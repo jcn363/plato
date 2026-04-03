@@ -1,0 +1,11 @@
+cargo:rustc-env=PKG_CONFIG_ALLOW_CROSS=1
+cargo:rustc-link-search=target/mupdf_wrapper/Kobo
+cargo:rustc-link-search=libs
+cargo:rustc-link-lib=dylib=stdc++
+cargo:rustc-link-lib=z
+cargo:rustc-link-lib=bz2
+cargo:rustc-link-lib=jpeg
+cargo:rustc-link-lib=png16
+cargo:rustc-link-lib=gumbo
+cargo:rustc-link-lib=openjp2
+cargo:rustc-link-lib=jbig2dec

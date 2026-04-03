@@ -1,0 +1,14 @@
+/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/deps/serde-57714009163648d9.d: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/serde-075b8e9e213be527/out/private.rs
+
+/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/deps/libserde-57714009163648d9.rlib: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/serde-075b8e9e213be527/out/private.rs
+
+/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/deps/libserde-57714009163648d9.rmeta: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/serde-075b8e9e213be527/out/private.rs
+
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/serde-075b8e9e213be527/out/private.rs:
+
+# env-dep:OUT_DIR=/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/serde-075b8e9e213be527/out

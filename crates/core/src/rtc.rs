@@ -1,0 +1,101 @@
+use anyhow::Error;
+use chrono::{Datelike, Duration, Timelike, Utc};
+use nix::{ioctl_none, ioctl_read, ioctl_write_ptr};
+use std::fs::File;
+use std::mem;
+use std::os::unix::io::AsRawFd;
+use std::path::Path;
+
+ioctl_read!(rtc_read_alarm, b'p', 0x10, RtcWkalrm);
+ioctl_write_ptr!(rtc_write_alarm, b'p', 0x0f, RtcWkalrm);
+ioctl_none!(rtc_disable_alarm, b'p', 0x02);
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct RtcTime {
+    tm_sec: libc::c_int,
+    tm_min: libc::c_int,
+    tm_hour: libc::c_int,
+    tm_mday: libc::c_int,
+    tm_mon: libc::c_int,
+    tm_year: libc::c_int,
+    tm_wday: libc::c_int,
+    tm_yday: libc::c_int,
+    tm_isdst: libc::c_int,
+}
+
+impl Default for RtcWkalrm {
+    fn default() -> Self {
+        // SAFETY: RtcWkalrm is a repr(C) struct with all-Copy fields. mem::zeroed() produces a valid zeroed state.
+        unsafe { mem::zeroed() }
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct RtcWkalrm {
+    enabled: libc::c_uchar,
+    pending: libc::c_uchar,
+    time: RtcTime,
+}
+
+impl RtcTime {
+    fn year(&self) -> i32 {
+        1900 + self.tm_year as i32
+    }
+}
+
+impl RtcWkalrm {
+    pub fn enabled(&self) -> bool {
+        self.enabled == 1
+    }
+
+    pub fn year(&self) -> i32 {
+        self.time.year()
+    }
+}
+
+pub struct Rtc(File);
+
+impl Rtc {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Rtc, Error> {
+        let file = File::open(path)?;
+        Ok(Rtc(file))
+    }
+
+    pub fn alarm(&self) -> Result<RtcWkalrm, Error> {
+        let mut rwa = RtcWkalrm::default();
+        // SAFETY: RTC device file descriptor is valid. ioctl parameters match kernel RTC_READ_ALARM interface.
+        unsafe {
+            rtc_read_alarm(self.0.as_raw_fd(), &mut rwa)
+                .map(|_| rwa)
+                .map_err(|e| e.into())
+        }
+    }
+
+    pub fn set_alarm(&self, days: f32) -> Result<i32, Error> {
+        let wt = Utc::now() + Duration::seconds((86_400.0 * days) as i64);
+        let rwa = RtcWkalrm {
+            enabled: 1,
+            pending: 0,
+            time: RtcTime {
+                tm_sec: wt.second() as libc::c_int,
+                tm_min: wt.minute() as libc::c_int,
+                tm_hour: wt.hour() as libc::c_int,
+                tm_mday: wt.day() as libc::c_int,
+                tm_mon: wt.month0() as libc::c_int,
+                tm_year: (wt.year() - 1900) as libc::c_int,
+                tm_wday: -1,
+                tm_yday: -1,
+                tm_isdst: -1,
+            },
+        };
+        // SAFETY: RTC device file descriptor is valid. ioctl parameters match kernel RTC_SET_ALARM interface.
+        unsafe { rtc_write_alarm(self.0.as_raw_fd(), &rwa).map_err(|e| e.into()) }
+    }
+
+    pub fn disable_alarm(&self) -> Result<i32, Error> {
+        // SAFETY: RTC device file descriptor is valid. ioctl parameters match kernel RTC_WKALM_RD interface.
+        unsafe { rtc_disable_alarm(self.0.as_raw_fd()).map_err(|e| e.into()) }
+    }
+}

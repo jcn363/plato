@@ -1,0 +1,56 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/core",
+  "crates/plato",
+  "crates/emulator",
+  "crates/importer",
+  "crates/fetcher",
+  "crates/epub_edit",
+]
+exclude = [
+  "epub_editor",
+]
+
+[profile.release-minsized]
+inherits = "release"
+panic = "abort"
+codegen-units = 1
+opt-level = "z"
+lto = true
+strip = true
+
+[profile.release-arm]
+inherits = "release"
+codegen-units = 4
+lto = "fat"
+strip = true
+opt-level = 3
+
+[profile.release-arm64]
+inherits = "release"
+codegen-units = 4
+lto = "fat"
+strip = true
+opt-level = 3
+
+[profile.release-embedded]
+inherits = "release"
+codegen-units = 1
+lto = "fat"
+opt-level = "s"
+strip = true
+debug = false
+
+[profile.release]
+lto = "thin"
+codegen-units = 16
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.bench]
+inherits = "release"
+debug = true
+lto = "thin"

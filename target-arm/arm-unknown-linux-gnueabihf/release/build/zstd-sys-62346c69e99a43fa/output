@@ -1,0 +1,122 @@
+cargo:rerun-if-env-changed=ZSTD_SYS_USE_PKG_CONFIG
+OUT_DIR = Some(/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/zstd-sys-62346c69e99a43fa/out)
+OPT_LEVEL = Some(3)
+TARGET = Some(arm-unknown-linux-gnueabihf)
+CARGO_ENCODED_RUSTFLAGS = Some(-Clink-args=-L/home/user/Desktop/plato/libs -Wl,-rpath-link,/home/user/Desktop/plato/libs)
+HOST = Some(x86_64-unknown-linux-gnu)
+cargo:rerun-if-env-changed=CC_arm-unknown-linux-gnueabihf
+CC_arm-unknown-linux-gnueabihf = None
+cargo:rerun-if-env-changed=CC_arm_unknown_linux_gnueabihf
+CC_arm_unknown_linux_gnueabihf = None
+cargo:rerun-if-env-changed=TARGET_CC
+TARGET_CC = None
+cargo:rerun-if-env-changed=CC
+CC = None
+cargo:rerun-if-env-changed=CROSS_COMPILE
+CROSS_COMPILE = None
+RUSTC_LINKER = Some(arm-linux-gnueabihf-gcc)
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+RUSTC_WRAPPER = None
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+DEBUG = Some(false)
+CARGO_CFG_TARGET_FEATURE = None
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=TARGET_CFLAGS
+TARGET_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_arm_unknown_linux_gnueabihf
+CFLAGS_arm_unknown_linux_gnueabihf = None
+cargo:rerun-if-env-changed=CFLAGS_arm-unknown-linux-gnueabihf
+CFLAGS_arm-unknown-linux-gnueabihf = None
+OUT_DIR = Some(/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/zstd-sys-62346c69e99a43fa/out)
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+TARGET = Some(arm-unknown-linux-gnueabihf)
+CARGO_CFG_TARGET_FEATURE = None
+HOST = Some(x86_64-unknown-linux-gnu)
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=TARGET_CFLAGS
+TARGET_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_arm_unknown_linux_gnueabihf
+CFLAGS_arm_unknown_linux_gnueabihf = None
+cargo:rerun-if-env-changed=CFLAGS_arm-unknown-linux-gnueabihf
+CFLAGS_arm-unknown-linux-gnueabihf = None
+OUT_DIR = Some(/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/zstd-sys-62346c69e99a43fa/out)
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+TARGET = Some(arm-unknown-linux-gnueabihf)
+CARGO_CFG_TARGET_FEATURE = None
+HOST = Some(x86_64-unknown-linux-gnu)
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=TARGET_CFLAGS
+TARGET_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_arm_unknown_linux_gnueabihf
+CFLAGS_arm_unknown_linux_gnueabihf = None
+cargo:rerun-if-env-changed=CFLAGS_arm-unknown-linux-gnueabihf
+CFLAGS_arm-unknown-linux-gnueabihf = None
+OUT_DIR = Some(/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/zstd-sys-62346c69e99a43fa/out)
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+TARGET = Some(arm-unknown-linux-gnueabihf)
+CARGO_CFG_TARGET_FEATURE = None
+HOST = Some(x86_64-unknown-linux-gnu)
+cargo:rerun-if-env-changed=CFLAGS
+CFLAGS = None
+cargo:rerun-if-env-changed=TARGET_CFLAGS
+TARGET_CFLAGS = None
+cargo:rerun-if-env-changed=CFLAGS_arm_unknown_linux_gnueabihf
+CFLAGS_arm_unknown_linux_gnueabihf = None
+cargo:rerun-if-env-changed=CFLAGS_arm-unknown-linux-gnueabihf
+CFLAGS_arm-unknown-linux-gnueabihf = None
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+exit status: 0
+cargo:rerun-if-env-changed=AR_arm-unknown-linux-gnueabihf
+AR_arm-unknown-linux-gnueabihf = None
+cargo:rerun-if-env-changed=AR_arm_unknown_linux_gnueabihf
+AR_arm_unknown_linux_gnueabihf = None
+cargo:rerun-if-env-changed=TARGET_AR
+TARGET_AR = None
+cargo:rerun-if-env-changed=AR
+AR = None
+cargo:rerun-if-env-changed=ARFLAGS
+ARFLAGS = None
+cargo:rerun-if-env-changed=TARGET_ARFLAGS
+TARGET_ARFLAGS = None
+cargo:rerun-if-env-changed=ARFLAGS_arm_unknown_linux_gnueabihf
+ARFLAGS_arm_unknown_linux_gnueabihf = None
+cargo:rerun-if-env-changed=ARFLAGS_arm-unknown-linux-gnueabihf
+ARFLAGS_arm-unknown-linux-gnueabihf = None
+cargo:rustc-link-lib=static=zstd
+cargo:rustc-link-search=native=/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/zstd-sys-62346c69e99a43fa/out
+cargo:root=/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/zstd-sys-62346c69e99a43fa/out
+cargo:include=/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zstd-sys-2.0.16+zstd.1.5.7/zstd/lib

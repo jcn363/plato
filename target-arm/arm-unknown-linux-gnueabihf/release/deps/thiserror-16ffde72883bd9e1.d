@@ -1,0 +1,14 @@
+/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/deps/thiserror-16ffde72883bd9e1.d: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/aserror.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/display.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/var.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/private.rs /home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/thiserror-93612af53def6981/out/private.rs
+
+/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/deps/libthiserror-16ffde72883bd9e1.rlib: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/aserror.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/display.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/var.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/private.rs /home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/thiserror-93612af53def6981/out/private.rs
+
+/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/deps/libthiserror-16ffde72883bd9e1.rmeta: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/aserror.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/display.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/var.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/private.rs /home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/thiserror-93612af53def6981/out/private.rs
+
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/lib.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/aserror.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/display.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/var.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.17/src/private.rs:
+/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/thiserror-93612af53def6981/out/private.rs:
+
+# env-dep:OUT_DIR=/home/user/Desktop/plato/./target-arm/arm-unknown-linux-gnueabihf/release/build/thiserror-93612af53def6981/out

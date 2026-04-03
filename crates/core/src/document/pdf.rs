@@ -1,0 +1,715 @@
+use super::mupdf_sys::*;
+
+use super::{chapter, chapter_relative};
+use super::{BoundedText, Document, Location, TextLocation, TocEntry};
+use crate::framebuffer::Pixmap;
+use crate::geom::{Boundary, CycleDir};
+use crate::log_error;
+use crate::metadata::TextAlign;
+use std::char;
+use std::ffi::{CStr, CString};
+use std::fs;
+use std::io::ErrorKind;
+use std::os::unix::ffi::OsStrExt;
+use std::path::Path;
+use std::ptr;
+use std::rc::Rc;
+use std::slice;
+
+const USER_STYLESHEET: &str = "css/html-user.css";
+
+fn auto_detect_margins(pixmap: &Pixmap, threshold: u8) -> (f32, f32, f32, f32) {
+    let width = pixmap.width as usize;
+    let height = pixmap.height as usize;
+    let samples = pixmap.samples;
+    let data = &pixmap.data;
+
+    let is_blank = |x: usize, y: usize| -> bool {
+        let addr = samples * (y * width + x);
+        if samples == 1 {
+            data[addr] > threshold
+        } else {
+            data[addr] > threshold && data[addr + 1] > threshold && data[addr + 2] > threshold
+        }
+    };
+
+    let mut top = 0;
+    'top_loop: for y in 0..height {
+        for x in 0..width {
+            if !is_blank(x, y) {
+                top = y;
+                break 'top_loop;
+            }
+        }
+    }
+
+    let mut bottom = height;
+    'bottom_loop: for y in (0..height).rev() {
+        for x in 0..width {
+            if !is_blank(x, y) {
+                bottom = y + 1;
+                break 'bottom_loop;
+            }
+        }
+    }
+
+    let mut left = 0;
+    'left_loop: for x in 0..width {
+        for y in top..bottom {
+            if !is_blank(x, y) {
+                left = x;
+                break 'left_loop;
+            }
+        }
+    }
+
+    let mut right = width;
+    'right_loop: for x in (0..width).rev() {
+        for y in top..bottom {
+            if !is_blank(x, y) {
+                right = x + 1;
+                break 'right_loop;
+            }
+        }
+    }
+
+    let content_left = left as f32 / width as f32;
+    let content_right = right as f32 / width as f32;
+    let content_top = top as f32 / height as f32;
+    let content_bottom = bottom as f32 / height as f32;
+
+    let margin_left = content_left;
+    let margin_right = 1.0 - content_right;
+    let margin_top = content_top;
+    let margin_bottom = 1.0 - content_bottom;
+
+    (margin_left, margin_top, margin_right, margin_bottom)
+}
+
+impl Into<Boundary> for FzRect {
+    fn into(self) -> Boundary {
+        Boundary {
+            min: vec2!(self.x0, self.y0),
+            max: vec2!(self.x1, self.y1),
+        }
+    }
+}
+
+struct PdfContext(*mut FzContext);
+
+pub struct PdfOpener(Rc<PdfContext>);
+
+pub struct PdfDocument {
+    ctx: Rc<PdfContext>,
+    doc: *mut FzDocument,
+}
+
+#[allow(dead_code)]
+pub struct PdfPage<'a> {
+    ctx: Rc<PdfContext>,
+    page: *mut FzPage,
+    index: usize,
+    _doc: &'a PdfDocument,
+}
+
+impl PdfOpener {
+    pub fn new() -> Option<PdfOpener> {
+        new_mupdf_context().map(|ctx| PdfOpener(Rc::new(PdfContext(ctx))))
+    }
+
+    pub fn open<P: AsRef<Path>>(&self, path: P) -> Option<PdfDocument> {
+        // SAFETY: FFI call to MuPDF library. Context pointer is valid and CString is null-terminated.
+        unsafe {
+            let c_path = CString::new(path.as_ref().as_os_str().as_bytes()).ok()?;
+            let doc = mp_open_document((self.0).0, c_path.as_ptr());
+            if doc.is_null() {
+                None
+            } else {
+                Some(PdfDocument {
+                    ctx: self.0.clone(),
+                    doc,
+                })
+            }
+        }
+    }
+
+    pub fn open_memory(&self, magic: &str, buf: &[u8]) -> Option<PdfDocument> {
+        // SAFETY: FFI calls to MuPDF library. Context and buffer pointers are valid for the duration of this call.
+        unsafe {
+            let stream = fz_open_memory(
+                (self.0).0,
+                buf.as_ptr() as *const libc::c_uchar,
+                buf.len() as libc::size_t,
+            );
+            let c_magic = CString::new(magic).ok()?;
+            let doc = mp_open_document_with_stream((self.0).0, c_magic.as_ptr(), stream);
+            fz_drop_stream((self.0).0, stream);
+            if doc.is_null() {
+                None
+            } else {
+                Some(PdfDocument {
+                    ctx: self.0.clone(),
+                    doc,
+                })
+            }
+        }
+    }
+    pub fn load_user_stylesheet(&mut self) {
+        if let Ok(content) = fs::read_to_string(USER_STYLESHEET)
+            .and_then(|s| CString::new(s).map_err(Into::into))
+            .map_err(|e| {
+                if e.kind() != ErrorKind::NotFound {
+                    log_error!("{:#}", e)
+                }
+            })
+        {
+            // SAFETY: FFI call to MuPDF. Context is valid and CString is null-terminated.
+            unsafe { fz_set_user_css((self.0).0, content.as_ptr()) }
+        }
+    }
+}
+
+unsafe impl Send for PdfDocument {}
+unsafe impl Sync for PdfDocument {}
+
+impl PdfDocument {
+    pub fn page(&self, index: usize) -> Option<PdfPage<'_>> {
+        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid and initialized.
+        unsafe {
+            let page = mp_load_page(self.ctx.0, self.doc, index as libc::c_int);
+            if page.is_null() {
+                None
+            } else {
+                Some(PdfPage {
+                    ctx: self.ctx.clone(),
+                    page,
+                    index,
+                    _doc: self,
+                })
+            }
+        }
+    }
+
+    fn walk_toc(&self, outline: *mut FzOutline, index: &mut usize) -> Vec<TocEntry> {
+        // SAFETY: FFI calls to MuPDF library. Outline pointer is valid and checked for null before dereferencing.
+        unsafe {
+            let mut vec = Vec::new();
+            let mut cur = outline;
+            while !cur.is_null() {
+                let num = mp_page_number_from_location(self.ctx.0, self.doc, (*cur).page);
+                let location = if num > -1 {
+                    Location::Exact(num as usize)
+                } else if !(*cur).uri.is_null() {
+                    let uri = CStr::from_ptr((*cur).uri).to_string_lossy().into_owned();
+                    Location::Uri(uri)
+                } else {
+                    Location::Exact(0)
+                };
+                let title = if !(*cur).title.is_null() {
+                    CStr::from_ptr((*cur).title).to_string_lossy().into_owned()
+                } else {
+                    "Untitled".to_string()
+                };
+                let current_index = *index;
+                *index += 1;
+                let children = if !(*cur).down.is_null() {
+                    self.walk_toc((*cur).down, index)
+                } else {
+                    Vec::new()
+                };
+                vec.push(TocEntry {
+                    title,
+                    location,
+                    index: current_index,
+                    children,
+                });
+                cur = (*cur).next;
+            }
+            vec
+        }
+    }
+
+    pub fn is_protected(&self) -> bool {
+        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid and initialized.
+        unsafe { fz_needs_password(self.ctx.0, self.doc) == 1 }
+    }
+}
+
+impl Document for PdfDocument {
+    fn dims(&self, index: usize) -> Option<(f32, f32)> {
+        self.page(index).map(|page| page.dims())
+    }
+
+    fn pages_count(&self) -> usize {
+        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid and initialized.
+        unsafe { mp_count_pages(self.ctx.0, self.doc) as usize }
+    }
+
+    fn resolve_location(&mut self, loc: Location) -> Option<usize> {
+        if self.pages_count() == 0 {
+            return None;
+        }
+
+        match loc {
+            Location::Exact(index) => {
+                if index >= self.pages_count() {
+                    None
+                } else {
+                    Some(index)
+                }
+            }
+            Location::Previous(index) => {
+                if index > 0 {
+                    Some(index - 1)
+                } else {
+                    None
+                }
+            }
+            Location::Next(index) => {
+                if index < self.pages_count() - 1 {
+                    Some(index + 1)
+                } else {
+                    None
+                }
+            }
+            Location::LocalUri(_index, _uri) => None,
+            _ => None,
+        }
+    }
+
+    fn pixmap(&mut self, loc: Location, scale: f32, samples: usize) -> Option<(Pixmap, usize)> {
+        let index = self.resolve_location(loc)?;
+        self.page(index)
+            .and_then(|page| page.pixmap(scale, samples))
+            .map(|pixmap| (pixmap, index))
+    }
+
+    fn toc(&mut self) -> Option<Vec<TocEntry>> {
+        // SAFETY: FFI calls to MuPDF library. Context and document pointers are valid and initialized.
+        unsafe {
+            let outline = mp_load_outline(self.ctx.0, self.doc);
+            if outline.is_null() {
+                None
+            } else {
+                let mut index = 0;
+                let toc = self.walk_toc(outline, &mut index);
+                fz_drop_outline(self.ctx.0, outline);
+                Some(toc)
+            }
+        }
+    }
+
+    fn chapter<'a>(&mut self, offset: usize, toc: &'a [TocEntry]) -> Option<(&'a TocEntry, f32)> {
+        chapter(offset, self.pages_count(), toc)
+    }
+
+    fn chapter_relative<'a>(
+        &mut self,
+        offset: usize,
+        dir: CycleDir,
+        toc: &'a [TocEntry],
+    ) -> Option<&'a TocEntry> {
+        chapter_relative(offset, dir, toc)
+    }
+
+    fn metadata(&self, key: &str) -> Option<String> {
+        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid, CString is null-terminated, and buffer pointer is valid.
+        unsafe {
+            let key = CString::new(key).ok()?;
+            let mut buf: [libc::c_char; 256] = [0; 256];
+            let len = fz_lookup_metadata(
+                self.ctx.0,
+                self.doc,
+                key.as_ptr(),
+                buf.as_mut_ptr(),
+                buf.len() as libc::c_int,
+            );
+            if len == -1 {
+                None
+            } else {
+                Some(CStr::from_ptr(buf.as_ptr()).to_string_lossy().into_owned())
+            }
+        }
+    }
+
+    fn words(&mut self, loc: Location) -> Option<(Vec<BoundedText>, usize)> {
+        let index = self.resolve_location(loc)?;
+        self.page(index)
+            .and_then(|page| page.words())
+            .map(|words| (words, index))
+    }
+
+    fn lines(&mut self, loc: Location) -> Option<(Vec<BoundedText>, usize)> {
+        let index = self.resolve_location(loc)?;
+        self.page(index)
+            .and_then(|page| page.lines())
+            .map(|lines| (lines, index))
+    }
+
+    fn images(&mut self, loc: Location) -> Option<(Vec<Boundary>, usize)> {
+        let index = self.resolve_location(loc)?;
+        self.page(index)
+            .and_then(|page| page.images())
+            .map(|images| (images, index))
+    }
+
+    fn links(&mut self, loc: Location) -> Option<(Vec<BoundedText>, usize)> {
+        let index = self.resolve_location(loc)?;
+        self.page(index)
+            .and_then(|page| page.links())
+            .map(|links| (links, index))
+    }
+
+    fn title(&self) -> Option<String> {
+        self.metadata(FZ_META_INFO_TITLE)
+    }
+
+    fn author(&self) -> Option<String> {
+        self.metadata(FZ_META_INFO_AUTHOR)
+    }
+
+    fn is_reflowable(&self) -> bool {
+        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid and initialized.
+        unsafe { fz_is_document_reflowable(self.ctx.0, self.doc) == 1 }
+    }
+
+    fn auto_crop_margins(
+        &mut self,
+        color_samples: usize,
+        threshold: u8,
+    ) -> Option<(f32, f32, f32, f32)> {
+        self.pixmap(Location::Exact(0), 1.0, color_samples)
+            .map(|(pixmap, _)| auto_detect_margins(&pixmap, threshold))
+    }
+
+    fn layout(&mut self, width: u32, height: u32, _font_size: f32, _dpi: u16) {
+        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid and initialized.
+        unsafe {
+            fz_layout_document(
+                self.ctx.0,
+                self.doc,
+                width as libc::c_float,
+                height as libc::c_float,
+            );
+        }
+    }
+
+    fn set_text_align(&mut self, _text_align: TextAlign) {}
+
+    fn set_font_family(&mut self, _family_name: &str, _search_path: &str) {}
+
+    fn set_margin_width(&mut self, _width: i32) {}
+
+    fn set_line_height(&mut self, _line_height: f32) {}
+
+    fn set_hyphen_penalty(&mut self, _hyphen_penalty: i32) {}
+
+    fn set_stretch_tolerance(&mut self, _stretch_tolerance: f32) {}
+
+    fn set_ignore_document_css(&mut self, ignore: bool) {
+        // SAFETY: FFI call to MuPDF library. Context pointer is valid and initialized.
+        unsafe {
+            fz_set_use_document_css(self.ctx.0, !ignore as libc::c_int);
+        }
+    }
+}
+
+impl<'a> PdfPage<'a> {
+    pub fn images(&self) -> Option<Vec<Boundary>> {
+        // SAFETY: FFI calls to MuPDF library. Context and page pointers are valid, and null is checked before dereferencing.
+        unsafe {
+            let mut images: Vec<Boundary> = Vec::new();
+            let opts = FzTextOptions {
+                flags: FZ_TEXT_PRESERVE_IMAGES,
+                scale: 1.0,
+                clip: FzRect::default(),
+            };
+            let tp = mp_new_stext_page_from_page(self.ctx.0, self.page, &opts);
+            if tp.is_null() {
+                return None;
+            }
+
+            let mut block = (*tp).first_block;
+
+            while !block.is_null() {
+                if (*block).kind == FZ_PAGE_BLOCK_IMAGE {
+                    let bnd: Boundary = (*block).bbox.into();
+                    images.retain(|img| !img.overlaps(&bnd));
+                    images.push(bnd);
+                }
+
+                block = (*block).next;
+            }
+
+            fz_drop_stext_page(self.ctx.0, tp);
+            Some(images)
+        }
+    }
+
+    pub fn lines(&self) -> Option<Vec<BoundedText>> {
+        // SAFETY: FFI calls to MuPDF library. Context and page pointers are valid, and null is checked before dereferencing.
+        unsafe {
+            let mut lines = Vec::new();
+            let tp = mp_new_stext_page_from_page(self.ctx.0, self.page, ptr::null());
+            if tp.is_null() {
+                return None;
+            }
+            let mut _offset = 0;
+            let mut block = (*tp).first_block;
+
+            while !block.is_null() {
+                if (*block).kind == FZ_PAGE_BLOCK_TEXT {
+                    let text_block = (*block).u.text;
+                    let mut line = text_block.first_line;
+
+                    while !line.is_null() {
+                        let rect = (*line).bbox.into();
+                        lines.push(BoundedText {
+                            rect,
+                            text: String::default(),
+                            location: rect.min.into(),
+                        });
+                        _offset += 1;
+                        line = (*line).next;
+                    }
+                }
+
+                block = (*block).next;
+            }
+
+            fz_drop_stext_page(self.ctx.0, tp);
+            Some(lines)
+        }
+    }
+
+    pub fn words(&self) -> Option<Vec<BoundedText>> {
+        // SAFETY: FFI calls to MuPDF library. Context and page pointers are valid, and null is checked before dereferencing.
+        unsafe {
+            let mut words = Vec::new();
+            let tp = mp_new_stext_page_from_page(self.ctx.0, self.page, ptr::null());
+            if tp.is_null() {
+                return None;
+            }
+            let mut block = (*tp).first_block;
+            let mut _offset = 0;
+
+            while !block.is_null() {
+                if (*block).kind == FZ_PAGE_BLOCK_TEXT {
+                    let text_block = (*block).u.text;
+                    let mut line = text_block.first_line;
+
+                    while !line.is_null() {
+                        let mut chr = (*line).first_char;
+                        let mut text = String::default();
+                        let mut rect = FzRect::default();
+
+                        while !chr.is_null() {
+                            while !chr.is_null() {
+                                if let Some(c) = char::from_u32((*chr).c as u32) {
+                                    if c.is_whitespace() {
+                                        chr = (*chr).next;
+                                        break;
+                                    } else {
+                                        #[allow(unreachable_code)]
+                                        let _chr_rect = fz_rect_from_quad(
+                                            self.ctx.0,
+                                            std::ptr::read(&(*chr).quad),
+                                        );
+                                        rect = fz_union_rect(self.ctx.0, rect, _chr_rect);
+                                        text.push(c);
+                                    }
+                                }
+                                chr = (*chr).next;
+                            }
+
+                            if !text.is_empty() {
+                                let bounds: Boundary = rect.into();
+                                words.push(BoundedText {
+                                    text: text.clone(),
+                                    rect: bounds,
+                                    location: bounds.min.into(),
+                                });
+                                text.clear();
+                                rect = FzRect::default();
+                                _offset += 1;
+                            }
+                        }
+
+                        line = (*line).next;
+                    }
+                }
+
+                block = (*block).next;
+            }
+
+            fz_drop_stext_page(self.ctx.0, tp);
+            Some(words)
+        }
+    }
+
+    pub fn links(&self) -> Option<Vec<BoundedText>> {
+        // SAFETY: FFI calls to MuPDF library. Context and page pointers are valid, and null is checked before dereferencing.
+        unsafe {
+            let links = mp_load_links(self.ctx.0, self.page);
+
+            if links.is_null() {
+                return None;
+            }
+
+            let mut link = links;
+            let mut result = Vec::new();
+            let mut _offset = 0;
+
+            while !link.is_null() {
+                let text = CStr::from_ptr((*link).uri).to_string_lossy().into_owned();
+                let rect: Boundary = (*link).rect.into();
+                result.push(BoundedText {
+                    text,
+                    rect,
+                    location: rect.min.into(),
+                });
+                link = (*link).next;
+                _offset += 1;
+            }
+
+            fz_drop_link(self.ctx.0, links);
+
+            Some(result)
+        }
+    }
+
+    pub fn pixmap(&self, scale: f32, color_samples: usize) -> Option<Pixmap> {
+        // SAFETY: FFI calls to MuPDF library. Context and page pointers are valid, and null is checked before dereferencing.
+        unsafe {
+            let mat = fz_scale(scale as libc::c_float, scale as libc::c_float);
+            let color_space = if color_samples == 1 {
+                fz_device_gray(self.ctx.0)
+            } else {
+                fz_device_rgb(self.ctx.0)
+            };
+            let pixmap = mp_new_pixmap_from_page(self.ctx.0, self.page, mat, color_space, 0);
+            if pixmap.is_null() {
+                return None;
+            }
+
+            let width = (*pixmap).w as u32;
+            let height = (*pixmap).h as u32;
+            let len = color_samples * (width * height) as usize;
+
+            let mut data = Vec::new();
+            if data.try_reserve(len).is_err() {
+                fz_drop_pixmap(self.ctx.0, pixmap);
+                return None;
+            }
+            data.extend_from_slice(slice::from_raw_parts((*pixmap).samples, len));
+
+            fz_drop_pixmap(self.ctx.0, pixmap);
+
+            Some(Pixmap {
+                width,
+                height,
+                samples: color_samples,
+                data,
+                update_flag: false,
+            })
+        }
+    }
+
+    pub fn boundary_box(&self) -> Option<Boundary> {
+        // SAFETY: FFI calls to MuPDF library. Context and page pointers are valid, and null is checked before dereferencing.
+        unsafe {
+            let rect = FzRect::default();
+            let dev = fz_new_bbox_device(self.ctx.0, rect);
+            if dev.is_null() {
+                None
+            } else {
+                fz_run_page(self.ctx.0, self.page, dev, fz_identity, ptr::null_mut());
+                fz_close_device(self.ctx.0, dev);
+                fz_drop_device(self.ctx.0, dev);
+                Some(rect.into())
+            }
+        }
+    }
+
+    #[inline]
+    pub fn dims(&self) -> (f32, f32) {
+        // SAFETY: FFI call to MuPDF library. Context and page pointers are valid and initialized.
+        unsafe {
+            let bounds = fz_bound_page(self.ctx.0, self.page);
+            (
+                (bounds.x1 - bounds.x0) as f32,
+                (bounds.y1 - bounds.y0) as f32,
+            )
+        }
+    }
+
+    #[inline]
+    pub fn width(&self) -> f32 {
+        let (width, _) = self.dims();
+        width
+    }
+
+    #[inline]
+    pub fn height(&self) -> f32 {
+        let (_, height) = self.dims();
+        height
+    }
+}
+
+impl Drop for PdfContext {
+    fn drop(&mut self) {
+        // SAFETY: FFI call to MuPDF library. Context pointer is valid and owned by this struct.
+        unsafe {
+            fz_drop_context(self.0);
+        }
+    }
+}
+
+impl Drop for PdfDocument {
+    fn drop(&mut self) {
+        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid and owned by this struct.
+        unsafe {
+            fz_drop_document(self.ctx.0, self.doc);
+        }
+    }
+}
+impl<'a> Drop for PdfPage<'a> {
+    fn drop(&mut self) {
+        // SAFETY: FFI call to MuPDF library. Context and page pointers are valid and owned by this struct.
+        unsafe {
+            fz_drop_page(self.ctx.0, self.page);
+        }
+    }
+}
+
+#[allow(dead_code)]
+impl<'a> PdfPage<'a> {
+    fn search_page(&self, text: &str, max_results: usize) -> Option<Vec<TextLocation>> {
+        // SAFETY: FFI call to MuPDF library. Context and page pointers are valid, CString is null-terminated, and hits buffer has sufficient capacity.
+        unsafe {
+            let mut hits: Vec<FzRect> = Vec::with_capacity(max_results);
+            let c_text = CString::new(text).ok()?;
+
+            let result = fz_search_page(
+                self.ctx.0,
+                self.page,
+                c_text.as_ptr(),
+                hits.as_mut_ptr(),
+                max_results as libc::c_int,
+            );
+
+            if result >= 0 {
+                hits.set_len(result as usize);
+                let mut locations = Vec::with_capacity(hits.len());
+
+                for _hit in hits {
+                    locations.push(TextLocation::Static(self.index, 0));
+                }
+
+                Some(locations)
+            } else {
+                None
+            }
+        }
+    }
+}
