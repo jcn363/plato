@@ -421,6 +421,30 @@ Each crate should have a single responsibility, explicit documentation in its `C
 - **Languages**: English, French, German, Spanish, Italian, Catalan, Portuguese, Dutch, Danish, Swedish, Finnish, Norwegian, Turkish, Japanese, Traditional Chinese
 - **Content**: Kobo eBookstore (6M+ titles), OverDrive, Dropbox, Adobe Digital Editions, Pocket, sideloading
 
+## Performance Optimization Decisions
+
+This section documents key performance decisions for the Plato codebase, particularly for constrained Kobo devices.
+
+### Memory Optimization
+
+- **Pre-allocation**: Use `String::with_capacity` and `Vec::with_capacity` when size is predictable
+- **Shared ownership**: Use `Rc` for shared MuPDF contexts, `Arc` for document references
+- **Cow\<str\>**: Use for conditional string ownership to avoid unnecessary clones
+
+### Battery Optimization
+
+- **Event-driven I/O**: Use `poll()` instead of busy loops for input handling
+- **State caching**: Cache battery and frontlight states to avoid redundant file I/O
+- **E-ink refresh modes**: Use appropriate `UpdateMode` (Gui, Partial, Full) based on content change
+
+### Not Recommended Optimizations
+
+The following were investigated and deemed unnecessary for this codebase:
+
+- **Thread pools for thumbnails**: Background fetchers already handle this; thread pools add complexity
+- **Async file I/O**: E-ink refresh latency dominates; async adds overhead without perceptible benefit
+- **Feature flags for plugins/sync**: These are integral features; feature flags add maintenance overhead
+
 ## Could the Kobo Elipsa benefit from parallel programming?
 
 The Kobo Elipsa can benefit from parallel programming for workloads that are CPU-bound, parallelizable, and not latency-sensitive. Practical considerations:
