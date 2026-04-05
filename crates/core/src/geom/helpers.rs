@@ -5,7 +5,7 @@ use crate::color::Color;
 use super::point::Point;
 use super::vec2::Vec2;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Edge {
     pub top: i32,
     pub right: i32,
@@ -20,17 +20,6 @@ impl Edge {
             right: value,
             bottom: value,
             left: value,
-        }
-    }
-}
-
-impl Default for Edge {
-    fn default() -> Self {
-        Edge {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
         }
     }
 }
@@ -155,7 +144,7 @@ pub fn nearest_segment_point(p: Vec2, a: Vec2, b: Vec2) -> (Vec2, f32) {
     let l2 = ab.dot(ab);
 
     // Will not happen in practice
-    if l2 < ::std::f32::EPSILON {
+    if l2 < f32::EPSILON {
         return (a, 0.0);
     }
 

@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 use plato_core::anyhow::{Context as ResultExt, Error};
 use plato_core::battery::{Battery, FakeBattery};
 use plato_core::chrono::Local;

@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 use plato_core::anyhow::{format_err, Context, Error};
 use plato_core::chrono::{DateTime, Duration, Local, Utc};
 use plato_core::helpers::{decode_entities, load_json, load_toml, save_json};

@@ -61,12 +61,10 @@ impl Point {
             } else {
                 self.dist2(Point::new(rect.min.x, rect.max.y - 1))
             }
+        } else if self.y < rect.min.y {
+            self.dist2(Point::new(rect.max.x - 1, rect.min.y))
         } else {
-            if self.y < rect.min.y {
-                self.dist2(Point::new(rect.max.x - 1, rect.min.y))
-            } else {
-                self.dist2(Point::new(rect.max.x - 1, rect.max.y - 1))
-            }
+            self.dist2(Point::new(rect.max.x - 1, rect.max.y - 1))
         }
     }
 
@@ -88,12 +86,10 @@ impl Point {
             } else {
                 Dir::West
             }
+        } else if self.y.is_positive() {
+            Dir::South
         } else {
-            if self.y.is_positive() {
-                Dir::South
-            } else {
-                Dir::North
-            }
+            Dir::North
         }
     }
 
@@ -105,12 +101,10 @@ impl Point {
             } else {
                 DiagDir::NorthEast
             }
+        } else if self.y.is_positive() {
+            DiagDir::SouthWest
         } else {
-            if self.y.is_positive() {
-                DiagDir::SouthWest
-            } else {
-                DiagDir::NorthWest
-            }
+            DiagDir::NorthWest
         }
     }
 }

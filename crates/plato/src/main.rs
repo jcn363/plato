@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 mod app;
 
 use crate::app::run;

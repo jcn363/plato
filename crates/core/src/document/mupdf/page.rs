@@ -1,3 +1,5 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 use crate::document::mupdf::annotation::Annotation;
 use crate::document::mupdf::image::Image;
 use crate::document::mupdf::link::Link;

@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 use getopts::Options;
 use plato_core::anyhow::{format_err, Context, Error};
 use plato_core::chrono::NaiveDateTime;
