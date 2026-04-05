@@ -1851,7 +1851,7 @@ impl Reader {
     }
 
     fn toc_aux(&self, simple_toc: &[SimpleTocEntry], index: &mut usize) -> Vec<TocEntry> {
-        let mut toc = Vec::new();
+        let mut toc = Vec::with_capacity(simple_toc.len());
         for entry in simple_toc {
             *index += 1;
             match entry {

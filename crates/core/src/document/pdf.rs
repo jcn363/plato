@@ -324,7 +324,7 @@ impl<'a> PdfPage<'a> {
             clip: mupdf::FzRect::default(),
         };
         let text_page = self.page.to_text_page(Some(&opts))?;
-        let mut images = Vec::new();
+        let mut images = Vec::with_capacity(16);
 
         for block in text_page.blocks() {
             if block.kind() == mupdf::FZ_PAGE_BLOCK_IMAGE {
@@ -338,7 +338,7 @@ impl<'a> PdfPage<'a> {
 
     pub fn lines(&self) -> Option<Vec<BoundedText>> {
         let text_page = self.page.to_text_page(None)?;
-        let mut lines = Vec::new();
+        let mut lines = Vec::with_capacity(64);
 
         for block in text_page.blocks() {
             for line in block.lines() {
@@ -355,7 +355,7 @@ impl<'a> PdfPage<'a> {
 
     pub fn words(&self) -> Option<Vec<BoundedText>> {
         let text_page = self.page.to_text_page(None)?;
-        let mut words = Vec::new();
+        let mut words = Vec::with_capacity(128);
 
         for block in text_page.blocks() {
             for line in block.lines() {
