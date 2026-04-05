@@ -215,9 +215,6 @@ impl Framebuffer for Pixmap {
         }
     }
 
-    #[inline]
-    fn shift_region(&mut self, _rect: &Rectangle, _drift: u8) {}
-
     fn update(&mut self, _rect: &Rectangle, _mode: UpdateMode) -> Result<u32, Error> {
         Ok(0)
     }
@@ -232,26 +229,6 @@ impl Framebuffer for Pixmap {
 
     fn set_rotation(&mut self, _n: i8) -> Result<(u32, u32), Error> {
         Ok((self.width, self.height))
-    }
-
-    fn set_monochrome(&mut self, _enable: bool) {}
-
-    fn set_dithered(&mut self, _enable: bool) {}
-
-    fn set_inverted(&mut self, _enable: bool) {}
-
-    fn monochrome(&self) -> bool {
-        false
-    }
-
-    #[inline]
-    fn dithered(&self) -> bool {
-        false
-    }
-
-    #[inline]
-    fn inverted(&self) -> bool {
-        false
     }
 
     #[inline]

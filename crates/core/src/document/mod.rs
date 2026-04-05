@@ -1,5 +1,6 @@
 pub mod epub;
 pub mod html;
+pub mod mupdf;
 pub mod pdf;
 pub mod pdf_manipulator;
 pub mod progressive_loader;
@@ -117,12 +118,31 @@ pub trait Document: Send + Sync {
 
     fn pixmap(&mut self, loc: Location, scale: f32, samples: usize) -> Option<(Pixmap, usize)>;
     fn layout(&mut self, width: u32, height: u32, font_size: f32, dpi: u16);
-    fn set_font_family(&mut self, family_name: &str, search_path: &str);
-    fn set_margin_width(&mut self, width: i32);
-    fn set_text_align(&mut self, text_align: TextAlign);
-    fn set_line_height(&mut self, line_height: f32);
-    fn set_hyphen_penalty(&mut self, hyphen_penalty: i32);
-    fn set_stretch_tolerance(&mut self, stretch_tolerance: f32);
+
+    /// Sets the font family for text rendering.
+    /// Not supported by PDF documents (MuPDF API limitation).
+    fn set_font_family(&mut self, _family_name: &str, _search_path: &str) {}
+
+    /// Sets the page margin width.
+    /// Not supported by PDF documents (MuPDF API limitation).
+    fn set_margin_width(&mut self, _width: i32) {}
+
+    /// Sets the text alignment.
+    /// Not supported by PDF documents (MuPDF API limitation).
+    fn set_text_align(&mut self, _text_align: TextAlign) {}
+
+    /// Sets the line height multiplier.
+    /// Not supported by PDF documents (MuPDF API limitation).
+    fn set_line_height(&mut self, _line_height: f32) {}
+
+    /// Sets the hyphen penalty for text reflow.
+    /// Not supported by PDF documents (MuPDF API limitation).
+    fn set_hyphen_penalty(&mut self, _hyphen_penalty: i32) {}
+
+    /// Sets the stretch tolerance for text reflow.
+    /// Not supported by PDF documents (MuPDF API limitation).
+    fn set_stretch_tolerance(&mut self, _stretch_tolerance: f32) {}
+
     fn set_ignore_document_css(&mut self, ignore: bool);
 
     fn title(&self) -> Option<String>;

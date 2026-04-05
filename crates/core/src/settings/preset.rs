@@ -53,7 +53,7 @@ pub fn guess_frontlight(
 
         for (i, lp) in light_presets.iter().enumerate() {
             let p = lp.lightsensor_level.unwrap_or_default();
-            let d = if s >= p { s - p } else { p - s };
+            let d = s.abs_diff(p);
 
             if p >= s && d < dmin[0] {
                 dmin[0] = d;

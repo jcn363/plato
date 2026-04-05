@@ -30,6 +30,8 @@ impl Frontlight for StandardFrontlight {
         }
     }
 
+    /// No-op: Standard frontlight does not support warmth adjustment.
+    /// Only devices with NaturalFrontlight (ComfortLight Pro) support warmth.
     fn set_warmth(&mut self, _value: f32) {}
 
     fn levels(&self) -> LightLevels {

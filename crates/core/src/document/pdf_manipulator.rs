@@ -1,10 +1,9 @@
-use crate::document::mupdf_sys::*;
+use super::mupdf;
+
 use crate::{log_info, log_warn};
 use anyhow::{format_err, Error};
-use std::ffi::CString;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::ptr;
 
 const MAX_FILE_SIZE_MB: u64 = 50;
 const WARNING_FILE_SIZE_MB: u64 = 30;
@@ -14,14 +13,14 @@ const CHUNK_SIZE: usize = 10;
 const KOBO_MEMORY_LIMIT_MB: u64 = 256;
 
 pub struct PdfManipulator {
-    ctx: *mut FzContext,
+    ctx: mupdf::MuPdfContext,
     progress_callback: Option<ProgressCallback>,
 }
 
 impl Default for PdfManipulator {
     fn default() -> Self {
         Self {
-            ctx: ptr::null_mut(),
+            ctx: mupdf::MuPdfContext::new().expect("MuPdfContext"),
             progress_callback: None,
         }
     }
@@ -65,10 +64,9 @@ impl Default for OperationOptions {
 
 impl PdfManipulator {
     pub fn new() -> Result<PdfManipulator, Error> {
-        let ctx_ptr =
-            new_mupdf_context().ok_or_else(|| format_err!("Failed to create MuPDF context"))?;
+        let ctx = mupdf::MuPdfContext::new()?;
         Ok(PdfManipulator {
-            ctx: ctx_ptr,
+            ctx,
             progress_callback: None,
         })
     }
@@ -114,19 +112,11 @@ impl PdfManipulator {
         let file_size_bytes = metadata.len();
         let file_size_mb = file_size_bytes / (1024 * 1024);
 
-        let path_cstr = CString::new(path.to_string_lossy().as_bytes())?;
-        // SAFETY: FFI call to MuPDF. Context pointer is valid and CString is null-terminated.
-        let doc = unsafe { mp_open_document(self.ctx, path_cstr.as_ptr()) };
-
-        let page_count = if !doc.is_null() {
-            // SAFETY: FFI call to MuPDF. Context and document pointers are valid and initialized.
-            let count = unsafe { fz_pdf_count_pages(self.ctx, doc) };
-            // SAFETY: Cleaning up MuPDF document resource. Context and document pointers are valid.
-            unsafe { fz_drop_document(self.ctx, doc) };
-            count as usize
-        } else {
-            0
-        };
+        let page_count = self
+            .ctx
+            .open_document(path)
+            .map(|doc| doc.pdf_page_count())
+            .unwrap_or(0);
 
         Ok(MemoryWarning {
             file_size_mb,
@@ -215,37 +205,26 @@ impl PdfManipulator {
 
         self.validate_operation(input_path)?;
 
-        // SAFETY: FFI calls to MuPDF for document manipulation. Context pointer is valid.
-        // CString values are properly null-terminated. Document is opened, manipulated, and dropped within this scope.
-        unsafe {
-            let path_cstr = CString::new(input_path.to_string_lossy().as_bytes())?;
-            let doc = mp_open_document(self.ctx, path_cstr.as_ptr());
+        let doc = self
+            .ctx
+            .open_document(input_path)
+            .ok_or_else(|| format_err!("Failed to open PDF"))?;
 
-            if doc.is_null() {
-                return Err(format_err!("Failed to open PDF"));
+        let total = pages.len();
+
+        for (i, &page_num) in pages.iter().rev().enumerate() {
+            self.report_progress(i + 1, total, "Deleting pages...");
+            if (page_num as i32) < doc.pdf_page_count() as i32 {
+                doc.pdf_delete_page(page_num);
             }
-
-            let _total_pages = fz_pdf_count_pages(self.ctx, doc) as usize;
-            let total = pages.len();
-
-            for (i, &page_num) in pages.iter().rev().enumerate() {
-                self.report_progress(i + 1, total, "Deleting pages...");
-                if (page_num as libc::c_int) < fz_pdf_count_pages(self.ctx, doc) {
-                    fz_pdf_delete_page(self.ctx, doc, page_num as libc::c_int);
-                }
-            }
-
-            let out_cstr = CString::new(output_path.to_string_lossy().as_bytes())?;
-            let opts = FzWriteOptions::default();
-            let format = CString::new("pdf")?;
-
-            self.report_progress(total, total, "Saving PDF...");
-            fz_save_document(self.ctx, doc, out_cstr.as_ptr(), &opts, format.as_ptr());
-            fz_drop_document(self.ctx, doc);
-
-            self.report_progress(total, total, "Operation complete!");
-            Ok(output_path.to_path_buf())
         }
+
+        let opts = mupdf::FzWriteOptions::default();
+        self.report_progress(total, total, "Saving PDF...");
+        doc.save(output_path, &opts, "pdf");
+
+        self.report_progress(total, total, "Operation complete!");
+        Ok(output_path.to_path_buf())
     }
 
     pub fn rotate_pages(
@@ -260,34 +239,24 @@ impl PdfManipulator {
 
         self.validate_operation(input_path)?;
 
-        // SAFETY: FFI calls to MuPDF for page rotation. Context pointer is valid.
-        // CString values are properly null-terminated. Document is opened and dropped within this scope.
-        unsafe {
-            let path_cstr = CString::new(input_path.to_string_lossy().as_bytes())?;
-            let doc = mp_open_document(self.ctx, path_cstr.as_ptr());
+        let doc = self
+            .ctx
+            .open_document(input_path)
+            .ok_or_else(|| format_err!("Failed to open PDF"))?;
 
-            if doc.is_null() {
-                return Err(format_err!("Failed to open PDF"));
-            }
+        let total = pages.len();
 
-            let total = pages.len();
-
-            for (i, &(page_num, degrees)) in pages.iter().enumerate() {
-                self.report_progress(i + 1, total, "Rotating pages...");
-                fz_pdf_rotate_page(self.ctx, doc, page_num as libc::c_int, degrees);
-            }
-
-            let out_cstr = CString::new(output_path.to_string_lossy().as_bytes())?;
-            let opts = FzWriteOptions::default();
-            let format = CString::new("pdf")?;
-
-            self.report_progress(total, total, "Saving PDF...");
-            fz_save_document(self.ctx, doc, out_cstr.as_ptr(), &opts, format.as_ptr());
-            fz_drop_document(self.ctx, doc);
-
-            self.report_progress(total, total, "Operation complete!");
-            Ok(output_path.to_path_buf())
+        for (i, &(page_num, degrees)) in pages.iter().enumerate() {
+            self.report_progress(i + 1, total, "Rotating pages...");
+            doc.pdf_rotate_page(page_num, degrees);
         }
+
+        let opts = mupdf::FzWriteOptions::default();
+        self.report_progress(total, total, "Saving PDF...");
+        doc.save(output_path, &opts, "pdf");
+
+        self.report_progress(total, total, "Operation complete!");
+        Ok(output_path.to_path_buf())
     }
 
     pub fn extract_pages(
@@ -305,49 +274,35 @@ impl PdfManipulator {
 
         self.check_memory_available(estimated_size + 10)?;
 
-        // SAFETY: FFI calls to MuPDF for page extraction. Context pointer is valid.
-        // CString values are null-terminated. Documents are properly created and dropped within this scope.
-        unsafe {
-            let path_cstr = CString::new(input_path.to_string_lossy().as_bytes())?;
-            let doc = mp_open_document(self.ctx, path_cstr.as_ptr());
+        let doc = self
+            .ctx
+            .open_document(input_path)
+            .ok_or_else(|| format_err!("Failed to open PDF"))?;
 
-            if doc.is_null() {
-                return Err(format_err!("Failed to open PDF"));
-            }
+        let new_doc = self
+            .ctx
+            .new_pdf_document()
+            .ok_or_else(|| format_err!("Failed to create new PDF"))?;
 
-            let new_doc = fz_new_pdf_document(self.ctx);
-            if new_doc.is_null() {
-                fz_drop_document(self.ctx, doc);
-                return Err(format_err!("Failed to create new PDF"));
-            }
+        let total_pages = doc.pdf_page_count();
+        let total = pages.len();
 
-            let total_pages = fz_pdf_count_pages(self.ctx, doc);
-            let total = pages.len();
+        for (i, &page_num) in pages.iter().enumerate() {
+            self.report_progress(i + 1, total, "Extracting pages...");
 
-            for (i, &page_num) in pages.iter().enumerate() {
-                self.report_progress(i + 1, total, "Extracting pages...");
-
-                if page_num < total_pages as usize {
-                    let page = fz_load_page(self.ctx, doc, page_num as libc::c_int);
-                    if !page.is_null() {
-                        fz_pdf_insert_page(self.ctx, new_doc, page, -1);
-                        fz_drop_page(self.ctx, page);
-                    }
+            if page_num < total_pages {
+                if let Ok(page) = doc.load_page(page_num as i32) {
+                    new_doc.pdf_insert_page(&page, -1);
                 }
             }
-
-            let out_cstr = CString::new(output_path.to_string_lossy().as_bytes())?;
-            let opts = FzWriteOptions::default();
-            let format = CString::new("pdf")?;
-
-            self.report_progress(total, total, "Saving extracted pages...");
-            fz_save_document(self.ctx, new_doc, out_cstr.as_ptr(), &opts, format.as_ptr());
-            fz_drop_document(self.ctx, new_doc);
-            fz_drop_document(self.ctx, doc);
-
-            self.report_progress(total, total, "Operation complete!");
-            Ok(output_path.to_path_buf())
         }
+
+        let opts = mupdf::FzWriteOptions::default();
+        self.report_progress(total, total, "Saving extracted pages...");
+        new_doc.save(output_path, &opts, "pdf");
+
+        self.report_progress(total, total, "Operation complete!");
+        Ok(output_path.to_path_buf())
     }
 
     pub fn reorder_pages(
@@ -362,39 +317,28 @@ impl PdfManipulator {
 
         self.validate_operation(input_path)?;
 
-        // SAFETY: FFI calls to MuPDF for page reordering. Context pointer is valid.
-        // CString values are null-terminated. Document is opened and dropped within this scope.
-        unsafe {
-            let path_cstr = CString::new(input_path.to_string_lossy().as_bytes())?;
-            let doc = mp_open_document(self.ctx, path_cstr.as_ptr());
+        let doc = self
+            .ctx
+            .open_document(input_path)
+            .ok_or_else(|| format_err!("Failed to open PDF"))?;
 
-            if doc.is_null() {
-                return Err(format_err!("Failed to open PDF"));
-            }
-
-            if fz_pdf_can_move_pages(self.ctx, doc) == 0 {
-                fz_drop_document(self.ctx, doc);
-                return Err(format_err!("This PDF doesn't support page moving"));
-            }
-
-            let total = order.len();
-
-            for (i, &(src, dst)) in order.iter().enumerate() {
-                self.report_progress(i + 1, total, "Reordering pages...");
-                fz_pdf_move_page(self.ctx, doc, src as libc::c_int, dst as libc::c_int);
-            }
-
-            let out_cstr = CString::new(output_path.to_string_lossy().as_bytes())?;
-            let opts = FzWriteOptions::default();
-            let format = CString::new("pdf")?;
-
-            self.report_progress(total, total, "Saving PDF...");
-            fz_save_document(self.ctx, doc, out_cstr.as_ptr(), &opts, format.as_ptr());
-            fz_drop_document(self.ctx, doc);
-
-            self.report_progress(total, total, "Operation complete!");
-            Ok(output_path.to_path_buf())
+        if !doc.pdf_can_move_pages() {
+            return Err(format_err!("This PDF doesn't support page moving"));
         }
+
+        let total = order.len();
+
+        for (i, &(src, dst)) in order.iter().enumerate() {
+            self.report_progress(i + 1, total, "Reordering pages...");
+            doc.pdf_move_page(src, dst);
+        }
+
+        let opts = mupdf::FzWriteOptions::default();
+        self.report_progress(total, total, "Saving PDF...");
+        doc.save(output_path, &opts, "pdf");
+
+        self.report_progress(total, total, "Operation complete!");
+        Ok(output_path.to_path_buf())
     }
 
     pub fn merge_pdfs(&mut self, inputs: &[&Path], output_path: &Path) -> Result<PathBuf, Error> {
@@ -425,60 +369,39 @@ impl PdfManipulator {
             );
         }
 
-        // SAFETY: FFI calls to MuPDF for merging PDFs. Context pointer is valid.
-        // CString values are null-terminated. Documents are opened and dropped within this scope.
-        unsafe {
-            let new_doc = fz_new_pdf_document(self.ctx);
-            if new_doc.is_null() {
-                return Err(format_err!("Failed to create new PDF"));
-            }
+        let new_doc = self
+            .ctx
+            .new_pdf_document()
+            .ok_or_else(|| format_err!("Failed to create new PDF"))?;
 
-            let total_inputs = inputs.len();
+        let total_inputs = inputs.len();
 
-            for (file_idx, input_path) in inputs.iter().enumerate() {
-                self.report_progress(
-                    file_idx + 1,
-                    total_inputs,
-                    &format!("Processing file {}/{}...", file_idx + 1, total_inputs),
-                );
+        for (file_idx, input_path) in inputs.iter().enumerate() {
+            self.report_progress(
+                file_idx + 1,
+                total_inputs,
+                &format!("Processing file {}/{}...", file_idx + 1, total_inputs),
+            );
 
-                let path_cstr = CString::new(input_path.to_string_lossy().as_bytes())?;
-                let doc = mp_open_document(self.ctx, path_cstr.as_ptr());
-
-                if doc.is_null() {
-                    continue;
-                }
-
-                let file_pages = fz_pdf_count_pages(self.ctx, doc);
+            if let Some(doc) = self.ctx.open_document(input_path) {
+                let file_pages = doc.pdf_page_count();
 
                 for page_idx in 0..file_pages {
-                    self.report_progress(
-                        page_idx as usize + 1,
-                        file_pages as usize,
-                        "Adding pages...",
-                    );
+                    self.report_progress(page_idx + 1, file_pages, "Adding pages...");
 
-                    let page = fz_load_page(self.ctx, doc, page_idx);
-                    if !page.is_null() {
-                        fz_pdf_insert_page(self.ctx, new_doc, page, -1);
-                        fz_drop_page(self.ctx, page);
+                    if let Ok(page) = doc.load_page(page_idx as i32) {
+                        new_doc.pdf_insert_page(&page, -1);
                     }
                 }
-
-                fz_drop_document(self.ctx, doc);
             }
-
-            let out_cstr = CString::new(output_path.to_string_lossy().as_bytes())?;
-            let opts = FzWriteOptions::default();
-            let format = CString::new("pdf")?;
-
-            self.report_progress(total_inputs, total_inputs, "Saving merged PDF...");
-            fz_save_document(self.ctx, new_doc, out_cstr.as_ptr(), &opts, format.as_ptr());
-            fz_drop_document(self.ctx, new_doc);
-
-            self.report_progress(total_inputs, total_inputs, "Merge complete!");
-            Ok(output_path.to_path_buf())
         }
+
+        let opts = mupdf::FzWriteOptions::default();
+        self.report_progress(total_inputs, total_inputs, "Saving merged PDF...");
+        new_doc.save(output_path, &opts, "pdf");
+
+        self.report_progress(total_inputs, total_inputs, "Merge complete!");
+        Ok(output_path.to_path_buf())
     }
 
     pub fn cleanup_temp_files(&self, dir: &Path) -> Result<u64, Error> {
@@ -512,8 +435,7 @@ pub struct RedactionRegion {
 }
 
 pub struct RedactionEditor {
-    ctx: *mut FzContext,
-    doc: *mut FzDocument,
+    doc: mupdf::Document,
     file_path: PathBuf,
     regions: Vec<RedactionRegion>,
     current_page: usize,
@@ -523,32 +445,22 @@ pub struct RedactionEditor {
 
 impl RedactionEditor {
     pub fn new(path: &Path) -> Result<RedactionEditor, Error> {
-        let ctx =
-            new_mupdf_context().ok_or_else(|| format_err!("Failed to create MuPDF context"))?;
+        let ctx = mupdf::MuPdfContext::new()?;
 
-        // SAFETY: FFI calls to MuPDF to open document and count pages. Context is newly created and valid.
-        // CString is null-terminated. Document pointer is valid for the lifetime of this struct.
-        unsafe {
-            let path_cstr = CString::new(path.to_string_lossy().as_bytes())?;
-            let doc = mp_open_document(ctx, path_cstr.as_ptr());
+        let doc = ctx
+            .open_document(path)
+            .ok_or_else(|| format_err!("Failed to open PDF: {}", path.display()))?;
 
-            if doc.is_null() {
-                fz_drop_context(ctx);
-                return Err(format_err!("Failed to open PDF: {}", path.display()));
-            }
+        let total_pages = doc.page_count() as usize;
 
-            let total_pages = mp_count_pages(ctx, doc) as usize;
-
-            Ok(RedactionEditor {
-                ctx,
-                doc,
-                file_path: path.to_path_buf(),
-                regions: Vec::new(),
-                current_page: 0,
-                total_pages,
-                modified: false,
-            })
-        }
+        Ok(RedactionEditor {
+            doc,
+            file_path: path.to_path_buf(),
+            regions: Vec::new(),
+            current_page: 0,
+            total_pages,
+            modified: false,
+        })
     }
 
     pub fn page_count(&self) -> usize {
@@ -592,46 +504,31 @@ impl RedactionEditor {
 
         self.check_memory_for_redaction(&self.file_path)?;
 
-        // SAFETY: FFI calls to MuPDF to apply redactions and save document. Context and document pointers are valid.
-        // CString values are null-terminated. Document has been opened in RedactionEditor::new.
-        unsafe {
-            let page = fz_load_page(self.ctx, self.doc, self.current_page as libc::c_int);
-            if page.is_null() {
-                return Err(format_err!("Failed to load page for redaction"));
-            }
-            fz_apply_redactions(self.ctx, page, 0);
-            fz_drop_page(self.ctx, page);
+        let page = self
+            .doc
+            .load_page(self.current_page as i32)
+            .map_err(|_| format_err!("Failed to load page for redaction"))?;
 
-            let out_cstr = CString::new(output_path.to_string_lossy().as_bytes())?;
-            let opts = FzWriteOptions::default();
-            let format = CString::new("pdf")?;
-            fz_save_document(
-                self.ctx,
-                self.doc,
-                out_cstr.as_ptr(),
-                &opts,
-                format.as_ptr(),
-            );
+        page.apply_redactions(0);
 
-            self.modified = false;
-            self.regions.clear();
-            Ok(output_path.to_path_buf())
-        }
+        let opts = mupdf::FzWriteOptions::default();
+        self.doc.save(output_path, &opts, "pdf");
+
+        self.modified = false;
+        self.regions.clear();
+        Ok(output_path.to_path_buf())
     }
 
     pub fn remove_redactions(&mut self) -> Result<(), Error> {
-        // SAFETY: FFI call to MuPDF to remove redactions. Context and document pointers are valid.
-        unsafe {
-            let page = fz_load_page(self.ctx, self.doc, self.current_page as libc::c_int);
-            if page.is_null() {
-                return Err(format_err!("Failed to load page"));
-            }
-            fz_remove_redactions(self.ctx, page);
-            fz_drop_page(self.ctx, page);
-            self.regions.clear();
-            self.modified = false;
-            Ok(())
-        }
+        let page = self
+            .doc
+            .load_page(self.current_page as i32)
+            .map_err(|_| format_err!("Failed to load page"))?;
+
+        page.remove_redactions();
+        self.regions.clear();
+        self.modified = false;
+        Ok(())
     }
 
     fn check_memory_for_redaction(&self, file_path: &Path) -> Result<(), Error> {
@@ -673,31 +570,6 @@ impl RedactionEditor {
     }
 }
 
-impl Drop for RedactionEditor {
-    fn drop(&mut self) {
-        // SAFETY: Cleaning up MuPDF resources. Pointers are checked for null before dropping.
-        unsafe {
-            if !self.doc.is_null() {
-                fz_drop_document(self.ctx, self.doc);
-            }
-            if !self.ctx.is_null() {
-                fz_drop_context(self.ctx);
-            }
-        }
-    }
-}
-
-impl Drop for PdfManipulator {
-    fn drop(&mut self) {
-        // SAFETY: Cleaning up MuPDF context. Pointer is checked for null before dropping.
-        unsafe {
-            if !self.ctx.is_null() {
-                fz_drop_context(self.ctx);
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct ExtractedImage {
     pub page: usize,
@@ -714,37 +586,26 @@ pub struct ExtractedFont {
 }
 
 pub struct ResourceExtractor {
-    ctx: *mut FzContext,
-    doc: *mut FzDocument,
+    doc: mupdf::Document,
     file_path: PathBuf,
     total_pages: usize,
 }
 
 impl ResourceExtractor {
     pub fn new(path: &Path) -> Result<ResourceExtractor, Error> {
-        let ctx =
-            new_mupdf_context().ok_or_else(|| format_err!("Failed to create MuPDF context"))?;
+        let ctx = mupdf::MuPdfContext::new()?;
 
-        // SAFETY: FFI calls to MuPDF to open document and count pages. Context is newly created and valid.
-        // CString is null-terminated. Document pointer is valid for the lifetime of this struct.
-        unsafe {
-            let path_cstr = CString::new(path.to_string_lossy().as_bytes())?;
-            let doc = mp_open_document(ctx, path_cstr.as_ptr());
+        let doc = ctx
+            .open_document(path)
+            .ok_or_else(|| format_err!("Failed to open PDF: {}", path.display()))?;
 
-            if doc.is_null() {
-                fz_drop_context(ctx);
-                return Err(format_err!("Failed to open PDF: {}", path.display()));
-            }
+        let total_pages = doc.page_count() as usize;
 
-            let total_pages = mp_count_pages(ctx, doc) as usize;
-
-            Ok(ResourceExtractor {
-                ctx,
-                doc,
-                file_path: path.to_path_buf(),
-                total_pages,
-            })
-        }
+        Ok(ResourceExtractor {
+            doc,
+            file_path: path.to_path_buf(),
+            total_pages,
+        })
     }
 
     pub fn page_count(&self) -> usize {
@@ -767,35 +628,26 @@ impl ResourceExtractor {
 
         let mut images = Vec::new();
 
-        // SAFETY: FFI calls to MuPDF to load page and extract images. Context, document, and page pointers are valid.
-        // Images and pages are properly dropped within this scope.
-        unsafe {
-            let page = fz_load_page(self.ctx, self.doc, page_num as i32);
-            if page.is_null() {
-                return Err(format_err!("Failed to load page {}", page_num + 1));
+        let page = self
+            .doc
+            .load_page(page_num as i32)
+            .map_err(|_| format_err!("Failed to load page {}", page_num + 1))?;
+
+        let image_count = page.count_images();
+
+        for i in 0..image_count {
+            if let Some(image) = page.load_image(i) {
+                let width = image.width() as i32;
+                let height = image.height() as i32;
+
+                images.push(ExtractedImage {
+                    page: page_num,
+                    index: i,
+                    width,
+                    height,
+                    data: Vec::new(),
+                });
             }
-
-            let image_count = fz_count_page_images(self.ctx, page);
-
-            for i in 0..image_count {
-                let image = fz_load_page_image(self.ctx, page, i);
-                if !image.is_null() {
-                    let width = fz_image_width(self.ctx, image);
-                    let height = fz_image_height(self.ctx, image);
-
-                    images.push(ExtractedImage {
-                        page: page_num,
-                        index: i as usize,
-                        width,
-                        height,
-                        data: Vec::new(),
-                    });
-
-                    fz_drop_image(self.ctx, image);
-                }
-            }
-
-            fz_drop_page(self.ctx, page);
         }
 
         Ok(images)
@@ -826,18 +678,12 @@ impl ResourceExtractor {
             return Err(format_err!("Page {} does not exist", page_num + 1));
         }
 
-        // SAFETY: FFI calls to MuPDF to load page and count fonts. Context and document pointers are valid.
-        // Page is properly dropped after counting.
-        unsafe {
-            let page = fz_load_page(self.ctx, self.doc, page_num as i32);
-            if page.is_null() {
-                return Err(format_err!("Failed to load page {}", page_num + 1));
-            }
+        let page = self
+            .doc
+            .load_page(page_num as i32)
+            .map_err(|_| format_err!("Failed to load page {}", page_num + 1))?;
 
-            let count = fz_count_page_fonts(self.ctx, page) as usize;
-            fz_drop_page(self.ctx, page);
-            Ok(count)
-        }
+        Ok(page.count_fonts())
     }
 
     pub fn extract_text_from_page(&self, page_num: usize) -> Result<String, Error> {
@@ -884,58 +730,33 @@ impl ResourceExtractor {
     }
 
     pub fn pdf_a_version(&self) -> String {
-        // SAFETY: FFI call to MuPDF to get PDF/A output intent. Context and document pointers are valid.
-        // Result pointer is checked for null before dereferencing.
-        unsafe {
-            let output_id = fz_pdf_output_intent(self.ctx, self.doc);
-            if !output_id.is_null() {
-                let cstr = std::ffi::CStr::from_ptr(output_id);
-                let id = cstr.to_string_lossy().to_string();
-                if id.contains("PDF/A") {
-                    return id;
-                }
-            }
-        }
-        String::new()
+        self.doc.pdf_output_intent().unwrap_or_default()
     }
 
     pub fn read_annotations(&self) -> Result<Vec<PdfAnnotation>, Error> {
         let mut annotations = Vec::new();
 
         for page_num in 0..self.total_pages {
-            // SAFETY: FFI calls to MuPDF to iterate annotations. Context, document, and page pointers are valid.
-            // Annotation and page pointers are valid during iteration and properly cleaned up.
-            unsafe {
-                let page = fz_load_page(self.ctx, self.doc, page_num as i32);
-                if page.is_null() {
-                    continue;
+            if let Ok(page) = self.doc.load_page(page_num as i32) {
+                if let Some(mut annot) = page.first_annot() {
+                    loop {
+                        let contents = annot.contents();
+                        let rect = annot.rect();
+
+                        annotations.push(PdfAnnotation {
+                            page: page_num,
+                            annot_type: "Unknown".to_string(),
+                            contents,
+                            rect: Some((rect.x0, rect.y0, rect.x1, rect.y1)),
+                            color: None,
+                        });
+
+                        match annot.next() {
+                            Some(next) => annot = next,
+                            None => break,
+                        }
+                    }
                 }
-
-                let mut annot = fz_first_annot(self.ctx, page);
-                while !annot.is_null() {
-                    let contents_cstr = fz_annot_contents(self.ctx, annot);
-                    let contents = if !contents_cstr.is_null() {
-                        std::ffi::CStr::from_ptr(contents_cstr)
-                            .to_string_lossy()
-                            .to_string()
-                    } else {
-                        String::new()
-                    };
-
-                    let rect = fz_annot_rect(self.ctx, annot);
-
-                    annotations.push(PdfAnnotation {
-                        page: page_num,
-                        annot_type: "Unknown".to_string(),
-                        contents,
-                        rect: Some((rect.x0, rect.y0, rect.x1, rect.y1)),
-                        color: None,
-                    });
-
-                    annot = fz_next_annot(self.ctx, annot);
-                }
-
-                fz_drop_page(self.ctx, page);
             }
         }
 
@@ -966,20 +787,6 @@ impl Default for ResourceSummary {
     }
 }
 
-impl Drop for ResourceExtractor {
-    fn drop(&mut self) {
-        // SAFETY: Cleaning up MuPDF resources. Pointers are checked for null before dropping.
-        unsafe {
-            if !self.doc.is_null() {
-                fz_drop_document(self.ctx, self.doc);
-            }
-            if !self.ctx.is_null() {
-                fz_drop_context(self.ctx);
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct PdfAnnotation {
     pub page: usize,
@@ -990,50 +797,32 @@ pub struct PdfAnnotation {
 }
 
 pub struct PdfAnnotationExporter {
-    ctx: *mut FzContext,
-    source_doc: *mut FzDocument,
-    output_doc: *mut FzDocument,
+    source_doc: mupdf::Document,
+    output_doc: mupdf::Document,
     file_path: PathBuf,
     total_pages: usize,
 }
 
 impl PdfAnnotationExporter {
     pub fn new(source_path: &Path, output_path: &Path) -> Result<PdfAnnotationExporter, Error> {
-        let ctx =
-            new_mupdf_context().ok_or_else(|| format_err!("Failed to create MuPDF context"))?;
+        let ctx = mupdf::MuPdfContext::new()?;
 
-        // SAFETY: FFI calls to MuPDF to open source document and create output document.
-        // Context is newly created and valid. CString values are null-terminated.
-        unsafe {
-            let source_cstr = CString::new(source_path.to_string_lossy().as_bytes())?;
-            let source_doc = mp_open_document(ctx, source_cstr.as_ptr());
+        let source_doc = ctx
+            .open_document(source_path)
+            .ok_or_else(|| format_err!("Failed to open source PDF: {}", source_path.display()))?;
 
-            if source_doc.is_null() {
-                fz_drop_context(ctx);
-                return Err(format_err!(
-                    "Failed to open source PDF: {}",
-                    source_path.display()
-                ));
-            }
+        let total_pages = source_doc.page_count() as usize;
 
-            let total_pages = mp_count_pages(ctx, source_doc) as usize;
+        let output_doc = ctx
+            .new_pdf_document()
+            .ok_or_else(|| format_err!("Failed to create output PDF"))?;
 
-            let _output_cstr = CString::new(output_path.to_string_lossy().as_bytes())?;
-            let output_doc = fz_new_pdf_document(ctx);
-            if output_doc.is_null() {
-                fz_drop_document(ctx, source_doc);
-                fz_drop_context(ctx);
-                return Err(format_err!("Failed to create output PDF"));
-            }
-
-            Ok(PdfAnnotationExporter {
-                ctx,
-                source_doc,
-                output_doc,
-                file_path: output_path.to_path_buf(),
-                total_pages,
-            })
-        }
+        Ok(PdfAnnotationExporter {
+            source_doc,
+            output_doc,
+            file_path: output_path.to_path_buf(),
+            total_pages,
+        })
     }
 
     pub fn page_count(&self) -> usize {
@@ -1045,71 +834,32 @@ impl PdfAnnotationExporter {
             return Err(format_err!("Page {} does not exist", annot.page + 1));
         }
 
-        // SAFETY: FFI calls to MuPDF to create and configure annotations. Context, document, and page pointers are valid.
-        // CString values are null-terminated. Annotation and page are properly dropped after use.
-        unsafe {
-            let page = fz_load_page(self.ctx, self.source_doc, annot.page as i32);
-            if page.is_null() {
-                return Err(format_err!("Failed to load page {}", annot.page + 1));
-            }
+        let page = self
+            .source_doc
+            .load_page(annot.page as i32)
+            .map_err(|_| format_err!("Failed to load page {}", annot.page + 1))?;
 
-            let annot_type_cstr = CString::new(annot.annot_type.as_str())?;
-            let pdf_annot = fz_create_annot(self.ctx, page, annot_type_cstr.as_ptr());
-
-            if !pdf_annot.is_null() {
+        if mupdf::create_annot(self.source_doc.ctx(), page.as_ptr(), &annot.annot_type).is_some() {
+            let pdf_annot =
+                mupdf::create_annot(self.source_doc.ctx(), page.as_ptr(), &annot.annot_type);
+            if let Some(pdf_annot) = pdf_annot {
                 if !annot.contents.is_empty() {
-                    let contents_cstr = CString::new(annot.contents.as_str())?;
-                    fz_set_annot_contents(self.ctx, pdf_annot, contents_cstr.as_ptr());
+                    pdf_annot.set_contents(&annot.contents);
                 }
 
                 if let Some((x0, y0, x1, y1)) = annot.rect {
-                    let rect = FzRect { x0, y0, x1, y1 };
-                    fz_set_annot_rect(self.ctx, pdf_annot, rect);
+                    pdf_annot.set_rect(mupdf::FzRect { x0, y0, x1, y1 });
                 }
-
-                fz_drop_annot(self.ctx, pdf_annot);
             }
-
-            fz_drop_page(self.ctx, page);
         }
 
         Ok(())
     }
 
     pub fn save(&self) -> Result<PathBuf, Error> {
-        // SAFETY: FFI call to MuPDF to save document. Context and output document pointers are valid.
-        // CString values are null-terminated.
-        unsafe {
-            let out_cstr = CString::new(self.file_path.to_string_lossy().as_bytes())?;
-            let opts = FzWriteOptions::default();
-            let format = CString::new("pdf")?;
+        let opts = mupdf::FzWriteOptions::default();
+        self.output_doc.save(&self.file_path, &opts, "pdf");
 
-            fz_save_document(
-                self.ctx,
-                self.output_doc,
-                out_cstr.as_ptr(),
-                &opts,
-                format.as_ptr(),
-            );
-
-            Ok(self.file_path.clone())
-        }
-    }
-}
-
-impl Drop for PdfAnnotationExporter {
-    fn drop(&mut self) {
-        // SAFETY: Cleaning up MuPDF resources. Pointers are checked for null before dropping.
-        unsafe {
-            if !self.output_doc.is_null() {
-                fz_drop_document(self.ctx, self.output_doc);
-            }
-            if !self.source_doc.is_null() {
-                fz_drop_document(self.ctx, self.source_doc);
-            }
-            if !self.ctx.is_null() {
-                fz_drop_context(self.ctx);
-            }
-        }
+        Ok(self.file_path.clone())
     }
 }

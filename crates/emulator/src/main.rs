@@ -229,24 +229,6 @@ impl Framebuffer for FBCanvas {
         Ok((width, height))
     }
 
-    fn set_monochrome(&mut self, _enable: bool) {}
-
-    fn set_dithered(&mut self, _enable: bool) {}
-
-    fn set_inverted(&mut self, _enable: bool) {}
-
-    fn monochrome(&self) -> bool {
-        false
-    }
-
-    fn dithered(&self) -> bool {
-        false
-    }
-
-    fn inverted(&self) -> bool {
-        false
-    }
-
     fn width(&self) -> u32 {
         self.0.window().size().0
     }
@@ -577,6 +559,31 @@ fn main() -> Result<(), Error> {
                             &mut rq,
                             &mut context,
                         )),
+                        AppCmd::CoverEditor
+                        | AppCmd::OpenCoverEditor(_)
+                        | AppCmd::Statistics
+                        | AppCmd::PdfManipulator => {
+                            let entries = vec![EntryKind::Command(
+                                "Not implemented".to_string(),
+                                EntryId::Back,
+                            )];
+                            let mut next_view: Box<dyn View> = Box::new(Menu::new(
+                                context.fb.rect(),
+                                ViewId::MainMenu,
+                                MenuKind::Contextual,
+                                entries,
+                                &mut context,
+                            ));
+                            transfer_notifications(
+                                view.as_mut(),
+                                next_view.as_mut(),
+                                &mut rq,
+                                &mut context,
+                            );
+                            history.push(view as Box<dyn View>);
+                            view = next_view;
+                            continue;
+                        }
                     };
                     transfer_notifications(
                         view.as_mut(),

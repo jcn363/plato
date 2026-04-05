@@ -32,10 +32,20 @@ impl LightLevels {
     }
 }
 
+/// Frontlight control trait for Kobo e-readers.
+///
+/// Not all devices support all features. Warmth control is only available
+/// on devices with natural frontlight (ComfortLight Pro).
 pub trait Frontlight {
-    // value is a percentage.
+    /// Sets the frontlight intensity as a percentage (0-100).
     fn set_intensity(&mut self, value: f32);
+
+    /// Sets the frontlight color warmth (0-100).
+    /// Only supported on devices with natural/comfort light.
+    /// On devices without warmth support, this is a no-op.
     fn set_warmth(&mut self, value: f32);
+
+    /// Returns current light levels.
     fn levels(&self) -> LightLevels;
 }
 

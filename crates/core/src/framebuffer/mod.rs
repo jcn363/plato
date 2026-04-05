@@ -35,17 +35,39 @@ pub trait Framebuffer {
     fn set_pixel(&mut self, x: u32, y: u32, color: Color);
     fn set_blended_pixel(&mut self, x: u32, y: u32, color: Color, alpha: f32);
     fn invert_region(&mut self, rect: &Rectangle);
-    fn shift_region(&mut self, rect: &Rectangle, drift: u8);
+
+    /// Shifts pixel values in a region by a drift value.
+    /// Used for annotation highlighting effect.
+    fn shift_region(&mut self, _rect: &Rectangle, _drift: u8) {}
+
     fn update(&mut self, rect: &Rectangle, mode: UpdateMode) -> Result<u32, Error>;
     fn wait(&self, token: u32) -> Result<i32, Error>;
     fn save(&self, path: &str) -> Result<(), Error>;
     fn set_rotation(&mut self, n: i8) -> Result<(u32, u32), Error>;
-    fn set_monochrome(&mut self, enable: bool);
-    fn set_dithered(&mut self, enable: bool);
-    fn set_inverted(&mut self, enable: bool);
-    fn monochrome(&self) -> bool;
-    fn dithered(&self) -> bool;
-    fn inverted(&self) -> bool;
+
+    /// Enables monochrome (grayscale) display mode.
+    /// Not supported on Kobo e-readers.
+    fn set_monochrome(&mut self, _enable: bool) {}
+
+    /// Enables dithering for smoother gradients.
+    /// Not supported on Kobo e-readers.
+    fn set_dithered(&mut self, _enable: bool) {}
+
+    /// Inverts display colors.
+    /// Not supported on Kobo e-readers.
+    fn set_inverted(&mut self, _enable: bool) {}
+
+    fn monochrome(&self) -> bool {
+        false
+    }
+
+    fn dithered(&self) -> bool {
+        false
+    }
+
+    fn inverted(&self) -> bool {
+        false
+    }
     fn width(&self) -> u32;
     fn height(&self) -> u32;
 

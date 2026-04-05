@@ -1,11 +1,9 @@
-use crate::document::mupdf_sys::*;
+use crate::document::mupdf::{self, Document as MuPdfDocument, MuPdfContext};
 use crate::framebuffer::Pixmap;
 use crate::{log_error, log_info, log_warn};
 use anyhow::{format_err, Error};
 use std::collections::{HashMap, VecDeque};
-use std::ffi::CString;
 use std::path::{Path, PathBuf};
-use std::ptr;
 use std::sync::{Mutex, RwLock};
 use std::time::{Duration, Instant};
 
@@ -33,8 +31,8 @@ pub struct CachedPage {
 }
 
 pub struct ProgressiveDocLoader {
-    ctx: *mut FzContext,
-    doc: *mut FzDocument,
+    ctx: MuPdfContext,
+    doc: MuPdfDocument,
     _path: PathBuf,
     total_pages: i32,
     current_page: i32,
@@ -48,23 +46,13 @@ pub struct ProgressiveDocLoader {
 
 impl ProgressiveDocLoader {
     pub fn new(path: &Path) -> Result<ProgressiveDocLoader, Error> {
-        let ctx =
-            new_mupdf_context().ok_or_else(|| format_err!("Failed to create MuPDF context"))?;
+        let ctx = MuPdfContext::new()
+            .map_err(|e| format_err!("Failed to create MuPDF context: {}", e))?;
 
-        let path_cstr = CString::new(path.to_string_lossy().as_bytes())?;
+        let doc = MuPdfDocument::open(&ctx, path)?;
 
-        // SAFETY: FFI call to MuPDF library. Context and CString pointers are valid.
-        let doc = unsafe { mp_open_document(ctx, path_cstr.as_ptr()) };
-        if doc.is_null() {
-            // SAFETY: FFI call to MuPDF library. Context pointer is valid.
-            unsafe { fz_drop_context(ctx) };
-            return Err(format_err!("Failed to open document: {}", path.display()));
-        }
-
-        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid.
-        let total_pages = unsafe { fz_pdf_count_pages(ctx, doc) };
-        // SAFETY: FFI call to MuPDF library. Context and document pointers are valid.
-        let is_linearized = unsafe { fz_is_document_linearized(ctx, doc) } != 0;
+        let total_pages = doc.page_count();
+        let is_linearized = false;
 
         let loader = ProgressiveDocLoader {
             ctx,
@@ -200,74 +188,55 @@ impl ProgressiveDocLoader {
         let size_bytes = (800 * 1200 * 1) as usize;
         self.ensure_cache_space(size_bytes);
 
-        // SAFETY: FFI call to MuPDF - page pointer will be checked for null before use
-        let page = unsafe { fz_load_page(self.ctx, self.doc, page_idx) };
+        let page = self.doc.load_page(page_idx)?;
 
-        unsafe {
-            if page.is_null() {
-                return Err(format_err!("Failed to load page {}", page_idx));
-            }
+        let matrix = mupdf::scale(800.0 / 600.0, 1200.0 / 800.0);
+        let colorspace = self.ctx.device_gray();
 
-            let matrix = fz_scale(800.0 / 600.0, 1200.0 / 800.0);
+        let pixmap = page.render_pixmap(matrix, colorspace, 0)?;
 
-            let dst = fz_new_pixmap(self.ctx, fz_device_gray(self.ctx), 800, 1200, 0);
+        let data_len = pixmap.data.len();
+        let pixmap = Pixmap {
+            width: 800,
+            height: 1200,
+            samples: 1,
+            data: pixmap.data,
+            update_flag: false,
+        };
 
-            fz_clear_pixmap(self.ctx, dst);
+        let page_info = PageInfo {
+            index: page_idx as usize,
+            width: 800,
+            height: 1200,
+            loaded: true,
+            last_access: Instant::now(),
+        };
 
-            let dev = fz_new_draw_device(self.ctx, matrix, dst);
-            if !dev.is_null() {
-                fz_run_page(self.ctx, page, dev, fz_identity, ptr::null_mut());
-                fz_close_device(self.ctx, dev);
-                fz_drop_device(self.ctx, dev);
-            }
+        *self
+            .cache_size_bytes
+            .write()
+            .expect("cache_size_bytes lock poisoned") += data_len;
 
-            fz_drop_page(self.ctx, page);
-
-            let samples = (*dst).w * (*dst).h;
-            let src_data = std::slice::from_raw_parts((*dst).samples, samples as usize);
-            let mut data = Vec::with_capacity(samples as usize);
-            data.extend_from_slice(src_data);
-            let data_len = data.len();
-
-            fz_drop_pixmap(self.ctx, dst);
-
-            let mut pixmap = Pixmap::empty(800, 1200, 1);
-            pixmap.data = data;
-
-            let page_info = PageInfo {
-                index: page_idx as usize,
-                width: 800,
-                height: 1200,
-                loaded: true,
-                last_access: Instant::now(),
-            };
-
-            *self
-                .cache_size_bytes
-                .write()
-                .expect("cache_size_bytes lock poisoned") += data_len;
-
-            {
-                let mut cache = self.page_cache.write().expect("page_cache lock poisoned");
-                cache.insert(
-                    page_idx,
-                    CachedPage {
-                        info: page_info,
-                        pixmap: Some(pixmap.clone()),
-                    },
-                );
-            }
-
-            {
-                let mut access = self
-                    .access_order
-                    .write()
-                    .expect("access_order lock poisoned");
-                access.push_back(page_idx);
-            }
-
-            Ok(pixmap)
+        {
+            let mut cache = self.page_cache.write().expect("page_cache lock poisoned");
+            cache.insert(
+                page_idx,
+                CachedPage {
+                    info: page_info,
+                    pixmap: Some(pixmap.clone()),
+                },
+            );
         }
+
+        {
+            let mut access = self
+                .access_order
+                .write()
+                .expect("access_order lock poisoned");
+            access.push_back(page_idx);
+        }
+
+        Ok(pixmap)
     }
 
     pub fn preload_page(&self, page_idx: i32) {
@@ -319,20 +288,6 @@ impl ProgressiveDocLoader {
             Duration::from_millis(distance as u64 * 50)
         } else {
             Duration::from_millis(page_idx as u64 * 100)
-        }
-    }
-}
-
-impl Drop for ProgressiveDocLoader {
-    fn drop(&mut self) {
-        // SAFETY: FFI calls to MuPDF library. Pointers are null-checked before use.
-        unsafe {
-            if !self.doc.is_null() {
-                fz_drop_document(self.ctx, self.doc);
-            }
-            if !self.ctx.is_null() {
-                fz_drop_context(self.ctx);
-            }
         }
     }
 }

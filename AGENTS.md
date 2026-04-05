@@ -336,6 +336,7 @@ When facing multiple compilation errors, resolve in this order:
 - **Root cause analysis** — When encountering a bug or issue, identify and fix the root cause; do not apply surface-level workarounds
 - **Eliminate dead code** — Remove unused functions, imports, fields, and modules immediately; never leave dead code for later
 - **No backward compatibility** — Do not add code to support old APIs, deprecated patterns, or legacy behavior unless explicitly required
+- **Project containment** — All created or used files and directories must be located inside the project root directory (`/home/user/Desktop/plato`); never create or access files outside the project workspace
 
 ### Context Management
 
@@ -355,12 +356,32 @@ Each crate should have a single responsibility, explicit documentation in its `C
 - Views implement the `View` trait and handle `Event`s; rendering goes through `RenderQueue`
 - Device-specific code uses `CURRENT_DEVICE` lazy static with environment variables `PRODUCT` and `MODEL_NUMBER`
 - MuPDF bindings live in `crates/core/src/document/mupdf_sys.rs` with a C wrapper in `mupdf_wrapper/`
+- Safe MuPDF wrappers are in `crates/core/src/document/mupdf.rs` — use these instead of direct FFI calls
+- Safe FreeType wrappers are in `crates/core/src/font/freetype.rs` — use these instead of direct FFI calls
+- Safe HarfBuzz wrappers are in `crates/core/src/font/harfbuzz.rs` — use these instead of direct FFI calls
+- **NEW code must use safe wrappers** — all user code should import from `crate::document::mupdf`, `crate::font::freetype`, `crate::font::harfbuzz` instead of `mupdf_sys`, `freetype_sys`, `harfbuzz_sys`
+- Legacy code in `font/mod.rs` still uses direct FFI — all FFI calls are covered by safe wrappers, migration requires architectural restructuring (replacing `FontLibrary`/`FontOpener`/`Font` with composed safe wrapper types)
+- `pdf.rs` and `pdf_manipulator.rs` have been migrated to use safe wrappers
+- All safe wrappers include `#[inline]` for hot-path optimization and `Drop` implementations for RAII resource cleanup
+- `MuPdfContext` uses `Rc` internally for shared ownership across multiple documents
+- `Outline`, `Link`, `Annotation` wrappers return owned values from `next()`/`down()` with proper RAII cleanup
+- Text iteration uses `Iterator` trait: `TextPage::blocks()` → `TextBlockIter`, `TextBlock::lines()` → `TextLineIter`, `TextLine::chars()` → `TextCharIter`
+- `Face::face_ptr()` returns raw `*mut FtFace` for HarfBuzz integration
 - The pre-compiled `libs/libmupdf.so` is incomplete — it lacks many PDF manipulation, annotation, and redaction symbols
 - `mupdf_wrapper/mupdf_wrapper.c` provides 20+ custom FFI functions (e.g., `fz_pdf_count_pages`, `fz_save_document`, `fz_first_annot`, `fz_apply_redactions`) that bridge the gap
 - The wrapper is built as `libmupdf_wrapper.a` and linked via `crates/core/build.rs` for ARM/ARM64 targets
 - When adding new MuPDF FFI functions, implement them in `mupdf_wrapper.c` using the `WRAP` macro or explicit `fz_try`/`fz_catch` blocks
 - Rebuild the wrapper after modifying `mupdf_wrapper.c`: `cd mupdf_wrapper && TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh`
 - Use `new_mupdf_context()` from `mupdf_sys` to create MuPDF contexts (DRY helper for FFI init)
+- Use `MuPdfContext` from `mupdf.rs` for safe context management with RAII cleanup
+- Use `log_error!`, `log_warn!`, `log_info!` macros from `crate::helpers` instead of raw `eprintln!`
+- The pre-compiled `libs/libmupdf.so` is incomplete — it lacks many PDF manipulation, annotation, and redaction symbols
+- `mupdf_wrapper/mupdf_wrapper.c` provides 20+ custom FFI functions (e.g., `fz_pdf_count_pages`, `fz_save_document`, `fz_first_annot`, `fz_apply_redactions`) that bridge the gap
+- The wrapper is built as `libmupdf_wrapper.a` and linked via `crates/core/build.rs` for ARM/ARM64 targets
+- When adding new MuPDF FFI functions, implement them in `mupdf_wrapper.c` using the `WRAP` macro or explicit `fz_try`/`fz_catch` blocks
+- Rebuild the wrapper after modifying `mupdf_wrapper.c`: `cd mupdf_wrapper && TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh`
+- Use `new_mupdf_context()` from `mupdf_sys` to create MuPDF contexts (DRY helper for FFI init)
+- Use `MuPdfContext` from `mupdf.rs` for safe context management with RAII cleanup
 - Use `log_error!`, `log_warn!`, `log_info!` macros from `crate::helpers` instead of raw `eprintln!`
 
 ## Kobo Elipsa Specifications

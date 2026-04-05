@@ -61,8 +61,20 @@ pub enum FzGridInfo {}
 pub enum FzPoolArray {}
 pub enum FzImage {}
 pub enum FzAnnot {}
-pub enum FzQuad {}
-pub enum FzPoint {}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FzQuad {
+    pub ul: FzPoint,
+    pub ur: FzPoint,
+    pub lr: FzPoint,
+    pub ll: FzPoint,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct FzPoint {
+    pub x: libc::c_float,
+    pub y: libc::c_float,
+}
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct FzTextOptions {
