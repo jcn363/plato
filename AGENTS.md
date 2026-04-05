@@ -375,14 +375,24 @@ Each crate should have a single responsibility, explicit documentation in its `C
 - Use `new_mupdf_context()` from `mupdf_sys` to create MuPDF contexts (DRY helper for FFI init)
 - Use `MuPdfContext` from `mupdf.rs` for safe context management with RAII cleanup
 - Use `log_error!`, `log_warn!`, `log_info!` macros from `crate::helpers` instead of raw `eprintln!`
-- The pre-compiled `libs/libmupdf.so` is incomplete — it lacks many PDF manipulation, annotation, and redaction symbols
-- `mupdf_wrapper/mupdf_wrapper.c` provides 20+ custom FFI functions (e.g., `fz_pdf_count_pages`, `fz_save_document`, `fz_first_annot`, `fz_apply_redactions`) that bridge the gap
-- The wrapper is built as `libmupdf_wrapper.a` and linked via `crates/core/build.rs` for ARM/ARM64 targets
-- When adding new MuPDF FFI functions, implement them in `mupdf_wrapper.c` using the `WRAP` macro or explicit `fz_try`/`fz_catch` blocks
-- Rebuild the wrapper after modifying `mupdf_wrapper.c`: `cd mupdf_wrapper && TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh`
-- Use `new_mupdf_context()` from `mupdf_sys` to create MuPDF contexts (DRY helper for FFI init)
-- Use `MuPdfContext` from `mupdf.rs` for safe context management with RAII cleanup
-- Use `log_error!`, `log_warn!`, `log_info!` macros from `crate::helpers` instead of raw `eprintln!`
+
+## Stub and Hardware Limitation Documentation
+
+**Mandatory rule:** Document all stub implementations and unsupported features.
+
+- When a trait method cannot be implemented (due to hardware/API limitations), add a default implementation with documentation
+- Document why the feature is unsupported (e.g., "Not supported on Kobo e-readers", "MuPDF API limitation")
+- Keep stub implementations in the trait definition (not in implementing structs) to avoid code duplication
+- Example:
+  ```rust
+  /// Enables monochrome (grayscale) display mode.
+  /// Not supported on Kobo e-readers.
+  fn set_monochrome(&mut self, _enable: bool) {}
+
+  /// Sets the font family for text rendering.
+  /// Not supported by PDF documents (MuPDF API limitation).
+  fn set_font_family(&mut self, _family_name: &str, _search_path: &str) {}
+  ```
 
 ## Kobo Elipsa Specifications
 
