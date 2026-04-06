@@ -44,7 +44,6 @@ use crate::view::filler::Filler;
 use crate::view::keyboard::Keyboard;
 use crate::view::menu::Menu;
 use crate::view::menu_entry::MenuEntry;
-use crate::view::named_input::NamedInput;
 use crate::view::notification::Notification;
 use crate::view::search_bar::SearchBar;
 use crate::view::top_bar::TopBar;
@@ -383,41 +382,7 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::EditNote) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let mut edit_note = NamedInput::new(
-                "Note".to_string(),
-                ViewId::EditNote,
-                ViewId::EditNoteInput,
-                32,
-                context,
-            );
-            if let Some(text) = text.as_ref() {
-                edit_note.set_text(text, &mut RenderQueue::new(), context);
-            }
-
-            rq.add(RenderData::new(
-                edit_note.id(),
-                *edit_note.rect(),
-                UpdateMode::Gui,
-            ));
-            hub.send(Event::Focus(Some(ViewId::EditNoteInput))).ok();
-
-            self.children.push(Box::new(edit_note) as Box<dyn View>);
-        }
+        super::reader_dialogs::toggle_edit_note(&mut self.children, text, enable, hub, rq, context);
     }
 
     fn toggle_name_page(
@@ -427,17 +392,9 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::NamePage) {
-            if let Some(true) = enable {
-                return;
-            }
+        super::reader_dialogs::toggle_name_page(&mut self.children, enable, hub, rq, context);
 
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-
+        if let Some(false) = enable {
             if self
                 .focus
                 .map(|focus_id| focus_id == ViewId::NamePageInput)
@@ -445,26 +402,6 @@ impl Reader {
             {
                 self.toggle_keyboard(false, None, hub, rq, context);
             }
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let name_page = NamedInput::new(
-                "Name page".to_string(),
-                ViewId::NamePage,
-                ViewId::NamePageInput,
-                4,
-                context,
-            );
-            rq.add(RenderData::new(
-                name_page.id(),
-                *name_page.rect(),
-                UpdateMode::Gui,
-            ));
-            hub.send(Event::Focus(Some(ViewId::NamePageInput))).ok();
-
-            self.children.push(Box::new(name_page) as Box<dyn View>);
         }
     }
 
@@ -476,23 +413,14 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let (text, input_id) = if id == ViewId::GoToPage {
-            ("Go to page", ViewId::GoToPageInput)
-        } else {
-            ("Go to results page", ViewId::GoToResultsPageInput)
-        };
+        super::reader_dialogs::toggle_go_to_page(&mut self.children, enable, id, hub, rq, context);
 
-        if let Some(index) = locate_by_id(self, id) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-
+        if let Some(false) = enable {
+            let input_id = if id == ViewId::GoToPage {
+                ViewId::GoToPageInput
+            } else {
+                ViewId::GoToResultsPageInput
+            };
             if self
                 .focus
                 .map(|focus_id| focus_id == input_id)
@@ -500,20 +428,6 @@ impl Reader {
             {
                 self.toggle_keyboard(false, None, hub, rq, context);
             }
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let go_to_page = NamedInput::new(text.to_string(), id, input_id, 4, context);
-            rq.add(RenderData::new(
-                go_to_page.id(),
-                *go_to_page.rect(),
-                UpdateMode::Gui,
-            ));
-            hub.send(Event::Focus(Some(input_id))).ok();
-
-            self.children.push(Box::new(go_to_page) as Box<dyn View>);
         }
     }
 

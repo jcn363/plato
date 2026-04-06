@@ -17,6 +17,7 @@
 //! - **reader_rendering**: Page rendering, animation, text extraction, display (WIP)
 //! - **reader_gestures**: Touch/gesture handling, input processing (WIP)
 //! - **reader_annotations**: Annotations, notes, highlighting, bookmarks (WIP)
+//! - **reader_dialogs**: Input dialogs and text entry interactions (WIP)
 //! - **reader_settings**: Settings menus and configuration (WIP)
 //! - **reader_search**: Search functionality and result management (WIP)
 
@@ -30,6 +31,7 @@ pub use reader::Reader;
 
 // Feature modules (WIP)
 mod reader_annotations;
+mod reader_dialogs;
 mod reader_gestures;
 mod reader_rendering;
 mod reader_search;
