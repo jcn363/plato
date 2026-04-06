@@ -9,7 +9,6 @@ use crate::document::{
     annotations_as_html, bookmarks_as_html, toc_as_html, BoundedText, Document, Location,
     SimpleTocEntry, TextLocation, TocEntry, BYTES_PER_PAGE,
 };
-use crate::font::family_names;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::frontlight::LightLevels;
@@ -832,56 +831,20 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::FontFamilyMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let mut families = family_names(&context.settings.reader.font_path)
-                .map_err(|e| log_error!("Can't get family names: {:#}.", e))
-                .unwrap_or_default();
-            let current_family = self
-                .info
-                .reader
-                .as_ref()
-                .and_then(|r| r.font_family.clone())
-                .unwrap_or_else(|| context.settings.reader.font_family.clone());
-            families.insert(DEFAULT_FONT_FAMILY.to_string());
-            let entries = families
-                .iter()
-                .map(|f| {
-                    EntryKind::RadioButton(
-                        f.clone(),
-                        EntryId::SetFontFamily(f.clone()),
-                        *f == current_family,
-                    )
-                })
-                .collect();
-            let font_family_menu = Menu::new(
-                rect,
-                ViewId::FontFamilyMenu,
-                MenuKind::DropDown,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                font_family_menu.id(),
-                *font_family_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(font_family_menu) as Box<dyn View>);
-        }
+        let current_family = self
+            .info
+            .reader
+            .as_ref()
+            .and_then(|r| r.font_family.clone())
+            .unwrap_or_else(|| context.settings.reader.font_family.clone());
+        super::reader_settings::toggle_font_family_menu(
+            &mut self.children,
+            current_family,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_font_size_menu(
@@ -891,58 +854,20 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::FontSizeMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let font_size = self
-                .info
-                .reader
-                .as_ref()
-                .and_then(|r| r.font_size)
-                .unwrap_or(context.settings.reader.font_size);
-            let min_font_size = context.settings.reader.font_size / 2.0;
-            let max_font_size = 3.0 * context.settings.reader.font_size / 2.0;
-            let entries = (0..=20)
-                .filter_map(|v| {
-                    let fs = font_size - 1.0 + v as f32 / 10.0;
-                    if fs >= min_font_size && fs <= max_font_size {
-                        Some(EntryKind::RadioButton(
-                            format!("{:.1}", fs),
-                            EntryId::SetFontSize(v),
-                            (fs - font_size).abs() < 0.05,
-                        ))
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-            let font_size_menu = Menu::new(
-                rect,
-                ViewId::FontSizeMenu,
-                MenuKind::Contextual,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                font_size_menu.id(),
-                *font_size_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(font_size_menu) as Box<dyn View>);
-        }
+        let current_size = self
+            .info
+            .reader
+            .as_ref()
+            .and_then(|r| r.font_size)
+            .unwrap_or(context.settings.reader.font_size);
+        super::reader_settings::toggle_font_size_menu(
+            &mut self.children,
+            current_size,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_text_align_menu(
@@ -952,58 +877,20 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::TextAlignMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let text_align = self
-                .info
-                .reader
-                .as_ref()
-                .and_then(|r| r.text_align)
-                .unwrap_or(context.settings.reader.text_align);
-            let choices = [
-                TextAlign::Justify,
-                TextAlign::Left,
-                TextAlign::Right,
-                TextAlign::Center,
-            ];
-            let entries = choices
-                .iter()
-                .map(|v| {
-                    EntryKind::RadioButton(
-                        v.to_string(),
-                        EntryId::SetTextAlign(*v),
-                        text_align == *v,
-                    )
-                })
-                .collect();
-            let text_align_menu = Menu::new(
-                rect,
-                ViewId::TextAlignMenu,
-                MenuKind::Contextual,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                text_align_menu.id(),
-                *text_align_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(text_align_menu) as Box<dyn View>);
-        }
+        let current_align = self
+            .info
+            .reader
+            .as_ref()
+            .and_then(|r| r.text_align)
+            .unwrap_or(context.settings.reader.text_align);
+        super::reader_settings::toggle_text_align_menu(
+            &mut self.children,
+            current_align,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_line_height_menu(
@@ -1013,52 +900,20 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::LineHeightMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let line_height = self
-                .info
-                .reader
-                .as_ref()
-                .and_then(|r| r.line_height)
-                .unwrap_or(context.settings.reader.line_height);
-            let entries = (0..=10)
-                .map(|x| {
-                    let lh = 1.0 + x as f32 / 10.0;
-                    EntryKind::RadioButton(
-                        format!("{:.1}", lh),
-                        EntryId::SetLineHeight(x),
-                        (lh - line_height).abs() < 0.05,
-                    )
-                })
-                .collect();
-            let line_height_menu = Menu::new(
-                rect,
-                ViewId::LineHeightMenu,
-                MenuKind::DropDown,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                line_height_menu.id(),
-                *line_height_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(line_height_menu) as Box<dyn View>);
-        }
+        let current_height = self
+            .info
+            .reader
+            .as_ref()
+            .and_then(|r| r.line_height)
+            .unwrap_or(context.settings.reader.line_height);
+        super::reader_settings::toggle_line_height_menu(
+            &mut self.children,
+            current_height,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_contrast_exponent_menu(
@@ -1068,46 +923,14 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::ContrastExponentMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let entries = (0..=8)
-                .map(|x| {
-                    let e = 1.0 + x as f32 / 2.0;
-                    EntryKind::RadioButton(
-                        format!("{:.1}", e),
-                        EntryId::SetContrastExponent(x),
-                        (e - self.contrast.exponent).abs() < f32::EPSILON,
-                    )
-                })
-                .collect();
-            let contrast_exponent_menu = Menu::new(
-                rect,
-                ViewId::ContrastExponentMenu,
-                MenuKind::DropDown,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                contrast_exponent_menu.id(),
-                *contrast_exponent_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(contrast_exponent_menu) as Box<dyn View>);
-        }
+        super::reader_settings::toggle_contrast_exponent_menu(
+            &mut self.children,
+            self.contrast.exponent,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_contrast_gray_menu(
@@ -1117,46 +940,14 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::ContrastGrayMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let entries = (1..=6)
-                .map(|x| {
-                    let g = ((1 << 8) - (1 << (8 - x))) as f32;
-                    EntryKind::RadioButton(
-                        format!("{:.1}", g),
-                        EntryId::SetContrastGray(x),
-                        (g - self.contrast.gray).abs() < f32::EPSILON,
-                    )
-                })
-                .collect();
-            let contrast_gray_menu = Menu::new(
-                rect,
-                ViewId::ContrastGrayMenu,
-                MenuKind::DropDown,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                contrast_gray_menu.id(),
-                *contrast_gray_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(contrast_gray_menu) as Box<dyn View>);
-        }
+        super::reader_settings::toggle_contrast_gray_menu(
+            &mut self.children,
+            self.contrast.gray,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_margin_width_menu(
