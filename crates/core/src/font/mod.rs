@@ -16,9 +16,9 @@ use crate::helpers::IsHidden;
 use crate::{log_error, log_warn};
 use anyhow::{format_err, Error};
 use bitflags::bitflags;
-use rustc_hash::FxHashMap;
 use globset::Glob;
 use lazy_static::lazy_static;
+use rustc_hash::FxHashMap;
 use std::collections::BTreeSet;
 use std::ffi::{CStr, CString};
 use std::os::unix::ffi::OsStrExt;
@@ -592,11 +592,8 @@ pub fn family_names<P: AsRef<Path>>(search_path: P) -> Result<BTreeSet<String>, 
         .min_depth(1)
         .into_iter()
         .filter_entry(|e| !e.is_hidden())
+        .filter_map(|e| e.ok())
     {
-        if entry.is_err() {
-            continue;
-        }
-        let entry = entry.expect("dir entry read failed");
         let path = entry.path();
         if !glob.is_match(path) {
             continue;
@@ -629,11 +626,8 @@ impl FontFamily {
             .min_depth(1)
             .into_iter()
             .filter_entry(|e| !e.is_hidden())
+            .filter_map(|e| e.ok())
         {
-            if entry.is_err() {
-                continue;
-            }
-            let entry = entry.expect("dir entry read failed");
             let path = entry.path();
             if !glob.is_match(path) {
                 continue;
@@ -654,7 +648,10 @@ impl FontFamily {
         }
 
         let regular_path = if styles.len() == 1 {
-            styles.values().next().expect("styles is empty")
+            styles
+                .values()
+                .next()
+                .ok_or_else(|| format_err!("styles is empty"))?
         } else {
             styles
                 .get("Regular")

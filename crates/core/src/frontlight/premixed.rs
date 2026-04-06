@@ -1,5 +1,6 @@
 use super::{Frontlight, LightLevels};
 use crate::device::CURRENT_DEVICE;
+use crate::log_warn;
 use anyhow::Error;
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -45,7 +46,9 @@ impl PremixedFrontlight {
 impl Frontlight for PremixedFrontlight {
     fn set_intensity(&mut self, intensity: f32) {
         let white = intensity.round() as i16;
-        write!(self.white, "{}", white).expect("write to sysfs failed");
+        if write!(self.white, "{}", white).is_err() {
+            log_warn!("failed to write intensity");
+        }
         self.intensity = intensity;
     }
 
@@ -54,7 +57,9 @@ impl Frontlight for PremixedFrontlight {
         if CURRENT_DEVICE.mark() != 8 {
             orange = 10 - orange;
         }
-        write!(self.orange, "{}", orange).expect("write to sysfs failed");
+        if write!(self.orange, "{}", orange).is_err() {
+            log_warn!("failed to write warmth");
+        }
         self.warmth = warmth;
     }
 

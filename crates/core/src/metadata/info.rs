@@ -233,9 +233,8 @@ impl Info {
         self.file
             .path
             .file_stem()
-            .expect("file_stem is missing")
-            .to_string_lossy()
-            .into_owned()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_else(|| String::new())
     }
 
     pub fn title(&self) -> String {
@@ -254,17 +253,10 @@ impl Info {
         }
 
         if !self.subtitle.is_empty() {
-            title = if self
-                .subtitle
-                .chars()
-                .next()
-                .unwrap_or('_')
-                .is_alphanumeric()
-                && title
-                    .chars()
-                    .last()
-                    .expect("title is empty")
-                    .is_alphanumeric()
+            let subtitle_first = self.subtitle.chars().next().unwrap_or('_');
+            let subtitle_last = self.subtitle.chars().last();
+            title = if subtitle_first.is_alphanumeric()
+                && subtitle_last.map_or(false, |c| c.is_alphanumeric())
             {
                 format!("{}: {}", title, self.subtitle)
             } else {

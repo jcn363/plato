@@ -1,8 +1,8 @@
 use super::{Frontlight, LightLevels};
 use crate::device::{Model, CURRENT_DEVICE};
 use anyhow::Error;
-use rustc_hash::FxHashMap;
 use lazy_static::lazy_static;
+use rustc_hash::FxHashMap;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::Read;
@@ -107,7 +107,7 @@ impl NaturalFrontlight {
         let max_value = self.maxima[&c] as f32;
         let value = (percent.clamp(0.0, 100.0) / 100.0 * max_value) as i16;
         let mut file = &self.values[&c];
-        write!(file, "{}", value).expect("write to sysfs failed");
+        let _ = write!(file, "{}", value);
 
         let new_power = if value > 0 {
             FRONTLIGHT_POWER_ON
@@ -123,7 +123,7 @@ impl NaturalFrontlight {
             .unwrap_or(FRONTLIGHT_POWER_OFF);
         if new_power != old_power {
             let mut file = &self.powers[&c];
-            write!(file, "{}", new_power).expect("write to sysfs failed");
+            let _ = write!(file, "{}", new_power);
             self.power_states.insert(c, new_power);
         }
     }
