@@ -1,7 +1,7 @@
 use crate::color::WHITE;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
-use crate::document::pdf_manipulator::{OperationProgress, PdfManipulator};
+use crate::document::pdf_manipulator::PdfManipulator;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
@@ -16,33 +16,28 @@ use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
 use std::path::PathBuf;
 
-#[allow(dead_code)]
 const WARNING_FILE_SIZE: u64 = 30;
-#[allow(dead_code)]
-const MAX_FILE_SIZE: u64 = 50;
 const PADDING: i32 = 10;
 const BUTTON_HEIGHT: i32 = 60;
 const BUTTON_SPACING: i32 = 10;
 
+// Note: ManipulationMode variants for file selection, redaction, and processing
+// are reserved for future implementation of file browser integration and advanced features.
+// Fields within these variants are currently unused but preserved for future expansion.
 #[allow(dead_code)]
 enum ManipulationMode {
     SelectFile,
-    #[allow(dead_code)]
     SelectAction(PathBuf),
-    #[allow(dead_code)]
     SelectRedactionPage(PathBuf, usize),
-    #[allow(dead_code)]
     Processing(PathBuf, String),
 }
 
-#[allow(dead_code)]
 pub struct PdfManipulatorView {
     id: Id,
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
     manipulator: PdfManipulator,
     mode: ManipulationMode,
-    current_progress: Option<OperationProgress>,
     selected_file: Option<PathBuf>,
 }
 
@@ -83,7 +78,7 @@ impl PdfManipulatorView {
                 rect.max.x - PADDING,
                 content_y + BUTTON_HEIGHT
             ],
-            "Large PDFs may cause memory issues.\nMax: 50MB, 500 pages. Keep battery charged."
+            "Large PDFs may cause memory issues.\nMax: 30MB, 500 pages. Keep battery charged."
                 .to_string(),
             Align::Left(0),
         );
@@ -91,26 +86,12 @@ impl PdfManipulatorView {
 
         let button_y = content_y + BUTTON_HEIGHT + BUTTON_SPACING;
         let button_width = rect.width() - 2 * PADDING as u32;
-
-        let file_browser_btn = Button::new(
+        let cleanup_btn = Button::new(
             rect![
                 rect.min.x + PADDING,
                 button_y,
                 rect.min.x + PADDING + button_width as i32,
                 button_y + BUTTON_HEIGHT
-            ],
-            Event::Select(EntryId::OpenFileBrowser),
-            "Select PDF File".to_string(),
-        );
-        children.push(Box::new(file_browser_btn) as Box<dyn View>);
-
-        let cleanup_y = button_y + BUTTON_HEIGHT + BUTTON_SPACING;
-        let cleanup_btn = Button::new(
-            rect![
-                rect.min.x + PADDING,
-                cleanup_y,
-                rect.min.x + PADDING + button_width as i32,
-                cleanup_y + BUTTON_HEIGHT
             ],
             Event::Select(EntryId::CleanUp),
             "🗑️ Clean Temp Backups".to_string(),
@@ -125,17 +106,17 @@ impl PdfManipulatorView {
             children,
             manipulator,
             mode: ManipulationMode::SelectFile,
-            current_progress: None,
             selected_file: None,
         })
     }
 
-    #[allow(dead_code)]
     fn show_message(&mut self, msg: String, rq: &mut RenderQueue, bus: &mut Bus) {
         bus.push_back(Event::Render(msg));
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
     }
 
+    /// Display available PDF manipulation actions for selected file.
+    /// Currently unused - awaiting file browser integration to provide file selection.
     #[allow(dead_code)]
     fn show_actions(&mut self, file_path: PathBuf, rq: &mut RenderQueue, context: &mut Context) {
         self.mode = ManipulationMode::SelectAction(file_path.clone());
@@ -426,7 +407,7 @@ impl PdfManipulatorView {
                 {
                     "❌ Memory error. Try smaller PDF or close apps.".to_string()
                 } else if e.to_string().contains("too large") || e.to_string().contains("exceeds") {
-                    "❌ File too large. Max 50MB, 500 pages.".to_string()
+                    "❌ File too large. Max 30MB, 500 pages.".to_string()
                 } else if e.to_string().contains("Insufficient memory") {
                     "❌ Low memory. Close other apps and retry.".to_string()
                 } else {

@@ -1,0 +1,14 @@
+/home/user/Desktop/plato/epub_editor/target/arm-unknown-linux-gnueabihf/release/deps/serde-b28a7943c833ec10.d: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Desktop/plato/epub_editor/target/arm-unknown-linux-gnueabihf/release/build/serde-acc9e94bf03b9c4c/out/private.rs
+
+/home/user/Desktop/plato/epub_editor/target/arm-unknown-linux-gnueabihf/release/deps/libserde-b28a7943c833ec10.rlib: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Desktop/plato/epub_editor/target/arm-unknown-linux-gnueabihf/release/build/serde-acc9e94bf03b9c4c/out/private.rs
+
+/home/user/Desktop/plato/epub_editor/target/arm-unknown-linux-gnueabihf/release/deps/libserde-b28a7943c833ec10.rmeta: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/user/Desktop/plato/epub_editor/target/arm-unknown-linux-gnueabihf/release/build/serde-acc9e94bf03b9c4c/out/private.rs
+
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/user/Desktop/plato/epub_editor/target/arm-unknown-linux-gnueabihf/release/build/serde-acc9e94bf03b9c4c/out/private.rs:
+
+# env-dep:OUT_DIR=/home/user/Desktop/plato/epub_editor/target/arm-unknown-linux-gnueabihf/release/build/serde-acc9e94bf03b9c4c/out

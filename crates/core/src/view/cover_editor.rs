@@ -15,6 +15,10 @@ use anyhow::Error;
 use image::DynamicImage;
 use std::path::PathBuf;
 
+// Note: Icon constants below are reserved for future UI implementation.
+// Currently unused but kept for reference in planned toolbar/button UI.
+// These will be used when the cover editor implements interactive buttons
+// for crop, rotate, brightness, contrast, grayscale, save, and navigation.
 #[allow(dead_code)]
 const ICON_CROP: &str = "enclosed_qr_code";
 #[allow(dead_code)]
