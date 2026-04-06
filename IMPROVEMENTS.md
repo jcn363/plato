@@ -172,7 +172,7 @@
 **Notable updateable packages (from `cargo outdated`):**
 - `nix`: ✅ Updated to 0.31.2
 - `reqwest`: 0.12 → 0.13.2 (fetcher uses 0.13.1 with different features)
-- `zip`: 7.0.0 → 8.5.0 (breaking API changes)
+- `zip`: 7.0.0 → 8.5.0 - **Breaking API changes** (see below)
 - `quick-xml`: ✅ Updated to 0.39.2 (API change: `unescape()` → `decode()`)
 - `indexmap`: ✅ Updated to 2.13.1
 - `chrono`: ✅ Updated to 0.4.44
@@ -236,7 +236,30 @@ kl-hyphenate 0.7.3 → bincode 1.3.3 (RUSTSEC-2025-0141)
 
 **Security-sensitive packages:**
 - `reqwest` with `rustls-tls-webpki-roots` - Using secure TLS defaults
-- `zip` 7.0.0 → 8.5.0 has breaking API changes
+
+### zip 7.x → 8.x Upgrade Analysis
+
+**Current:** zip 7.0.0  
+**Latest:** zip 8.5.0 (requires Rust 1.83+)
+
+**Breaking changes in zip 8.x:**
+- `zip::CompressionMethod::Deflated` → `zip::CompressionMethod::DEFLATE` (enum variant naming)
+- `ZipArchive::new()` → `ZipArchive::new(reader)` (takes generic reader)
+- Module reorganization: `zip::read`, `zip::write`, `zip::result` submodules
+- Feature flags changed: many features now default-enabled
+- Requires Rust 1.83 minimum
+
+**Plato usage:**
+- `cover_editor.rs`: Uses `ZipArchive`, `ZipWriter`, `SimpleFileOptions`, `CompressionMethod::Deflated`
+- `epub/opener.rs`: Uses `ZipArchive`
+- `epub_edit/src/lib.rs`: Uses `ZipWriter`, `FileOptions`, `CompressionMethod`, `ZipArchive`
+
+**Upgrade complexity:** Medium
+- Need to update enum variants: `Deflated` → `DEFLATE`
+- Need to update API calls for reader handling
+- Need to add minimal features to maintain current behavior
+
+**Recommendation:** Can upgrade with moderate effort. Test thoroughly as EPUB writing is critical functionality.
 
 **Recommendation:** Run `cargo audit` before releases to catch security advisories. Version updates should be tested incrementally.
 
