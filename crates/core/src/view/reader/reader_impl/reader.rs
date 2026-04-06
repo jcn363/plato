@@ -1437,26 +1437,8 @@ impl Reader {
                 return;
             }
 
-            let entries = vec![
-                EntryKind::RadioButton(
-                    "Forward".to_string(),
-                    EntryId::SearchDirection(LinearDir::Forward),
-                    self.search_direction == LinearDir::Forward,
-                ),
-                EntryKind::RadioButton(
-                    "Backward".to_string(),
-                    EntryId::SearchDirection(LinearDir::Backward),
-                    self.search_direction == LinearDir::Backward,
-                ),
-            ];
-
-            let search_menu = Menu::new(
-                rect,
-                ViewId::SearchMenu,
-                MenuKind::Contextual,
-                entries,
-                context,
-            );
+            let search_menu =
+                super::reader_search::create_search_menu(self.search_direction, rect, context);
             rq.add(RenderData::new(
                 search_menu.id(),
                 *search_menu.rect(),
