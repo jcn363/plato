@@ -1,30 +1,33 @@
 use anyhow::{format_err, Context, Result};
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 use zip::write::FileOptions;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
-lazy_static! {
-    static ref TITLE_RE: Regex = Regex::new(r#"<dc:title[^>]*>([^<]+)</dc:title>"#).unwrap();
-    static ref AUTHOR_RE: Regex = Regex::new(r#"<dc:creator[^>]*>([^<]+)</dc:creator>"#).unwrap();
-    static ref LANGUAGE_RE: Regex =
-        Regex::new(r#"<dc:language[^>]*>([^<]+)</dc:language>"#).unwrap();
-    static ref IDENTIFIER_RE: Regex =
-        Regex::new(r#"<dc:identifier[^>]*>([^<]+)</dc:identifier>"#).unwrap();
-    static ref PUBLISHER_RE: Regex =
-        Regex::new(r#"<dc:publisher[^>]*>([^<]+)</dc:publisher>"#).unwrap();
-    static ref DATE_RE: Regex = Regex::new(r#"<dc:date[^>]*>([^<]+)</dc:date>"#).unwrap();
-    static ref DESCRIPTION_RE: Regex =
-        Regex::new(r#"<dc:description[^>]*>([^<]+)</dc:description>"#).unwrap();
-    static ref ROOTFILE_RE: Regex = Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).unwrap();
-    static ref ITEM_RE: Regex =
-        Regex::new(r#"<item[^>]+href="([^"]+)"[^>]+id="([^"]+)"[^>]*>"#).unwrap();
-    static ref SPINE_RE: Regex = Regex::new(r#"<itemref[^>]+idref="([^"]+)"[^>]*>"#).unwrap();
-}
+static TITLE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<dc:title[^>]*>([^<]+)</dc:title>"#).unwrap());
+static AUTHOR_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<dc:creator[^>]*>([^<]+)</dc:creator>"#).unwrap());
+static LANGUAGE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<dc:language[^>]*>([^<]+)</dc:language>"#).unwrap());
+static IDENTIFIER_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<dc:identifier[^>]*>([^<]+)</dc:identifier>"#).unwrap());
+static PUBLISHER_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<dc:publisher[^>]*>([^<]+)</dc:publisher>"#).unwrap());
+static DATE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<dc:date[^>]*>([^<]+)</dc:date>"#).unwrap());
+static DESCRIPTION_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<dc:description[^>]*>([^<]+)</dc:description>"#).unwrap());
+static ROOTFILE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).unwrap());
+static ITEM_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<item[^>]+href="([^"]+)"[^>]+id="([^"]+)"[^>]*>"#).unwrap());
+static SPINE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<itemref[^>]+idref="([^"]+)"[^>]*>"#).unwrap());
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EpubMetadata {
@@ -75,6 +78,17 @@ pub struct EpubEditorCore {
 }
 
 impl EpubEditorCore {
+    /// Creates a new EpubEditorCore instance from an EPUB file path.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * The EPUB file cannot be opened
+    /// * The ZIP archive cannot be read
+    /// * Creating the temporary directory fails
+    /// * Extracting the EPUB contents fails
+    /// * Parsing metadata fails
+    /// * Parsing content fails
     pub fn new(epub_path: &str) -> Result<Self> {
         let temp_dir = Self::create_temp_dir()?;
         let mut editor = Self {
@@ -93,6 +107,13 @@ impl EpubEditorCore {
         Ok(editor)
     }
 
+    /// Creates a temporary directory for EPUB processing.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Creating the temporary directory fails
+    /// * Removing an existing temporary directory fails
     fn create_temp_dir() -> Result<PathBuf> {
         let temp_dir = std::env::temp_dir().join(format!("epub_editor_{}", uuid::Uuid::new_v4()));
         if temp_dir.exists() {
@@ -102,6 +123,15 @@ impl EpubEditorCore {
         Ok(temp_dir)
     }
 
+    /// Extracts the EPUB archive to the temporary directory.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Opening the EPUB file fails
+    /// * Reading the ZIP archive fails
+    /// * Creating directories for extracted files fails
+    /// * Writing extracted files fails
     fn extract(&self) -> Result<()> {
         let file = File::open(&self.epub_path).context("Failed to open EPUB file")?;
         let mut archive = ZipArchive::new(file).context("Failed to read ZIP archive")?;
@@ -125,6 +155,16 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Parses metadata from the EPUB's OPF file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * The container.xml file is missing
+    /// * Reading the container.xml file fails
+    /// * The rootfile path cannot be found in container.xml
+    /// * The OPF file is missing at the specified path
+    /// * Reading the OPF file fails
     fn parse_metadata(&mut self) -> Result<()> {
         let container_path = self.temp_dir.join("META-INF/container.xml");
         if !container_path.exists() {
@@ -132,10 +172,8 @@ impl EpubEditorCore {
         }
 
         let container_content = fs::read_to_string(&container_path)?;
-        let rootfile_regex =
-            Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).expect("Invalid rootfile regex");
 
-        if let Some(caps) = rootfile_regex.captures(&container_content) {
+        if let Some(caps) = ROOTFILE_RE.captures(&container_content) {
             let opf_path = caps
                 .get(1)
                 .map(|m| m.as_str())
@@ -190,10 +228,21 @@ impl EpubEditorCore {
         }
     }
 
+    #[must_use]
     pub fn to_plato_metadata(&self) -> EpubMetadata {
         self.metadata.clone()
     }
 
+    /// Parses the content structure from the EPUB's OPF file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * The container.xml file is missing
+    /// * Reading the container.xml file fails
+    /// * The rootfile path cannot be found in container.xml
+    /// * The OPF file is missing at the specified path
+    /// * Reading the OPF file fails
     fn parse_content(&mut self) -> Result<()> {
         let container_path = self.temp_dir.join("META-INF/container.xml");
         let container_content = fs::read_to_string(&container_path)?;
@@ -255,6 +304,7 @@ impl EpubEditorCore {
         }
     }
 
+    #[must_use]
     pub fn extract_title(html: &str) -> Option<String> {
         let title_regex = Regex::new(r"(?i)<title[^>]*>([^<]+)</title>").ok()?;
         let h1_regex = Regex::new(r"(?i)<h1[^>]*>([^<]+)</h1>").ok()?;
@@ -276,6 +326,7 @@ impl EpubEditorCore {
         None
     }
 
+    #[must_use]
     pub fn sanitize_filename(name: &str) -> String {
         name.chars()
             .map(|c| match c {
@@ -294,6 +345,12 @@ impl EpubEditorCore {
         self.metadata = metadata;
     }
 
+    /// Updates the content of a chapter at the specified index.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Writing the updated chapter content to file fails
     pub fn update_chapter(&mut self, index: usize, content: String) -> Result<()> {
         if index < self.chapters.len() {
             let old_content = self.chapters[index].content.clone();
@@ -309,6 +366,12 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Undoes the last action performed on the EPUB.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Writing the undone content to file fails
     pub fn undo(&mut self) -> Result<bool> {
         if let Some(action) = self.undo_stack.pop() {
             match action {
@@ -334,6 +397,12 @@ impl EpubEditorCore {
         }
     }
 
+    /// Redoes the last undone action on the EPUB.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Writing the redone content to file fails
     pub fn redo(&mut self) -> Result<bool> {
         if let Some(action) = self.redo_stack.pop() {
             match action {
@@ -359,6 +428,7 @@ impl EpubEditorCore {
         }
     }
 
+    #[must_use]
     pub fn search_in_chapter(&self, index: usize, query: &str) -> Vec<(usize, usize)> {
         if index >= self.chapters.len() || query.is_empty() {
             return Vec::new();
@@ -399,6 +469,12 @@ impl EpubEditorCore {
         Ok(count)
     }
 
+    /// Replaces all occurrences of a search string with a replacement string in all chapters.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Writing any chapter content to file fails during replacement
     pub fn replace_all_in_document(&mut self, search: &str, replace: &str) -> Result<usize> {
         if search.is_empty() {
             return Ok(0);
@@ -411,6 +487,7 @@ impl EpubEditorCore {
         Ok(total)
     }
 
+    #[must_use]
     pub fn search_all_chapters(&self, query: &str) -> Vec<(usize, Vec<(usize, usize)>)> {
         if query.is_empty() {
             return Vec::new();
@@ -429,6 +506,16 @@ impl EpubEditorCore {
             .collect()
     }
 
+    /// Saves the EPUB file with all modifications applied.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Updating the OPF metadata fails
+    /// * Creating the output EPUB file fails
+    /// * Initializing the ZIP writer fails
+    /// * Walking the temporary directory and adding files to the ZIP archive fails
+    /// * Finalizing the ZIP archive fails
     pub fn save(&self) -> Result<()> {
         self.update_opf_metadata()?;
         let file =
@@ -441,6 +528,17 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Updates the metadata in the EPUB's OPF file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * The container.xml file is missing
+    /// * Reading the container.xml file fails
+    /// * The rootfile path cannot be found in container.xml
+    /// * The OPF file is missing at the specified path
+    /// * Reading the OPF file fails
+    /// * Writing the updated OPF file fails
     fn update_opf_metadata(&self) -> Result<()> {
         let container_path = self.temp_dir.join("META-INF/container.xml");
         let container_content = fs::read_to_string(&container_path)?;
@@ -484,12 +582,17 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Updates a specific field in the OPF XML content.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Creating the regex pattern for the field tag fails
     fn update_opf_field(&self, content: &str, tag: &str, value: &str) -> Result<String> {
-        let regex = Regex::new(&format!(r#"<{}[^>]*>[^<]*</{}>"#, tag, tag))
-            .map_err(|e| format_err!("Invalid regex: {}", e))?;
-        Ok(regex
-            .replace(content, format!("<{}>{}</{}>", tag, value, tag))
-            .to_string())
+        let regex_str = format!(r#"<{}[^>]*>[^<]*</{}>"#, tag, tag);
+        let regex = Regex::new(&regex_str).map_err(|e| format_err!("Invalid regex: {}", e))?;
+        let replace_str = format!("<{}>{}</{}>", tag, value, tag);
+        Ok(regex.replace(content, &replace_str).to_string())
     }
 
     fn walk_dir<W: Write + io::Seek>(
