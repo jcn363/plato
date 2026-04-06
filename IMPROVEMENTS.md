@@ -50,23 +50,35 @@
 
 ## Remaining Items
 
-### Remaining — Justified `.expect()` Calls (~72 total)
+### Remaining — Justified `.expect()` Calls (~68 total)
 
 These are defensible as "if this fails, the system is broken and should panic":
 
 | Module | Count | Justification |
 |--------|-------|---------------|
 | `gesture.rs` | 12 | Input handling invariants |
-| `dictionary/indexing.rs` | 12 | Dictionary index invariants |
 | `document/progressive_loader.rs` | 13 | Document loading invariants |
-| `document/html/engine.rs` | 20 | HTML rendering pipeline invariants |
-| `document/html/dom.rs` | 5 | DOM tree structure invariants |
-| `document/html/xml.rs` | 4 | XML parse tree invariants |
+| `document/html/engine.rs` | 18 | HTML rendering pipeline invariants |
+| `dictionary/indexing.rs` | 12 | Test assertions |
 | `input.rs` | 6 | Input event invariants |
-| `context.rs` | 4 | Runtime initialization |
-| `dictionary/mod.rs` | 9 | Dictionary loading |
+| `dictionary/mod.rs` | 9 | Test assertions |
+| `document/html/xml.rs` | 4 | XML parse tree invariants |
 | `view/reader/reader_impl/reader.rs` | 4 | Lock poisoning (unrecoverable) |
+| `context.rs` | 0 | ✅ Cleaned up |
 | `view/home/shelf.rs` | 1 | Lock poisoning (unrecoverable) |
+| `view/icon.rs` | 2 | Fatal `lazy_static!` init |
+| `document/html/style.rs` | 2 | XML parse tree invariants |
+| `document/html/parse.rs` | 1 | Static regex (hardcoded pattern) |
+| `sync.rs` | 1 | Static regex (hardcoded pattern) |
+| `metadata/query.rs` | 1 | Static regex (hardcoded pattern) |
+| `document/epub/document.rs` | 1 | URI invariant |
+| `document/html/dom.rs` | 0 | ✅ Cleaned up |
+| `document/html/mod.rs` | 1 | URI invariant |
+| `font/mod.rs` | 1 | FFI CString invariant |
+| `geom/rectangle.rs` | 1 | Conversion invariant |
+| `framebuffer/kobo2.rs` | 1 | Display init (fatal) |
+| `framebuffer/transform.rs` | 2 | Test-only noise texture |
+| `document/pdf_manipulator.rs` | 1 | MuPDF context init (fatal) |
 | `view/icon.rs` | 2 | Fatal `lazy_static!` init |
 | Other modules | ~5 | Device init, FFI, invariants |
 
