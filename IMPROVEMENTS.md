@@ -173,9 +173,9 @@
 - `nix`: ✅ Updated to 0.31.2
 - `reqwest`: 0.12 → 0.13.2 (fetcher uses 0.13.1 with different features)
 - `zip`: ✅ Updated to 8.5.0 (Breaking: `Deflated` → `DEFLATE`, generic `FileOptions`)
-- `rand_core` / `rand_xoshiro`: See analysis below
-- `reqwest`: See analysis below
-- `toml` / `toml_datetime` / `winnow`: See analysis below
+- `rand_core` / `rand_xoshiro`: ✅ Updated to 0.10/0.8 (API change: add `use rand_core::Rng`)
+- `reqwest`: Kept 0.12 (TLS features complex for ARM cross-compile)
+- `toml` / `toml_datetime` / `winnow`: Skipped (High effort - major versions with breaking changes)
 - `quick-xml`: ✅ Updated to 0.39.2 (API change: `unescape()` → `decode()`)
 - `indexmap`: ✅ Updated to 2.13.1
 - `chrono`: ✅ Updated to 0.4.44

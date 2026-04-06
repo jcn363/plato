@@ -29,10 +29,10 @@ use crate::settings::{
 };
 use crate::unit::{mm_to_px, scale_by_dpi};
 use chrono::Local;
-use rustc_hash::{FxHashMap, FxHashSet};
 use lazy_static::lazy_static;
-use rand_core::RngCore;
+use rand_core::Rng;
 use regex::Regex;
+use rustc_hash::{FxHashMap, FxHashSet};
 use septem::{Digit, Roman};
 use std::collections::{BTreeMap, VecDeque};
 use std::fs::OpenOptions;
