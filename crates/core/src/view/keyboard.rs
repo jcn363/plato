@@ -12,7 +12,7 @@ use crate::geom::Rectangle;
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
 use crate::unit::scale_by_dpi;
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use lazy_static::lazy_static;
 use serde::Deserialize;
 

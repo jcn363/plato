@@ -19,7 +19,7 @@ use crate::geom::{Boundary, CycleDir, Edge};
 use crate::helpers::{decode_entities, Normalize};
 use crate::unit::pt_to_px;
 use anyhow::Error;
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};

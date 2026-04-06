@@ -3,7 +3,7 @@ use crate::document::html::xml::XmlParser;
 use crate::document::Location;
 use crate::document::TocEntry;
 use crate::helpers::{decode_entities, Normalize};
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use percent_encoding::percent_decode_str;
 use std::io::Read;
 use std::path::Path;

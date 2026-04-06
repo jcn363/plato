@@ -15,7 +15,7 @@ use crate::view::keyboard::Layout;
 use crate::view::ViewId;
 use bitflags::bitflags;
 use chrono::Local;
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use globset::Glob;
 use rand_core::SeedableRng;
 use rand_xoshiro::Xoroshiro128Plus;

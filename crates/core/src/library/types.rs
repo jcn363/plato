@@ -3,7 +3,7 @@ use crate::metadata::{Info, ReaderInfo, SortMethod};
 use crate::settings::{ImportSettings, LibraryMode};
 use crate::{log_error, log_warn};
 use anyhow::{bail, Error};
-use fxhash::{FxBuildHasher, FxHashMap, FxHashSet};
+use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use indexmap::IndexMap;
 use std::fs::{self, File};
 use std::io::{Error as IoError, ErrorKind};

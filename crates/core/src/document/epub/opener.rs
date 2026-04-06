@@ -4,7 +4,7 @@ use crate::document::html::xml::XmlParser;
 use crate::helpers::decode_entities;
 use crate::log_error;
 use anyhow::{format_err, Error};
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use percent_encoding::percent_decode_str;
 use std::fs::File;
 use std::io::Read;

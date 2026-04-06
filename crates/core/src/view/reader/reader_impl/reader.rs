@@ -29,7 +29,7 @@ use crate::settings::{
 };
 use crate::unit::{mm_to_px, scale_by_dpi};
 use chrono::Local;
-use fxhash::{FxHashMap, FxHashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use lazy_static::lazy_static;
 use rand_core::RngCore;
 use regex::Regex;

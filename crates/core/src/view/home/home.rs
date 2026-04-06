@@ -16,7 +16,7 @@ use crate::metadata::{sort, BookQuery, Info, Metadata, SimpleStatus, SortMethod,
 use crate::settings::{FirstColumn, Hook, LibraryMode, SecondColumn};
 use crate::unit::{mm_to_px, scale_by_dpi};
 use chrono::Local;
-use fxhash::{FxHashMap, FxHashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use rand_core::RngCore;
 use serde_json::{json, Value as JsonValue};
 use std::collections::HashSet;

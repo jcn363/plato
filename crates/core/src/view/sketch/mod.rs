@@ -17,7 +17,7 @@ use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{BORDER_RADIUS_SMALL, SMALL_BAR_HEIGHT};
 use anyhow::Error;
 use chrono::Local;
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use globset::Glob;
 use std::fs::{self, File};
 use std::io::BufReader;

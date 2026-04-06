@@ -31,7 +31,7 @@ pub mod view;
 
 pub use anyhow;
 pub use chrono;
-pub use fxhash;
+pub use rustc_hash;
 pub use globset;
 pub use image;
 pub use png;

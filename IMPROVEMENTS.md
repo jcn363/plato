@@ -179,7 +179,7 @@
 
 **Unmaintained packages (advisory):**
 - `bincode` 1.3.3 - RUSTSEC-2025-0141 (via kl-hyphenate) - **See below for replacement analysis**
-- `fxhash` 0.2.1 - RUSTSEC-2025-0057 - **See replacement analysis below**
+- ~~`fxhash` 0.2.1~~ - ✅ **REPLACED** with rustc-hash 2.1.2 (RUSTSEC-2025-0057 resolved)
 
 ### fxhash Replacement Analysis
 
@@ -249,6 +249,7 @@ anyhow = "1.0"
 bitflags = "2.11"
 indexmap = { version = "2.13", features = ["serde"] }
 nix = { version = "0.31", features = ["fs", "ioctl"] }
+rustc-hash = "2.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ```
@@ -324,6 +325,6 @@ Most code quality and performance improvements have been addressed, including:
 - **Evaluated font system FreeType/HarfBuzz separation and bitmap font handling -- determined to be already well-structured at FFI and safe-wrapper levels**
 - **Documented device-specific optimizations: display refresh batching (600ms MAX_UPDATE_DELAY), font cache eviction (N/A - no cache), filesystem sync (N/A - minimal)**
 - **Fixed build error: `context.online` field replaced with `DeviceFlags::ONLINE` bitflag**
-- **Dependency management improvements:** Added workspace.dependencies, updated nix/indexmap, aligned epub_edit
+- **Dependency management improvements:** Added workspace.dependencies, updated nix/indexmap, aligned epub_edit, replaced fxhash with rustc-hash
 
 These remaining items are refinement opportunities rather than critical issues - the codebase is production-ready.

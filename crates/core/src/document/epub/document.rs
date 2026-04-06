@@ -8,7 +8,7 @@ use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir};
 use crate::helpers::{decode_entities, Normalize};
 use crate::metadata::TextAlign;
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use std::io::Read;
 use std::path::Path;
 

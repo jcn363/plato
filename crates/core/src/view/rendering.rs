@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 use std::time::{Duration, Instant};
 
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 
 use super::identifiers::Id;
 use crate::framebuffer::UpdateMode;

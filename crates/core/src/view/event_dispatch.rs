@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::time::Instant;
 
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 
 use super::events::{Bus, Hub};
 use super::identifiers::Id;

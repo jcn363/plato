@@ -38,7 +38,7 @@ use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
-use fxhash::{FxHashMap, FxHashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use rand_core::RngCore;
 use serde_json::{json, Value as JsonValue};
 use std::fs;

@@ -10,7 +10,7 @@ use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 

@@ -9,7 +9,7 @@ use crate::geom::{CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::unit::scale_by_dpi_raw;
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use lazy_static::lazy_static;
 use std::path::Path;
 

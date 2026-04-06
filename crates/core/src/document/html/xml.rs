@@ -1,6 +1,6 @@
 use super::dom::{element, text, whitespace};
 use super::dom::{Attributes, NodeId, XmlTree};
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 
 #[derive(Debug)]
 pub struct XmlParser<'a> {

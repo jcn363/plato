@@ -9,7 +9,7 @@ mod tools;
 
 use crate::frontlight::LightLevels;
 use crate::metadata::{SortMethod, TextAlign};
-use fxhash::FxHashSet;
+use rustc_hash::FxHashSet;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;

@@ -1,4 +1,4 @@
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use lazy_static::lazy_static;
 use regex::Regex;
 

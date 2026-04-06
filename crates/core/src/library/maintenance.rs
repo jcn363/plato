@@ -28,7 +28,7 @@ impl Library {
                         .and_then(|md| md.fingerprint(self.fat32_epoch).ok())
                 }
             })
-            .collect::<fxhash::FxHashSet<_>>();
+            .collect::<rustc_hash::FxHashSet<_>>();
 
         self.reading_states.retain(|fp, _| {
             if fps.contains(fp) {

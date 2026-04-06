@@ -16,7 +16,7 @@ use crate::helpers::IsHidden;
 use crate::{log_error, log_warn};
 use anyhow::{format_err, Error};
 use bitflags::bitflags;
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use globset::Glob;
 use lazy_static::lazy_static;
 use std::collections::BTreeSet;

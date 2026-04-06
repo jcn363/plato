@@ -1,7 +1,7 @@
 use super::{Frontlight, LightLevels};
 use crate::device::{Model, CURRENT_DEVICE};
 use anyhow::Error;
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 use lazy_static::lazy_static;
 use std::fs::File;
 use std::fs::OpenOptions;
