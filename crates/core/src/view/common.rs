@@ -101,6 +101,28 @@ pub fn locate_by_id(view: &dyn View, id: ViewId) -> Option<usize> {
         .position(|c| c.view_id().map_or(false, |i| i == id))
 }
 
+/// Add a menu to a view's children and queue it for rendering.
+///
+/// This convenience function eliminates boilerplate by combining menu creation,
+/// render queue addition, and child insertion into a single operation.
+///
+/// # Arguments
+///
+/// * `menu` - The menu to add (already created via Menu::new())
+/// * `view` - The parent view to add the menu to
+/// * `rq` - The render queue to add this render operation to
+///
+/// # Examples
+///
+/// ```ignore
+/// let menu = Menu::new(rect, id, kind, entries, context);
+/// add_menu(menu, self, rq);
+/// ```
+pub fn add_menu(menu: Menu, view: &mut dyn View, rq: &mut RenderQueue) {
+    rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
+    view.children_mut().push(Box::new(menu) as Box<dyn View>);
+}
+
 pub fn overlapping_rectangle(view: &dyn View) -> Rectangle {
     let mut rect = *view.rect();
     for child in view.children() {
