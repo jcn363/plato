@@ -170,11 +170,15 @@
 ### 2. Dependency Version Audit
 
 **Notable updateable packages (from `cargo outdated`):**
-- `nix`: 0.30.1 → 0.31.2
-- `reqwest`: 0.12 → 0.13.2
-- `zip`: 7.0.0 → 8.5.0 (major version)
+- `nix`: ✅ Updated to 0.31.2
+- `reqwest`: 0.12 → 0.13.2 (fetcher uses 0.13.1 with different features)
+- `zip`: 7.0.0 → 8.5.0 (breaking API changes)
 - `quick-xml`: 0.37.0 → 0.39.2
-- `indexmap`: 2.13.0 → 2.13.1
+- `indexmap`: ✅ Updated to 2.13.1
+
+**Unmaintained packages (advisory):**
+- `bincode` 1.3.3 - RUSTSEC-2025-0141 (via kl-hyphenate)
+- `fxhash` 0.2.1 - RUSTSEC-2025-0057
 
 **Security-sensitive packages:**
 - `reqwest` with `rustls-tls-webpki-roots` - Using secure TLS defaults
@@ -182,18 +186,22 @@
 
 **Recommendation:** Run `cargo audit` before releases to catch security advisories. Version updates should be tested incrementally.
 
-### 3. Workspace Dependency Alignment
+### 3. Workspace Dependency Alignment ✅ IMPLEMENTED
 
-**Workspace resolver:** v2 (legacy resolver preserved for compatibility)
+**Added `[workspace.dependencies]`:**
+```toml
+[workspace.dependencies]
+anyhow = "1.0"
+bitflags = "2.11"
+indexmap = { version = "2.13", features = ["serde"] }
+nix = { version = "0.31", features = ["fs", "ioctl"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+```
 
-**Shared dependencies could use workspace-level version declarations:**
-- `anyhow`: 1.0.100 (all crates)
-- `bitflags`: 2.10.0 (core, fetcher, epub_edit)
-- `indexmap`: 2.13.0 (core, epub_edit, fetcher)
-- `serde`: 1.0.228 (core, epub_edit, fetcher)
-- `serde_json`: 1.0.149 (core, epub_edit)
-
-**Note:** The workspace does not use `[workspace.dependencies]` - individual crate versions are specified per-Crate.
+**Updated crates:**
+- `plato-core`: Uses workspace for anyhow, bitflags, serde, serde_json, nix, indexmap
+- `epub_edit`: Uses workspace for anyhow, serde
 
 ### 4. Feature Flags
 
@@ -262,5 +270,6 @@ Most code quality and performance improvements have been addressed, including:
 - **Evaluated font system FreeType/HarfBuzz separation and bitmap font handling -- determined to be already well-structured at FFI and safe-wrapper levels**
 - **Documented device-specific optimizations: display refresh batching (600ms MAX_UPDATE_DELAY), font cache eviction (N/A - no cache), filesystem sync (N/A - minimal)**
 - **Fixed build error: `context.online` field replaced with `DeviceFlags::ONLINE` bitflag**
+- **Dependency management improvements:** Added workspace.dependencies, updated nix/indexmap, aligned epub_edit
 
 These remaining items are refinement opportunities rather than critical issues - the codebase is production-ready.
