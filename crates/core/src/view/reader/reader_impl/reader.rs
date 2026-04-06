@@ -16,7 +16,6 @@ use crate::frontlight::LightLevels;
 use crate::geom::{halves, Axis, CycleDir, DiagDir, Dir, LinearDir, Region};
 use crate::geom::{BorderSpec, Boundary, CornerSpec, Point, Rectangle, Vec2};
 use crate::gesture::GestureEvent;
-use crate::helpers::AsciiExtension;
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::log_error;
 use crate::log_warn;
@@ -32,7 +31,7 @@ use chrono::Local;
 use rand_core::Rng;
 use regex::Regex;
 use rustc_hash::{FxHashMap, FxHashSet};
-use septem::{Digit, Roman};
+use septem::Digit;
 use std::collections::{BTreeMap, VecDeque};
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -1836,40 +1835,7 @@ impl Reader {
     }
 
     fn find_page_by_name(&self, name: &str) -> Option<usize> {
-        self.info.reader.as_ref().and_then(|r| {
-            if let Ok(a) = name.parse::<u32>() {
-                r.page_names
-                    .iter()
-                    .filter_map(|(i, s)| s.parse::<u32>().ok().map(|b| (b, i)))
-                    .filter(|(b, _)| *b <= a)
-                    .max_by(|x, y| x.0.cmp(&y.0))
-                    .map(|(b, i)| *i + (a - b) as usize)
-            } else if let Some(a) = name.chars().next().and_then(|c| c.to_alphabetic_digit()) {
-                r.page_names
-                    .iter()
-                    .filter_map(|(i, s)| {
-                        s.chars()
-                            .next()
-                            .and_then(|c| c.to_alphabetic_digit())
-                            .map(|c| (c, i))
-                    })
-                    .filter(|(b, _)| *b <= a)
-                    .max_by(|x, y| x.0.cmp(&y.0))
-                    .map(|(b, i)| *i + (a - b) as usize)
-            } else if let Ok(a) = name.parse::<Roman>() {
-                let a_val = *a;
-                r.page_names
-                    .iter()
-                    .filter_map(|(i, s)| s.parse::<Roman>().ok().map(|b| (b, i)))
-                    .filter(|(b, _)| {
-                        (*b).cmp(&Roman::from_unchecked(a_val)) != std::cmp::Ordering::Greater
-                    })
-                    .max_by(|x, y| x.0.cmp(&y.0))
-                    .map(|(b, i)| *i + (a_val - *b) as usize)
-            } else {
-                None
-            }
-        })
+        super::reader_settings::find_page_by_name(&self.info, name)
     }
 
     // -----------------------------------------------------------------------
