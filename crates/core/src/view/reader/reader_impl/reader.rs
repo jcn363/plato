@@ -1633,17 +1633,13 @@ impl Reader {
     }
 
     fn toggle_bookmark(&mut self, rq: &mut RenderQueue) {
-        if let Some(ref mut r) = self.info.reader {
-            if !r.bookmarks.insert(self.current_page) {
-                r.bookmarks.remove(&self.current_page);
-            }
-        }
-        let dpi = CURRENT_DEVICE.dpi;
-        let thickness = scale_by_dpi(3.0, dpi) as u16;
-        let radius = mm_to_px(0.4, dpi) as i32 + thickness as i32;
-        let center = pt!(self.rect.max.x - 5 * radius, self.rect.min.y + 5 * radius);
-        let rect = Rectangle::from_disk(center, radius);
-        rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
+        super::reader_annotations::toggle_bookmark(
+            self.current_page,
+            &mut self.info,
+            self.id,
+            self.rect,
+            rq,
+        );
     }
 
     fn set_contrast_exponent(
@@ -1909,19 +1905,11 @@ impl Reader {
     // -----------------------------------------------------------------------
 
     fn find_annotation_ref(&mut self, sel: [TextLocation; 2]) -> Option<&Annotation> {
-        self.info.reader.as_ref().and_then(|r| {
-            r.annotations
-                .iter()
-                .find(|a| a.selection[0] == sel[0] && a.selection[1] == sel[1])
-        })
+        super::reader_annotations::find_annotation_ref(&self.info, sel)
     }
 
     fn find_annotation_mut(&mut self, sel: [TextLocation; 2]) -> Option<&mut Annotation> {
-        self.info.reader.as_mut().and_then(|r| {
-            r.annotations
-                .iter_mut()
-                .find(|a| a.selection[0] == sel[0] && a.selection[1] == sel[1])
-        })
+        super::reader_annotations::find_annotation_mut(&mut self.info, sel)
     }
 
     fn reseed(&mut self, rq: &mut RenderQueue, context: &mut Context) {
