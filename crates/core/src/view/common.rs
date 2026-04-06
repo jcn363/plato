@@ -9,6 +9,27 @@ use crate::settings::{ButtonScheme, RotationLock};
 use chrono::Local;
 use std::sync::mpsc;
 
+/// Convenience macro for executing code when a child view with a specific ID exists.
+///
+/// This macro eliminates boilerplate by combining locate_by_id lookup with
+/// conditional execution, reducing repeated patterns across the codebase.
+///
+/// # Examples
+///
+/// ```ignore
+/// with_child!(self, ViewId::SortMenu, |index| {
+///     self.children_mut().remove(index);
+/// });
+/// ```
+#[macro_export]
+macro_rules! with_child {
+    ($view:expr, $id:expr, $body:expr) => {
+        if let Some(index) = $crate::view::common::locate_by_id($view, $id) {
+            $body(index)
+        }
+    };
+}
+
 pub fn close_view(id: ViewId, view: &mut dyn View, rq: &mut RenderQueue) {
     if let Some(index) = locate_by_id(view, id) {
         let rect = overlapping_rectangle(view.child(index));
