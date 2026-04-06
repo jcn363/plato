@@ -83,7 +83,7 @@ Any 4.*X*.*Y* firmware, with *X* ≥ 6, will do.
 - **Build System** - Resolved linker failures by expanding `mupdf_wrapper.c` with 20+ custom FFI functions (PDF manipulation, annotations, redactions, image/font extraction); wrapper is now automatically linked via `build.rs`
 - **Safe FFI Wrappers** - Added `mupdf.rs`, `freetype.rs`, `harfbuzz.rs` with RAII/Drop semantics for safe resource management; `pdf.rs` and `pdf_manipulator.rs` migrated to use safe wrappers
 - **AArch64 (ARM64)** - Added support for newer Kobo devices (Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
-- **Error Handling** - Improved robustness with proper error handling instead of `unwrap()`
+- **Error Handling** - Improved robustness with proper error handling instead of `unwrap()`; further reduced unwrap/expect in sync, HTML parsing, and fetcher crates
 - **Memory** - Optimized string building with pre-allocated buffers, fixed memory availability detection, reduced thumbnail memory by 75% (grayscale instead of RGBA), reduced MuPDF context cache from 32MB to 16MB, fixed Pixmap OOM panics, optimized pixmap creation to avoid double allocation
 - **PDF** - Added auto-crop margins feature for scanned documents, PDF/A detection, annotation reading and export
 - **Rendering** - Added minimum font size support for better readability
@@ -95,6 +95,7 @@ Any 4.*X*.*Y* firmware, with *X* ≥ 6, will do.
 - **Document** - Added `#[inline]` to PDF page methods and font metrics
 - **Device** - Added `#[inline]` to all device capability methods
 - **Input** - Added `#[inline]` to button status conversion
+- **Modern Rust** - Migrated 13 `lazy_static!` instances to `std::sync::LazyLock` for constants, regex patterns, translations, and dithering matrices
 
 ### Build Targets
 

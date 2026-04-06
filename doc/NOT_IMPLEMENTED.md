@@ -56,6 +56,9 @@ The following features were implemented in the latest updates:
 48. **Reader Crash Safety** - Fixed 7 dangerous unwrap() calls in reader/mod.rs (cache.get, selection.as_mut, text_excerpt, doc.dims, child_mut/downcast)
 49. **EPUB Editor Performance** - Cached 10 regex compilations as lazy_static constants in epub_edit/src/lib.rs, eliminating repeated regex compilation on every EPUB parse
 50. **MuPDF Wrapper Expansion** - Added 20+ custom FFI wrapper functions to `mupdf_wrapper.c` for PDF manipulation (page insert/delete/rotate, annotations, redactions, image/font extraction), resolving linker failures from incomplete pre-compiled `libmupdf.so`
+51. **lazy_static → LazyLock Migration** - Migrated 13 `lazy_static!` instances to `std::sync::LazyLock` across 9 files (constants, keyboard combos, regex patterns, hyphenation, i18n translations, dithering matrices, shelf mutex). 5 remaining depend on `CURRENT_DEVICE` runtime config and cannot migrate.
+52. **Further Unwrap/Expect Reduction** - Replaced `.unwrap()` with proper error handling in `sync.rs`, `document/html/parse.rs`, and `fetcher/main.rs` (HTTP response handling, JSON parsing fallbacks)
+53. **IMPROVEMENTS.md Reorganization** - Condensed from 539 to 127 lines with clear status tables, consolidated completed items, and separated remaining/deferred/future work
 
 ---
 
