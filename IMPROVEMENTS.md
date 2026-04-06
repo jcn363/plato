@@ -171,7 +171,6 @@
 
 **Notable updateable packages (from `cargo outdated`):**
 - `nix`: ✅ Updated to 0.31.2
-- `reqwest`: 0.12 → 0.13.2 (fetcher uses 0.13.1 with different features)
 - `zip`: ✅ Updated to 8.5.0 (Breaking: `Deflated` → `DEFLATE`, generic `FileOptions`)
 - `rand_core` / `rand_xoshiro`: ✅ Updated to 0.10/0.8 (API change: add `use rand_core::Rng`)
 - `reqwest`: 0.12.28 → 0.13.2 - **Breaking TLS changes** (see below)
@@ -221,7 +220,6 @@
 | Crate | Status | API Compatibility | Notes |
 |-------|--------|-------------------|-------|
 | `rustc-hash` 2.1.2 | ✅ Active (Rust team) | Identical | **Recommended replacement** |
-| `ccl-fxhash` 3.0.0 | ⚠️ Fork | Different internal structure | 30+ file refactoring needed |
 | `foldhash` 0.2.0 | ✅ Active | Different API | Extra features not needed |
 
 **Replacement for rustc-hash:**
@@ -279,7 +277,7 @@ kl-hyphenate 0.7.3 → bincode 1.3.3 (RUSTSEC-2025-0141)
 
 #### rand_core / rand_xoshiro
 
-**Current:** rand_core 0.9.5, rand_xoshiro 0.7.0  
+**Current:** rand_core 0.9.5, rand_xoshiro 0.7.0
 **Latest:** rand_core 0.10.0, rand_xoshiro 0.8.0
 
 **Plato usage:**
@@ -292,7 +290,7 @@ kl-hyphenate 0.7.3 → bincode 1.3.3 (RUSTSEC-2025-0141)
 
 #### reqwest
 
-**Current:** 0.12.28  
+**Current:** 0.12.28
 **Latest:** 0.13.2
 
 **Breaking changes:**
@@ -307,7 +305,7 @@ kl-hyphenate 0.7.3 → bincode 1.3.3 (RUSTSEC-2025-0141)
 
 #### toml / toml_datetime / winnow
 
-**Current:** toml 0.9.12, toml_datetime 0.7.5, winnow 0.7.15  
+**Current:** toml 0.9.12, toml_datetime 0.7.5, winnow 0.7.15
 **Latest:** toml 1.1.2, toml_datetime 1.1.1, winnow 1.0.1
 
 **Breaking changes:**
@@ -379,6 +377,76 @@ serde_json = "1.0"
    - More aggressive display refresh batching (increase `MAX_UPDATE_DELAY`)
    - Optimized font cache eviction policies (if caching is added)
    - Reduced filesystem sync frequency (already minimal)
+
+## Codebase Analysis
+
+### 1. Project Structure
+
+| Crate | Purpose | Files | LOC |
+|-------|---------|-------|-----|
+| plato-core | Core library | 188 | ~53k |
+| plato | Kobo binary | - | - |
+| emulator | SDL2 desktop | - | - |
+| importer | Document import | - | - |
+| fetcher | Article fetch | - | - |
+| epub_edit | EPUB editing | - | - |
+
+### 2. Code Health
+
+- **Clippy:** ✅ Clean (no warnings)
+- **Dead code:** ⚠️ epub_editor folder has unused deps (build artifact)
+- **Unwrap usage:** 187 instances - potential for error handling improvements
+- **Test infrastructure:** ⚠️ Tests require native libs (mupdf, gumbo) - missing on host
+
+### 3. Dependency Analysis
+
+- **Total dependencies:** ~423 (including transitive)
+- **License issues:** ⚠️ Several packages with non-standard licenses fail cargo deny
+- **Version consistency:** Issues with reqwest (0.12 vs 0.13.1)
+
+### 4. File Size Concerns
+
+| File | LOC | Status |
+|------|-----|--------|
+| reader.rs | 4169 | ⚠️ Consider splitting |
+| font/mod.rs | 2768 | ⚠️ Consider splitting |
+| home/mod.rs | 2689 | ⚠️ Consider splitting |
+| html/engine.rs | 2678 | ⚠️ Consider splitting |
+| document/mod.rs | 720 | OK |
+| pdf_manipulator.rs | 864 | OK |
+
+### 5. Improvement Opportunities
+
+#### High Priority
+1. **Split large files** (reader.rs, font/mod.rs, home/mod.rs) - each exceeds 2000 LOC
+2. **Error handling** - reduce unwrap/expect usage (187 instances)
+3. **License configuration** - add deny.toml to fix cargo deny failures
+
+#### Medium Priority
+4. **Unified reqwest version** - align core (0.12.28) and fetcher (0.13.1)
+5. **Test infrastructure** - native libs needed for tests on host
+6. **Feature flags** - add more granular control for optional features
+
+#### Low Priority
+7. **Additional documentation** - module-level docs in large files
+8. **Performance monitoring** - add benchmarking for critical paths
+9. **CI/CD improvements** - automated ARM build verification
+
+### 6. Missing Functionality (Potential Features)
+
+1. **Dark mode transitions** - smooth fade vs instant
+2. **Reading statistics** - time spent, pages read
+3. **Bookmarks sync** - cloud backup
+4. **Custom gestures** - user-definable actions
+5. **Annotation export** - highlights to markdown/clipboard
+6. **Multiple dictionaries** - simultaneous lookup
+7. **Scribble/notes** - stylus support (Elipsa)
+
+### 7. Security & Maintenance
+
+- **Dependency updates:** ✅ Mostly current (except reqwest, toml, winnow)
+- **Security advisories:** ⚠️ bincode (via kl-hyphenate) - low risk for e-reader
+- **API stability:** Good - well-structured internal APIs
 
 ## Summary
 
