@@ -77,7 +77,10 @@ impl View for RoundedButton {
             TEXT_NORMAL
         };
 
-        let pixmap = ICONS_PIXMAPS.get(&self.name[..]).expect("icon not found");
+        let pixmap = match ICONS_PIXMAPS.get(&self.name[..]) {
+            Some(p) => p,
+            None => return,
+        };
         let dx = (self.rect.width() as i32 - pixmap.width as i32) / 2;
         let dy = (self.rect.height() as i32 - pixmap.height as i32) / 2;
         let pt = self.rect.min + pt!(dx, dy);

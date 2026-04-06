@@ -296,10 +296,9 @@ pub(super) fn update_text_align_icon(
     text_align: TextAlign,
     rq: &mut RenderQueue,
 ) {
-    let icon = children[4]
-        .as_mut()
-        .downcast_mut::<Icon>()
-        .expect("component type mismatch");
+    let Some(icon) = children[4].as_mut().downcast_mut::<Icon>() else {
+        return;
+    };
     let name = text_align.icon_name();
     if icon.name != name {
         icon.name = name.to_string();
@@ -312,10 +311,9 @@ pub(super) fn update_font_size_slider(
     font_size: f32,
     rq: &mut RenderQueue,
 ) {
-    let slider = children[6]
-        .as_mut()
-        .downcast_mut::<Slider>()
-        .expect("component type mismatch");
+    let Some(slider) = children[6].as_mut().downcast_mut::<Slider>() else {
+        return;
+    };
     slider.update(font_size, rq);
 }
 
@@ -324,10 +322,9 @@ pub(super) fn update_contrast_exponent_slider(
     exponent: f32,
     rq: &mut RenderQueue,
 ) {
-    let slider = children[1]
-        .as_mut()
-        .downcast_mut::<Slider>()
-        .expect("component type mismatch");
+    let Some(slider) = children[1].as_mut().downcast_mut::<Slider>() else {
+        return;
+    };
     slider.update(exponent, rq);
 }
 
@@ -336,9 +333,8 @@ pub(super) fn update_contrast_gray_slider(
     gray: f32,
     rq: &mut RenderQueue,
 ) {
-    let slider = children[3]
-        .as_mut()
-        .downcast_mut::<Slider>()
-        .expect("component type mismatch");
+    let Some(slider) = children[3].as_mut().downcast_mut::<Slider>() else {
+        return;
+    };
     slider.update(gray, rq);
 }

@@ -184,7 +184,10 @@ impl View for Icon {
             TEXT_NORMAL
         };
 
-        let pixmap = ICONS_PIXMAPS.get(&self.name[..]).expect("icon not found");
+        let pixmap = match ICONS_PIXMAPS.get(&self.name[..]) {
+            Some(p) => p,
+            None => return,
+        };
         let dx = self
             .align
             .offset(pixmap.width as i32, self.rect.width() as i32);

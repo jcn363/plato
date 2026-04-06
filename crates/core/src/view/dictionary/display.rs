@@ -199,7 +199,10 @@ impl Dictionary {
             ];
 
             let number = id == Some(ViewId::GoToPageInput);
-            let index = locate::<BottomBar>(self).expect("component not found") + 1;
+            let Some(index) = locate::<BottomBar>(self) else {
+                return;
+            };
+            let index = index + 1;
 
             let keyboard = Keyboard::new(&mut kb_rect, number, context);
             self.children

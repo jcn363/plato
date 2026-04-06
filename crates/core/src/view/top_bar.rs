@@ -75,10 +75,9 @@ impl TopBar {
     }
 
     pub fn update_root_icon(&mut self, name: &str, rq: &mut RenderQueue) {
-        let icon = self
-            .child_mut(0)
-            .downcast_mut::<Icon>()
-            .expect("component type mismatch");
+        let Some(icon) = self.child_mut(0).downcast_mut::<Icon>() else {
+            return;
+        };
         if icon.name != name {
             icon.name = name.to_string();
             rq.add(RenderData::new(icon.id(), *icon.rect(), UpdateMode::Gui));
@@ -86,10 +85,9 @@ impl TopBar {
     }
 
     pub fn update_title_label(&mut self, title: &str, rq: &mut RenderQueue) {
-        let title_label = self.children[1]
-            .as_mut()
-            .downcast_mut::<Label>()
-            .expect("component type mismatch");
+        let Some(title_label) = self.children[1].as_mut().downcast_mut::<Label>() else {
+            return;
+        };
         title_label.update(title, rq);
     }
 
@@ -99,10 +97,9 @@ impl TopBar {
         } else {
             "frontlight-disabled"
         };
-        let icon = self
-            .child_mut(4)
-            .downcast_mut::<Icon>()
-            .expect("component type mismatch");
+        let Some(icon) = self.child_mut(4).downcast_mut::<Icon>() else {
+            return;
+        };
         icon.name = name.to_string();
         rq.add(RenderData::new(icon.id(), *icon.rect(), UpdateMode::Gui));
     }

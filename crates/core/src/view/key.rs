@@ -309,11 +309,12 @@ impl View for Key {
                 font.render(fb, scheme[1], &plan, pt);
             }
             KeyLabel::Icon(name) => {
-                let pixmap = ICONS_PIXMAPS.get(name).expect("icon not found");
-                let dx = (self.rect.width() as i32 - pixmap.width as i32) / 2;
-                let dy = (self.rect.height() as i32 - pixmap.height as i32) / 2;
-                let pt = self.rect.min + pt!(dx, dy);
-                fb.draw_blended_pixmap(pixmap, pt, scheme[1]);
+                if let Some(pixmap) = ICONS_PIXMAPS.get(name) {
+                    let dx = (self.rect.width() as i32 - pixmap.width as i32) / 2;
+                    let dy = (self.rect.height() as i32 - pixmap.height as i32) / 2;
+                    let pt = self.rect.min + pt!(dx, dy);
+                    fb.draw_blended_pixmap(pixmap, pt, scheme[1]);
+                }
             }
         }
     }

@@ -72,8 +72,8 @@ impl View for Directory {
         let text = self
             .path
             .file_name()
-            .expect("path has no file name")
-            .to_string_lossy();
+            .map(|n| n.to_string_lossy())
+            .unwrap_or_default();
         let plan = font.plan(text, self.max_width, None);
 
         let dx = self.align.offset(plan.width, self.rect.width() as i32);

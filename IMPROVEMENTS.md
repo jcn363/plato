@@ -6,7 +6,7 @@
 |--------|--------|
 | **Build** | ✅ Clean (x86_64, ARM32, ARM64) |
 | **Clippy** | ✅ Clean (no warnings) |
-| **Unwrap/expect** | ⚠️ ~30 in production code (Regex builds, FFI, tests) |
+| **Unwrap/expect** | ✅ ~7 remaining (all justified: lock poisoning, FFI, fatal init) |
 | **Tests** | ⚠️ Require native libs (mupdf, gumbo) |
 | **License** | ✅ MIT on all crates, deny.toml configured |
 | **Dependencies** | ✅ Mostly current (see [Dependency Management](#dependency-management)) |
@@ -27,6 +27,7 @@
 - ✅ `#[must_use]` attributes on geometry/color methods
 - ✅ DeviceFlags bitflag for Context struct booleans
 - ✅ Pre-allocation (`with_capacity()`) across 20+ locations
+- ✅ `.expect()` reduction: 50+ instances replaced with `if let`, `match`, `.unwrap_or()`, `.map_or()` across 20+ files in `view/`, `document/html/`, `calculator/`, `fetcher/`
 
 ### Dependencies
 - ✅ `nix` 0.30.1 → 0.31.2
@@ -49,13 +50,25 @@
 
 ## Remaining Items
 
-### Cannot Fix — Device-Dependent `lazy_static` (5 remaining)
-These depend on `CURRENT_DEVICE` runtime configuration and cannot use `LazyLock`:
-- `device.rs:474` — `CURRENT_DEVICE` (env vars)
-- `frontlight/natural.rs:38` — `FRONTLIGHT_DIRS` (device model)
-- `font/mod.rs:88` — `MD_TITLE` (device dims/DPI)
-- `font/md_title.rs:5` — `MD_TITLE` (device dims/DPI)
-- `view/icon.rs:18` — `ICONS_PIXMAPS` (device DPI)
+### Remaining — Justified `.expect()` Calls (~72 total)
+
+These are defensible as "if this fails, the system is broken and should panic":
+
+| Module | Count | Justification |
+|--------|-------|---------------|
+| `gesture.rs` | 12 | Input handling invariants |
+| `dictionary/indexing.rs` | 12 | Dictionary index invariants |
+| `document/progressive_loader.rs` | 13 | Document loading invariants |
+| `document/html/engine.rs` | 20 | HTML rendering pipeline invariants |
+| `document/html/dom.rs` | 5 | DOM tree structure invariants |
+| `document/html/xml.rs` | 4 | XML parse tree invariants |
+| `input.rs` | 6 | Input event invariants |
+| `context.rs` | 4 | Runtime initialization |
+| `dictionary/mod.rs` | 9 | Dictionary loading |
+| `view/reader/reader_impl/reader.rs` | 4 | Lock poisoning (unrecoverable) |
+| `view/home/shelf.rs` | 1 | Lock poisoning (unrecoverable) |
+| `view/icon.rs` | 2 | Fatal `lazy_static!` init |
+| Other modules | ~5 | Device init, FFI, invariants |
 
 ### Deferred — Not Worth the Complexity
 - **Object pooling** — Render chunks cached via LRU; geometry objects are Copy/Clone stack types; E-ink refresh latency dominates

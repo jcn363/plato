@@ -98,10 +98,9 @@ impl BottomBar {
     }
 
     pub fn update_chapter_label(&mut self, title: String, progress: f32, rq: &mut RenderQueue) {
-        let chapter_label = self
-            .child_mut(1)
-            .downcast_mut::<ChapterLabel>()
-            .expect("component type mismatch");
+        let Some(chapter_label) = self.child_mut(1).downcast_mut::<ChapterLabel>() else {
+            return;
+        };
         chapter_label.update(title, progress, rq);
     }
 
@@ -111,10 +110,9 @@ impl BottomBar {
         pages_count: usize,
         rq: &mut RenderQueue,
     ) {
-        let page_label = self
-            .child_mut(2)
-            .downcast_mut::<PageLabel>()
-            .expect("component type mismatch");
+        let Some(page_label) = self.child_mut(2).downcast_mut::<PageLabel>() else {
+            return;
+        };
         page_label.update(current_page, pages_count, rq);
     }
 

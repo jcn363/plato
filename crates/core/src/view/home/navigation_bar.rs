@@ -198,9 +198,9 @@ impl NavigationBar {
 
         loop {
             if index % 2 == 0 {
-                let dirs_bar = self.children[index]
-                    .downcast_mut::<DirectoriesBar>()
-                    .expect("component type mismatch");
+                let Some(dirs_bar) = self.children[index].downcast_mut::<DirectoriesBar>() else {
+                    break;
+                };
                 dirs_bar.shift(pt!(0, y_shift));
                 if !last.starts_with(current) || !current.starts_with(&first) {
                     if current == path.as_ref() {
@@ -315,9 +315,9 @@ impl NavigationBar {
         self.children[index].rect_mut().max.y = y_max;
         let y_shift = y_max - rect.max.y;
 
-        let dirs_bar = self.children[index]
-            .downcast_mut::<DirectoriesBar>()
-            .expect("component type mismatch");
+        let Some(dirs_bar) = self.children[index].downcast_mut::<DirectoriesBar>() else {
+            return 0;
+        };
         let dirs = dirs_bar.dirs();
         dirs_bar.update_content(&dirs, self.path.as_ref(), fonts);
 

@@ -459,8 +459,7 @@ impl Calculator {
         let beginning = if honor_prefix {
             self.children[4]
                 .downcast_ref::<InputBar>()
-                .expect("failed to downcast to InputBar")
-                .text_before_cursor()
+                .map_or("", |bar| bar.text_before_cursor())
         } else {
             ""
         };

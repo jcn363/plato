@@ -296,19 +296,20 @@ impl Home {
         let mut index = 2;
 
         if context.settings.home.address_bar {
-            let addr_bar = self.children[index]
-                .as_mut()
-                .downcast_mut::<AddressBar>()
-                .expect("address bar not found");
+            let Some(addr_bar) = self.children[index].as_mut().downcast_mut::<AddressBar>() else {
+                return;
+            };
             addr_bar.set_text(self.current_directory.to_string_lossy(), rq, context);
             index += 2;
         }
 
         if context.settings.home.navigation_bar {
-            let nav_bar = self.children[index]
+            let Some(nav_bar) = self.children[index]
                 .as_mut()
                 .downcast_mut::<NavigationBar>()
-                .expect("navigation bar not found");
+            else {
+                return;
+            };
             nav_bar.set_path(&self.current_directory, &dirs, rq, context);
             self.adjust_shelf_top_edge();
             rq.add(RenderData::new(
@@ -394,8 +395,7 @@ impl Home {
         let max_lines = self.children[self.shelf_index]
             .as_ref()
             .downcast_ref::<Shelf>()
-            .expect("shelf not found")
-            .max_lines;
+            .map_or(1, |shelf| shelf.max_lines);
         let index_lower = self.current_page * max_lines;
         let index_upper = (index_lower + max_lines).min(self.visible_books.len());
         let book_index = match dir {
@@ -438,11 +438,8 @@ impl Home {
         self.visible_books = files;
 
         let max_lines = {
-            let shelf = self
-                .child(self.shelf_index)
-                .downcast_ref::<Shelf>()
-                .expect("shelf not found");
-            shelf.max_lines
+            let shelf = self.child(self.shelf_index).downcast_ref::<Shelf>();
+            shelf.map_or(1, |s| s.max_lines)
         };
 
         self.pages_count = (self.visible_books.len() as f32 / max_lines as f32).ceil() as usize;
@@ -461,21 +458,23 @@ impl Home {
 
     fn update_first_column(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         let selected_library = context.settings.selected_library;
-        self.children[self.shelf_index]
+        if let Some(shelf) = self.children[self.shelf_index]
             .as_mut()
             .downcast_mut::<Shelf>()
-            .expect("shelf not found")
-            .set_first_column(context.settings.libraries[selected_library].first_column);
+        {
+            shelf.set_first_column(context.settings.libraries[selected_library].first_column);
+        }
         self.update_shelf(false, hub, rq, context);
     }
 
     fn update_second_column(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         let selected_library = context.settings.selected_library;
-        self.children[self.shelf_index]
+        if let Some(shelf) = self.children[self.shelf_index]
             .as_mut()
             .downcast_mut::<Shelf>()
-            .expect("shelf not found")
-            .set_second_column(context.settings.libraries[selected_library].second_column);
+        {
+            shelf.set_second_column(context.settings.libraries[selected_library].second_column);
+        }
         self.update_shelf(false, hub, rq, context);
     }
 
@@ -486,13 +485,14 @@ impl Home {
         context: &mut Context,
     ) {
         let selected_library = context.settings.selected_library;
-        self.children[self.shelf_index]
+        if let Some(shelf) = self.children[self.shelf_index]
             .as_mut()
             .downcast_mut::<Shelf>()
-            .expect("shelf not found")
-            .set_thumbnail_previews(
+        {
+            shelf.set_thumbnail_previews(
                 context.settings.libraries[selected_library].thumbnail_previews,
             );
+        }
         self.update_shelf(false, hub, rq, context);
     }
 
@@ -506,10 +506,13 @@ impl Home {
         let dpi = CURRENT_DEVICE.dpi;
         let big_height = scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
-        let shelf = self.children[self.shelf_index]
+        let shelf = match self.children[self.shelf_index]
             .as_mut()
             .downcast_mut::<Shelf>()
-            .expect("shelf not found");
+        {
+            Some(s) => s,
+            None => return,
+        };
         let max_lines = ((shelf.rect.height() as i32 + thickness) / big_height) as usize;
 
         if was_resized {
@@ -544,22 +547,19 @@ impl Home {
 
     fn update_top_bar(&mut self, search_visible: bool, rq: &mut RenderQueue) {
         if let Some(index) = locate::<TopBar>(self) {
-            let top_bar = self.children[index]
-                .as_mut()
-                .downcast_mut::<TopBar>()
-                .expect("top bar not found");
-            let name = if search_visible { "back" } else { "search" };
-            top_bar.update_root_icon(name, rq);
-            top_bar.update_title_label(&self.sort_method.title(), rq);
+            if let Some(top_bar) = self.children[index].as_mut().downcast_mut::<TopBar>() {
+                let name = if search_visible { "back" } else { "search" };
+                top_bar.update_root_icon(name, rq);
+                top_bar.update_title_label(&self.sort_method.title(), rq);
+            }
         }
     }
 
     fn update_bottom_bar(&mut self, rq: &mut RenderQueue, context: &Context) {
         if let Some(index) = rlocate::<BottomBar>(self) {
-            let bottom_bar = self.children[index]
-                .as_mut()
-                .downcast_mut::<BottomBar>()
-                .expect("bottom bar not found");
+            let Some(bottom_bar) = self.children[index].as_mut().downcast_mut::<BottomBar>() else {
+                return;
+            };
             let filter = self.query.is_some() || self.current_directory != context.library.home;
             let selected_library = context.settings.selected_library;
             let library_settings = &context.settings.libraries[selected_library];
@@ -623,7 +623,10 @@ impl Home {
                 return;
             }
 
-            let index = rlocate::<BottomBar>(self).expect("bottom bar not found") - 1;
+            let Some(index) = rlocate::<BottomBar>(self) else {
+                return;
+            };
+            let index = index - 1;
             let mut kb_rect = rect![
                 self.rect.min.x,
                 self.rect.max.y - (small_height + 3 * big_height) as i32 + big_thickness,
@@ -732,10 +735,11 @@ impl Home {
 
             // Move the navigation bar up.
             if context.settings.home.navigation_bar {
-                let nav_bar = self.children[self.shelf_index - 2]
-                    .downcast_mut::<NavigationBar>()
-                    .expect("navigation bar not found");
-                nav_bar.shift(pt!(0, -small_height));
+                if let Some(nav_bar) =
+                    self.children[self.shelf_index - 2].downcast_mut::<NavigationBar>()
+                {
+                    nav_bar.shift(pt!(0, -small_height));
+                }
             }
 
             // Move the separator above the shelf up.
@@ -778,17 +782,18 @@ impl Home {
             if context.settings.home.navigation_bar {
                 let rect = *self.children[self.shelf_index].rect();
                 let y_shift = rect.height() as i32 - (big_height - thickness);
-                let nav_bar = self.children[self.shelf_index - 2]
-                    .downcast_mut::<NavigationBar>()
-                    .expect("navigation bar not found");
-                // Move the navigation bar down.
-                nav_bar.shift(pt!(0, small_height));
+                if let Some(nav_bar) =
+                    self.children[self.shelf_index - 2].downcast_mut::<NavigationBar>()
+                {
+                    // Move the navigation bar down.
+                    nav_bar.shift(pt!(0, small_height));
 
-                // Shrink the nav bar.
-                if y_shift < 0 {
-                    let y_shift = nav_bar.shrink(y_shift, &mut context.fonts);
-                    self.children[self.shelf_index].rect_mut().min.y += y_shift;
-                    *self.children[self.shelf_index - 1].rect_mut() += pt!(0, y_shift);
+                    // Shrink the nav bar.
+                    if y_shift < 0 {
+                        let y_shift = nav_bar.shrink(y_shift, &mut context.fonts);
+                        self.children[self.shelf_index].rect_mut().min.y += y_shift;
+                        *self.children[self.shelf_index - 1].rect_mut() += pt!(0, y_shift);
+                    }
                 }
             }
         }
@@ -931,10 +936,11 @@ impl Home {
             self.children[self.shelf_index].rect_mut().max.y += delta_y;
 
             if context.settings.home.navigation_bar {
-                let nav_bar = self.children[self.shelf_index - 2]
-                    .downcast_mut::<NavigationBar>()
-                    .expect("navigation bar not found");
-                nav_bar.vertical_limit += delta_y;
+                if let Some(nav_bar) =
+                    self.children[self.shelf_index - 2].downcast_mut::<NavigationBar>()
+                {
+                    nav_bar.vertical_limit += delta_y;
+                }
             }
 
             self.query = None;
@@ -970,16 +976,17 @@ impl Home {
             if context.settings.home.navigation_bar {
                 let rect = *self.children[self.shelf_index].rect();
                 let y_shift = rect.height() as i32 - (big_height - thickness);
-                let nav_bar = self.children[self.shelf_index - 2]
-                    .downcast_mut::<NavigationBar>()
-                    .expect("navigation bar not found");
-                nav_bar.vertical_limit -= delta_y;
+                if let Some(nav_bar) =
+                    self.children[self.shelf_index - 2].downcast_mut::<NavigationBar>()
+                {
+                    nav_bar.vertical_limit -= delta_y;
 
-                // Shrink the nav bar.
-                if y_shift < 0 {
-                    let y_shift = nav_bar.shrink(y_shift, &mut context.fonts);
-                    self.children[self.shelf_index].rect_mut().min.y += y_shift;
-                    *self.children[self.shelf_index - 1].rect_mut() += pt!(0, y_shift);
+                    // Shrink the nav bar.
+                    if y_shift < 0 {
+                        let y_shift = nav_bar.shrink(y_shift, &mut context.fonts);
+                        self.children[self.shelf_index].rect_mut().min.y += y_shift;
+                        *self.children[self.shelf_index - 1].rect_mut() += pt!(0, y_shift);
+                    }
                 }
             }
 
@@ -1249,8 +1256,7 @@ impl Home {
         let max_lines = self
             .child(self.shelf_index)
             .downcast_ref::<Shelf>()
-            .expect("shelf not found")
-            .max_lines;
+            .map_or(1, |shelf| shelf.max_lines);
         let index_lower = self.current_page * max_lines;
         (index_lower + index).min(self.visible_books.len())
     }
@@ -2472,10 +2478,9 @@ impl View for Home {
             }
             Event::ToggleFrontlight => {
                 if let Some(index) = locate::<TopBar>(self) {
-                    self.child_mut(index)
-                        .downcast_mut::<TopBar>()
-                        .expect("top bar not found")
-                        .update_frontlight_icon(rq, context);
+                    if let Some(top_bar) = self.child_mut(index).downcast_mut::<TopBar>() {
+                        top_bar.update_frontlight_icon(rq, context);
+                    }
                 }
                 true
             }
@@ -2553,45 +2558,48 @@ impl View for Home {
             } else {
                 1
             };
-            let nav_bar = self.children[index]
+            let (_, dirs) = context.library.list(&self.current_directory, None, true);
+            if let Some(nav_bar) = self.children[index]
                 .as_mut()
                 .downcast_mut::<NavigationBar>()
-                .expect("navigation bar not found");
-            let (_, dirs) = context.library.list(&self.current_directory, None, true);
-            nav_bar.clear();
-            nav_bar.resize(
-                rect![
-                    rect.min.x,
-                    shelf_min_y,
-                    rect.max.x,
-                    shelf_min_y + small_height - thickness
-                ],
-                hub,
-                rq,
-                context,
-            );
-            nav_bar.vertical_limit =
-                rect.max.y - count * small_height - big_height - small_thickness;
-            nav_bar.set_path(
-                &self.current_directory,
-                &dirs,
-                &mut RenderQueue::new(),
-                context,
-            );
-            shelf_min_y += nav_bar.rect().height() as i32;
-            index += 1;
+            {
+                nav_bar.clear();
+                nav_bar.resize(
+                    rect![
+                        rect.min.x,
+                        shelf_min_y,
+                        rect.max.x,
+                        shelf_min_y + small_height - thickness
+                    ],
+                    hub,
+                    rq,
+                    context,
+                );
+                nav_bar.vertical_limit =
+                    rect.max.y - count * small_height - big_height - small_thickness;
+                nav_bar.set_path(
+                    &self.current_directory,
+                    &dirs,
+                    &mut RenderQueue::new(),
+                    context,
+                );
+                shelf_min_y += nav_bar.rect().height() as i32;
+                index += 1;
 
-            self.children[index].resize(
-                rect![rect.min.x, shelf_min_y, rect.max.x, shelf_min_y + thickness],
-                hub,
-                rq,
-                context,
-            );
-            shelf_min_y += thickness;
+                self.children[index].resize(
+                    rect![rect.min.x, shelf_min_y, rect.max.x, shelf_min_y + thickness],
+                    hub,
+                    rq,
+                    context,
+                );
+                shelf_min_y += thickness;
+            }
         }
 
         // Bottom bar.
-        let bottom_bar_index = rlocate::<BottomBar>(self).expect("bottom bar not found");
+        let Some(bottom_bar_index) = rlocate::<BottomBar>(self) else {
+            return;
+        };
         index = bottom_bar_index;
 
         let separator_rect = rect![

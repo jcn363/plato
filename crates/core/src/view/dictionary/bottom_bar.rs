@@ -98,10 +98,9 @@ impl BottomBar {
     }
 
     pub fn update_name(&mut self, text: &str, rq: &mut RenderQueue) {
-        let name_label = self
-            .child_mut(1)
-            .downcast_mut::<Label>()
-            .expect("failed to downcast to Label");
+        let Some(name_label) = self.child_mut(1).downcast_mut::<Label>() else {
+            return;
+        };
         name_label.update(text, rq);
     }
 }

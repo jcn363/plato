@@ -107,7 +107,7 @@ impl FrontlightWindow {
                     .iter()
                     .map(|t| font.plan(t, None, None).width)
                     .max()
-                    .expect("empty collection") as i32
+                    .unwrap_or(0) as i32
             };
 
             for (index, slider_id) in [SliderId::LightIntensity, SliderId::LightWarmth]
@@ -172,7 +172,7 @@ impl FrontlightWindow {
                 .iter()
                 .map(|t| font.plan(t, None, None).width)
                 .max()
-                .expect("empty collection") as i32
+                .unwrap_or(0) as i32
         };
 
         let button_height = 4 * x_height;
@@ -462,7 +462,7 @@ impl View for FrontlightWindow {
                     .iter()
                     .map(|t| font.plan(t, None, None).width)
                     .max()
-                    .expect("empty collection") as i32
+                    .unwrap_or(0) as i32
             };
             for i in 0..2usize {
                 let min_y = rect.min.y + (i + 1) as i32 * small_height;
@@ -513,7 +513,7 @@ impl View for FrontlightWindow {
                 .iter()
                 .map(|t| font.plan(t, None, None).width)
                 .max()
-                .expect("empty collection") as i32
+                .unwrap_or(0) as i32
         };
 
         let button_height = 4 * x_height;

@@ -100,10 +100,9 @@ impl BottomBar {
         filter: bool,
         rq: &mut RenderQueue,
     ) {
-        let library_label = self.children[1]
-            .as_mut()
-            .downcast_mut::<LibraryLabel>()
-            .expect("component type mismatch");
+        let Some(library_label) = self.children[1].as_mut().downcast_mut::<LibraryLabel>() else {
+            return;
+        };
         library_label.update(name, count, filter, rq);
     }
 
@@ -113,10 +112,9 @@ impl BottomBar {
         pages_count: usize,
         rq: &mut RenderQueue,
     ) {
-        let page_label = self.children[2]
-            .as_mut()
-            .downcast_mut::<PageLabel>()
-            .expect("component type mismatch");
+        let Some(page_label) = self.children[2].as_mut().downcast_mut::<PageLabel>() else {
+            return;
+        };
         page_label.update(current_page, pages_count, rq);
     }
 

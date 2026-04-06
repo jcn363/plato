@@ -228,22 +228,21 @@ impl DirectoriesBar {
         let mut page = Page::default();
 
         if start_index > 0 {
-            let pixmap = ICONS_PIXMAPS
-                .get("angle-left-small")
-                .expect("icon not found");
-            line.width += pixmap.width as i32 + padding;
-            line.items.push(Item::Icon {
-                name: "angle-left-small",
-                width: pixmap.width as i32,
-            });
+            if let Some(pixmap) = ICONS_PIXMAPS.get("angle-left-small") {
+                line.width += pixmap.width as i32 + padding;
+                line.items.push(Item::Icon {
+                    name: "angle-left-small",
+                    width: pixmap.width as i32,
+                });
+            }
         }
 
         for dir in directories.iter().skip(start_index) {
             let mut dir_width = font
                 .plan(
                     dir.file_name()
-                        .expect("missing file name")
-                        .to_string_lossy(),
+                        .map(|n| n.to_string_lossy())
+                        .unwrap_or_default(),
                     None,
                     None,
                 )
@@ -279,7 +278,7 @@ impl DirectoriesBar {
                     }
                     if line.labels_count == 1 {
                         let occupied_width =
-                            line.width - line.items.last().expect("empty collection").width();
+                            line.width - line.items.last().map_or(0, |item| item.width());
                         if let Some(&mut Item::Label {
                             ref mut width,
                             ref mut max_width,
@@ -310,41 +309,40 @@ impl DirectoriesBar {
 
         if end_index < directories.len() {
             if let Some(mut line) = page.lines.pop() {
-                let pixmap = ICONS_PIXMAPS
-                    .get("angle-right-small")
-                    .expect("icon not found");
-                line.width += pixmap.width as i32 + padding;
+                if let Some(pixmap) = ICONS_PIXMAPS.get("angle-right-small") {
+                    line.width += pixmap.width as i32 + padding;
 
-                if line.labels_count > 1 {
-                    while line.width > max_line_width {
-                        if let Some(Item::Label { width, .. }) = line.items.pop() {
-                            line.width -= width + padding;
-                            line.labels_count -= 1;
-                            end_index -= 1;
-                        } else {
-                            break;
+                    if line.labels_count > 1 {
+                        while line.width > max_line_width {
+                            if let Some(Item::Label { width, .. }) = line.items.pop() {
+                                line.width -= width + padding;
+                                line.labels_count -= 1;
+                                end_index -= 1;
+                            } else {
+                                break;
+                            }
                         }
+                    } else {
+                        let occupied_width =
+                            line.width - line.items.last().map_or(0, |item| item.width());
+                        if let Some(&mut Item::Label {
+                            ref mut width,
+                            ref mut max_width,
+                            ..
+                        }) = line.items.last_mut()
+                        {
+                            *width = max_line_width - occupied_width;
+                            *max_width = Some(*width);
+                        }
+                        line.width = max_line_width;
                     }
-                } else {
-                    let occupied_width =
-                        line.width - line.items.last().expect("empty collection").width();
-                    if let Some(&mut Item::Label {
-                        ref mut width,
-                        ref mut max_width,
-                        ..
-                    }) = line.items.last_mut()
-                    {
-                        *width = max_line_width - occupied_width;
-                        *max_width = Some(*width);
-                    }
-                    line.width = max_line_width;
-                }
 
-                line.items.push(Item::Icon {
-                    name: "angle-right-small",
-                    width: pixmap.width as i32,
-                });
-                page.lines.push(line);
+                    line.items.push(Item::Icon {
+                        name: "angle-right-small",
+                        width: pixmap.width as i32,
+                    });
+                    page.lines.push(line);
+                }
             }
         }
 

@@ -94,8 +94,7 @@ impl InputBar {
     pub fn text_before_cursor(&self) -> &str {
         self.children[2]
             .downcast_ref::<InputField>()
-            .expect("failed to downcast to InputField")
-            .text_before_cursor()
+            .map_or("", |field| field.text_before_cursor())
     }
 }
 

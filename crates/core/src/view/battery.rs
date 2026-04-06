@@ -150,12 +150,13 @@ impl View for Battery {
             } else {
                 "check_mark-small"
             };
-            let pixmap = ICONS_PIXMAPS.get(name).expect("icon not found");
-            pt += pt!(
-                (max_fill_width - pixmap.width as i32) / 2,
-                (fill_height - pixmap.height as i32) / 2
-            );
-            fb.draw_blended_pixmap(pixmap, pt, BLACK);
+            if let Some(pixmap) = ICONS_PIXMAPS.get(name) {
+                pt += pt!(
+                    (max_fill_width - pixmap.width as i32) / 2,
+                    (fill_height - pixmap.height as i32) / 2
+                );
+                fb.draw_blended_pixmap(pixmap, pt, BLACK);
+            }
         }
     }
 

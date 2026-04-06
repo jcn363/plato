@@ -112,13 +112,13 @@ impl View for RotationValues {
                         .enumerate()
                         .min_by_key(|(_, &pt)| first.dist2(pt))
                         .map(|(i, _)| i)
-                        .expect("empty collection");
+                        .unwrap_or(0);
                     let origin = self.taps[CORNERS_COUNT..2 * CORNERS_COUNT]
                         .iter()
                         .enumerate()
                         .min_by_key(|(_, pt)| pt.x + pt.y)
                         .map(|(i, _)| i)
-                        .expect("empty collection");
+                        .unwrap_or(0);
                     let center = (origin + 2) % 4;
                     let next = self.taps[CORNERS_COUNT + (center + 1) % 4];
                     let polarity = 2 * ((origin + startup_rotation) as i8 % 2) - 1;

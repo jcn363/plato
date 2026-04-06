@@ -118,7 +118,7 @@ impl Dictionary {
                         .keys()
                         .next()
                         .cloned()
-                        .expect("empty collection"),
+                        .unwrap_or_default(),
                 )
             } else {
                 None

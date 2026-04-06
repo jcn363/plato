@@ -103,17 +103,17 @@ impl View for Intermission {
 
                 font.render(fb, scheme[1], &plan, pt!(dx, dy));
 
-                let mut doc = open("icons/dodecahedron.svg").expect("failed to open icon");
-                let (width, height) = doc.dims(0).expect("failed to get dimensions");
-                let scale = (plan.width as f32 / width.max(height) as f32) / 4.0;
-                let (pixmap, _) = doc
-                    .pixmap(Location::Exact(0), scale, 1)
-                    .expect("failed to render icon");
-                let dx = (self.rect.width() as i32 - pixmap.width as i32) / 2;
-                let dy = dy + 2 * x_height;
-                let pt = self.rect.min + pt!(dx, dy);
-
-                fb.draw_blended_pixmap(&pixmap, pt, scheme[1]);
+                if let Some(mut doc) = open("icons/dodecahedron.svg") {
+                    if let Some((width, height)) = doc.dims(0) {
+                        let scale = (plan.width as f32 / width.max(height) as f32) / 4.0;
+                        if let Some((pixmap, _)) = doc.pixmap(Location::Exact(0), scale, 1) {
+                            let dx = (self.rect.width() as i32 - pixmap.width as i32) / 2;
+                            let dy = dy + 2 * x_height;
+                            let pt = self.rect.min + pt!(dx, dy);
+                            fb.draw_blended_pixmap(&pixmap, pt, scheme[1]);
+                        }
+                    }
+                }
             }
             Message::Image(ref path) => {
                 if let Some(mut doc) = open(path) {

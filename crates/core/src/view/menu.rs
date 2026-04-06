@@ -124,7 +124,7 @@ impl Menu {
                 .iter()
                 .map(|e| font.plan(e.text(), None, None).width)
                 .max()
-                .expect("menu operation failed");
+                .unwrap_or(0);
 
         let entry_width = free_width.min(max_width);
 

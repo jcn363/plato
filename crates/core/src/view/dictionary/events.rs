@@ -128,7 +128,10 @@ impl View for Dictionary {
             }
             Event::Submit(ViewId::EditLanguagesInput, ref text) => {
                 if let Some(name) = self.target.as_ref() {
-                    let re = Regex::new(r"\s*,\s*").expect("invalid regex");
+                    let re = match Regex::new(r"\s*,\s*") {
+                        Ok(r) => r,
+                        Err(_) => return true,
+                    };
                     context
                         .settings
                         .dictionary

@@ -117,9 +117,10 @@ impl Sketch {
                 return;
             }
 
-            let glob = Glob::new("**/*.png")
-                .expect("invalid glob pattern")
-                .compile_matcher();
+            let glob = match Glob::new("**/*.png") {
+                Ok(g) => g.compile_matcher(),
+                Err(_) => return,
+            };
             let mut loadables: Vec<PathBuf> = WalkDir::new(&self.save_path)
                 .min_depth(1)
                 .into_iter()
