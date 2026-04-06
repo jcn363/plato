@@ -178,8 +178,32 @@
 - `chrono`: ✅ Updated to 0.4.44
 
 **Unmaintained packages (advisory):**
-- `bincode` 1.3.3 - RUSTSEC-2025-0141 (via kl-hyphenate) - **Cannot replace** without upstream kl-hyphenate update
-- `fxhash` 0.2.1 - RUSTSEC-2025-0057 - **Attempted replacement to ccl-fxhash 3.0.0 but API incompatibility** (ccl-fxhash has different internal structure, would require significant refactoring across 30+ files)
+- `bincode` 1.3.3 - RUSTSEC-2025-0141 (via kl-hyphenate) - **See below for replacement analysis**
+- `fxhash` 0.2.1 - RUSTSEC-2025-0057 - ccl-fxhash incompatible
+
+### bincode/kl-hyphenate Replacement Analysis
+
+**Current dependency chain:**
+```
+kl-hyphenate 0.7.3 → bincode 1.3.3 (RUSTSEC-2025-0141)
+```
+
+**kl-hyphenate usage in Plato:**
+- `document/html/layout.rs:7` - imports `Language, Load, Standard`
+- `document/html/layout.rs:645-668` - loads hyphenation patterns from files (`.standard.bincode`)
+- `document/html/engine.rs:2270-2313` - uses `dictionary.hyphenate(word).iter().segments()` API
+- 80+ language codes supported (en, de, fr, es, etc.)
+
+**Replacement options:**
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **Keep kl-hyphenate** | Works, 80+ languages | bincode unmaintained |
+| **hyphenation 0.8.4** | Active, similar Knuth-Liang | Different API (dictionary-based), embed patterns at build time |
+| **spandex-hyphenation** 0.7.4 | Older but stable | Less maintained |
+| **Fork kl-hyphenate** | Remove bincode dep | Significant effort |
+
+**Conclusion:** The bincode vulnerability is in kl-hyphenate's internal pattern loading. The patterns are embedded as binary data at build time - the vulnerability is low-risk for e-reader use (not network-facing). Best approach: wait for upstream kl-hyphenate update OR fork and replace bincode with alternative serialization.
 
 **Security-sensitive packages:**
 - `reqwest` with `rustls-tls-webpki-roots` - Using secure TLS defaults
