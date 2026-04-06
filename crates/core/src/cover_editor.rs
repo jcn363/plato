@@ -193,7 +193,7 @@ pub fn set_cover_in_epub<P: AsRef<Path>>(epub_path: P, cover_path: P) -> Result<
     let mut new_archive = zip::ZipWriter::new(temp_file);
 
     let options = zip::write::SimpleFileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated);
+        .compression_method(zip::CompressionMethod::DEFLATE);
 
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i)?;

@@ -521,7 +521,7 @@ impl EpubEditorCore {
         let file =
             File::create(&self.epub_path).context("Failed to create EPUB file for saving")?;
         let mut zip = ZipWriter::new(file);
-        let options = FileOptions::default().compression_method(CompressionMethod::Deflated);
+        let options = FileOptions::default().compression_method(CompressionMethod::DEFLATE);
         let mut buffer = Vec::new();
         self.walk_dir(&self.temp_dir, &mut zip, &options, &mut buffer)?;
         zip.finish()?;
@@ -599,7 +599,7 @@ impl EpubEditorCore {
         &self,
         dir: &Path,
         zip: &mut ZipWriter<W>,
-        options: &FileOptions,
+        options: &FileOptions<()>,
         buffer: &mut Vec<u8>,
     ) -> io::Result<()> {
         for entry in fs::read_dir(dir)? {
