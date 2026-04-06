@@ -173,8 +173,9 @@
 - `nix`: ✅ Updated to 0.31.2
 - `reqwest`: 0.12 → 0.13.2 (fetcher uses 0.13.1 with different features)
 - `zip`: 7.0.0 → 8.5.0 (breaking API changes)
-- `quick-xml`: 0.37.0 → 0.39.2
+- `quick-xml`: ✅ Updated to 0.39.2 (API change: `unescape()` → `decode()`)
 - `indexmap`: ✅ Updated to 2.13.1
+- `chrono`: ✅ Updated to 0.4.44
 
 **Unmaintained packages (advisory):**
 - `bincode` 1.3.3 - RUSTSEC-2025-0141 (via kl-hyphenate)

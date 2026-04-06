@@ -66,7 +66,7 @@ impl OPDSCatalog {
                     }
                 }
                 Ok(quick_xml::events::Event::Text(e)) => {
-                    let text = e.unescape()?;
+                    let text = e.decode()?;
                     if in_title {
                         title.push_str(&text);
                     } else if in_entry {
@@ -129,7 +129,7 @@ impl OPDSCatalog {
                     }
                 }
                 Ok(quick_xml::events::Event::Text(e)) => {
-                    let text = e.unescape()?;
+                    let text = e.decode()?;
                     if !text.is_empty() && in_link {
                         entries.push(OPDSEntry {
                             id: href.clone(),
