@@ -127,18 +127,18 @@ impl Context {
     /// # Errors
     /// Logs errors for individual layout file failures but continues processing.
     pub fn load_keyboard_layouts(&mut self) {
-        let glob = Glob::new("**/*.json")
-            .expect("invalid glob pattern")
-            .compile_matcher();
+        let glob = match Glob::new("**/*.json") {
+            Ok(g) => g.compile_matcher(),
+            Err(_) => return,
+        };
         for entry in WalkDir::new(Path::new(KEYBOARD_LAYOUTS_DIRNAME))
             .min_depth(1)
             .into_iter()
             .filter_entry(|e| !e.is_hidden())
         {
-            if entry.is_err() {
+            let Ok(entry) = entry else {
                 continue;
-            }
-            let entry = entry.expect("dir entry read failed");
+            };
             let path = entry.path();
             if !glob.is_match(path) {
                 continue;
@@ -156,18 +156,18 @@ impl Context {
     /// # Errors
     /// Logs errors for individual dictionary load failures but continues processing.
     pub fn load_dictionaries(&mut self) {
-        let glob = Glob::new("**/*.index")
-            .expect("invalid glob pattern")
-            .compile_matcher();
+        let glob = match Glob::new("**/*.index") {
+            Ok(g) => g.compile_matcher(),
+            Err(_) => return,
+        };
         for entry in WalkDir::new(Path::new(DICTIONARIES_DIRNAME))
             .min_depth(1)
             .into_iter()
             .filter_entry(|e| !e.is_hidden())
         {
-            if entry.is_err() {
+            let Ok(entry) = entry else {
                 continue;
-            }
-            let entry = entry.expect("dir entry read failed");
+            };
             if !glob.is_match(entry.path()) {
                 continue;
             }
