@@ -37,7 +37,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{atomic, Arc, LazyLock, Mutex};
 
 use crate::view::common::{
     locate, locate_by_id, toggle_battery_menu, toggle_clock_menu, toggle_main_menu,
@@ -58,6 +58,8 @@ use crate::view::{
 use crate::view::reader::bottom_bar::BottomBar;
 use crate::view::reader::tool_bar::ToolBar;
 
+use super::reader_core::{Contrast, RenderChunk, Search, Selection, State};
+
 pub const RECT_DIST_JITTER: f32 = 0.1;
 pub const MEM_SCHEME: &str = "mem:";
 
@@ -73,57 +75,6 @@ pub const ANNOTATION_DRIFT: f32 = 0.05;
 // ===========================================================================
 // Type Definitions
 // ===========================================================================
-
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-pub struct RenderChunk {
-    pub page: usize,
-    pub location: usize,
-    pub rect: Rectangle,
-    pub frame: Rectangle,
-    pub position: Point,
-    pub scale: f32,
-}
-
-#[allow(dead_code)]
-#[derive(Debug)]
-pub struct Search {
-    pub query: String,
-    pub results: Vec<Location>,
-    pub index: usize,
-    pub running: std::sync::atomic::AtomicBool,
-    pub results_count: usize,
-    pub highlights: FxHashMap<usize, Vec<Rectangle>>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum State {
-    Idle,
-    Selection(usize),
-    AdjustSelection,
-}
-
-#[derive(Debug, Clone)]
-pub struct Selection {
-    pub start: Point,
-    pub end: Point,
-    pub anchor: Point,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Contrast {
-    pub gray: f32,
-    pub exponent: f32,
-}
-
-impl Default for Contrast {
-    fn default() -> Self {
-        Contrast {
-            gray: 224.0,
-            exponent: 1.0,
-        }
-    }
-}
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2046,7 +1997,7 @@ impl Reader {
 
     fn quit(&mut self, context: &mut Context) {
         if let Some(ref mut s) = self.search {
-            s.running.store(false, std::sync::atomic::Ordering::Relaxed);
+            s.running.store(false, atomic::Ordering::Relaxed);
         }
 
         if self.ephemeral {
@@ -3133,7 +3084,7 @@ impl View for Reader {
                 self.toggle_results_bar(false, rq, context);
                 self.toggle_search_bar(false, hub, rq, context);
                 if let Some(ref mut s) = self.search {
-                    s.running.store(false, std::sync::atomic::Ordering::Relaxed);
+                    s.running.store(false, atomic::Ordering::Relaxed);
                     self.render_results(rq);
                     self.search = None;
                 }
@@ -3537,7 +3488,7 @@ impl View for Reader {
                     if let Some(ViewId::ReaderSearchInput) = v {
                         self.toggle_results_bar(false, rq, context);
                         if let Some(ref mut s) = self.search {
-                            s.running.store(false, std::sync::atomic::Ordering::Relaxed);
+                            s.running.store(false, atomic::Ordering::Relaxed);
                         }
                         self.render_results(rq);
                         self.search = None;
