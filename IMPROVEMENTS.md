@@ -179,7 +179,36 @@
 
 **Unmaintained packages (advisory):**
 - `bincode` 1.3.3 - RUSTSEC-2025-0141 (via kl-hyphenate) - **See below for replacement analysis**
-- `fxhash` 0.2.1 - RUSTSEC-2025-0057 - ccl-fxhash incompatible
+- `fxhash` 0.2.1 - RUSTSEC-2025-0057 - **See replacement analysis below**
+
+### fxhash Replacement Analysis
+
+**Current status:** fxhash 0.2.1 unmaintained (RUSTSEC-2025-0057)
+
+**Usage in Plato:** 123 locations across 30+ files:
+- `FxHashMap` and `FxHashSet` for non-cryptographic hashing
+- Used throughout document rendering, UI views, library management
+
+**Replacement options:**
+
+| Crate | Status | API Compatibility | Notes |
+|-------|--------|-------------------|-------|
+| `rustc-hash` 2.1.2 | ✅ Active (Rust team) | Identical | **Recommended replacement** |
+| `ccl-fxhash` 3.0.0 | ⚠️ Fork | Different internal structure | 30+ file refactoring needed |
+| `foldhash` 0.2.0 | ✅ Active | Different API | Extra features not needed |
+
+**Replacement for rustc-hash:**
+```toml
+# Cargo.toml change:
+- fxhash = "0.2.1"
++ rustc-hash = "2.1"
+
+# All imports are API-compatible:
+- use fxhash::{FxHashMap, FxHashSet};
++ use rustc_hash::{FxHashMap, FxHashSet};
+```
+
+**Recommended action:** Replace fxhash with rustc-hash (minimal code change, API-compatible, actively maintained by Rust team)
 
 ### bincode/kl-hyphenate Replacement Analysis
 
