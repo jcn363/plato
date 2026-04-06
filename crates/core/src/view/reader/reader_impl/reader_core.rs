@@ -3,15 +3,13 @@
 //! This module defines shared types used across Reader functionality.
 //! Eventually constructors and core Reader methods will be moved here.
 
-use std::collections::BTreeMap;
 use std::sync::atomic;
 
-use crate::document::{BoundedText, Location, TextLocation};
+use crate::document::Location;
 use crate::framebuffer::Pixmap;
-use crate::geom::{Boundary, LinearDir, Point, Rectangle};
-use crate::input::ButtonCode;
-use crate::metadata::{Annotation, ScrollMode, ZoomMode};
-use rustc_hash::{FxHashMap, FxHashSet};
+use crate::geom::{LinearDir, Point, Rectangle};
+use crate::metadata::{ScrollMode, ZoomMode};
+use rustc_hash::FxHashMap;
 
 // ===========================================================================
 // Shared Types - Used Across Modules

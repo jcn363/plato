@@ -1,10 +1,20 @@
 //! Reader Gestures Module
 //!
 //! Handles touch/gesture handling and input processing.
+//!
+//! ## Methods to Move Here  
+//! - `handle_event()` - Main event dispatcher (~1400 lines - LARGEST)
+//! - Touch/swipe/pinch gesture handling
+//! - Button input processing
+//! - Stylus input handling
+//! - Margin cropper gestures
+//! - Menu selection callbacks
+//!
+//! ## Size
+//! This is the largest module (~1,400 lines from handle_event alone).
+//! Will need careful extraction to maintain readability.
+//!
+//! ## Dependencies
+//! Relies on most other Reader methods (navigation, rendering, settings, annotations).
 
-// TODO: Move gesture-related methods here
-// - handle_event()
-// - process_touch_events()
-// - process_button_events()
-// - process_gestures()
-// - Input state management
+pub(crate) use super::reader_core::{Selection, State};
