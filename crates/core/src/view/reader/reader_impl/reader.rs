@@ -59,6 +59,7 @@ use crate::view::reader::bottom_bar::BottomBar;
 use crate::view::reader::tool_bar::ToolBar;
 
 use super::reader_core::{Contrast, RenderChunk, Search, Selection, State};
+use super::reader_rendering;
 use super::reader_search;
 
 pub const RECT_DIST_JITTER: f32 = 0.1;
@@ -1880,36 +1881,7 @@ impl Reader {
     // -----------------------------------------------------------------------
 
     fn text_excerpt(&self, sel: [Point; 2]) -> Option<String> {
-        let [start, end] = sel;
-        let parts = self
-            .text
-            .values()
-            .flatten()
-            .filter(|bnd| bnd.location >= start && bnd.location <= end)
-            .map(|bnd| bnd.text.as_str())
-            .collect::<Vec<&str>>();
-
-        if parts.is_empty() {
-            return None;
-        }
-
-        let ws = if self.info.language.starts_with("zh") || self.info.language.starts_with("ja") {
-            ""
-        } else {
-            " "
-        };
-        let mut text = parts[0].to_string();
-
-        for p in &parts[1..] {
-            if text.ends_with('\u{00AD}') {
-                text.pop();
-            } else if !text.ends_with('-') {
-                text.push_str(ws);
-            }
-            text += p;
-        }
-
-        Some(text)
+        reader_rendering::text_excerpt(&self.text, sel, &self.info.language)
     }
 
     fn selected_text(&self) -> Option<String> {
@@ -1919,26 +1891,7 @@ impl Reader {
     }
 
     fn text_rect(&self, sel: [Point; 2]) -> Option<Rectangle> {
-        let [start, end] = sel;
-        let mut result: Option<Rectangle> = None;
-
-        for chunk in &self.chunks {
-            if let Some(words) = self.text.get(&chunk.location) {
-                for word in words {
-                    if word.location >= start && word.location <= end {
-                        let rect =
-                            (word.rect * chunk.scale).to_rect() - chunk.frame.min + chunk.position;
-                        if let Some(ref mut r) = result {
-                            r.absorb(&rect);
-                        } else {
-                            result = Some(rect);
-                        }
-                    }
-                }
-            }
-        }
-
-        result
+        reader_rendering::text_rect(&self.text, &self.chunks, sel)
     }
 
     fn render_results(&self, rq: &mut RenderQueue) {
