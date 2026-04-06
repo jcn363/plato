@@ -9,23 +9,40 @@
 //! - `toggle_line_height_menu()` - Line height settings ✓
 //! - `toggle_contrast_exponent_menu()` - Contrast exponent ✓
 //! - `toggle_contrast_gray_menu()` - Contrast gray level ✓
+//! - `toggle_margin_width_menu()` - Margin width settings ✓
+//! - `toggle_page_menu()` - Page navigation menu ✓
+//! - `toggle_margin_cropper_menu()` - Margin cropping settings ✓
+//! - `toggle_annotation_menu()` - Annotation context menu ✓
+//! - `toggle_selection_menu()` - Text selection menu ✓
+//! - `toggle_title_menu()` - Title bar menu ✓
 //! - `find_page_by_name()` - Page lookup utility ✓
 //! - `build_toc()` - TOC building ✓
 //! - `build_toc_aux()` - TOC recursive builder ✓
 
+use crate::context::Context;
 use crate::document::{Location, SimpleTocEntry, TocEntry, TocLocation};
 use crate::font::family_names;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::helpers::AsciiExtension;
 use crate::log_error;
-use crate::metadata::CroppingMargins;
-use crate::metadata::Info;
-use crate::metadata::PageScheme;
-use crate::metadata::TextAlign;
+use crate::metadata::{
+    Annotation, CroppingMargins, Info, PageScheme, ScrollMode, TextAlign, ZoomMode,
+};
 use crate::settings::DEFAULT_FONT_FAMILY;
-use crate::view::{EntryId, EntryKind, RenderData, RenderQueue, View, ViewId};
+use crate::view::menu::Menu;
+use crate::view::menu::MenuKind;
+use crate::view::menu_entry::MenuEntry;
+use crate::view::{AppCmd, EntryId, EntryKind, RenderData, RenderQueue, View, ViewId};
 use septem::Roman;
+
+/// Find child view index by ViewId in children vector
+#[inline]
+fn find_child_by_id(children: &[Box<dyn View>], id: ViewId) -> Option<usize> {
+    children
+        .iter()
+        .position(|c| c.view_id().map_or(false, |i| i == id))
+}
 
 /// Find page index by named page reference
 #[allow(dead_code)]
@@ -631,5 +648,300 @@ pub(crate) fn toggle_margin_cropper_menu(
             UpdateMode::Gui,
         ));
         children.push(Box::new(margin_cropper_menu) as Box<dyn crate::view::View>);
+    }
+}
+
+// ===========================================================================
+// Public Menu Functions
+// ===========================================================================
+
+/// Toggle annotation menu for a specific annotation
+pub(crate) fn toggle_annotation_menu(
+    children: &mut Vec<Box<dyn View>>,
+    annot: &Annotation,
+    rect: Rectangle,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
+    if let Some(index) = find_child_by_id(children, ViewId::AnnotationMenu) {
+        if let Some(true) = enable {
+            return;
+        }
+
+        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
+        children.remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+
+        let sel = annot.selection;
+        let mut entries = Vec::new();
+
+        if annot.note.is_empty() {
+            entries.push(EntryKind::Command(
+                "Remove Highlight".to_string(),
+                EntryId::RemoveAnnotation(sel),
+            ));
+            entries.push(EntryKind::Separator);
+            entries.push(EntryKind::Command(
+                "Add Note".to_string(),
+                EntryId::EditAnnotationNote(sel),
+            ));
+        } else {
+            entries.push(EntryKind::Command(
+                "Remove Annotation".to_string(),
+                EntryId::RemoveAnnotation(sel),
+            ));
+            entries.push(EntryKind::Separator);
+            entries.push(EntryKind::Command(
+                "Edit Note".to_string(),
+                EntryId::EditAnnotationNote(sel),
+            ));
+            entries.push(EntryKind::Command(
+                "Remove Note".to_string(),
+                EntryId::RemoveAnnotationNote(sel),
+            ));
+        }
+
+        let selection_menu = Menu::new(
+            rect,
+            ViewId::AnnotationMenu,
+            MenuKind::Contextual,
+            entries,
+            context,
+        );
+        rq.add(RenderData::new(
+            selection_menu.id(),
+            *selection_menu.rect(),
+            UpdateMode::Gui,
+        ));
+        children.push(Box::new(selection_menu) as Box<dyn View>);
+    }
+}
+
+/// Toggle selection menu for text selection actions
+pub(crate) fn toggle_selection_menu(
+    children: &mut Vec<Box<dyn View>>,
+    current_page: usize,
+    file_kind: &str,
+    file_path: Option<String>,
+    has_page_names: bool,
+    rect: Rectangle,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
+    if let Some(index) = find_child_by_id(children, ViewId::SelectionMenu) {
+        if let Some(true) = enable {
+            return;
+        }
+
+        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
+        children.remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+        let mut entries = vec![
+            EntryKind::Command("Highlight".to_string(), EntryId::HighlightSelection),
+            EntryKind::Command("Add Note".to_string(), EntryId::AnnotateSelection),
+        ];
+
+        if file_kind == "epub" {
+            if let Some(path) = file_path {
+                entries.push(EntryKind::Command(
+                    "Edit".to_string(),
+                    EntryId::Launch(AppCmd::EpubEditor {
+                        path,
+                        chapter: Some(current_page),
+                    }),
+                ));
+            }
+        }
+
+        entries.push(EntryKind::Separator);
+        entries.push(EntryKind::Command(
+            "Define".to_string(),
+            EntryId::DefineSelection,
+        ));
+        entries.push(EntryKind::Command(
+            "Search".to_string(),
+            EntryId::SearchForSelection,
+        ));
+
+        if has_page_names {
+            entries.push(EntryKind::Command(
+                "Go To".to_string(),
+                EntryId::GoToSelectedPageName,
+            ));
+        }
+
+        entries.push(EntryKind::Separator);
+        entries.push(EntryKind::Command(
+            "Adjust Selection".to_string(),
+            EntryId::AdjustSelection,
+        ));
+
+        let selection_menu = Menu::new(
+            rect,
+            ViewId::SelectionMenu,
+            MenuKind::Contextual,
+            entries,
+            context,
+        );
+        rq.add(RenderData::new(
+            selection_menu.id(),
+            *selection_menu.rect(),
+            UpdateMode::Gui,
+        ));
+        children.push(Box::new(selection_menu) as Box<dyn View>);
+    }
+}
+
+/// Toggle title menu for document-level settings and navigation
+pub(crate) fn toggle_title_menu(
+    children: &mut Vec<Box<dyn View>>,
+    rect: Rectangle,
+    reflowable: bool,
+    file_kind: &str,
+    file_path: Option<String>,
+    has_annotations: bool,
+    has_bookmarks: bool,
+    zoom_mode: ZoomMode,
+    scroll_mode: ScrollMode,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
+    if let Some(index) = find_child_by_id(children, ViewId::TitleMenu) {
+        if let Some(true) = enable {
+            return;
+        }
+
+        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
+        children.remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+
+        let sf = if let ZoomMode::Custom(sf) = zoom_mode {
+            sf
+        } else {
+            1.0
+        };
+
+        let mut entries = if reflowable {
+            vec![EntryKind::SubMenu(
+                "Zoom Mode".to_string(),
+                vec![
+                    EntryKind::RadioButton(
+                        "Fit to Page".to_string(),
+                        EntryId::SetZoomMode(ZoomMode::FitToPage),
+                        zoom_mode == ZoomMode::FitToPage,
+                    ),
+                    EntryKind::RadioButton(
+                        format!("Custom ({:.1}%)", 100.0 * sf),
+                        EntryId::SetZoomMode(ZoomMode::Custom(sf)),
+                        zoom_mode == ZoomMode::Custom(sf),
+                    ),
+                ],
+            )]
+        } else {
+            vec![EntryKind::SubMenu(
+                "Zoom Mode".to_string(),
+                vec![
+                    EntryKind::RadioButton(
+                        "Fit to Page".to_string(),
+                        EntryId::SetZoomMode(ZoomMode::FitToPage),
+                        zoom_mode == ZoomMode::FitToPage,
+                    ),
+                    EntryKind::RadioButton(
+                        "Fit to Width".to_string(),
+                        EntryId::SetZoomMode(ZoomMode::FitToWidth),
+                        zoom_mode == ZoomMode::FitToWidth,
+                    ),
+                    EntryKind::RadioButton(
+                        format!("Custom ({:.1}%)", 100.0 * sf),
+                        EntryId::SetZoomMode(ZoomMode::Custom(sf)),
+                        zoom_mode == ZoomMode::Custom(sf),
+                    ),
+                ],
+            )]
+        };
+
+        entries.push(EntryKind::SubMenu(
+            "Scroll Mode".to_string(),
+            vec![
+                EntryKind::RadioButton(
+                    "Screen".to_string(),
+                    EntryId::SetScrollMode(ScrollMode::Screen),
+                    scroll_mode == ScrollMode::Screen,
+                ),
+                EntryKind::RadioButton(
+                    "Page".to_string(),
+                    EntryId::SetScrollMode(ScrollMode::Page),
+                    scroll_mode == ScrollMode::Page,
+                ),
+            ],
+        ));
+
+        if has_annotations {
+            entries.push(EntryKind::Command(
+                "Annotations".to_string(),
+                EntryId::Annotations,
+            ));
+        }
+
+        if has_bookmarks {
+            entries.push(EntryKind::Command(
+                "Bookmarks".to_string(),
+                EntryId::Bookmarks,
+            ));
+        }
+
+        if !entries.is_empty() {
+            entries.push(EntryKind::Separator);
+        }
+
+        if file_kind == "epub" {
+            if let Some(path) = file_path {
+                entries.push(EntryKind::Command(
+                    "Edit EPUB".to_string(),
+                    EntryId::Launch(AppCmd::EpubEditor {
+                        path,
+                        chapter: None,
+                    }),
+                ));
+                entries.push(EntryKind::Separator);
+            }
+        }
+
+        entries.push(EntryKind::CheckBox(
+            "Apply Dithering".to_string(),
+            EntryId::ToggleDithered,
+            context.fb.dithered(),
+        ));
+
+        let mut title_menu = Menu::new(
+            rect,
+            ViewId::TitleMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        );
+        title_menu
+            .child_mut(1)
+            .downcast_mut::<MenuEntry>()
+            .map(|entry| entry.set_disabled(zoom_mode != ZoomMode::FitToWidth, rq));
+
+        rq.add(RenderData::new(
+            title_menu.id(),
+            *title_menu.rect(),
+            UpdateMode::Gui,
+        ));
+        children.push(Box::new(title_menu) as Box<dyn View>);
     }
 }

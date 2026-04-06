@@ -42,15 +42,15 @@ use crate::view::common::{
 };
 use crate::view::filler::Filler;
 use crate::view::keyboard::Keyboard;
-use crate::view::menu::{Menu, MenuKind};
+use crate::view::menu::Menu;
 use crate::view::menu_entry::MenuEntry;
 use crate::view::named_input::NamedInput;
 use crate::view::notification::Notification;
 use crate::view::search_bar::SearchBar;
 use crate::view::top_bar::TopBar;
 use crate::view::{
-    AppCmd, Bus, EntryId, EntryKind, Event, Hub, Id, RenderData, RenderQueue, SliderId, View,
-    ViewId, BIG_BAR_HEIGHT, ID_FEEDER, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
+    AppCmd, Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, SliderId, View, ViewId,
+    BIG_BAR_HEIGHT, ID_FEEDER, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
 };
 
 use crate::view::reader::bottom_bar::BottomBar;
@@ -525,65 +525,14 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::AnnotationMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let sel = annot.selection;
-            let mut entries = Vec::new();
-
-            if annot.note.is_empty() {
-                entries.push(EntryKind::Command(
-                    "Remove Highlight".to_string(),
-                    EntryId::RemoveAnnotation(sel),
-                ));
-                entries.push(EntryKind::Separator);
-                entries.push(EntryKind::Command(
-                    "Add Note".to_string(),
-                    EntryId::EditAnnotationNote(sel),
-                ));
-            } else {
-                entries.push(EntryKind::Command(
-                    "Remove Annotation".to_string(),
-                    EntryId::RemoveAnnotation(sel),
-                ));
-                entries.push(EntryKind::Separator);
-                entries.push(EntryKind::Command(
-                    "Edit Note".to_string(),
-                    EntryId::EditAnnotationNote(sel),
-                ));
-                entries.push(EntryKind::Command(
-                    "Remove Note".to_string(),
-                    EntryId::RemoveAnnotationNote(sel),
-                ));
-            }
-
-            let selection_menu = Menu::new(
-                rect,
-                ViewId::AnnotationMenu,
-                MenuKind::Contextual,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                selection_menu.id(),
-                *selection_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(selection_menu) as Box<dyn View>);
-        }
+        super::reader_settings::toggle_annotation_menu(
+            &mut self.children,
+            annot,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     pub fn toggle_selection_menu(
@@ -593,79 +542,30 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::SelectionMenu) {
-            if let Some(true) = enable {
-                return;
-            }
+        let file_kind = self.info.file.kind.as_str();
+        let file_path = context.library.home.join(&self.info.file.path);
+        let file_path_str = file_path.to_string_lossy().to_string();
+        let has_page_names = self
+            .info
+            .reader
+            .as_ref()
+            .map_or(false, |r| !r.page_names.is_empty());
 
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-            let mut entries = vec![
-                EntryKind::Command("Highlight".to_string(), EntryId::HighlightSelection),
-                EntryKind::Command("Add Note".to_string(), EntryId::AnnotateSelection),
-            ];
-
-            if self.info.file.kind == "epub" {
-                let epub_path = context.library.home.join(&self.info.file.path);
-                entries.push(EntryKind::Command(
-                    "Edit".to_string(),
-                    EntryId::Launch(AppCmd::EpubEditor {
-                        path: epub_path.to_string_lossy().to_string(),
-                        chapter: Some(self.current_page),
-                    }),
-                ));
-            }
-
-            entries.push(EntryKind::Separator);
-            entries.push(EntryKind::Command(
-                "Define".to_string(),
-                EntryId::DefineSelection,
-            ));
-            entries.push(EntryKind::Command(
-                "Search".to_string(),
-                EntryId::SearchForSelection,
-            ));
-
-            if self
-                .info
-                .reader
-                .as_ref()
-                .map_or(false, |r| !r.page_names.is_empty())
-            {
-                entries.push(EntryKind::Command(
-                    "Go To".to_string(),
-                    EntryId::GoToSelectedPageName,
-                ));
-            }
-
-            entries.push(EntryKind::Separator);
-            entries.push(EntryKind::Command(
-                "Adjust Selection".to_string(),
-                EntryId::AdjustSelection,
-            ));
-
-            let selection_menu = Menu::new(
-                rect,
-                ViewId::SelectionMenu,
-                MenuKind::Contextual,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                selection_menu.id(),
-                *selection_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(selection_menu) as Box<dyn View>);
-        }
+        super::reader_settings::toggle_selection_menu(
+            &mut self.children,
+            self.current_page,
+            file_kind,
+            if file_kind == "epub" {
+                Some(file_path_str)
+            } else {
+                None
+            },
+            has_page_names,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     pub fn toggle_title_menu(
@@ -675,153 +575,38 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::TitleMenu) {
-            if let Some(true) = enable {
-                return;
-            }
+        let file_kind = self.info.file.kind.as_str();
+        let file_path = context.library.home.join(&self.info.file.path);
+        let file_path_str = file_path.to_string_lossy().to_string();
+        let has_annotations = self
+            .info
+            .reader
+            .as_ref()
+            .map_or(false, |r| !r.annotations.is_empty());
+        let has_bookmarks = self
+            .info
+            .reader
+            .as_ref()
+            .map_or(false, |r| !r.bookmarks.is_empty());
 
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let zoom_mode = self.view_port.zoom_mode;
-            let scroll_mode = self.view_port.scroll_mode;
-            let sf = if let ZoomMode::Custom(sf) = zoom_mode {
-                sf
+        super::reader_settings::toggle_title_menu(
+            &mut self.children,
+            rect,
+            self.reflowable,
+            file_kind,
+            if file_kind == "epub" {
+                Some(file_path_str)
             } else {
-                1.0
-            };
-
-            let mut entries = if self.reflowable {
-                vec![EntryKind::SubMenu(
-                    "Zoom Mode".to_string(),
-                    vec![
-                        EntryKind::RadioButton(
-                            "Fit to Page".to_string(),
-                            EntryId::SetZoomMode(ZoomMode::FitToPage),
-                            zoom_mode == ZoomMode::FitToPage,
-                        ),
-                        EntryKind::RadioButton(
-                            format!("Custom ({:.1}%)", 100.0 * sf),
-                            EntryId::SetZoomMode(ZoomMode::Custom(sf)),
-                            zoom_mode == ZoomMode::Custom(sf),
-                        ),
-                    ],
-                )]
-            } else {
-                vec![EntryKind::SubMenu(
-                    "Zoom Mode".to_string(),
-                    vec![
-                        EntryKind::RadioButton(
-                            "Fit to Page".to_string(),
-                            EntryId::SetZoomMode(ZoomMode::FitToPage),
-                            zoom_mode == ZoomMode::FitToPage,
-                        ),
-                        EntryKind::RadioButton(
-                            "Fit to Width".to_string(),
-                            EntryId::SetZoomMode(ZoomMode::FitToWidth),
-                            zoom_mode == ZoomMode::FitToWidth,
-                        ),
-                        EntryKind::RadioButton(
-                            format!("Custom ({:.1}%)", 100.0 * sf),
-                            EntryId::SetZoomMode(ZoomMode::Custom(sf)),
-                            zoom_mode == ZoomMode::Custom(sf),
-                        ),
-                    ],
-                )]
-            };
-
-            entries.push(EntryKind::SubMenu(
-                "Scroll Mode".to_string(),
-                vec![
-                    EntryKind::RadioButton(
-                        "Screen".to_string(),
-                        EntryId::SetScrollMode(ScrollMode::Screen),
-                        scroll_mode == ScrollMode::Screen,
-                    ),
-                    EntryKind::RadioButton(
-                        "Page".to_string(),
-                        EntryId::SetScrollMode(ScrollMode::Page),
-                        scroll_mode == ScrollMode::Page,
-                    ),
-                ],
-            ));
-
-            if self.ephemeral {
-                entries.push(EntryKind::Command("Save".to_string(), EntryId::Save));
-            }
-
-            if self
-                .info
-                .reader
-                .as_ref()
-                .map_or(false, |r| !r.annotations.is_empty())
-            {
-                entries.push(EntryKind::Command(
-                    "Annotations".to_string(),
-                    EntryId::Annotations,
-                ));
-            }
-
-            if self
-                .info
-                .reader
-                .as_ref()
-                .map_or(false, |r| !r.bookmarks.is_empty())
-            {
-                entries.push(EntryKind::Command(
-                    "Bookmarks".to_string(),
-                    EntryId::Bookmarks,
-                ));
-            }
-
-            if !entries.is_empty() {
-                entries.push(EntryKind::Separator);
-            }
-
-            if self.info.file.kind == "epub" {
-                let epub_path = context.library.home.join(&self.info.file.path);
-                entries.push(EntryKind::Command(
-                    "Edit EPUB".to_string(),
-                    EntryId::Launch(AppCmd::EpubEditor {
-                        path: epub_path.to_string_lossy().to_string(),
-                        chapter: None,
-                    }),
-                ));
-                entries.push(EntryKind::Separator);
-            }
-
-            entries.push(EntryKind::CheckBox(
-                "Apply Dithering".to_string(),
-                EntryId::ToggleDithered,
-                context.fb.dithered(),
-            ));
-
-            let mut title_menu = Menu::new(
-                rect,
-                ViewId::TitleMenu,
-                MenuKind::DropDown,
-                entries,
-                context,
-            );
-            title_menu
-                .child_mut(1)
-                .downcast_mut::<MenuEntry>()
-                .map(|entry| entry.set_disabled(zoom_mode != ZoomMode::FitToWidth, rq));
-
-            rq.add(RenderData::new(
-                title_menu.id(),
-                *title_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(title_menu) as Box<dyn View>);
-        }
+                None
+            },
+            has_annotations,
+            has_bookmarks,
+            self.view_port.zoom_mode,
+            self.view_port.scroll_mode,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_font_family_menu(
