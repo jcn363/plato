@@ -19,7 +19,7 @@ pub fn query_to_content(
     target: Option<&String>,
     context: &mut Context,
 ) -> String {
-    let mut content = String::new();
+    let mut content = String::with_capacity(512);
 
     for (name, dict) in context.dictionaries.iter_mut() {
         if target.is_some() && target != Some(name) {

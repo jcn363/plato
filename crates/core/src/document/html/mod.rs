@@ -44,7 +44,8 @@ pub struct HtmlDocument {
 impl ResourceFetcher for PathBuf {
     fn fetch(&mut self, name: &str) -> Result<Vec<u8>, Error> {
         let mut file = File::open(self.join(name))?;
-        let mut buf = Vec::new();
+        let size = file.metadata()?.len() as usize;
+        let mut buf = Vec::with_capacity(size);
         file.read_to_end(&mut buf)?;
         Ok(buf)
     }
@@ -57,7 +58,7 @@ impl HtmlDocument {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<HtmlDocument, Error> {
         let mut file = File::open(&path)?;
         let size = file.metadata()?.len() as usize;
-        let mut text = String::new();
+        let mut text = String::with_capacity(size);
         file.read_to_string(&mut text)?;
         let mut content = XmlParser::new(&text).parse();
         content.wrap_lost_inlines();

@@ -53,19 +53,20 @@ impl EpubDocument {
     }
 
     pub fn build_display_list(&mut self, index: usize, start_offset: usize) -> Vec<Page> {
-        let mut text = String::new();
         let mut spine_dir = PathBuf::default();
-
-        {
+        let text = {
             let path = &self.spine[index].path;
             if let Some(parent) = Path::new(path).parent() {
                 spine_dir = parent.to_path_buf();
             }
-
-            if let Ok(mut zf) = self.archive.by_name(path) {
-                zf.read_to_string(&mut text).ok();
+            let mut zf = self.archive.by_name(path).ok();
+            let size = zf.as_ref().map(|f| f.size() as usize).unwrap_or(0);
+            let mut s = String::with_capacity(size);
+            if let Some(ref mut f) = zf {
+                f.read_to_string(&mut s).ok();
             }
-        }
+            s
+        };
 
         let mut root = XmlParser::new(&text).parse();
         root.wrap_lost_inlines();
@@ -91,8 +92,9 @@ impl EpubDocument {
                     {
                         if let Some(href) = child.attribute("href") {
                             if let Some(name) = spine_dir.join(href).normalize().to_str() {
-                                let mut text = String::new();
                                 if let Ok(mut zf) = self.archive.by_name(name) {
+                                    let size = zf.size() as usize;
+                                    let mut text = String::with_capacity(size);
                                     zf.read_to_string(&mut text).ok();
                                     let mut css = CssParser::new(&text).parse();
                                     inner_css.append(&mut css, false);

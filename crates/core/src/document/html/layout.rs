@@ -36,9 +36,9 @@ impl Default for DrawState {
             position: Point::default(),
             floats: FxHashMap::default(),
             prefix: None,
-            min_column_widths: Vec::new(),
-            max_column_widths: Vec::new(),
-            column_widths: Vec::new(),
+            min_column_widths: Vec::with_capacity(4),
+            max_column_widths: Vec::with_capacity(4),
+            column_widths: Vec::with_capacity(4),
             center_table: false,
         }
     }

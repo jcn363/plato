@@ -84,12 +84,14 @@ impl Document for EpubDocument {
 
         let toc_dir = Path::new(&name).parent().unwrap_or_else(|| Path::new(""));
 
-        let mut text = String::new();
-        if let Ok(mut zf) = self.archive.by_name(&name) {
-            zf.read_to_string(&mut text).ok()?;
+        let text = if let Ok(mut zf) = self.archive.by_name(&name) {
+            let size = zf.size() as usize;
+            let mut text = String::with_capacity(size);
+            zf.read_to_string(&mut text).ok();
+            text
         } else {
             return None;
-        }
+        };
 
         let root = XmlParser::new(&text).parse();
 

@@ -131,6 +131,12 @@ impl PdfManipulatorView {
     }
 
     #[allow(dead_code)]
+    fn show_message(&mut self, msg: String, rq: &mut RenderQueue, bus: &mut Bus) {
+        bus.push_back(Event::Render(msg));
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
+    }
+
+    #[allow(dead_code)]
     fn show_actions(&mut self, file_path: PathBuf, rq: &mut RenderQueue, context: &mut Context) {
         self.mode = ManipulationMode::SelectAction(file_path.clone());
 
@@ -332,19 +338,21 @@ impl PdfManipulatorView {
                 };
                 match extractor.list_resources() {
                     Ok(summary) => {
-                        let pdf_a_info = if summary.is_pdf_a {
-                            format!(" | 📋 PDF/A: {}", summary.pdf_a_version)
+                        let msg = if summary.is_pdf_a {
+                            format!(
+                                "📄 Pages: {} | 🖼️ Images: {} | 🔤 Fonts: {} | 📋 PDF/A: {}",
+                                summary.total_pages,
+                                summary.total_images,
+                                summary.total_fonts,
+                                summary.pdf_a_version
+                            )
                         } else {
-                            String::new()
+                            format!(
+                                "📄 Pages: {} | 🖼️ Images: {} | 🔤 Fonts: {}",
+                                summary.total_pages, summary.total_images, summary.total_fonts
+                            )
                         };
-                        let msg = format!(
-                            "📄 Pages: {} | 🖼️ Images: {} | 🔤 Fonts: {}{}",
-                            summary.total_pages,
-                            summary.total_images,
-                            summary.total_fonts,
-                            pdf_a_info
-                        );
-                        bus.push_back(Event::Render(msg));
+                        self.show_message(msg, rq, bus);
                     }
                     Err(e) => {
                         bus.push_back(Event::Render(format!("Error: {}", e)));

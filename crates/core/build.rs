@@ -29,7 +29,7 @@ fn main() {
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/Darwin");
                 println!("cargo:rustc-link-lib=dylib=c++");
             }
-            _ => panic!("Unsupported platform: {}.", target_os),
+            _ => panic!("Unsupported platform: {}", target_os),
         }
 
         println!("cargo:rustc-link-lib=mupdf-third");

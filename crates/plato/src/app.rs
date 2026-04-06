@@ -1,7 +1,7 @@
 use plato_core::anyhow::{format_err, Context as ResultExt, Error};
 use plato_core::battery::{Battery, KoboBattery};
 use plato_core::chrono::Local;
-use plato_core::context::Context;
+use plato_core::context::{Context, DeviceFlags};
 use plato_core::device::{FrontlightKind, Orientation, CURRENT_DEVICE};
 use plato_core::document::sys_info_as_html;
 use plato_core::font::Fonts;
@@ -267,7 +267,7 @@ fn set_wifi(enable: bool, context: &mut Context) {
         Command::new("scripts/wifi-enable.sh").status().ok();
     } else {
         Command::new("scripts/wifi-disable.sh").status().ok();
-        context.online = false;
+        context.flags.remove(DeviceFlags::ONLINE);
     }
 }
 
@@ -318,7 +318,10 @@ pub fn run() -> Result<(), Error> {
 
     let mut context = build_context(fb).context("can't build context")?;
 
-    context.plugged = context.battery.status().is_ok_and(|v| v[0].is_wired());
+    context.flags.set(
+        DeviceFlags::PLUGGED,
+        context.battery.status().is_ok_and(|v| v[0].is_wired()),
+    );
 
     if context.settings.import.startup_trigger {
         context.batch_import();
@@ -445,7 +448,9 @@ pub fn run() -> Result<(), Error> {
                     status: ButtonStatus::Released,
                     ..
                 } => {
-                    if context.shared || context.covered {
+                    if context.flags.contains(DeviceFlags::SHARED)
+                        || context.flags.contains(DeviceFlags::COVERED)
+                    {
                         continue;
                     }
 
@@ -498,14 +503,14 @@ pub fn run() -> Result<(), Error> {
                     tx.send(Event::ToggleFrontlight).ok();
                 }
                 DeviceEvent::CoverOn => {
-                    if context.covered {
+                    if context.flags.contains(DeviceFlags::COVERED) {
                         continue;
                     }
 
-                    context.covered = true;
+                    context.flags.insert(DeviceFlags::COVERED);
 
                     if !context.settings.sleep_cover
-                        || context.shared
+                        || context.flags.contains(DeviceFlags::SHARED)
                         || tasks.iter().any(|task| {
                             task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend
                         })
@@ -535,13 +540,14 @@ pub fn run() -> Result<(), Error> {
                     view.children_mut().push(Box::new(interm) as Box<dyn View>);
                 }
                 DeviceEvent::CoverOff => {
-                    if !context.covered {
+                    if !context.flags.contains(DeviceFlags::COVERED) {
                         continue;
                     }
 
-                    context.covered = false;
+                    context.flags.remove(DeviceFlags::COVERED);
 
-                    if context.shared || !context.settings.sleep_cover {
+                    if context.flags.contains(DeviceFlags::SHARED) || !context.settings.sleep_cover
+                    {
                         continue;
                     }
 
@@ -586,7 +592,7 @@ pub fn run() -> Result<(), Error> {
                         &mut rq,
                         &mut context,
                     );
-                    context.online = true;
+                    context.flags.insert(DeviceFlags::ONLINE);
                     view.children_mut().push(Box::new(notif) as Box<dyn View>);
                     if view.is::<Home>() {
                         view.handle_event(&evt, &tx, &mut bus, &mut rq, &mut context);
@@ -604,15 +610,15 @@ pub fn run() -> Result<(), Error> {
                     }
                 }
                 DeviceEvent::Plug(power_source) => {
-                    if context.plugged {
+                    if context.flags.contains(DeviceFlags::PLUGGED) {
                         continue;
                     }
 
-                    context.plugged = true;
+                    context.flags.insert(DeviceFlags::PLUGGED);
 
                     tasks.retain(|task| task.id != TaskId::CheckBattery);
 
-                    if context.covered {
+                    if context.flags.contains(DeviceFlags::COVERED) {
                         continue;
                     }
 
@@ -667,12 +673,12 @@ pub fn run() -> Result<(), Error> {
                     tx.send(Event::BatteryTick).ok();
                 }
                 DeviceEvent::Unplug(..) => {
-                    if !context.plugged {
+                    if !context.flags.contains(DeviceFlags::PLUGGED) {
                         continue;
                     }
 
-                    if context.shared {
-                        context.shared = false;
+                    if context.flags.contains(DeviceFlags::SHARED) {
+                        context.flags.remove(DeviceFlags::SHARED);
                         Command::new("scripts/usb-disable.sh").status().ok();
                         env::set_current_dir(&current_dir)
                             .map_err(|e| {
@@ -711,7 +717,7 @@ pub fn run() -> Result<(), Error> {
                         }
                         view.handle_event(&Event::Reseed, &tx, &mut bus, &mut rq, &mut context);
                     } else {
-                        context.plugged = false;
+                        context.flags.remove(DeviceFlags::PLUGGED);
                         schedule_task(
                             TaskId::CheckBattery,
                             Event::CheckBattery,
@@ -720,7 +726,7 @@ pub fn run() -> Result<(), Error> {
                             &mut tasks,
                         );
                         if tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                            if !context.covered {
+                            if !context.flags.contains(DeviceFlags::COVERED) {
                                 resume(
                                     TaskId::Suspend,
                                     &mut tasks,
@@ -736,7 +742,7 @@ pub fn run() -> Result<(), Error> {
                     }
                 }
                 DeviceEvent::RotateScreen(n) => {
-                    if context.shared
+                    if context.flags.contains(DeviceFlags::SHARED)
                         || tasks.iter().any(|task| {
                             task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend
                         })
@@ -815,7 +821,7 @@ pub fn run() -> Result<(), Error> {
                 }
                 if context.settings.wifi {
                     Command::new("scripts/wifi-disable.sh").status().ok();
-                    context.online = false;
+                    context.flags.remove(DeviceFlags::ONLINE);
                 }
                 // https://github.com/koreader/koreader/commit/71afe36
                 schedule_task(
@@ -881,7 +887,7 @@ pub fn run() -> Result<(), Error> {
                 }
             }
             Event::PrepareShare => {
-                if context.shared {
+                if context.flags.contains(DeviceFlags::SHARED) {
                     continue;
                 }
 
@@ -913,7 +919,7 @@ pub fn run() -> Result<(), Error> {
                 }
                 if context.settings.wifi {
                     Command::new("scripts/wifi-disable.sh").status().ok();
-                    context.online = false;
+                    context.flags.remove(DeviceFlags::ONLINE);
                 }
 
                 let interm = Intermission::new(
@@ -931,11 +937,11 @@ pub fn run() -> Result<(), Error> {
                 tx.send(Event::Share).ok();
             }
             Event::Share => {
-                if context.shared {
+                if context.flags.contains(DeviceFlags::SHARED) {
                     continue;
                 }
 
-                context.shared = true;
+                context.flags.insert(DeviceFlags::SHARED);
                 Command::new("scripts/usb-enable.sh").status().ok();
             }
             Event::Gesture(ge) => match ge {
@@ -1365,7 +1371,7 @@ pub fn run() -> Result<(), Error> {
                 break;
             }
             Event::MightSuspend if context.settings.auto_suspend > 0.0 => {
-                if context.shared
+                if context.flags.contains(DeviceFlags::SHARED)
                     || tasks
                         .iter()
                         .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)

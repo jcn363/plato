@@ -130,7 +130,7 @@ impl Keyboard {
             children,
             layout,
             state,
-            combine_buffer: String::new(),
+            combine_buffer: String::with_capacity(16),
         }
     }
 

@@ -626,14 +626,13 @@ impl ResourceExtractor {
             ));
         }
 
-        let mut images = Vec::new();
-
         let page = self
             .doc
             .load_page(page_num as i32)
             .map_err(|_| format_err!("Failed to load page {}", page_num + 1))?;
 
         let image_count = page.count_images();
+        let mut images = Vec::with_capacity(image_count);
 
         for i in 0..image_count {
             if let Some(image) = page.load_image(i) {

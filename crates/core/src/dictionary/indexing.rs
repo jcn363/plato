@@ -195,7 +195,7 @@ pub fn parse_index<B: BufRead>(mut br: B, lazy: bool) -> Result<Index<B>, DictEr
     let mut info = false;
     let mut entries = Vec::new();
     let mut line_number = 0;
-    let mut line = String::new();
+    let mut line = String::with_capacity(256);
 
     while let Ok(nb) = br.read_line(&mut line) {
         if nb == 0 {

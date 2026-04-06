@@ -107,11 +107,7 @@ impl Page {
             let samples = (*pixmap).n as usize;
             let len = samples * (width * height) as usize;
 
-            let mut data = Vec::new();
-            if data.try_reserve(len).is_err() {
-                fz_drop_pixmap(self.ctx, pixmap);
-                return Err(format_err!("Failed to allocate pixmap data"));
-            }
+            let mut data = Vec::with_capacity(len);
             data.extend_from_slice(std::slice::from_raw_parts((*pixmap).samples, len));
             fz_drop_pixmap(self.ctx, pixmap);
 

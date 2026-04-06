@@ -21,11 +21,13 @@ impl fmt::Display for Point {
 
 impl Point {
     #[inline]
+    #[must_use]
     pub fn new(x: i32, y: i32) -> Point {
         Point { x, y }
     }
 
     #[inline]
+    #[must_use]
     pub fn min_max(self, other: Self) -> (Self, Self) {
         if self.x < other.x || (self.x == other.x && self.y < other.y) {
             (self, other)
@@ -35,11 +37,13 @@ impl Point {
     }
 
     #[inline]
+    #[must_use]
     pub fn dist2(self, pt: Point) -> u32 {
         ((pt.x - self.x).pow(2) + (pt.y - self.y).pow(2)) as u32
     }
 
     #[inline]
+    #[must_use]
     pub fn rdist2(self, rect: &Rectangle) -> u32 {
         if rect.includes(self) {
             0
@@ -74,11 +78,13 @@ impl Point {
     }
 
     #[inline]
+    #[must_use]
     pub fn angle(self) -> f32 {
         (-self.y as f32).atan2(self.x as f32)
     }
 
     #[inline]
+    #[must_use]
     pub fn dir(self) -> Dir {
         if self.x.abs() > self.y.abs() {
             if self.x.is_positive() {
@@ -94,6 +100,7 @@ impl Point {
     }
 
     #[inline]
+    #[must_use]
     pub fn diag_dir(self) -> DiagDir {
         if self.x.is_positive() {
             if self.y.is_positive() {

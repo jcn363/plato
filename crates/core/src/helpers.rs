@@ -117,9 +117,15 @@ where
 {
     let file = File::create(path.as_ref())
         .with_context(|| format!("can't create file {}", path.as_ref().display()))?;
-    let writer = BufWriter::new(file);
-    serde_json::to_writer_pretty(writer, data)
-        .with_context(|| format!("can't serialize to JSON file {}", path.as_ref().display()))
+    let mut writer = BufWriter::new(file);
+    serde_json::to_writer_pretty(&mut writer, data)
+        .with_context(|| format!("can't serialize to JSON file {}", path.as_ref().display()))?;
+    writer
+        .into_inner()
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))
+        .with_context(|| format!("can't finalize JSON file {}", path.as_ref().display()))?
+        .sync_all()
+        .with_context(|| format!("can't sync JSON file to disk {}", path.as_ref().display()))
         .map_err(Into::into)
 }
 
@@ -139,8 +145,12 @@ where
     T: Serialize,
 {
     let s = toml::to_string(data).context("can't convert to TOML format")?;
-    fs::write(path.as_ref(), &s)
-        .with_context(|| format!("can't write to file {}", path.as_ref().display()))
+    let path = path.as_ref();
+    let tmp_path = path.with_extension("tmp");
+    fs::write(&tmp_path, &s)
+        .with_context(|| format!("can't write to temp file {}", tmp_path.display()))?;
+    fs::rename(&tmp_path, path)
+        .with_context(|| format!("can't rename temp file to {}", path.display()))
         .map_err(Into::into)
 }
 

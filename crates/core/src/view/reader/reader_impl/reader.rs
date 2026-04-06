@@ -1,3 +1,7 @@
+// ===========================================================================
+// Imports and Constants
+// ===========================================================================
+
 use crate::color::{BLACK, WHITE};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
@@ -66,6 +70,10 @@ lazy_static! {
 
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
 pub const ANNOTATION_DRIFT: f32 = 0.05;
+
+// ===========================================================================
+// Type Definitions
+// ===========================================================================
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -155,7 +163,6 @@ pub struct Reader {
     children: Vec<Box<dyn View>>,
     doc: Arc<Mutex<Box<dyn Document>>>,
     cache: BTreeMap<usize, Resource>,
-    cache_order: VecDeque<usize>,
     chunks: Vec<RenderChunk>,
     text: FxHashMap<usize, Vec<BoundedText>>,
     annotations: FxHashMap<usize, Vec<Annotation>>,
@@ -201,6 +208,10 @@ impl Default for ViewPort {
     }
 }
 
+// ===========================================================================
+// Constructors
+// ===========================================================================
+
 impl Reader {
     pub fn new(rect: Rectangle, info: Info, _hub: &Hub, context: &mut Context) -> Option<Reader> {
         let id = ID_FEEDER.next();
@@ -239,7 +250,6 @@ impl Reader {
             children,
             doc,
             cache: BTreeMap::new(),
-            cache_order: VecDeque::new(),
             chunks: Vec::new(),
             text: FxHashMap::default(),
             annotations: FxHashMap::default(),
@@ -309,7 +319,6 @@ impl Reader {
             children,
             doc,
             cache: BTreeMap::new(),
-            cache_order: VecDeque::new(),
             chunks: Vec::new(),
             text: FxHashMap::default(),
             annotations: FxHashMap::default(),
@@ -411,6 +420,10 @@ impl Reader {
             }
         }
     }
+
+    // -----------------------------------------------------------------------
+    // Toggle Menus
+    // -----------------------------------------------------------------------
 
     fn toggle_edit_note(
         &mut self,
@@ -1454,6 +1467,10 @@ impl Reader {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Settings Setters
+    // -----------------------------------------------------------------------
+
     fn set_font_size(
         &mut self,
         font_size: f32,
@@ -1842,6 +1859,10 @@ impl Reader {
         self.update(None, hub, rq, context);
     }
 
+    // -----------------------------------------------------------------------
+    // Table of Contents and Page Lookup
+    // -----------------------------------------------------------------------
+
     fn toc(&self) -> Option<Vec<TocEntry>> {
         let mut index = 0;
         self.info
@@ -1920,6 +1941,10 @@ impl Reader {
             }
         })
     }
+
+    // -----------------------------------------------------------------------
+    // Text Excerpt and Selection Geometry
+    // -----------------------------------------------------------------------
 
     fn text_excerpt(&self, sel: [Point; 2]) -> Option<String> {
         let [start, end] = sel;
@@ -2004,6 +2029,10 @@ impl Reader {
             .and_then(|sel| self.text_rect([sel.start, sel.end]))
     }
 
+    // -----------------------------------------------------------------------
+    // Annotation Lookup and UI Reseed
+    // -----------------------------------------------------------------------
+
     fn find_annotation_ref(&mut self, sel: [TextLocation; 2]) -> Option<&Annotation> {
         self.info.reader.as_ref().and_then(|r| {
             r.annotations
@@ -2029,6 +2058,10 @@ impl Reader {
 
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
+
+    // -----------------------------------------------------------------------
+    // Quit and State Persistence
+    // -----------------------------------------------------------------------
 
     fn quit(&mut self, context: &mut Context) {
         if let Some(ref mut s) = self.search {
@@ -2077,6 +2110,10 @@ impl Reader {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Page Scaling (Pinch/Spread Zoom)
+    // -----------------------------------------------------------------------
+
     fn scale_page(
         &mut self,
         center: Point,
@@ -2120,7 +2157,15 @@ impl Reader {
     }
 }
 
+// ===========================================================================
+// View Trait Implementation
+// ===========================================================================
+
 impl View for Reader {
+    // -----------------------------------------------------------------------
+    // Event Handling
+    // -----------------------------------------------------------------------
+
     fn handle_event(
         &mut self,
         evt: &Event,
@@ -3710,6 +3755,10 @@ impl View for Reader {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Rendering
+    // -----------------------------------------------------------------------
+
     fn render_rect(&self, rect: &Rectangle) -> Rectangle {
         rect.intersection(&self.rect).unwrap_or(self.rect)
     }
@@ -3918,6 +3967,10 @@ impl View for Reader {
         self.id
     }
 }
+
+// ===========================================================================
+// Stub Method Declarations (Reader trait interface)
+// ===========================================================================
 
 impl Reader {
     pub fn update(

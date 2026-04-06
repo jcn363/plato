@@ -105,8 +105,10 @@ pub fn parse_font_size(value: &str, em: f32, rem: f32) -> Option<f32> {
 }
 
 pub fn parse_inline_material(value: &str, em: f32, rem: f32, dpi: u16) -> Vec<InlineMaterial> {
-    let mut inlines = Vec::new();
-    for decl in value.split(',') {
+    let split = value.split(',');
+    let count = split.clone().count();
+    let mut inlines = Vec::with_capacity(count);
+    for decl in split {
         let tokens: Vec<&str> = decl.trim().split_whitespace().collect();
         match tokens.get(0).cloned() {
             Some("glue") => {

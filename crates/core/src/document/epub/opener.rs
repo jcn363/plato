@@ -33,7 +33,8 @@ unsafe impl Sync for EpubDocument {}
 impl ResourceFetcher for ZipArchive<File> {
     fn fetch(&mut self, name: &str) -> Result<Vec<u8>, Error> {
         let mut file = self.by_name(name)?;
-        let mut buf = Vec::new();
+        let size = file.size() as usize;
+        let mut buf = Vec::with_capacity(size);
         file.read_to_end(&mut buf)?;
         Ok(buf)
     }
@@ -46,7 +47,8 @@ impl EpubDocument {
 
         let opf_path = {
             let mut zf = archive.by_name("META-INF/container.xml")?;
-            let mut text = String::new();
+            let size = zf.size() as usize;
+            let mut text = String::with_capacity(size);
             zf.read_to_string(&mut text)?;
             let root = XmlParser::new(&text).parse();
             root.root()
@@ -62,7 +64,8 @@ impl EpubDocument {
 
         let text = {
             let mut zf = archive.by_name(&opf_path)?;
-            let mut text = String::new();
+            let size = zf.size() as usize;
+            let mut text = String::with_capacity(size);
             zf.read_to_string(&mut text)?;
             text
         };

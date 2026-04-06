@@ -62,8 +62,8 @@ pub enum Combinator {
 impl Default for Selector {
     fn default() -> Self {
         Selector {
-            simple_selectors: Vec::new(),
-            combinators: Vec::new(),
+            simple_selectors: Vec::with_capacity(2),
+            combinators: Vec::with_capacity(2),
         }
     }
 }
@@ -73,8 +73,8 @@ impl Default for SimpleSelector {
         SimpleSelector {
             tag_name: None,
             classes: FxHashSet::default(),
-            pseudo_classes: Vec::new(),
-            attributes: Vec::new(),
+            pseudo_classes: Vec::with_capacity(1),
+            attributes: Vec::with_capacity(1),
             id: None,
         }
     }

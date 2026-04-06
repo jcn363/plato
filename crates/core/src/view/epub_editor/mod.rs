@@ -329,7 +329,7 @@ impl EpubEditor {
 
         let (search_text, replace_text) = match &self.search_replace {
             Some(state) => (state.search_text.clone(), state.replace_text.clone()),
-            None => (String::new(), String::new()),
+            None => (String::with_capacity(32), String::with_capacity(32)),
         };
 
         let search_replace_view =
@@ -529,8 +529,8 @@ impl View for EpubEditor {
             }
             Event::Select(EntryId::SearchReplace) => {
                 self.search_replace = Some(SearchReplaceState {
-                    search_text: String::new(),
-                    replace_text: String::new(),
+                    search_text: String::with_capacity(32),
+                    replace_text: String::with_capacity(32),
                 });
                 self.show_search_replace(hub, rq, context);
                 true

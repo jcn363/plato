@@ -13,7 +13,7 @@ use self::navigation_bar::NavigationBar;
 use self::shelf::Shelf;
 use super::top_bar::TopBar;
 use crate::color::BLACK;
-use crate::context::Context;
+use crate::context::{Context, DeviceFlags};
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
@@ -1855,7 +1855,7 @@ impl Home {
             &save_path,
             &hook.program,
             context.settings.wifi,
-            context.online,
+            context.flags.contains(DeviceFlags::ONLINE),
             hub,
         ) {
             Ok(process) => {

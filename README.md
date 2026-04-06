@@ -96,16 +96,47 @@ Any 4.*X*.*Y* firmware, with *X* ≥ 6, will do.
 - **Device** - Added `#[inline]` to all device capability methods
 - **Input** - Added `#[inline]` to button status conversion
 
-For a detailed list of features not yet implemented, see [NOT_IMPLEMENTED](doc/NOT_IMPLEMENTED.md).
-
 ### Build Targets
 
 ```bash
-# Build for 32-bit ARM (original Kobo devices)
-cargo build --profile release-arm
+# Build for 32-bit ARM (original Kobo devices) — DEFAULT
+cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
 
-# Build for 64-bit ARM (newer Kobo devices like Libra 2, Sage)
-cargo build --target aarch64-unknown-linux-gnu --profile release-arm64
+# Build for 64-bit ARM (newer Kobo devices: Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
+cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
+
+# Build for host (development/testing)
+cargo build --target x86_64-unknown-linux-gnu -p plato
+
+# Full build with native dependencies (downloads libs + MuPDF)
+./build.sh
+
+# Create distribution bundle
+./dist.sh
+
+# Run the desktop emulator (requires SDL2)
+./run-emulator.sh
+```
+
+### Testing
+
+Since the default target is ARM, all test commands on the host require `--target x86_64-unknown-linux-gnu`:
+
+```bash
+# Run all tests
+cargo test --target x86_64-unknown-linux-gnu
+
+# Run tests for a specific crate
+cargo test -p plato-core --target x86_64-unknown-linux-gnu
+
+# Run a single test by name
+cargo test -p plato-core test_device_canonical_rotation --target x86_64-unknown-linux-gnu
+
+# Run tests in a specific module
+cargo test -p plato-core geom::tests --target x86_64-unknown-linux-gnu
+
+# Run tests matching a pattern
+cargo test overlaping --target x86_64-unknown-linux-gnu
 ```
 
 ### Credits

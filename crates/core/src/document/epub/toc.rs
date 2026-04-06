@@ -21,8 +21,6 @@ impl EpubDocument {
         index: &mut usize,
         cache: &mut UriCache,
     ) -> Vec<TocEntry> {
-        let mut entries = Vec::new();
-
         let mut nav_points: Vec<(usize, NodeRef)> = node
             .children()
             .filter(|child| child.tag_name() == Some("navPoint"))
@@ -34,6 +32,10 @@ impl EpubDocument {
                 (play_order, child)
             })
             .collect();
+
+        nav_points.sort_by_key(|(order, _)| *order);
+
+        let mut entries = Vec::with_capacity(nav_points.len());
 
         nav_points.sort_by_key(|(order, _)| *order);
 
@@ -91,7 +93,11 @@ impl EpubDocument {
         index: &mut usize,
         cache: &mut UriCache,
     ) -> Vec<TocEntry> {
-        let mut entries = Vec::new();
+        let child_count = node
+            .children()
+            .filter(|c| c.tag_name() == Some("li"))
+            .count();
+        let mut entries = Vec::with_capacity(child_count);
 
         for child in node.children() {
             if child.tag_name() == Some("li") {
@@ -147,11 +153,13 @@ impl EpubDocument {
         let (index, start_offset) = self.vertebra_coordinates_from_name(name)?;
 
         if frag_index_opt.is_some() {
-            let mut text = String::new();
-            {
+            let text = {
                 let mut zf = self.archive.by_name(name).ok()?;
+                let size = zf.size() as usize;
+                let mut text = String::with_capacity(size);
                 zf.read_to_string(&mut text).ok()?;
-            }
+                text
+            };
             let root = XmlParser::new(&text).parse();
             self.cache_uris(root.root(), name, start_offset, cache);
             cache.get(uri).cloned()

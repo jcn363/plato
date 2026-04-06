@@ -1,6 +1,10 @@
 mod freetype_sys;
 mod harfbuzz_sys;
 
+// ===========================================================================
+// Imports and Re-exports
+// ===========================================================================
+
 use self::freetype_sys::*;
 use self::harfbuzz_sys::*;
 
@@ -79,6 +83,10 @@ lazy_static! {
     };
 }
 
+// ===========================================================================
+// Font Size Constants and Style Definitions
+// ===========================================================================
+
 pub const MD_AUTHOR: Style = Style {
     family: Family::Serif,
     variant: Variant::REGULAR,
@@ -98,6 +106,10 @@ pub const MD_SIZE: Style = Style {
     variant: Variant::REGULAR,
     size: FONT_SIZES[0],
 };
+
+// ===========================================================================
+// Embedded Font Data Declarations (platform-specific)
+// ===========================================================================
 
 #[cfg(any(not(target_os = "linux"), target_arch = "arm"))]
 #[link(name = "mupdf")]
@@ -553,6 +565,10 @@ extern "C" {
         [libc::c_uchar; 8664];
 }
 
+// ===========================================================================
+// Font Family and Discovery Utilities
+// ===========================================================================
+
 pub const SLIDER_VALUE: Style = MD_SIZE;
 
 pub struct FontFamily {
@@ -766,6 +782,10 @@ pub fn font_from_style<'a>(fonts: &'a mut Fonts, style: &Style, dpi: u16) -> &'a
     font.set_size(style.size, dpi);
     font
 }
+
+// ===========================================================================
+// Script-to-Font Mapping and Unicode Script Detection
+// ===========================================================================
 
 #[inline]
 unsafe fn font_data_from_script(script: HbScript) -> &'static [libc::c_uchar] {
@@ -1537,6 +1557,10 @@ fn script_from_code(code: u32) -> HbScript {
     }
 }
 
+// ===========================================================================
+// FontLibrary, FontOpener, and Font Core Types
+// ===========================================================================
+
 pub struct FontLibrary(*mut FtLibrary);
 
 pub struct FontOpener(Rc<FontLibrary>);
@@ -1917,7 +1941,7 @@ impl Font {
             let info = hb_buffer_get_glyph_infos(buf, ptr::null_mut());
             let pos = hb_buffer_get_glyph_positions(buf, ptr::null_mut());
             let mut render_plan = RenderPlan::default();
-            let mut missing_glyphs = Vec::new();
+            let mut missing_glyphs = Vec::with_capacity(len / 4 + 1);
 
             for i in 0..len {
                 let pos_i = &*pos.add(i);
@@ -2210,6 +2234,10 @@ impl Font {
     }
 }
 
+// ===========================================================================
+// RenderPlan and GlyphPlan (Text Shaping Output)
+// ===========================================================================
+
 #[derive(Debug, Copy, Clone)]
 struct GlyphPlan {
     codepoint: u32,
@@ -2344,10 +2372,18 @@ impl Drop for Font {
     }
 }
 
+// ===========================================================================
+// Helper Utilities
+// ===========================================================================
+
 #[inline]
 fn tag(c1: u8, c2: u8, c3: u8, c4: u8) -> u32 {
     ((c1 as u32) << 24) | ((c2 as u32) << 16) | ((c3 as u32) << 8) | c4 as u32
 }
+
+// ===========================================================================
+// FreetypeError Type Definitions
+// ===========================================================================
 
 #[derive(Error, Debug)]
 enum FreetypeError {

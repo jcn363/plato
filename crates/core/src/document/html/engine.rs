@@ -781,8 +781,9 @@ impl Engine {
             }
         } else {
             if node.has_children() {
-                let mut inlines = Vec::new();
-                let mut markers = Vec::new();
+                let child_count = node.children().count();
+                let mut inlines = Vec::with_capacity(child_count);
+                let mut markers = Vec::with_capacity(1);
                 if node.id().is_some() {
                     markers.push(node.offset());
                 }
@@ -1192,7 +1193,7 @@ impl Engine {
         line_width: i32,
         resource_fetcher: &mut dyn ResourceFetcher,
     ) -> (Vec<ParagraphItem<ParagraphElement>>, Vec<ImageElement>) {
-        let mut items = Vec::new();
+        let mut items = Vec::with_capacity(inlines.len());
         let mut floats = Vec::new();
         let big_stretch = 3 * {
             let font_size = (parent_style.font_size * 64.0) as u32;
@@ -1788,7 +1789,7 @@ impl Engine {
 
         let para_shape = if let Some(floating_rects) = draw_state.floats.get(&page_index) {
             let max_lines = (root_data.rect.max.y - position.y + space_top) / style.line_height;
-            let mut para_shape = Vec::new();
+            let mut para_shape = Vec::with_capacity(max_lines as usize + 1);
             for index in 0..max_lines {
                 let y_min = position.y - space_top + index * style.line_height;
                 let mut rect = rect![
