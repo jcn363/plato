@@ -1715,6 +1715,7 @@ impl Reader {
         self.update(None, hub, rq, context);
     }
 
+    #[allow(dead_code)]
     fn scaling_factor(
         rect: &Rectangle,
         _margin: &Margin,
@@ -1749,8 +1750,6 @@ impl Reader {
                 return;
             };
             let offset = frame.min + self.view_port.page_offset;
-            let x_ratio = offset.x as f32 / pixmap.width as f32;
-            let y_ratio = offset.y as f32 / pixmap.height as f32;
             let dims = {
                 let doc = self
                     .doc
@@ -1758,22 +1757,25 @@ impl Reader {
                     .unwrap_or_else(|poisoned| poisoned.into_inner());
                 doc.dims(index).unwrap_or((0.0, 0.0))
             };
-            let scale = Self::scaling_factor(
+            let scale = reader_rendering::scaling_factor(
                 &self.rect,
                 margin,
                 self.view_port.margin_width,
                 dims,
                 self.view_port.zoom_mode,
             );
-            if x_ratio >= margin.left && x_ratio <= (1.0 - margin.right) {
-                self.view_port.page_offset.x = (scale * (x_ratio - margin.left) * dims.0) as i32;
-            } else {
-                self.view_port.page_offset.x = 0;
-            }
-            if y_ratio >= margin.top && y_ratio <= (1.0 - margin.bottom) {
-                self.view_port.page_offset.y = (scale * (y_ratio - margin.top) * dims.1) as i32;
-            } else {
-                self.view_port.page_offset.y = 0;
+            if let Some(new_offset) = reader_rendering::calculate_margin_offset(
+                offset,
+                pixmap.width,
+                pixmap.height,
+                margin.left,
+                margin.right,
+                margin.top,
+                margin.bottom,
+                scale,
+                dims,
+            ) {
+                self.view_port.page_offset = new_offset;
             }
         }
         if let Some(r) = self.info.reader.as_mut() {

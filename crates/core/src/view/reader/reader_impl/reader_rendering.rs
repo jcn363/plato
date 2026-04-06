@@ -181,3 +181,51 @@ pub(crate) fn selection_rect(
 ) -> Option<Rectangle> {
     selection.and_then(|sel| text_rect(text_data, chunks, [sel.start, sel.end]))
 }
+
+/// Calculate cropped margin offset within a page
+///
+/// Computes the page offset required when cropping margins, handling position
+/// normalization relative to the page dimensions.
+///
+/// # Arguments
+/// - `offset`: Current frame offset position
+/// - `pixmap_width`: Pixmap width in pixels
+/// - `pixmap_height`: Pixmap height in pixels
+/// - `margin_left`: Left margin ratio (0.0-1.0)
+/// - `margin_right`: Right margin ratio (0.0-1.0)
+/// - `margin_top`: Top margin ratio (0.0-1.0)
+/// - `margin_bottom`: Bottom margin ratio (0.0-1.0)
+/// - `scale`: Scale factor for the page
+/// - `dims`: Original page dimensions (width, height)
+///
+/// # Returns
+/// Adjusted page offset, or None if margins are out of bounds
+#[allow(dead_code)]
+pub(crate) fn calculate_margin_offset(
+    offset: Point,
+    pixmap_width: u32,
+    pixmap_height: u32,
+    margin_left: f32,
+    margin_right: f32,
+    margin_top: f32,
+    margin_bottom: f32,
+    scale: f32,
+    dims: (f32, f32),
+) -> Option<Point> {
+    let x_ratio = offset.x as f32 / pixmap_width as f32;
+    let y_ratio = offset.y as f32 / pixmap_height as f32;
+
+    let x = if x_ratio >= margin_left && x_ratio <= (1.0 - margin_right) {
+        (scale * (x_ratio - margin_left) * dims.0) as i32
+    } else {
+        0
+    };
+
+    let y = if y_ratio >= margin_top && y_ratio <= (1.0 - margin_bottom) {
+        (scale * (y_ratio - margin_top) * dims.1) as i32
+    } else {
+        0
+    };
+
+    Some(Point { x, y })
+}
