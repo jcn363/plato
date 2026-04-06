@@ -145,27 +145,30 @@
 
 ### 1. `lazy_static` Usage Analysis
 
-**Status:** Partially migrated (epub_edit crate only)
+**Status:** Fully migrated candidates to `std::sync::LazyLock`
 
 | Crate | Status | Notes |
 |-------|--------|-------|
 | `epub_edit` | ✅ Migrated | Converted to `std::sync::LazyLock` |
-| `plato-core` | ⚠️ Complex | Most usages depend on runtime device configuration via `CURRENT_DEVICE` |
+| `plato-core` | ✅ All migratable candidates migrated | 5 remaining (device-dependent), 0 candidates left |
 
-**`lazy_static` in plato-core (cannot trivially migrate):**
-- `device.rs:474` - `CURRENT_DEVICE` depends on `env::var("PRODUCT")` and `env::var("MODEL_NUMBER")` at runtime
+**Migrated to `LazyLock`:**
+- `metadata/constants.rs` - `TITLE_PREFIXES`
+- `view/keyboard.rs` - `DEFAULT_COMBINATIONS`
+- `view/reader/reader_impl/reader.rs` - `TOC_PAGE_RE`, `PDF_PAGE_RE`, `SEARCH_RE`
+- `helpers.rs` - `CHARACTER_ENTITIES`
+- `document/html/layout.rs` - `HYPHENATION_LANGUAGES`, `HYPHENATION_PATTERNS`, `EM_SPACE_RATIOS`, `WORD_SPACE_RATIOS`
+- `framebuffer/transform.rs` - `DITHER_G16_DRIFTS`, `DITHER_G2_DRIFTS`
+- `i18n/mod.rs` - `CURRENT_LANGUAGE`, `ENGLISH`, `SPANISH`
+- `view/home/shelf.rs` - `EXCLUSIVE_ACCESS`
+
+**Remaining `lazy_static` in plato-core (5 total):**
+*Cannot migrate — depends on runtime device configuration:*
+- `device.rs:474` - `CURRENT_DEVICE` depends on `env::var("PRODUCT")` and `env::var("MODEL_NUMBER")`
 - `frontlight/natural.rs:38` - `FRONTLIGHT_DIRS` depends on `CURRENT_DEVICE.model`
-- `font/mod.rs:70` - `MD_TITLE` depends on `CURRENT_DEVICE.dims` and `CURRENT_DEVICE.dpi`
-- `font/md_title.rs:5` - Same pattern
-- `helpers.rs:44` - `CHARACTER_ENTITIES` - **Cannot migrate** (depends on entities crate runtime iterator)
-- `i18n/mod.rs:34,66` - `CURRENT_LANGUAGE`, `ENGLISH`, `SPANISH` - **Cannot migrate** (uses RwLock for mutable state)
-- `view/keyboard.rs:409` - Keyboard layouts depend on `CURRENT_DEVICE`
-- `view/icon.rs:18` - Icons depend on `CURRENT_DEVICE`
-- `view/home/shelf.rs:22` - Shelf icons depend on `CURRENT_DEVICE`
-- `framebuffer/transform.rs:9` - Display rotation depends on device model
-- `document/html/layout.rs:561` - Hyphenation patterns depend on `CURRENT_DEVICE.dpi`
-
-**Conclusion:** Most `lazy_static` usages in core are tied to device-specific runtime configuration and cannot use `LazyLock` (which requires const initialization). The `CHARACTER_ENTITIES`, translation maps, and similar compile-time-constant data could migrate but the benefit is minimal.
+- `font/mod.rs:88` - `MD_TITLE` depends on `CURRENT_DEVICE.dims` and `CURRENT_DEVICE.dpi`
+- `font/md_title.rs:5` - `MD_TITLE` depends on `CURRENT_DEVICE.dims` and `CURRENT_DEVICE.dpi`
+- `view/icon.rs:18` - `ICONS_PIXMAPS` depends on `CURRENT_DEVICE.dpi`
 
 ### 2. Dependency Version Audit
 
@@ -484,14 +487,20 @@ Most code quality and performance improvements have been addressed, including:
 
 ### lazy_static Migration Analysis
 
-**CHARACTER_ENTITIES (helpers.rs:44):** Cannot migrate - depends on `entities` crate's `ENTITIES` iterator which is runtime-initialized. The `lazy_static!` pattern is appropriate here.
+**CHARACTER_ENTITIES (helpers.rs:44):** ✅ Migrated — `entities::ENTITIES` is a static array, not runtime-initialized.
 
 **i18n module (i18n/mod.rs:34,66):**
-- `CURRENT_LANGUAGE`: Uses `RwLock<Language>` for mutable global state - cannot use `LazyLock`
-- `ENGLISH`, `SPANISH`: Static translation maps - technically could migrate but requires significant refactoring to replace `HashMap` with `const` alternatives
-- **Conclusion:** Cannot trivially migrate due to `RwLock` and runtime data population
+- `CURRENT_LANGUAGE`: Uses `RwLock<Language>` for mutable global state — can wrap in `LazyLock<RwLock<Language>>`
+- `ENGLISH`, `SPANISH`: Static translation maps — can migrate to `LazyLock<HashMap>`
+- **Conclusion:** All three can migrate; `LazyLock` wraps initialization, not mutability
 
-**Other usages:** All other 25+ `lazy_static` usages depend on `CURRENT_DEVICE` runtime configuration and cannot use `LazyLock`
+**Regex patterns (view/reader/reader_impl/reader.rs):** ✅ Migrated — `TOC_PAGE_RE`, `PDF_PAGE_RE`, `SEARCH_RE` are compile-time constant regexes.
+
+**Hyphenation (document/html/layout.rs):** ✅ Migrated — `HYPHENATION_LANGUAGES`, `HYPHENATION_PATTERNS`, `EM_SPACE_RATIOS`, `WORD_SPACE_RATIOS` are static data.
+
+**Remaining candidates (no device dependency):**
+- `framebuffer/transform.rs:9` — `DITHER_G16_DRIFTS`, `DITHER_G2_DRIFTS` (load PNG, no device dependency)
+- `view/home/shelf.rs:22` — `EXCLUSIVE_ACCESS` (`Mutex<u8>`, no device dependency)
 
 ### Module Documentation Added
 
@@ -507,5 +516,24 @@ Most code quality and performance improvements have been addressed, including:
 - `fetcher`: reqwest 0.13.1
 
 **Analysis:** Upgrade requires TLS feature changes (`rustls-tls-webpki-roots` → `rustls`). Currently works but should align in future.
+
+### lazy_static Migration Completed This Session
+
+- **metadata/constants.rs:8** - `TITLE_PREFIXES` - ✅ Migrated to `LazyLock`
+- **view/keyboard.rs:409** - `DEFAULT_COMBINATIONS` - ✅ Migrated to `LazyLock`
+- **view/reader/reader_impl/reader.rs:65** - `TOC_PAGE_RE`, `PDF_PAGE_RE`, `SEARCH_RE` - ✅ Migrated to `LazyLock`
+- **helpers.rs:44** - `CHARACTER_ENTITIES` - ✅ Migrated to `LazyLock`
+- **document/html/layout.rs:561** - `HYPHENATION_LANGUAGES`, `HYPHENATION_PATTERNS`, `EM_SPACE_RATIOS`, `WORD_SPACE_RATIOS` - ✅ Migrated to `LazyLock`
+- **framebuffer/transform.rs:9** - `DITHER_G16_DRIFTS`, `DITHER_G2_DRIFTS` - ✅ Migrated to `LazyLock`
+- **i18n/mod.rs:33** - `CURRENT_LANGUAGE` - ✅ Migrated to `LazyLock`
+- **i18n/mod.rs:65** - `ENGLISH`, `SPANISH` - ✅ Migrated to `LazyLock`
+- **view/home/shelf.rs:22** - `EXCLUSIVE_ACCESS` - ✅ Migrated to `LazyLock`
+
+**Still remaining (5 cannot migrate — device-dependent):**
+- `device.rs:474` - `CURRENT_DEVICE`
+- `frontlight/natural.rs:38` - `FRONTLIGHT_DIRS`
+- `font/mod.rs:88` - `MD_TITLE`
+- `font/md_title.rs:5` - `MD_TITLE`
+- `view/icon.rs:18` - `ICONS_PIXMAPS`
 
 These remaining items are refinement opportunities rather than critical issues - the codebase is production-ready.

@@ -1,38 +1,40 @@
 use super::image::Pixmap;
 use crate::color::Color;
-use lazy_static::lazy_static;
+use std::sync::LazyLock;
 
 pub type ColorTransform = fn(u32, u32, Color) -> Color;
 
 const DITHER_PITCH: u32 = 128;
 
-lazy_static! {
-    // Tileable blue noise matrix.
-    pub static ref DITHER_G16_DRIFTS: Vec<i8> = {
-        let pixmap = Pixmap::from_png("resources/blue_noise-128.png").expect("failed to load pixmap");
-        // The gap between two succesive colors in G16 is 17.
-        // Map {0 .. 255} to {-8 .. 8}.
-        pixmap.data().iter().map(|&v| {
-            match v {
-                  0..=119 => v as i8 / 15 - 8,
-                      120 => 0,
-                121..=255 => ((v - 121) / 15) as i8,
-            }
-        }).collect()
-    };
+/// Tileable blue noise matrix for G16 dithering.
+/// Maps pixel values from {0..255} to {-8..8} drift values.
+pub static DITHER_G16_DRIFTS: LazyLock<Vec<i8>> = LazyLock::new(|| {
+    let pixmap = Pixmap::from_png("resources/blue_noise-128.png").expect("failed to load pixmap");
+    // The gap between two successive colors in G16 is 17.
+    pixmap
+        .data()
+        .iter()
+        .map(|&v| match v {
+            0..=119 => v as i8 / 15 - 8,
+            120 => 0,
+            121..=255 => ((v - 121) / 15) as i8,
+        })
+        .collect()
+});
 
-    // Tileable blue noise matrix.
-    pub static ref DITHER_G2_DRIFTS: Vec<i8> = {
-        let pixmap = Pixmap::from_png("resources/blue_noise-128.png").expect("failed to load pixmap");
-        // Map {0 .. 255} to {-128 .. 127}.
-        pixmap.data().iter().map(|&v| {
-            match v {
-                  0..=127 => -128 + (v as i8),
-                128..=255 => (v - 128) as i8,
-            }
-        }).collect()
-    };
-}
+/// Tileable blue noise matrix for G2 dithering.
+/// Maps pixel values from {0..255} to {-128..127} drift values.
+pub static DITHER_G2_DRIFTS: LazyLock<Vec<i8>> = LazyLock::new(|| {
+    let pixmap = Pixmap::from_png("resources/blue_noise-128.png").expect("failed to load pixmap");
+    pixmap
+        .data()
+        .iter()
+        .map(|&v| match v {
+            0..=127 => -128 + (v as i8),
+            128..=255 => (v - 128) as i8,
+        })
+        .collect()
+});
 
 // Ordered dithering.
 // The input color is in {0 .. 255}.

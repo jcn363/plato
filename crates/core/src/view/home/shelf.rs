@@ -14,14 +14,11 @@ use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use crate::view::{BIG_BAR_HEIGHT, THICKNESS_MEDIUM};
-use lazy_static::lazy_static;
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 use std::thread;
 
-lazy_static! {
-    static ref EXCLUSIVE_ACCESS: Mutex<u8> = Mutex::new(0);
-}
+static EXCLUSIVE_ACCESS: LazyLock<Mutex<u8>> = LazyLock::new(|| Mutex::new(0));
 
 pub struct Shelf {
     id: Id,

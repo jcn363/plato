@@ -29,7 +29,6 @@ use crate::settings::{
 };
 use crate::unit::{mm_to_px, scale_by_dpi};
 use chrono::Local;
-use lazy_static::lazy_static;
 use rand_core::Rng;
 use regex::Regex;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -38,7 +37,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 
 use crate::view::common::{
     locate, locate_by_id, toggle_battery_menu, toggle_clock_menu, toggle_main_menu,
@@ -62,11 +61,11 @@ use crate::view::reader::tool_bar::ToolBar;
 pub const RECT_DIST_JITTER: f32 = 0.1;
 pub const MEM_SCHEME: &str = "mem:";
 
-lazy_static! {
-    pub static ref TOC_PAGE_RE: Regex = Regex::new(r"(?i)page\s*(\d+)").unwrap();
-    pub static ref PDF_PAGE_RE: Regex = Regex::new(r"(\d+)").unwrap();
-    pub static ref SEARCH_RE: Regex = Regex::new(r"\((\d+),\s*(\d+)\)").unwrap();
-}
+pub static TOC_PAGE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)page\s*(\d+)").unwrap());
+pub static PDF_PAGE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(\d+)").unwrap());
+pub static SEARCH_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\((\d+),\s*(\d+)\)").unwrap());
 
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
 pub const ANNOTATION_DRIFT: f32 = 0.05;

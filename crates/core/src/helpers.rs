@@ -1,6 +1,5 @@
 use anyhow::{Context, Error};
 use entities::ENTITIES;
-use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -13,6 +12,7 @@ use std::num::ParseIntError;
 use std::ops::{Deref, DerefMut};
 use std::path::{Component, Path, PathBuf};
 use std::str::FromStr;
+use std::sync::LazyLock;
 use std::time::SystemTime;
 use walkdir::{DirEntry, WalkDir};
 
@@ -41,15 +41,14 @@ macro_rules! log_info {
     };
 }
 
-lazy_static! {
-    pub static ref CHARACTER_ENTITIES: FxHashMap<&'static str, &'static str> = {
+pub static CHARACTER_ENTITIES: LazyLock<FxHashMap<&'static str, &'static str>> =
+    LazyLock::new(|| {
         let mut m = FxHashMap::default();
         for e in ENTITIES.iter() {
             m.insert(e.entity, e.characters);
         }
         m
-    };
-}
+    });
 
 /// Walk a directory, filtering hidden files and skipping errors.
 /// This is the standard directory traversal pattern for the codebase.
