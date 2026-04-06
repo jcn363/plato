@@ -30,6 +30,7 @@
 - ✅ Pre-allocation (`with_capacity()`) across 20+ locations
 - ✅ `.expect()` reduction: 50+ instances replaced with `if let`, `match`, `.unwrap_or()`, `.map_or()` across 20+ files in `view/`, `document/html/`, `calculator/`, `fetcher/`
 - ✅ Raw `println!` cleanup: 15 instances replaced with `log_info!`, `log_warn!`, or proper assertions across `sync.rs`, `library/scan.rs`, `library/maintenance.rs`, `view/rotation_values/mod.rs`, `framebuffer/kobo1.rs`, `document/html/css.rs`, `view/home/directories_bar.rs`
+- ✅ Dead code cleanup: Removed incomplete file browser integration (button, event handler, dead field); marked incomplete ManipulationMode enum variants as reserved for future implementation; documented ICON constants as future UI buttons
 
 ### Dependencies
 - ✅ `nix` 0.30.1 → 0.31.2
@@ -51,6 +52,11 @@
 - ✅ Build fix: `context.online` → `flags.remove(DeviceFlags::ONLINE)` in emulator
 
 ## Remaining Items
+
+### Dead Code Summary
+- **49 total `#[allow(dead_code)]` attributes** identified across codebase
+- **Cleaned:** 41 removed/resolved in pdf_manipulator.rs and cover_editor.rs
+- **Remaining: 8** with documented justifications in specific modules (see below)
 
 ### Remaining — Justified `.expect()` Calls (~68 total)
 
