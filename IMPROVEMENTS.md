@@ -178,8 +178,8 @@
 - `chrono`: ✅ Updated to 0.4.44
 
 **Unmaintained packages (advisory):**
-- `bincode` 1.3.3 - RUSTSEC-2025-0141 (via kl-hyphenate)
-- `fxhash` 0.2.1 - RUSTSEC-2025-0057
+- `bincode` 1.3.3 - RUSTSEC-2025-0141 (via kl-hyphenate) - **Cannot replace** without upstream kl-hyphenate update
+- `fxhash` 0.2.1 - RUSTSEC-2025-0057 - **Attempted replacement to ccl-fxhash 3.0.0 but API incompatibility** (ccl-fxhash has different internal structure, would require significant refactoring across 30+ files)
 
 **Security-sensitive packages:**
 - `reqwest` with `rustls-tls-webpki-roots` - Using secure TLS defaults
