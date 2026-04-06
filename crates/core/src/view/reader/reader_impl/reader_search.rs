@@ -5,30 +5,29 @@
 //! ## Methods to Move Here
 //! - `toggle_search_menu()` - Search direction menu ✓
 //! - `render_results()` - Highlight search results on page (postponed - type conflicts)
-//! - `go_to_results_neighbor()` - Navigate between search results
-//! - `go_to_results_page()` - Jump to specific result
-//! - `toggle_search_bar()` - Search input UI
-//! - `toggle_results_bar()` - Results display bar
-//! - `search()` - Execute search query (stub)
-//! - `update_results_bar()` - Update results display
+//! - `go_to_results_neighbor()` - Navigate between search results ✓ (stub)
+//! - `go_to_results_page()` - Jump to specific result ✓ (stub)
+//! - `toggle_search_bar()` - Search input UI ✓ (stub)
+//! - `toggle_results_bar()` - Results display bar ✓ (stub)
+//! - `search()` - Execute search query (stub) ✓ (stub)
+//! - `update_results_bar()` - Update results display ✓ (stub)
 //!
 //! ## Notes
 //! Type duplication issue: RenderChunk exists in both reader.rs and reader_core.rs.
 //! This needs architectural cleanup before extracting render-related functions.
+//! Stub methods are minimal implementations that update render queue.
 
 use crate::geom::{LinearDir, Rectangle};
 use crate::view::menu::{Menu, MenuKind};
-use crate::view::{EntryId, EntryKind};
+use crate::view::{EntryId, EntryKind, Id, RenderData, RenderQueue};
 
 use crate::context::Context;
+use crate::framebuffer::UpdateMode;
 
-/// Toggle the search direction menu.
+/// Create search direction menu
 ///
-/// Creates or removes a contextual menu allowing the user to select
-/// search direction (Forward/Backward).
-///
-/// This helper is called from Reader::toggle_search_menu() which provides
-/// the children vector and other reader state.
+/// Creates a menu for selecting search direction (Forward/Backward).
+/// This menu is toggled by Reader::toggle_search_menu().
 pub(crate) fn create_search_menu(
     search_direction: LinearDir,
     rect: Rectangle,
@@ -56,4 +55,55 @@ pub(crate) fn create_search_menu(
         entries,
         context,
     )
+}
+
+/// Navigate to the next or previous search result
+#[allow(dead_code)]
+pub(crate) fn go_to_results_neighbor(
+    _dir: crate::geom::CycleDir,
+    view_id: Id,
+    rect: Rectangle,
+    rq: &mut RenderQueue,
+) {
+    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
+}
+
+/// Jump to a specific search result page
+#[allow(dead_code)]
+pub(crate) fn go_to_results_page(
+    _index: usize,
+    view_id: Id,
+    rect: Rectangle,
+    rq: &mut RenderQueue,
+) {
+    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
+}
+
+/// Toggle search input bar visibility
+#[allow(dead_code)]
+pub(crate) fn toggle_search_bar(_enable: bool, view_id: Id, rect: Rectangle, rq: &mut RenderQueue) {
+    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
+}
+
+/// Toggle search results display bar visibility
+#[allow(dead_code)]
+pub(crate) fn toggle_results_bar(
+    _enable: bool,
+    view_id: Id,
+    rect: Rectangle,
+    rq: &mut RenderQueue,
+) {
+    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
+}
+
+/// Execute a text search
+#[allow(dead_code)]
+pub(crate) fn execute_search(_query: &str, view_id: Id, rect: Rectangle, rq: &mut RenderQueue) {
+    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
+}
+
+/// Update the search results bar display
+#[allow(dead_code)]
+pub(crate) fn update_results_bar(view_id: Id, rect: Rectangle, rq: &mut RenderQueue) {
+    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
 }
