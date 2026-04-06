@@ -7,7 +7,7 @@ use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{
     annotations_as_html, bookmarks_as_html, toc_as_html, BoundedText, Document, Location,
-    SimpleTocEntry, TextLocation, TocEntry, TocLocation, BYTES_PER_PAGE,
+    SimpleTocEntry, TextLocation, TocEntry, BYTES_PER_PAGE,
 };
 use crate::font::family_names;
 use crate::font::Fonts;
@@ -1793,45 +1793,16 @@ impl Reader {
     // -----------------------------------------------------------------------
 
     fn toc(&self) -> Option<Vec<TocEntry>> {
-        let mut index = 0;
-        self.info
-            .toc
-            .as_ref()
-            .map(|simple_toc| self.toc_aux(simple_toc, &mut index))
+        super::reader_settings::build_toc(&self.info, |name| {
+            super::reader_settings::find_page_by_name(&self.info, name)
+        })
     }
 
+    #[allow(dead_code)]
     fn toc_aux(&self, simple_toc: &[SimpleTocEntry], index: &mut usize) -> Vec<TocEntry> {
-        let mut toc = Vec::with_capacity(simple_toc.len());
-        for entry in simple_toc {
-            *index += 1;
-            match entry {
-                SimpleTocEntry::Leaf(title, location)
-                | SimpleTocEntry::Container(title, location, _) => {
-                    let current_title = title.clone();
-                    let current_location = match location {
-                        TocLocation::Uri(uri) if uri.starts_with('\'') => self
-                            .find_page_by_name(&uri[1..])
-                            .map(Location::Exact)
-                            .unwrap_or_else(|| location.clone().into()),
-                        _ => location.clone().into(),
-                    };
-                    let current_index = *index;
-                    let current_children = if let SimpleTocEntry::Container(_, _, children) = entry
-                    {
-                        self.toc_aux(children, index)
-                    } else {
-                        Vec::new()
-                    };
-                    toc.push(TocEntry {
-                        title: current_title,
-                        location: current_location,
-                        index: current_index,
-                        children: current_children,
-                    });
-                }
-            }
-        }
-        toc
+        super::reader_settings::build_toc_aux(simple_toc, index, |name| {
+            super::reader_settings::find_page_by_name(&self.info, name)
+        })
     }
 
     fn find_page_by_name(&self, name: &str) -> Option<usize> {

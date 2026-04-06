@@ -25,6 +25,7 @@
 //! ## Future Use
 //! Types from reader_core will be imported when methods are extracted.
 
+use crate::document::{Location, SimpleTocEntry, TocEntry, TocLocation};
 use crate::helpers::AsciiExtension;
 use crate::metadata::Info;
 use septem::Roman;
@@ -78,4 +79,78 @@ pub(crate) fn find_page_by_name(info: &Info, name: &str) -> Option<usize> {
             None
         }
     })
+}
+
+/// Build table of contents from document structure
+///
+/// Converts the simple TOC structure from document metadata into a hierarchical
+/// TocEntry structure suitable for navigation UI.
+///
+/// # Arguments
+/// - `info`: Metadata containing document TOC
+/// - `find_page_fn`: Function to resolve page names to page indices
+///
+/// # Returns
+/// Hierarchical TOC structure, or None if no TOC in document
+#[allow(dead_code)]
+pub(crate) fn build_toc<F>(info: &Info, find_page_fn: F) -> Option<Vec<TocEntry>>
+where
+    F: Fn(&str) -> Option<usize> + Copy,
+{
+    let mut index = 0;
+    info.toc
+        .as_ref()
+        .map(|simple_toc| build_toc_aux(simple_toc, &mut index, find_page_fn))
+}
+
+/// Recursively build table of contents entries
+///
+/// Internal helper for building TOC hierarchy. Processes each TOC entry and
+/// recursively processes child entries for containers.
+///
+/// # Arguments
+/// - `simple_toc`: Flat list of TOC entries
+/// - `index`: Mutable counter for assigning sequential indices
+/// - `find_page_fn`: Function to resolve named page references
+///
+/// # Returns
+/// Vector of TocEntry with full hierarchy populated
+#[allow(dead_code)]
+pub(crate) fn build_toc_aux<F>(
+    simple_toc: &[SimpleTocEntry],
+    index: &mut usize,
+    find_page_fn: F,
+) -> Vec<TocEntry>
+where
+    F: Fn(&str) -> Option<usize> + Copy,
+{
+    let mut toc = Vec::with_capacity(simple_toc.len());
+    for entry in simple_toc {
+        *index += 1;
+        match entry {
+            SimpleTocEntry::Leaf(title, location)
+            | SimpleTocEntry::Container(title, location, _) => {
+                let current_title = title.clone();
+                let current_location = match location {
+                    TocLocation::Uri(uri) if uri.starts_with('\'') => find_page_fn(&uri[1..])
+                        .map(Location::Exact)
+                        .unwrap_or_else(|| location.clone().into()),
+                    _ => location.clone().into(),
+                };
+                let current_index = *index;
+                let current_children = if let SimpleTocEntry::Container(_, _, children) = entry {
+                    build_toc_aux(children, index, find_page_fn)
+                } else {
+                    Vec::new()
+                };
+                toc.push(TocEntry {
+                    title: current_title,
+                    location: current_location,
+                    index: current_index,
+                    children: current_children,
+                });
+            }
+        }
+    }
+    toc
 }
