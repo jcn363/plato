@@ -501,7 +501,7 @@ pub fn parse_text_overflow(value: &str) -> Option<TextOverflow> {
 }
 
 pub fn parse_font_features(value: &str) -> Vec<String> {
-    let re = Regex::new(r#""([^"]+)"\s*(on|off|\d+)?"#).unwrap();
+    let re = Regex::new(r#""([^"]+)"\s*(on|off|\d+)?"#).expect("invalid font feature regex");
     let mut features = Vec::new();
 
     for cap in re.captures_iter(value) {

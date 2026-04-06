@@ -228,7 +228,7 @@ pub fn list_webdav_files(
         let response = String::from_utf8_lossy(&output.stdout);
         let mut files = Vec::new();
 
-        let re = regex::Regex::new(r"<d:href>([^<]+)</d:href>").unwrap();
+        let re = regex::Regex::new(r"<d:href>([^<]+)</d:href>").expect("invalid WebDAV href regex");
         for cap in re.captures_iter(&response) {
             if let Some(m) = cap.get(1) {
                 let href = m.as_str();

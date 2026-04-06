@@ -193,7 +193,13 @@ fn main() -> Result<(), Error> {
                 )
                 .json(&query)
                 .send();
-            let response = response.unwrap();
+            let response = match response {
+                Ok(r) => r,
+                Err(e) => {
+                    log_error!("Request failed: {}", e);
+                    continue;
+                }
+            };
             if !response.status().is_success() {
                 let status = response.status();
                 let body: JsonValue = response.json()?;
@@ -262,7 +268,13 @@ fn main() -> Result<(), Error> {
                                 )
                                 .json(&query)
                                 .send();
-                            let response = response.unwrap();
+                            let response = match response {
+                                Ok(r) => r,
+                                Err(e) => {
+                                    log_error!("Request failed: {}", e);
+                                    continue;
+                                }
+                            };
                             if response.status().is_success() {
                                 archivals_count += 1;
                             } else {
@@ -372,7 +384,7 @@ fn main() -> Result<(), Error> {
             break;
         } else {
             if page == 1 {
-                let total = entries.get("total").and_then(|v| v.as_u64()).unwrap();
+                let total = entries.get("total").and_then(|v| v.as_u64()).unwrap_or(0);
                 let message = if total == 0 {
                     "No new articles.".to_string()
                 } else {
@@ -388,7 +400,7 @@ fn main() -> Result<(), Error> {
                 });
                 println!("{}", event);
                 if total > 0 {
-                    pages_count = entries.get("pages").and_then(|v| v.as_u64()).unwrap();
+                    pages_count = entries.get("pages").and_then(|v| v.as_u64()).unwrap_or(1);
                 }
             }
         }
