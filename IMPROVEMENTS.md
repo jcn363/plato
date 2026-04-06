@@ -142,9 +142,68 @@
      - `FtBitmapSize` struct already defined in `freetype_sys.rs` if bitmap support is needed in the future
 
 ## Dependency Management
-1. **Audit Dependencies** - Regularly run `cargo audit` and update
-2. **Version Alignment** - Ensure workspace dependencies use consistent versions
-3. **Feature Flags** - Consider adding feature flags for optional components
+
+### 1. `lazy_static` Usage Analysis
+
+**Status:** Partially migrated (epub_edit crate only)
+
+| Crate | Status | Notes |
+|-------|--------|-------|
+| `epub_edit` | ✅ Migrated | Converted to `std::sync::LazyLock` |
+| `plato-core` | ⚠️ Complex | Most usages depend on runtime device configuration via `CURRENT_DEVICE` |
+
+**`lazy_static` in plato-core (cannot trivially migrate):**
+- `device.rs:474` - `CURRENT_DEVICE` depends on `env::var("PRODUCT")` and `env::var("MODEL_NUMBER")` at runtime
+- `frontlight/natural.rs:38` - `FRONTLIGHT_DIRS` depends on `CURRENT_DEVICE.model`
+- `font/mod.rs:70` - `MD_TITLE` depends on `CURRENT_DEVICE.dims` and `CURRENT_DEVICE.dpi`
+- `font/md_title.rs:5` - Same pattern
+- `helpers.rs:44` - `CHARACTER_ENTITIES` - **Could migrate** (static data only)
+- `i18n/mod.rs:34,66` - `CURRENT_LANGUAGE`, `ENGLISH`, `SPANISH` - **Could migrate** (static data)
+- `view/keyboard.rs:409` - Keyboard layouts depend on `CURRENT_DEVICE`
+- `view/icon.rs:18` - Icons depend on `CURRENT_DEVICE`
+- `view/home/shelf.rs:22` - Shelf icons depend on `CURRENT_DEVICE`
+- `framebuffer/transform.rs:9` - Display rotation depends on device model
+- `document/html/layout.rs:561` - Hyphenation patterns depend on `CURRENT_DEVICE.dpi`
+
+**Conclusion:** Most `lazy_static` usages in core are tied to device-specific runtime configuration and cannot use `LazyLock` (which requires const initialization). The `CHARACTER_ENTITIES`, translation maps, and similar compile-time-constant data could migrate but the benefit is minimal.
+
+### 2. Dependency Version Audit
+
+**Notable updateable packages (from `cargo outdated`):**
+- `nix`: 0.30.1 → 0.31.2
+- `reqwest`: 0.12 → 0.13.2
+- `zip`: 7.0.0 → 8.5.0 (major version)
+- `quick-xml`: 0.37.0 → 0.39.2
+- `indexmap`: 2.13.0 → 2.13.1
+
+**Security-sensitive packages:**
+- `reqwest` with `rustls-tls-webpki-roots` - Using secure TLS defaults
+- `zip` 7.0.0 → 8.5.0 has breaking API changes
+
+**Recommendation:** Run `cargo audit` before releases to catch security advisories. Version updates should be tested incrementally.
+
+### 3. Workspace Dependency Alignment
+
+**Workspace resolver:** v2 (legacy resolver preserved for compatibility)
+
+**Shared dependencies could use workspace-level version declarations:**
+- `anyhow`: 1.0.100 (all crates)
+- `bitflags`: 2.10.0 (core, fetcher, epub_edit)
+- `indexmap`: 2.13.0 (core, epub_edit, fetcher)
+- `serde`: 1.0.228 (core, epub_edit, fetcher)
+- `serde_json`: 1.0.149 (core, epub_edit)
+
+**Note:** The workspace does not use `[workspace.dependencies]` - individual crate versions are specified per-Crate.
+
+### 4. Feature Flags
+
+**Currently minimal feature flags:**
+- `image` crate: `["png", "jpeg", "gif", "bmp", "webp", "tga"]` - appropriate for e-reader
+- `reqwest`: `["blocking", "json", "rustls-tls-webpki-roots"]` - secure TLS, no wasm
+
+**Opportunities:**
+- Consider `serde` features for selective serialization (derive, alloc, std)
+- Consider `zip` features (deflate, deflate-zlib) based on actual EPUB needs
 
 ## Device-Specific Optimizations
 
@@ -192,7 +251,7 @@ Improvement opportunities are primarily in:
 Most code quality and performance improvements have been addressed, including:
 - Fixed format string improvements
 - Fixed raw string literals
-- Migrated lazy_static! to std::sync::LazyLock
+- **lazy_static usage:** epub_edit migrated to `LazyLock`; plato-core complex due to device runtime deps
 - Added Result documentation (# Errors sections)
 - Simplified Option usage
 - Added #[must_use] attributes to appropriate methods
