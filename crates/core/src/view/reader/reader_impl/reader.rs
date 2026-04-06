@@ -19,7 +19,7 @@ use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::log_error;
 use crate::log_warn;
 use crate::metadata::{make_query, CroppingMargins, Margin};
-use crate::metadata::{Annotation, Info, PageScheme, ScrollMode, TextAlign, ZoomMode};
+use crate::metadata::{Annotation, Info, ScrollMode, TextAlign, ZoomMode};
 use crate::metadata::{DEFAULT_CONTRAST_EXPONENT, DEFAULT_CONTRAST_GRAY};
 use crate::settings::{
     guess_frontlight, BottomRightGestureAction, EastStripAction, SouthEastCornerAction,
@@ -957,66 +957,32 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::MarginWidthMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let reflowable = self.reflowable;
-            let margin_width = self
-                .info
-                .reader
-                .as_ref()
-                .and_then(|r| {
-                    if reflowable {
-                        r.margin_width
-                    } else {
-                        r.screen_margin_width
-                    }
-                })
-                .unwrap_or_else(|| {
-                    if reflowable {
-                        context.settings.reader.margin_width
-                    } else {
-                        0
-                    }
-                });
-            let min_margin_width = context.settings.reader.min_margin_width;
-            let max_margin_width = context.settings.reader.max_margin_width;
-            let entries = (min_margin_width..=max_margin_width)
-                .map(|mw| {
-                    EntryKind::RadioButton(
-                        format!("{}", mw),
-                        EntryId::SetMarginWidth(mw),
-                        mw == margin_width,
-                    )
-                })
-                .collect();
-            let margin_width_menu = Menu::new(
-                rect,
-                ViewId::MarginWidthMenu,
-                MenuKind::DropDown,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                margin_width_menu.id(),
-                *margin_width_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(margin_width_menu) as Box<dyn View>);
-        }
+        let margin_width = self
+            .info
+            .reader
+            .as_ref()
+            .and_then(|r| {
+                if self.reflowable {
+                    r.margin_width
+                } else {
+                    r.screen_margin_width
+                }
+            })
+            .unwrap_or_else(|| {
+                if self.reflowable {
+                    context.settings.reader.margin_width
+                } else {
+                    0
+                }
+            });
+        super::reader_settings::toggle_margin_width_menu(
+            &mut self.children,
+            margin_width,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_page_menu(
@@ -1026,58 +992,15 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::PageMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let has_name = self
-                .info
-                .reader
-                .as_ref()
-                .map_or(false, |r| r.page_names.contains_key(&self.current_page));
-
-            let mut entries = vec![EntryKind::Command("Name".to_string(), EntryId::SetPageName)];
-            if has_name {
-                entries.push(EntryKind::Command(
-                    "Remove Name".to_string(),
-                    EntryId::RemovePageName,
-                ));
-            }
-            let names = self
-                .info
-                .reader
-                .as_ref()
-                .map(|r| {
-                    r.page_names
-                        .iter()
-                        .map(|(i, s)| EntryKind::Command(s.to_string(), EntryId::GoTo(*i)))
-                        .collect::<Vec<EntryKind>>()
-                })
-                .unwrap_or_default();
-            if !names.is_empty() {
-                entries.push(EntryKind::Separator);
-                entries.push(EntryKind::SubMenu("Go To".to_string(), names));
-            }
-
-            let page_menu = Menu::new(rect, ViewId::PageMenu, MenuKind::DropDown, entries, context);
-            rq.add(RenderData::new(
-                page_menu.id(),
-                *page_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(page_menu) as Box<dyn View>);
-        }
+        super::reader_settings::toggle_page_menu(
+            &mut self.children,
+            self.current_page,
+            &self.info,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_margin_cropper_menu(
@@ -1087,75 +1010,15 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::MarginCropperMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let current_page = self.current_page;
-            let is_split = self
-                .info
-                .reader
-                .as_ref()
-                .and_then(|r| r.cropping_margins.as_ref().map(CroppingMargins::is_split));
-
-            let (any_selected, even_odd_selected) = match is_split {
-                Some(true) => (false, true),
-                Some(false) => (true, false),
-                None => (false, false),
-            };
-
-            let mut entries = vec![
-                EntryKind::RadioButton(
-                    "Any".to_string(),
-                    EntryId::ApplyCroppings(current_page, PageScheme::Any),
-                    any_selected,
-                ),
-                EntryKind::RadioButton(
-                    "Even/Odd".to_string(),
-                    EntryId::ApplyCroppings(current_page, PageScheme::EvenOdd),
-                    even_odd_selected,
-                ),
-            ];
-
-            let is_applied = self
-                .info
-                .reader
-                .as_ref()
-                .map(|r| r.cropping_margins.is_some())
-                .unwrap_or(false);
-            if is_applied {
-                entries.extend_from_slice(&[
-                    EntryKind::Separator,
-                    EntryKind::Command("Remove".to_string(), EntryId::RemoveCroppings),
-                ]);
-            }
-
-            let margin_cropper_menu = Menu::new(
-                rect,
-                ViewId::MarginCropperMenu,
-                MenuKind::DropDown,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                margin_cropper_menu.id(),
-                *margin_cropper_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(margin_cropper_menu) as Box<dyn View>);
-        }
+        super::reader_settings::toggle_margin_cropper_menu(
+            &mut self.children,
+            self.current_page,
+            &self.info,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_search_menu(
@@ -1165,30 +1028,14 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::SearchMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
-            let search_menu =
-                super::reader_search::create_search_menu(self.search_direction, rect, context);
-            rq.add(RenderData::new(
-                search_menu.id(),
-                *search_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(search_menu) as Box<dyn View>);
-        }
+        super::reader_search::toggle_search_menu(
+            &mut self.children,
+            self.search_direction,
+            rect,
+            enable,
+            rq,
+            context,
+        );
     }
 
     // -----------------------------------------------------------------------

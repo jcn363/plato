@@ -19,7 +19,9 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::helpers::AsciiExtension;
 use crate::log_error;
+use crate::metadata::CroppingMargins;
 use crate::metadata::Info;
+use crate::metadata::PageScheme;
 use crate::metadata::TextAlign;
 use crate::settings::DEFAULT_FONT_FAMILY;
 use crate::view::{EntryId, EntryKind, RenderData, RenderQueue, View, ViewId};
@@ -436,5 +438,198 @@ pub(crate) fn toggle_contrast_gray_menu(
             UpdateMode::Gui,
         ));
         children.push(Box::new(contrast_gray_menu) as Box<dyn crate::view::View>);
+    }
+}
+
+/// Toggle margin width menu visibility
+#[allow(dead_code)]
+pub(crate) fn toggle_margin_width_menu(
+    children: &mut Vec<Box<dyn crate::view::View>>,
+    current_margin_width: i32,
+    rect: Rectangle,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut crate::context::Context,
+) {
+    use crate::view::menu::{Menu, MenuKind};
+
+    if let Some(index) = children
+        .iter()
+        .position(|c| c.view_id().map_or(false, |i| i == ViewId::MarginWidthMenu))
+    {
+        if let Some(true) = enable {
+            return;
+        }
+        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
+        children.remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+        let min_margin_width = context.settings.reader.min_margin_width;
+        let max_margin_width = context.settings.reader.max_margin_width;
+        let entries: Vec<_> = (min_margin_width..=max_margin_width)
+            .map(|mw| {
+                EntryKind::RadioButton(
+                    format!("{}", mw),
+                    EntryId::SetMarginWidth(mw),
+                    mw == current_margin_width,
+                )
+            })
+            .collect();
+        let margin_width_menu = Menu::new(
+            rect,
+            ViewId::MarginWidthMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        );
+        rq.add(RenderData::new(
+            margin_width_menu.id(),
+            *margin_width_menu.rect(),
+            UpdateMode::Gui,
+        ));
+        children.push(Box::new(margin_width_menu) as Box<dyn crate::view::View>);
+    }
+}
+
+/// Toggle page menu visibility
+#[allow(dead_code)]
+pub(crate) fn toggle_page_menu(
+    children: &mut Vec<Box<dyn crate::view::View>>,
+    current_page: usize,
+    info: &Info,
+    rect: Rectangle,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut crate::context::Context,
+) {
+    use crate::view::menu::{Menu, MenuKind};
+
+    if let Some(index) = children
+        .iter()
+        .position(|c| c.view_id().map_or(false, |i| i == ViewId::PageMenu))
+    {
+        if let Some(true) = enable {
+            return;
+        }
+        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
+        children.remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+        let has_name = info
+            .reader
+            .as_ref()
+            .map_or(false, |r| r.page_names.contains_key(&current_page));
+
+        let mut entries = vec![EntryKind::Command("Name".to_string(), EntryId::SetPageName)];
+        if has_name {
+            entries.push(EntryKind::Command(
+                "Remove Name".to_string(),
+                EntryId::RemovePageName,
+            ));
+        }
+        let names = info
+            .reader
+            .as_ref()
+            .map(|r| {
+                r.page_names
+                    .iter()
+                    .map(|(i, s)| EntryKind::Command(s.to_string(), EntryId::GoTo(*i)))
+                    .collect::<Vec<EntryKind>>()
+            })
+            .unwrap_or_default();
+        if !names.is_empty() {
+            entries.push(EntryKind::Separator);
+            entries.push(EntryKind::SubMenu("Go To".to_string(), names));
+        }
+
+        let page_menu = Menu::new(rect, ViewId::PageMenu, MenuKind::DropDown, entries, context);
+        rq.add(RenderData::new(
+            page_menu.id(),
+            *page_menu.rect(),
+            UpdateMode::Gui,
+        ));
+        children.push(Box::new(page_menu) as Box<dyn crate::view::View>);
+    }
+}
+
+/// Toggle margin cropper menu visibility
+#[allow(dead_code)]
+pub(crate) fn toggle_margin_cropper_menu(
+    children: &mut Vec<Box<dyn crate::view::View>>,
+    current_page: usize,
+    info: &Info,
+    rect: Rectangle,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut crate::context::Context,
+) {
+    use crate::view::menu::{Menu, MenuKind};
+
+    if let Some(index) = children.iter().position(|c| {
+        c.view_id()
+            .map_or(false, |i| i == ViewId::MarginCropperMenu)
+    }) {
+        if let Some(true) = enable {
+            return;
+        }
+        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
+        children.remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+        let is_split = info
+            .reader
+            .as_ref()
+            .and_then(|r| r.cropping_margins.as_ref().map(CroppingMargins::is_split));
+
+        let (any_selected, even_odd_selected) = match is_split {
+            Some(true) => (false, true),
+            Some(false) => (true, false),
+            None => (false, false),
+        };
+
+        let mut entries = vec![
+            EntryKind::RadioButton(
+                "Any".to_string(),
+                EntryId::ApplyCroppings(current_page, PageScheme::Any),
+                any_selected,
+            ),
+            EntryKind::RadioButton(
+                "Even/Odd".to_string(),
+                EntryId::ApplyCroppings(current_page, PageScheme::EvenOdd),
+                even_odd_selected,
+            ),
+        ];
+
+        let is_applied = info
+            .reader
+            .as_ref()
+            .map(|r| r.cropping_margins.is_some())
+            .unwrap_or(false);
+        if is_applied {
+            entries.extend_from_slice(&[
+                EntryKind::Separator,
+                EntryKind::Command("Remove".to_string(), EntryId::RemoveCroppings),
+            ]);
+        }
+
+        let margin_cropper_menu = Menu::new(
+            rect,
+            ViewId::MarginCropperMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        );
+        rq.add(RenderData::new(
+            margin_cropper_menu.id(),
+            *margin_cropper_menu.rect(),
+            UpdateMode::Gui,
+        ));
+        children.push(Box::new(margin_cropper_menu) as Box<dyn crate::view::View>);
     }
 }

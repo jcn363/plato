@@ -14,7 +14,7 @@
 
 use crate::geom::{LinearDir, Rectangle};
 use crate::view::menu::{Menu, MenuKind};
-use crate::view::{EntryId, EntryKind, Id, RenderData, RenderQueue};
+use crate::view::{EntryId, EntryKind, Id, RenderData, RenderQueue, View, ViewId};
 
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
@@ -125,4 +125,37 @@ pub(crate) fn execute_search(_query: &str, view_id: Id, rect: Rectangle, rq: &mu
 #[allow(dead_code)]
 pub(crate) fn update_results_bar(view_id: Id, rect: Rectangle, rq: &mut RenderQueue) {
     rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
+}
+
+/// Toggle search menu visibility
+#[allow(dead_code)]
+pub(crate) fn toggle_search_menu(
+    children: &mut Vec<Box<dyn crate::view::View>>,
+    search_direction: LinearDir,
+    rect: Rectangle,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
+    if let Some(index) = children
+        .iter()
+        .position(|c| c.view_id().map_or(false, |i| i == ViewId::SearchMenu))
+    {
+        if let Some(true) = enable {
+            return;
+        }
+        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
+        children.remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+        let search_menu = create_search_menu(search_direction, rect, context);
+        rq.add(RenderData::new(
+            search_menu.id(),
+            *search_menu.rect(),
+            UpdateMode::Gui,
+        ));
+        children.push(Box::new(search_menu) as Box<dyn crate::view::View>);
+    }
 }
