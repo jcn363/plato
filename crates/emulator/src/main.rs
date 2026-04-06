@@ -773,7 +773,9 @@ fn main() -> Result<(), Error> {
                                 tx2.send(Event::Device(DeviceEvent::NetUp)).ok();
                             });
                         } else {
-                            context.online = false;
+                            context
+                                .flags
+                                .remove(plato_core::context::DeviceFlags::ONLINE);
                         }
                     }
                 }

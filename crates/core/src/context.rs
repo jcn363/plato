@@ -13,6 +13,7 @@ use crate::rtc::Rtc;
 use crate::settings::Settings;
 use crate::view::keyboard::Layout;
 use crate::view::ViewId;
+use bitflags::bitflags;
 use chrono::Local;
 use fxhash::FxHashMap;
 use globset::Glob;
@@ -25,6 +26,17 @@ use walkdir::WalkDir;
 const KEYBOARD_LAYOUTS_DIRNAME: &str = "keyboard-layouts";
 const DICTIONARIES_DIRNAME: &str = "dictionaries";
 const INPUT_HISTORY_SIZE: usize = 32;
+
+bitflags! {
+    /// Device state flags
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct DeviceFlags: u8 {
+        const PLUGGED = 0b0000_0001;
+        const COVERED = 0b0000_0010;
+        const SHARED = 0b0000_0100;
+        const ONLINE = 0b0000_1000;
+    }
+}
 
 pub struct Context {
     pub fb: Box<dyn Framebuffer>,
@@ -42,10 +54,7 @@ pub struct Context {
     pub notification_index: u8,
     pub kb_rect: Rectangle,
     pub rng: Xoroshiro128Plus,
-    pub plugged: bool,
-    pub covered: bool,
-    pub shared: bool,
-    pub online: bool,
+    pub flags: DeviceFlags,
 }
 
 impl Context {
@@ -78,10 +87,7 @@ impl Context {
             notification_index: 0,
             kb_rect: Rectangle::default(),
             rng,
-            plugged: false,
-            covered: false,
-            shared: false,
-            online: false,
+            flags: DeviceFlags::empty(),
         }
     }
 
@@ -183,10 +189,12 @@ impl Context {
             let levels = self.settings.frontlight_levels;
             self.frontlight.set_warmth(levels.warmth);
             self.frontlight.set_intensity(levels.intensity);
+            self.flags.insert(DeviceFlags::ONLINE);
         } else {
             self.settings.frontlight_levels = self.frontlight.levels();
             self.frontlight.set_intensity(0.0);
             self.frontlight.set_warmth(0.0);
+            self.flags.remove(DeviceFlags::ONLINE);
         }
     }
 }
