@@ -173,6 +173,9 @@
 - `nix`: ✅ Updated to 0.31.2
 - `reqwest`: 0.12 → 0.13.2 (fetcher uses 0.13.1 with different features)
 - `zip`: ✅ Updated to 8.5.0 (Breaking: `Deflated` → `DEFLATE`, generic `FileOptions`)
+- `rand_core` / `rand_xoshiro`: See analysis below
+- `reqwest`: See analysis below
+- `toml` / `toml_datetime` / `winnow`: See analysis below
 - `quick-xml`: ✅ Updated to 0.39.2 (API change: `unescape()` → `decode()`)
 - `indexmap`: ✅ Updated to 2.13.1
 - `chrono`: ✅ Updated to 0.4.44
@@ -247,6 +250,52 @@ kl-hyphenate 0.7.3 → bincode 1.3.3 (RUSTSEC-2025-0141)
 - Updated both `plato-core` and `epub_edit` Cargo.toml
 
 **Recommendation:** Run `cargo audit` before releases to catch security advisories. Version updates should be tested incrementally.
+
+### Additional Outdated Dependencies Analysis
+
+#### rand_core / rand_xoshiro
+
+**Current:** rand_core 0.9.5, rand_xoshiro 0.7.0  
+**Latest:** rand_core 0.10.0, rand_xoshiro 0.8.0
+
+**Plato usage:**
+- `context.rs`: Uses `SeedableRng`, `Xoroshiro128Plus` for random number generation
+- `reader.rs`, `home.rs`, `home/mod.rs`: Uses `RngCore` for random page selection
+
+**API compatibility:** High - trait methods likely unchanged, may need minor adjustments
+
+**Upgrade effort:** Low - likely drop-in replacement
+
+#### reqwest
+
+**Current:** 0.12.28  
+**Latest:** 0.13.2
+
+**Breaking changes:**
+- TLS feature changed: `rustls-tls-webpki-roots` is now obsolete (now defaults to rustls)
+- API refinements, but core functionality unchanged
+
+**Plato usage:**
+- `fetcher`: HTTP downloads for web content
+- `core`: Network requests
+
+**Upgrade effort:** Medium - may need feature flag adjustments
+
+#### toml / toml_datetime / winnow
+
+**Current:** toml 0.9.12, toml_datetime 0.7.5, winnow 0.7.15  
+**Latest:** toml 1.1.2, toml_datetime 1.1.1, winnow 1.0.1
+
+**Breaking changes:**
+- toml 1.0 has significant API changes (crate renamed from `toml` to `toml-edit` for editing, `toml` for reading)
+- winnow 1.0 is a major version with breaking changes
+
+**Plato usage:**
+- `context.rs`, settings files: TOML parsing for configuration
+
+**Upgrade effort:** High - major version jumps with breaking changes
+
+**Recommendation:** These are lower priority. Focus on security advisories first (bincode), then update rand/rs crates later.
 
 ### 3. Workspace Dependency Alignment ✅ IMPLEMENTED
 
