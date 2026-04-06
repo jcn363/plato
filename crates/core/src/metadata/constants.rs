@@ -1,6 +1,6 @@
-use rustc_hash::FxHashMap;
 use lazy_static::lazy_static;
 use regex::Regex;
+use rustc_hash::FxHashMap;
 
 pub const DEFAULT_CONTRAST_EXPONENT: f32 = 1.0;
 pub const DEFAULT_CONTRAST_GRAY: f32 = 224.0;

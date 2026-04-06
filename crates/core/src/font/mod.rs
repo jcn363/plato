@@ -1,3 +1,21 @@
+//! Font Rendering Subsystem
+//!
+//! This module provides font handling for Plato, wrapping FreeType and HarfBuzz libraries.
+//!
+//! ## Architecture
+//!
+//! - **freetype_sys**: Low-level FreeType FFI bindings
+//! - **harfbuzz_sys**: Low-level HarfBuzz FFI bindings
+//! - **freetype.rs** (implied): Safe FreeType wrappers with RAII
+//! - **harfbuzz.rs** (implied): Safe HarfBuzz wrappers with RAII
+//!
+//! The subsystem handles:
+//! - Font discovery and loading from filesystem
+//! - Embedded font resources
+//! - Glyph rasterization via FreeType
+//! - Text shaping (glyph positioning) via HarfBuzz
+//! - Missing glyph handling
+
 mod freetype_sys;
 mod harfbuzz_sys;
 

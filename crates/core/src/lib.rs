@@ -31,12 +31,12 @@ pub mod view;
 
 pub use anyhow;
 pub use chrono;
-pub use rustc_hash;
 pub use globset;
 pub use image;
 pub use png;
 pub use rand_core;
 pub use rand_xoshiro;
+pub use rustc_hash;
 pub use serde;
 pub use serde_json;
 pub use walkdir;

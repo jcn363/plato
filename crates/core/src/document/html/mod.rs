@@ -1,3 +1,18 @@
+//! HTML Document Rendering
+//!
+//! This module provides HTML and EPUB rendering capabilities for Plato. It implements
+//! a custom HTML/CSS rendering engine optimized for e-ink displays.
+//!
+//! ## Architecture
+//!
+//! - **css**: CSS parsing and selector matching
+//! - **dom**: Document Object Model for XML/HTML tree structure
+//! - **engine**: Layout and rendering engine
+//! - **layout**: Text layout, line breaking (Knuth-Plass), and drawing commands
+//! - **parse**: HTML/XML parsing using gumbo
+//! - **style**: Style computation and inheritance
+//! - **xml**: XML parsing utilities
+
 pub mod css;
 pub mod dom;
 pub mod engine;

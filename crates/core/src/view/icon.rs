@@ -9,8 +9,8 @@ use crate::geom::{CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::unit::scale_by_dpi_raw;
-use rustc_hash::FxHashMap;
 use lazy_static::lazy_static;
+use rustc_hash::FxHashMap;
 use std::path::Path;
 
 const ICON_SCALE: f32 = 1.0 / 32.0;

@@ -3,10 +3,10 @@
 ## Documentation Improvements
 
 ### High Priority - Missing Module Documentation
-- `crates/core/src/view/reader/reader_impl/*.rs` - Add module-level docs explaining purpose
-- `crates/core/src/document/html/*.rs` - Document HTML rendering pipeline modules
-- `crates/core/src/font/*.rs` - Document font rendering subsystem
-- `crates/core/src/gesture.rs` - Document complex gesture recognition system
+- `crates/core/src/view/reader/reader_impl/*.rs` - Add module-level docs explaining purpose - **FIXED**
+- `crates/core/src/document/html/*.rs` - Document HTML rendering pipeline modules - **FIXED**
+- `crates/core/src/font/*.rs` - Document font rendering subsystem - **FIXED**
+- `crates/core/src/gesture.rs` - Document complex gesture recognition system - **FIXED**
 
 ### Medium Priority - Function-Level Documentation
 - Public API methods in `crates/core/src/context.rs` - Add # Errors, # Panics sections
@@ -157,8 +157,8 @@
 - `frontlight/natural.rs:38` - `FRONTLIGHT_DIRS` depends on `CURRENT_DEVICE.model`
 - `font/mod.rs:70` - `MD_TITLE` depends on `CURRENT_DEVICE.dims` and `CURRENT_DEVICE.dpi`
 - `font/md_title.rs:5` - Same pattern
-- `helpers.rs:44` - `CHARACTER_ENTITIES` - **Could migrate** (static data only)
-- `i18n/mod.rs:34,66` - `CURRENT_LANGUAGE`, `ENGLISH`, `SPANISH` - **Could migrate** (static data)
+- `helpers.rs:44` - `CHARACTER_ENTITIES` - **Cannot migrate** (depends on entities crate runtime iterator)
+- `i18n/mod.rs:34,66` - `CURRENT_LANGUAGE`, `ENGLISH`, `SPANISH` - **Cannot migrate** (uses RwLock for mutable state)
 - `view/keyboard.rs:409` - Keyboard layouts depend on `CURRENT_DEVICE`
 - `view/icon.rs:18` - Icons depend on `CURRENT_DEVICE`
 - `view/home/shelf.rs:22` - Shelf icons depend on `CURRENT_DEVICE`
@@ -479,5 +479,33 @@ Most code quality and performance improvements have been addressed, including:
 - **Dependency management improvements:** Added workspace.dependencies, updated nix/indexmap/chrono/quick-xml/zip/rand, aligned epub_edit, replaced fxhash with rustc-hash
 - **Unwrap/expect reduction:** Reduced from 187 to 140 (~25% decrease) using proper error handling patterns
 - **License compliance:** Added deny.toml, MIT license to all crates
+
+## Investigation Completed This Session
+
+### lazy_static Migration Analysis
+
+**CHARACTER_ENTITIES (helpers.rs:44):** Cannot migrate - depends on `entities` crate's `ENTITIES` iterator which is runtime-initialized. The `lazy_static!` pattern is appropriate here.
+
+**i18n module (i18n/mod.rs:34,66):**
+- `CURRENT_LANGUAGE`: Uses `RwLock<Language>` for mutable global state - cannot use `LazyLock`
+- `ENGLISH`, `SPANISH`: Static translation maps - technically could migrate but requires significant refactoring to replace `HashMap` with `const` alternatives
+- **Conclusion:** Cannot trivially migrate due to `RwLock` and runtime data population
+
+**Other usages:** All other 25+ `lazy_static` usages depend on `CURRENT_DEVICE` runtime configuration and cannot use `LazyLock`
+
+### Module Documentation Added
+
+- **reader_impl/mod.rs:** Added module documentation describing document reading view responsibilities
+- **document/html/mod.rs:** Added module documentation with architecture overview and component descriptions  
+- **font/mod.rs:** Added module documentation describing font subsystem and FFI layer architecture
+- **gesture.rs:** Added module documentation with supported gestures list and algorithm complexity notes
+
+### reqwest Version Alignment
+
+**Current status:** Unaligned
+- `plato-core`: reqwest 0.12.28
+- `fetcher`: reqwest 0.13.1
+
+**Analysis:** Upgrade requires TLS feature changes (`rustls-tls-webpki-roots` → `rustls`). Currently works but should align in future.
 
 These remaining items are refinement opportunities rather than critical issues - the codebase is production-ready.

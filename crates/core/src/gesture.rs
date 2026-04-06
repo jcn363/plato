@@ -1,3 +1,31 @@
+//! Gesture Recognition System
+//!
+//! This module provides touch gesture recognition for Plato, converting raw input events
+//! into meaningful gestures for navigation and interaction.
+//!
+//! ## Supported Gestures
+//!
+//! - **Tap**: Single touch tap with jitter tolerance
+//! - **MultiTap**: Two-finger tap
+//! - **Swipe**: Directional swipe (up/down/left/right)
+//! - **SlantedSwipe**: Diagonal swipe
+//! - **MultiSwipe**: Two-finger swipe
+//! - **Arrow**: Line gesture in a direction
+//! - **MultiArrow**: Two-finger line gesture
+//! - **Corner**: Corner tap gesture
+//! - **MultiCorner**: Two-finger corner tap
+//! - **Pinch**: Pinch-to-zoom gesture
+//! - **Spread**: Spread-to-zoom gesture
+//! - **Hold**: Long press gesture
+//! - **Rotate**: Two-finger rotation
+//!
+//! ## Algorithm
+//!
+//! The system uses O(1) algorithms throughout:
+//! - `elbow()` samples 2 fixed points (1/3 and 2/3 of stroke)
+//! - `nearest_segment_point()` uses pure vector math
+//! - State machine processes events in O(1) per input event
+
 use crate::device::CURRENT_DEVICE;
 use crate::geom::{elbow, nearest_segment_point, Axis, DiagDir, Dir, Point, Vec2};
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
