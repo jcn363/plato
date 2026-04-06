@@ -420,7 +420,7 @@ serde_json = "1.0"
 
 #### High Priority
 1. **Split large files** (reader.rs, font/mod.rs, home/mod.rs) - each exceeds 2000 LOC
-2. **Error handling** - reduce unwrap/expect usage (187 instances)
+2. **Error handling** - reduce unwrap/expect usage (~25% reduced, 140 remaining)
 3. **License configuration** - add deny.toml to fix cargo deny failures ✅ DONE
 
 #### Medium Priority
