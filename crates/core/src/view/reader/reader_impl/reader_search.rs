@@ -4,18 +4,13 @@
 //!
 //! ## Methods to Move Here
 //! - `toggle_search_menu()` - Search direction menu ✓
-//! - `render_results()` - Highlight search results on page (postponed - type conflicts)
+//! - `render_results()` - Highlight search results on page ✓
 //! - `go_to_results_neighbor()` - Navigate between search results ✓ (stub)
 //! - `go_to_results_page()` - Jump to specific result ✓ (stub)
 //! - `toggle_search_bar()` - Search input UI ✓ (stub)
 //! - `toggle_results_bar()` - Results display bar ✓ (stub)
 //! - `search()` - Execute search query (stub) ✓ (stub)
 //! - `update_results_bar()` - Update results display ✓ (stub)
-//!
-//! ## Notes
-//! Type duplication issue: RenderChunk exists in both reader.rs and reader_core.rs.
-//! This needs architectural cleanup before extracting render-related functions.
-//! Stub methods are minimal implementations that update render queue.
 
 use crate::geom::{LinearDir, Rectangle};
 use crate::view::menu::{Menu, MenuKind};
@@ -23,6 +18,8 @@ use crate::view::{EntryId, EntryKind, Id, RenderData, RenderQueue};
 
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
+
+use super::reader_core::{RenderChunk, Search};
 
 /// Create search direction menu
 ///
@@ -55,6 +52,28 @@ pub(crate) fn create_search_menu(
         entries,
         context,
     )
+}
+
+/// Render search result highlights on visible page chunks
+///
+/// Adds render requests for all search result rectangles that fall within
+/// the currently visible page chunks.
+pub(crate) fn render_results(
+    search: Option<&Search>,
+    chunks: &[RenderChunk],
+    view_id: Id,
+    rq: &mut RenderQueue,
+) {
+    if let Some(search) = search {
+        for chunk in chunks {
+            if let Some(groups) = search.highlights.get(&chunk.location) {
+                for rect_ref in groups {
+                    let rect = *rect_ref - chunk.frame.min + chunk.position;
+                    rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
+                }
+            }
+        }
+    }
 }
 
 /// Navigate to the next or previous search result

@@ -59,6 +59,7 @@ use crate::view::reader::bottom_bar::BottomBar;
 use crate::view::reader::tool_bar::ToolBar;
 
 use super::reader_core::{Contrast, RenderChunk, Search, Selection, State};
+use super::reader_search;
 
 pub const RECT_DIST_JITTER: f32 = 0.1;
 pub const MEM_SCHEME: &str = "mem:";
@@ -1941,18 +1942,7 @@ impl Reader {
     }
 
     fn render_results(&self, rq: &mut RenderQueue) {
-        for chunk in &self.chunks {
-            if let Some(groups) = self
-                .search
-                .as_ref()
-                .and_then(|s| s.highlights.get(&chunk.location))
-            {
-                for rect_ref in groups {
-                    let rect = *rect_ref - chunk.frame.min + chunk.position;
-                    rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                }
-            }
-        }
+        reader_search::render_results(self.search.as_ref(), &self.chunks, self.id, rq);
     }
 
     fn selection_rect(&self) -> Option<Rectangle> {
