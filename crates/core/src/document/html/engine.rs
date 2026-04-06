@@ -2624,10 +2624,7 @@ fn format_list_prefix(kind: ListStyleType, index: usize) -> Option<String> {
             } else {
                 0x41
             };
-            Some(format!(
-                "{}. ",
-                char::try_from(start + i).expect("invalid char code")
-            ))
+            Some(format!("{}. ", char::try_from(start + i).unwrap_or('?')))
         }
         ListStyleType::LowerGreek | ListStyleType::UpperGreek => {
             let mut i = index as u32 % 24;
@@ -2640,10 +2637,7 @@ fn format_list_prefix(kind: ListStyleType, index: usize) -> Option<String> {
             } else {
                 0x0391
             };
-            Some(format!(
-                "{}. ",
-                char::try_from(start + i).expect("invalid char code")
-            ))
+            Some(format!("{}. ", char::try_from(start + i).unwrap_or('?')))
         }
     }
 }

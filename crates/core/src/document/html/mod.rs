@@ -423,14 +423,21 @@ impl Document for HtmlDocument {
                 .iter()
                 .filter_map(|dc| match dc {
                     DrawCommand::Text(TextCommand {
-                        uri, rect, offset, ..
+                        uri,
+                        rect,
+                        offset: _,
+                        ..
                     })
                     | DrawCommand::Image(ImageCommand {
-                        uri, rect, offset, ..
-                    }) if uri.is_some() => {
+                        uri,
+                        rect,
+                        offset: _,
+                        ..
+                    }) => {
+                        let uri = uri.as_ref()?;
                         let bounds: Boundary = (*rect).into();
                         Some(BoundedText {
-                            text: uri.clone().expect("URI is missing"),
+                            text: uri.clone(),
                             rect: bounds,
                             location: bounds.min.into(),
                         })

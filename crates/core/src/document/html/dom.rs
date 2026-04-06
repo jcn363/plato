@@ -229,7 +229,9 @@ impl XmlTree {
 
             for s in n.previous_siblings() {
                 if s.is_block() {
-                    first_id = Some(s.next_sibling().expect("no next sibling").id);
+                    if let Some(next) = s.next_sibling() {
+                        first_id = Some(next.id);
+                    }
                     break;
                 } else {
                     known_ids.insert(s.id);
@@ -238,7 +240,9 @@ impl XmlTree {
 
             for s in n.next_siblings() {
                 if s.is_block() {
-                    last_id = Some(s.previous_sibling().expect("no previous sibling").id);
+                    if let Some(prev) = s.previous_sibling() {
+                        last_id = Some(prev.id);
+                    }
                     break;
                 } else {
                     known_ids.insert(s.id);
@@ -246,11 +250,19 @@ impl XmlTree {
             }
 
             if first_id.is_some() || last_id.is_some() {
-                let parent = n.parent().expect("no parent");
+                let Some(parent) = n.parent() else {
+                    continue;
+                };
+                let Some(first_child) = parent.node.first_child else {
+                    continue;
+                };
+                let Some(last_child) = parent.node.last_child else {
+                    continue;
+                };
                 ids.push([
                     parent.id,
-                    first_id.unwrap_or_else(|| parent.node.first_child.expect("no first child")),
-                    last_id.unwrap_or_else(|| parent.node.last_child.expect("no last child")),
+                    first_id.unwrap_or(first_child),
+                    last_id.unwrap_or(last_child),
                 ]);
             }
         }
