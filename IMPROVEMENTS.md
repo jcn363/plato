@@ -447,6 +447,7 @@ serde_json = "1.0"
 - **Dependency updates:** ✅ Mostly current (except reqwest, toml, winnow)
 - **Security advisories:** ⚠️ bincode (via kl-hyphenate) - low risk for e-reader
 - **API stability:** Good - well-structured internal APIs
+- **License compliance:** Added deny.toml for cargo-deny, MIT license added to all crates
 
 ## Summary
 

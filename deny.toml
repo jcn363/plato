@@ -1,0 +1,26 @@
+# cargo-deny configuration for Plato e-reader
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause", 
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "GPL-2.0",
+    "GPL-3.0",
+    "LGPL-2.0",
+    "LGPL-2.1",
+    "MPL-2.0",
+    "CC0-1.0",
+    "Zlib",
+    "0BSD",
+    "bzip2-1.0.6",
+]
+
+[advisories]
+ignore = [
+    "RUSTSEC-2025-0141", # bincode (via kl-hyphenate) - low risk for e-reader
+]
