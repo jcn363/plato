@@ -174,7 +174,31 @@
 - `reqwest`: 0.12 → 0.13.2 (fetcher uses 0.13.1 with different features)
 - `zip`: ✅ Updated to 8.5.0 (Breaking: `Deflated` → `DEFLATE`, generic `FileOptions`)
 - `rand_core` / `rand_xoshiro`: ✅ Updated to 0.10/0.8 (API change: add `use rand_core::Rng`)
-- `reqwest`: Kept 0.12 (TLS features complex for ARM cross-compile)
+- `reqwest`: 0.12.28 → 0.13.2 - **Breaking TLS changes** (see below)
+
+#### reqwest 0.12 → 0.13 Upgrade Analysis
+
+**Breaking changes in 0.13:**
+- `rustls` is now the default TLS backend (was `native-tls`)
+- `rustls-tls-webpki-roots` feature removed (use `rustls` with `rustls-platform-verifier`)
+- `query` and `form` are now crate features, disabled by default
+- TLS-related methods renamed (soft deprecation)
+
+**Plato usage:**
+- `opds.rs`: Uses `reqwest::blocking::Client`
+- `sync.rs`, `update.rs`: Uses `blocking::Client::new()`
+- `fetcher`: Uses 0.13.1 with custom features
+
+**Current status:**
+- `plato-core`: reqwest 0.12.28 (works with ARM, kept for compatibility)
+- `fetcher`: reqwest 0.13.1 (different features)
+
+**Upgrade effort:** Medium-High
+- Need to update TLS features: `default-tls` → `rustls` or `native-tls`
+- Need to enable `query` feature if used
+- Need to test HTTP/HTTPS functionality on ARM
+
+**Recommendation:** Can upgrade but requires careful TLS feature testing on ARM. Current 0.12 works fine.
 - `toml` / `toml_datetime` / `winnow`: Skipped (High effort - major versions with breaking changes)
 - `quick-xml`: ✅ Updated to 0.39.2 (API change: `unescape()` → `decode()`)
 - `indexmap`: ✅ Updated to 2.13.1
