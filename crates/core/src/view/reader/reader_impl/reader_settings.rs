@@ -20,5 +20,6 @@
 //!
 //! ## Dependencies
 //! Moderate dependencies on Reader state and document properties.
-
-pub(crate) use super::reader_core::Contrast;
+//!
+//! ## Future Use
+//! Types from reader_core will be imported when methods are extracted.

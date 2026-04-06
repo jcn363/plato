@@ -16,7 +16,6 @@
 //! Type duplication issue: RenderChunk exists in both reader.rs and reader_core.rs.
 //! This needs architectural cleanup before extracting render-related functions.
 
-use crate::framebuffer::UpdateMode;
 use crate::geom::{LinearDir, Rectangle};
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::{EntryId, EntryKind};

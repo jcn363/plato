@@ -75,6 +75,7 @@ pub enum PageAnimation {
 
 /// A rendered chunk of a page
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct RenderChunk {
     pub page: usize,
     pub location: usize,
@@ -86,6 +87,7 @@ pub struct RenderChunk {
 
 /// Search state
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Search {
     pub query: String,
     pub results: Vec<Location>,
@@ -97,6 +99,7 @@ pub struct Search {
 
 /// Cached rendered resource
 #[derive(Debug)]
+#[allow(dead_code)]
 pub(crate) struct Resource {
     pub pixmap: Pixmap,
     pub frame: Rectangle,
@@ -105,6 +108,7 @@ pub(crate) struct Resource {
 
 /// Viewport configuration
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ViewPort {
     pub zoom_mode: ZoomMode,
     pub scroll_mode: ScrollMode,

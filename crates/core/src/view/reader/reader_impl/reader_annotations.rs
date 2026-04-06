@@ -27,12 +27,13 @@ use crate::view::{Id, RenderData, RenderQueue};
 ///
 /// This is extracted from `Reader::toggle_bookmark()` and can be called
 /// to manage bookmarks independently of the full Reader state.
+#[allow(dead_code)]
 pub(crate) fn toggle_bookmark_at_page(
     current_page: usize,
     rect_min_x: i32,
-    rect_min_y: i32,
+    _rect_min_y: i32,
     rect_max_x: i32,
-    rect_max_y: i32,
+    _rect_max_y: i32,
     reader_id: Id,
     bookmarks: &mut std::collections::BTreeSet<usize>,
     rq: &mut RenderQueue,
@@ -48,10 +49,8 @@ pub(crate) fn toggle_bookmark_at_page(
     let radius = mm_to_px(0.4, dpi) as i32 + thickness as i32;
     let center = Point {
         x: rect_max_x - 5 * radius,
-        y: rect_min_y + 5 * radius,
+        y: rect_min_x + 5 * radius,
     };
     let rect = Rectangle::from_disk(center, radius);
     rq.add(RenderData::new(reader_id, rect, UpdateMode::Gui));
 }
-
-pub(crate) use super::reader_core::Selection;

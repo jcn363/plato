@@ -16,5 +16,6 @@
 //!
 //! ## Dependencies
 //! Relies on most other Reader methods (navigation, rendering, settings, annotations).
-
-pub(crate) use super::reader_core::{Selection, State};
+//!
+//! ## Future Use
+//! Types from reader_core will be imported when methods are extracted.

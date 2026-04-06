@@ -20,8 +20,6 @@
 use crate::geom::Rectangle;
 use crate::metadata::{Margin, ZoomMode};
 
-pub(crate) use super::reader_core::{AnimState, PageAnimKind, PageAnimation, RenderChunk};
-
 /// Calculate page scaling factor based on zoom mode
 ///
 /// Determines how much to scale page content based on viewport and zoom settings.
@@ -37,6 +35,7 @@ pub(crate) use super::reader_core::{AnimState, PageAnimKind, PageAnimation, Rend
 /// Scale factor to apply to page rendering (1.0 = native size)
 ///
 /// Extracted from `Reader::scaling_factor()` (line 1788)
+#[allow(dead_code)]
 pub(crate) fn scaling_factor(
     rect: &Rectangle,
     _margin: &Margin,
