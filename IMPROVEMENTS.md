@@ -397,6 +397,7 @@ serde_json = "1.0"
 - **Dead code:** ⚠️ epub_editor folder has unused deps (build artifact)
 - **Unwrap usage:** 187 instances - potential for error handling improvements
 - **Test infrastructure:** ⚠️ Tests require native libs (mupdf, gumbo) - missing on host
+- **License compliance:** ✅ Added deny.toml, MIT license to all crates
 
 ### 3. Dependency Analysis
 
@@ -420,7 +421,7 @@ serde_json = "1.0"
 #### High Priority
 1. **Split large files** (reader.rs, font/mod.rs, home/mod.rs) - each exceeds 2000 LOC
 2. **Error handling** - reduce unwrap/expect usage (187 instances)
-3. **License configuration** - add deny.toml to fix cargo deny failures
+3. **License configuration** - add deny.toml to fix cargo deny failures ✅ DONE
 
 #### Medium Priority
 4. **Unified reqwest version** - align core (0.12.28) and fetcher (0.13.1)
