@@ -1895,9 +1895,7 @@ impl Reader {
     }
 
     fn selection_rect(&self) -> Option<Rectangle> {
-        self.selection
-            .as_ref()
-            .and_then(|sel| self.text_rect([sel.start, sel.end]))
+        super::reader_rendering::selection_rect(self.selection.as_ref(), &self.text, &self.chunks)
     }
 
     // -----------------------------------------------------------------------

@@ -158,3 +158,26 @@ pub(crate) fn text_rect(
 
     result
 }
+
+/// Calculate bounding rectangle for current selection
+///
+/// Returns the rectangular region encompassing the user's current text selection,
+/// or None if no selection is active.
+///
+/// Uses text_rect() to compute bounds for the selection start and end locations.
+///
+/// # Arguments
+/// - `selection`: Optional current selection with start/end locations
+/// - `text_data`: FxHashMap containing BoundedText for all page chunks
+/// - `chunks`: Rendered page chunks with positioning info
+///
+/// # Returns
+/// Rectangular region covering the selection, or None if no selection
+#[allow(dead_code)]
+pub(crate) fn selection_rect(
+    selection: Option<&super::reader_core::Selection>,
+    text_data: &FxHashMap<usize, Vec<BoundedText>>,
+    chunks: &[super::reader_core::RenderChunk],
+) -> Option<Rectangle> {
+    selection.and_then(|sel| text_rect(text_data, chunks, [sel.start, sel.end]))
+}
