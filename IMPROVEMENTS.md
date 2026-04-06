@@ -9,9 +9,9 @@
 - `crates/core/src/gesture.rs` - Document complex gesture recognition system - **FIXED**
 
 ### Medium Priority - Function-Level Documentation
-- Public API methods in `crates/core/src/context.rs` - Add # Errors, # Panics sections
-- Complex algorithms in `crates/core/src/document/pdf.rs` - Document PDF manipulation logic
-- Geometry utilities in `crates/core/src/geom/*.rs` - Add examples to complex functions
+- Public API methods in `crates/core/src/context.rs` - Add # Errors, # Panics sections - **FIXED**
+- Complex algorithms in `crates/core/src/document/pdf.rs` - Document PDF manipulation logic - **FIXED**
+- Geometry utilities in `crates/core/src/geom/*.rs` - Add examples to complex functions - **FIXED**
 
 ## Code Quality Improvements
 

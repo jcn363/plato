@@ -1,3 +1,21 @@
+//! PDF Document Handling
+//!
+//! This module provides PDF document loading, rendering, and manipulation via MuPDF.
+//!
+//! ## Architecture
+//!
+//! - **PdfOpener**: Creates and manages PDF document instances
+//! - **PdfDocument**: Represents an opened PDF with page access
+//! - **PdfPage**: Provides rendering and text extraction for individual pages
+//!
+//! ## Features
+//!
+//! - Page rendering to pixmaps
+//! - Text extraction and search
+//! - Table of contents extraction
+//! - Auto-margin detection for scanned documents
+//! - Link and annotation handling
+
 use super::mupdf;
 
 use super::{chapter, chapter_relative};
@@ -86,15 +104,18 @@ impl From<mupdf::FzRect> for Boundary {
     }
 }
 
+/// PDF document opener that manages MuPDF context.
 pub struct PdfOpener {
     ctx: mupdf::MuPdfContext,
 }
 
+/// PDF document instance with page access.
 pub struct PdfDocument {
     ctx: mupdf::MuPdfContext,
     doc: mupdf::Document,
 }
 
+/// PDF page for rendering and text extraction.
 #[allow(dead_code)]
 pub struct PdfPage<'a> {
     page: mupdf::Page,
@@ -103,10 +124,20 @@ pub struct PdfPage<'a> {
 }
 
 impl PdfOpener {
+    /// Creates a new PDF opener with MuPDF context.
+    ///
+    /// Returns None if MuPDF initialization fails.
     pub fn new() -> Option<PdfOpener> {
         mupdf::MuPdfContext::new().ok().map(|ctx| PdfOpener { ctx })
     }
 
+    /// Opens a PDF file from the given path.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the PDF file
+    ///
+    /// # Returns
+    /// None if the file cannot be opened or is not a valid PDF.
     pub fn open<P: AsRef<Path>>(&self, path: P) -> Option<PdfDocument> {
         self.ctx.open_document(path).map(|doc| PdfDocument {
             ctx: self.ctx.clone(),
@@ -114,6 +145,11 @@ impl PdfOpener {
         })
     }
 
+    /// Opens a PDF from memory buffer.
+    ///
+    /// # Arguments
+    /// * `magic` - MIME type or file magic bytes (e.g., "application/pdf")
+    /// * `buf` - PDF file content as bytes
     pub fn open_memory(&self, magic: &str, buf: &[u8]) -> Option<PdfDocument> {
         self.ctx
             .open_document_memory(magic, buf)
@@ -123,6 +159,7 @@ impl PdfOpener {
             })
     }
 
+    /// Loads user stylesheet from css/html-user.css if present.
     pub fn load_user_stylesheet(&mut self) {
         if let Ok(content) = std::fs::read_to_string(USER_STYLESHEET).map_err(|e| {
             if e.kind() != std::io::ErrorKind::NotFound {
@@ -138,6 +175,13 @@ unsafe impl Send for PdfDocument {}
 unsafe impl Sync for PdfDocument {}
 
 impl PdfDocument {
+    /// Loads a page by index (0-based).
+    ///
+    /// # Arguments
+    /// * `index` - Page number (0-based)
+    ///
+    /// # Returns
+    /// None if the page doesn't exist or cannot be loaded.
     pub fn page(&self, index: usize) -> Option<PdfPage<'_>> {
         self.doc.load_page(index as i32).ok().map(|page| PdfPage {
             page,

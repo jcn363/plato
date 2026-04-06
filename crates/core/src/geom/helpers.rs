@@ -112,7 +112,20 @@ const HALF_PIXEL_DIAGONAL: f32 = consts::SQRT_2 / 2.0;
 
 // Takes the (signed) distance and angle from the center of a pixel to the closest point on a
 // shape's boundary and returns the approximate shape area contained within that pixel (the
-// boundary is considered flat at the pixel level).
+/// Computes the fraction of a pixel's surface area that lies inside a shape boundary.
+///
+/// Used for anti-aliased rendering. The boundary is defined by distance from the pixel center
+/// and angle of the normal vector.
+///
+/// # Arguments
+/// * `dist` - Signed distance from pixel center to boundary (positive = inside)
+/// * `angle` - Angle of the boundary normal in radians
+///
+/// # Example
+/// ```
+/// let area = surface_area(0.0, 0.0);  // Boundary through center, parallel to pixel sides
+/// let area = surface_area(0.25, std::f32::consts::FRAC_PI_4);  // Diagonal boundary
+/// ```
 #[inline]
 pub fn surface_area(dist: f32, angle: f32) -> f32 {
     // Clearly {in,out}side of the shape.
@@ -136,7 +149,25 @@ pub fn surface_area(dist: f32, angle: f32) -> f32 {
     }
 }
 
-// Returns the nearest point to p on segment ab
+/// Finds the nearest point on line segment `ab` to point `p`.
+///
+/// Uses vector projection to find the closest point, then clamps to segment endpoints.
+/// Returns both the nearest point and the parameter `t` (0.0 = at `a`, 1.0 = at `b`).
+///
+/// # Arguments
+/// * `p` - Query point
+/// * `a` - Segment start
+/// * `b` - Segment end
+///
+/// # Returns
+/// `(nearest_point, t)` where `t` is in range [0.0, 1.0]
+///
+/// # Example
+/// ```
+/// let p = Point::new(5.0, 5.0);
+/// let (nearest, t) = nearest_segment_point(p.into(), Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0));
+/// assert!(t > 0.0 && t < 1.0);  // Point projects onto segment interior
+/// ```
 #[inline]
 pub fn nearest_segment_point(p: Vec2, a: Vec2, b: Vec2) -> (Vec2, f32) {
     let ab = b - a;
@@ -184,12 +215,26 @@ pub fn small_half(n: i32) -> i32 {
 }
 
 #[inline]
+/// Returns the larger half when splitting `n` into two parts.
+///
+/// # Example
+/// ```
+/// let (small, big) = halves(10);  // small=5, big=5
+/// let (small, big) = halves(11);  // small=5, big=6
+/// ```
 pub fn big_half(n: i32) -> i32 {
     n - small_half(n)
 }
 
-// Returns a Vec v, of size p, such that the sum all the elements is n.
-// Each element x in v is such that |x - n/p| < 1.
+/// Divides `n` into `p` roughly equal parts.
+///
+/// Returns a vector of size `p` where elements differ by at most 1.
+/// Used for distributing space (e.g., column widths).
+///
+/// # Example
+/// ```
+/// let parts = divide(10, 3);  // [4, 3, 3] or [3, 4, 3]
+/// ```
 pub fn divide(n: i32, p: i32) -> Vec<i32> {
     let size = n.checked_div(p).unwrap_or(0);
     let mut rem = n - p * size;

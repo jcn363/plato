@@ -58,6 +58,17 @@ pub struct Context {
 }
 
 impl Context {
+    /// Creates a new Context with the given runtime dependencies.
+    ///
+    /// # Arguments
+    /// * `fb` - Framebuffer for display rendering
+    /// * `rtc` - Real-time clock (optional)
+    /// * `library` - Book library instance
+    /// * `settings` - Application settings
+    /// * `fonts` - Font collection
+    /// * `battery` - Battery status provider
+    /// * `frontlight` - Frontlight controller
+    /// * `lightsensor` - Ambient light sensor
     pub fn new(
         fb: Box<dyn Framebuffer>,
         rtc: Option<Rtc>,
@@ -91,6 +102,10 @@ impl Context {
         }
     }
 
+    /// Imports books from configured import directories to all libraries.
+    ///
+    /// # Errors
+    /// Logs errors for individual library import failures but continues processing.
     pub fn batch_import(&mut self) {
         self.library.import(&self.settings.import);
         let selected_library = self.settings.selected_library;
@@ -107,6 +122,10 @@ impl Context {
         }
     }
 
+    /// Loads keyboard layouts from the KEYBOARD_LAYOUTS_DIRNAME directory.
+    ///
+    /// # Errors
+    /// Logs errors for individual layout file failures but continues processing.
     pub fn load_keyboard_layouts(&mut self) {
         let glob = Glob::new("**/*.json")
             .expect("invalid glob pattern")
@@ -132,6 +151,10 @@ impl Context {
         }
     }
 
+    /// Loads dictionary index files from the DICTIONARIES_DIRNAME directory.
+    ///
+    /// # Errors
+    /// Logs errors for individual dictionary load failures but continues processing.
     pub fn load_dictionaries(&mut self) {
         let glob = Glob::new("**/*.index")
             .expect("invalid glob pattern")
@@ -166,6 +189,9 @@ impl Context {
         }
     }
 
+    /// Records text input for the given view for auto-complete history.
+    ///
+    /// Deduplicates consecutive identical inputs and limits history size.
     pub fn record_input(&mut self, text: &str, id: ViewId) {
         if text.is_empty() {
             return;
@@ -182,6 +208,10 @@ impl Context {
         }
     }
 
+    /// Enables or disables the frontlight.
+    ///
+    /// When enabling, restores previously saved warmth and intensity levels.
+    /// When disabling, saves current levels and turns off frontlight.
     pub fn set_frontlight(&mut self, enable: bool) {
         self.settings.frontlight = enable;
 
