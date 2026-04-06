@@ -1,5 +1,6 @@
 use crate::document::file_kind;
 use crate::helpers::{Fingerprint, IsHidden};
+use crate::log_info;
 use crate::metadata::BookQuery;
 use crate::metadata::{extract_metadata_from_document, sort, FileInfo, Info};
 use crate::settings::{ImportSettings, LibraryMode};
@@ -160,7 +161,7 @@ impl Library {
 
             if self.db.contains_key(&fp) {
                 if relat != self.db[&fp].file.path {
-                    println!(
+                    log_info!(
                         "Update path for {}: {} → {}.",
                         fp,
                         self.db[&fp].file.path.display(),
@@ -172,7 +173,7 @@ impl Library {
                     self.has_db_changed = true;
                 }
             } else if let Some(fp2) = self.paths.get(relat).cloned() {
-                println!(
+                log_info!(
                     "Update fingerprint for {}: {} → {}.",
                     relat.display(),
                     fp2,
@@ -216,7 +217,7 @@ impl Library {
                 };
 
                 if let Some(nfp) = nfp {
-                    println!(
+                    log_info!(
                         "Update fingerprint for {}: {} → {}.",
                         self.db[&nfp].file.path.display(),
                         nfp,
@@ -233,7 +234,7 @@ impl Library {
                     let tp2 = self.thumbnail_preview_path(fp);
                     fs::rename(tp1, tp2).ok();
                     if relat != self.db[&fp].file.path {
-                        println!(
+                        log_info!(
                             "Update path for {}: {} → {}.",
                             fp,
                             self.db[&fp].file.path.display(),
@@ -248,7 +249,7 @@ impl Library {
                     if !settings.allowed_kinds.contains(&kind) {
                         continue;
                     }
-                    println!("Add new entry: {}, {}.", fp, relat.display());
+                    log_info!("Add new entry: {}, {}.", fp, relat.display());
                     let size = md.len();
                     let file = FileInfo {
                         path: relat.to_path_buf(),
@@ -278,7 +279,7 @@ impl Library {
             if path.exists() {
                 true
             } else {
-                println!("Remove entry: {}, {}.", fp, info.file.path.display());
+                log_info!("Remove entry: {}, {}.", fp, info.file.path.display());
                 false
             }
         });

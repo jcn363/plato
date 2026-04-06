@@ -6,6 +6,7 @@ use crate::font::{font_from_style, Font, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{big_half, divide, small_half, CycleDir, Dir, Point, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::log_warn;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::icon::{Icon, ICONS_PIXMAPS};
@@ -584,7 +585,7 @@ impl View for DirectoriesBar {
                         if let Some(icon) = page[index].downcast_mut::<Icon>() {
                             icon.active = false;
                         } else {
-                            println!("oups");
+                            log_warn!("Failed to downcast to Icon for cycling directories");
                         }
                         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                     }

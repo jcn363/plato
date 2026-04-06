@@ -6,6 +6,7 @@ use crate::color::Color;
 use crate::device::{Model, CURRENT_DEVICE};
 use crate::geom::Rectangle;
 use crate::log_error;
+use crate::log_info;
 use anyhow::{Context, Error};
 use std::fs::{File, OpenOptions};
 use std::io::{self, Write};
@@ -390,7 +391,7 @@ impl Framebuffer for KoboFramebuffer1 {
         self.fix_info = fix_screen_info(&self.file)?;
         self.frame_size = (self.var_info.yres * self.fix_info.line_length) as libc::size_t;
 
-        println!("Framebuffer rotation: {} -> {}.", n, self.rotation());
+        log_info!("Framebuffer rotation: {} -> {}.", n, self.rotation());
 
         Ok((self.var_info.xres, self.var_info.yres))
     }

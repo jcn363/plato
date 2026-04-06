@@ -6,6 +6,7 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{Point, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::log_error;
+use crate::log_info;
 use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{Id, ID_FEEDER};
 use std::mem;
@@ -81,7 +82,7 @@ impl View for RotationValues {
                     mem::swap(&mut pt.x, &mut pt.y);
                 }
 
-                println!("Tap {} {:?}", pt, context.fb.dims());
+                log_info!("Tap {} {:?}", pt, context.fb.dims());
 
                 self.taps.push(pt);
                 self.finished = self.taps.len() >= 2 * CORNERS_COUNT;
@@ -123,8 +124,8 @@ impl View for RotationValues {
                     let next = self.taps[CORNERS_COUNT + (center + 1) % 4];
                     let polarity = 2 * ((origin + startup_rotation) as i8 % 2) - 1;
                     let dir = if next.x < next.y { polarity } else { -polarity };
-                    println!("Startup rotation: {}.", startup_rotation);
-                    println!("Mirroring scheme: ({}, {}).", center, dir);
+                    log_info!("Startup rotation: {}.", startup_rotation);
+                    log_info!("Mirroring scheme: ({}, {}).", center, dir);
                     hub.send(Event::Back).ok();
                 } else {
                     rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));

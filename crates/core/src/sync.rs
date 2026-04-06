@@ -1,3 +1,4 @@
+use crate::log_info;
 use crate::settings::BackgroundSyncSettings;
 use anyhow::{format_err, Error};
 use std::process::Command;
@@ -193,7 +194,7 @@ fn sync_with_webdav(
         let response = String::from_utf8_lossy(&output.stdout);
 
         if response.contains("<d:response>") {
-            println!("WebDAV: Connected to server, sync available");
+            log_info!("WebDAV: Connected to server, sync available");
         }
     }
 

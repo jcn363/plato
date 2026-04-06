@@ -6,7 +6,8 @@
 |--------|--------|
 | **Build** | ✅ Clean (x86_64, ARM32, ARM64) |
 | **Clippy** | ✅ Clean (no warnings) |
-| **Unwrap/expect** | ✅ ~7 remaining (all justified: lock poisoning, FFI, fatal init) |
+| **Unwrap/expect** | ✅ ~68 remaining (all justified: lock poisoning, FFI, fatal init) |
+| **Raw println!** | ✅ Cleaned (15 replaced with log macros or removed) |
 | **Tests** | ⚠️ Require native libs (mupdf, gumbo) |
 | **License** | ✅ MIT on all crates, deny.toml configured |
 | **Dependencies** | ✅ Mostly current (see [Dependency Management](#dependency-management)) |
@@ -28,6 +29,7 @@
 - ✅ DeviceFlags bitflag for Context struct booleans
 - ✅ Pre-allocation (`with_capacity()`) across 20+ locations
 - ✅ `.expect()` reduction: 50+ instances replaced with `if let`, `match`, `.unwrap_or()`, `.map_or()` across 20+ files in `view/`, `document/html/`, `calculator/`, `fetcher/`
+- ✅ Raw `println!` cleanup: 15 instances replaced with `log_info!`, `log_warn!`, or proper assertions across `sync.rs`, `library/scan.rs`, `library/maintenance.rs`, `view/rotation_values/mod.rs`, `framebuffer/kobo1.rs`, `document/html/css.rs`, `view/home/directories_bar.rs`
 
 ### Dependencies
 - ✅ `nix` 0.30.1 → 0.31.2

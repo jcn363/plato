@@ -34,7 +34,7 @@ impl Library {
             if fps.contains(fp) {
                 true
             } else {
-                println!("Remove reading state for {}.", fp);
+                log_warn!("Remove reading state for {}.", fp);
                 false
             }
         });
