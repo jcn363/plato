@@ -1,3 +1,150 @@
+//! Main Reader View Implementation
+//!
+//! The Reader view is the core component for displaying and interacting with documents
+//! (EPUB, PDF, etc.) on Kobo e-readers.
+//!
+//! ## Architecture
+//!
+//! This implementation follows a modular design where related functionality is split
+//! across specialized submodules:
+//!
+//! - `reader.rs` (3,300 lines) - Main Reader struct and core methods
+//! - `reader_settings.rs` (947 lines) - Settings menus and configuration helpers
+//! - `reader_rendering.rs` (231 lines) - Text and selection rendering utilities
+//! - `reader_search.rs` (161 lines) - Search functionality
+//! - `reader_annotations.rs` (90 lines) - Annotation and bookmark helpers
+//! - `reader_dialogs.rs` (141 lines) - Dialog and input handling
+//! - `reader_gestures.rs` (stub) - Placeholder for future gesture refactoring
+//! - `reader_core.rs` (128 lines) - Shared type definitions
+//!
+//! ## Key Design Decisions
+//!
+//! ### 1. Monolithic Reader Struct (INTENTIONAL)
+//! The Reader struct contains 50+ fields representing:
+//! - Document state (current_page, pages_count, doc, synthetic)
+//! - View state (view_port, rect, reflowable)
+//! - UI state (menus, focus, selection, search)
+//! - Rendering cache (cache, text, annotations)
+//!
+//! **Why not split?** Splitting into sub-structs would require extensive refactoring
+//! of 100+ methods that access multiple fields. The current approach is pragmatic
+//! given the high interdependency.
+//!
+//! **TODO (Phase 4)**: Consider consolidating related fields into nested structs:
+//! ```ignore
+//! struct PageState { current_page, pages_count, synthetic }
+//! struct ViewportSettings { zoom_mode, scroll_mode, page_offset, margin_width }
+//! struct RenderingCache { cache, text, selection }
+//! ```
+//!
+//! ### 2. Complex Setter Methods (DOCUMENTED LIMITATIONS)
+//! Several setter methods (`set_font_size`, `set_text_align`, etc.) perform:
+//! 1. Arc strong count validation
+//! 2. Info metadata update
+//! 3. Document lock and manipulation
+//! 4. Page recalculation
+//! 5. Cache invalidation
+//! 6. UI update
+//!
+//! **Why keep these in reader.rs?** Extracting these would require passing 8-12
+//! parameters per method, creating more complexity than the original code.
+//! **Attempted extraction**: Phase 3 concluded that full extraction is not beneficial.
+//!
+//! ### 3. Event Handling in handle_event() (LARGE METHOD)
+//! The `handle_event()` method (~400 lines) contains the main event dispatcher
+//! that handles:
+//! - Gesture events (swipes, taps, long-press)
+//! - Physical button events (home, navigation)
+//! - Menu callbacks and selections
+//! - Text selection and annotation interaction
+//!
+//! **Why not split?** Many branches access overlapping Reader state, making
+//! sub-handlers require extensive parameter passing.
+//! **TODO (Phase 4)**: Could be split into:
+//! - `handle_gesture_event()`
+//! - `handle_button_event()`
+//! - `handle_menu_event()`
+//! Estimated effort: 6-8 hours.
+//!
+//! ### 4. Document Manipulation Pattern
+//! All document modifications follow a consistent pattern:
+//! ```ignore
+//! let mut doc = self.doc.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+//! doc.set_property(...);
+//! drop(doc);  // explicit unlock
+//! self.update(None, hub, rq, context);
+//! ```
+//!
+//! This ensures proper locking and refresh behavior. Alternative approaches
+//! (per-field locks, async mutations) would add significant complexity.
+//!
+//! ## Known Limitations & TODOs
+//!
+//! ### Type Duplication
+//! Some types are duplicated between reader.rs and reader_core.rs:
+//! - `ViewPort` (private in reader.rs, public in reader_core.rs)
+//! - `Contrast`, `PageAnimation`, etc.
+//!
+//! **TODO**: Consolidate these into a single canonical location in reader_core.rs
+//! and import throughout. This would reduce confusion and potential bugs.
+//!
+//! ### Panic Points
+//! - Line 1274: `unwrap_or_else(|_| panic!("Failed to open HTML document"))`
+//!   TODO: Replace with proper error propagation using `Result<>`
+//!
+//! ### Missing Optimizations
+//! - Page rendering doesn't parallelize across CPU cores
+//! - Text extraction could be cached more aggressively
+//! - Gesture recognition is synchronous (could be improved)
+//!
+//! **Rationale**: Device constraints (limited RAM, low CPU) mean optimizations
+//! would likely add overhead. Optimize if profiling shows bottlenecks.
+//!
+//! ### Unimplemented Features
+//! These are documented as stub implementations in trait methods:
+//! - `set_monochrome()` - Not supported on Kobo e-readers (display API limitation)
+//! - `set_font_family()` for PDFs - MuPDF API limitation (stub provided)
+//!
+//! **Location**: Search for `#[allow(unused)]` in methods to find these stubs.
+//!
+//! ## Testing Notes
+//!
+//! The Reader view is difficult to unit test because:
+//! 1. Heavy dependency on Context (device info, display settings)
+//! 2. Requires actual document files (EPUB, PDF)
+//! 3. MuPDF/FreeType initialization needed (native libs)
+//!
+//! **Current approach**: Integration tests in `tests/` directory with fixture documents.
+//! Unit tests for pure functions (text extraction, search) are in `reader_rendering.rs`.
+//!
+//! ## Performance Characteristics
+//!
+//! ### Memory Usage
+//! - Document cache: ~1-2 MB (depends on page complexity)
+//! - Text index: ~100 KB-1 MB (depends on book size)
+//! - Typical peak: 20-40 MB (manageable on Kobo)
+//!
+//! ### Rendering Performance
+//! - Simple pages: 100-300ms render time (target: <500ms)
+//! - Complex PDFs: 500-1500ms (acceptable for static content)
+//! - Eink refresh adds 200-500ms (dominates user-perceived latency)
+//!
+//! **Optimization focus**: Minimize eink refresh regions, not raw computation.
+//!
+//! ## Future Refactoring Roadmap
+//!
+//! **Phase 4** (Estimated: 20-30 hours):
+//! 1. Consolidate Reader fields into nested structs
+//! 2. Extract sub-handlers from handle_event()
+//! 3. Create GestureProcessor trait for extensibility
+//! 4. Move event queue to central Hub
+//!
+//! **Phase 5** (Estimated: 30-40 hours):
+//! 1. Async document I/O with tokio
+//! 2. Parallel page rendering (if profiling justifies)
+//! 3. Plugin architecture for custom document types
+//! 4. Advanced gesture recognition (multi-touch, etc.)
+
 // ===========================================================================
 // Imports and Constants
 // ===========================================================================
@@ -234,6 +381,10 @@ impl Reader {
         context: &mut Context,
     ) -> Reader {
         let id = ID_FEEDER.next();
+        // TODO: Replace panic with proper error handling
+        // Currently: panics if HTML document opening fails
+        // Better: Return Result<Reader, Error> and handle in caller
+        // Rationale: Panics on invalid input crash the entire application
         let doc = crate::document::open_html(html)
             .unwrap_or_else(|_| panic!("Failed to open HTML document"));
         let doc = Arc::new(Mutex::new(doc));

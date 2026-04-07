@@ -1,3 +1,100 @@
+//! Home Library View
+//!
+//! The Home view displays the library of documents and provides navigation,
+//! search, sorting, and document metadata management.
+//!
+//! ## Module Structure
+//!
+//! - `home/mod.rs` (2,690 lines) - Main Home struct and implementation
+//! - `home_utils.rs` (39 lines) - Utility functions for child view management
+//! - `shelf.rs` - Document display shelf with thumbnail grid
+//! - `book.rs` - Individual book/document entry
+//! - `directory.rs` - Directory view for file browsing
+//! - `address_bar.rs` - Path/address bar
+//! - `navigation_bar.rs` - Library navigation controls
+//! - `bottom_bar.rs` - Status and metadata bar
+//! - `library_label.rs` - Library selection label
+//! - `directories_bar.rs` - Directory list separator
+//!
+//! ## Key Features
+//!
+//! ### Document Display
+//! - Shelf-based grid layout with configurable columns
+//! - Cover thumbnails with metadata overlay
+//! - Scrollable view with pagination
+//!
+//! ### Navigation
+//! - Directory browser with breadcrumb navigation
+//! - Library switching between multiple document sources
+//! - Search/filter capability
+//!
+//! ### Sorting
+//! - Multiple sort methods (by title, author, date, etc.)
+//! - Configurable sort order (ascending/descending)
+//! - Persistent sort preferences
+//!
+//! ### Document Interaction
+//! - Long-press for context menu
+//! - Rename, move, delete operations
+//! - Metadata editing
+//! - Quick access to recent documents
+//!
+//! ## Known Limitations & TODOs
+//!
+//! ### Size and Complexity
+//! The Home view at 2,690 lines handles many concerns:
+//! - View hierarchy management (child views)
+//! - Event routing to child views
+//! - Library/document model management
+//! - File system operations (list, rename, delete)
+//! - Search and filter logic
+//! - Thumbnail caching and rendering
+//!
+//! **TODO (Phase 5)**: Consider splitting into:
+//! - `home_core.rs` - Data model and state management
+//! - `home_library.rs` - Library operations
+//! - `home_ui.rs` - UI layout and rendering
+//! - `home_input.rs` - Event handling
+//!
+//! ### Performance Issues
+//! - Thumbnail generation is synchronous (blocking UI)
+//! - Large libraries (1000+ books) can be slow to scroll
+//! - Search filtering is linear (O(n)) across all documents
+//!
+//! **TODO**: Implement lazy thumbnail loading and async search.
+//!
+//! ### Type Duplication
+//! Fixed: ViewId-based helper function now correctly matches views by ViewId
+//! instead of attempting to match by generic Id type.
+//! See `home_utils::find_child_index_by_view_id()`.
+//!
+//! ## Testing
+//!
+//! Home view is challenging to test because:
+//! 1. Heavy File system operations (directory listing, file I/O)
+//! 2. Requires actual document library fixtures
+//! 3. Complex event routing and state management
+//!
+//! **Current approach**: Integration tests with fixture directories.
+//! Consider: Mocking Library and FileSystem interfaces.
+//!
+//! ## Future Improvements
+//!
+//! **Short Term** (10-15 hours):
+//! - Async thumbnail generation (off-main thread)
+//! - Indexed search (faster filtering)
+//! - Better memory management for large libraries
+//!
+//! **Medium Term** (20-30 hours):
+//! - Split into sub-modules for better maintainability
+//! - Create ViewModel abstraction for Library operations
+//! - Plugin support for custom book sources
+//!
+//! **Long Term** (40+ hours):
+//! - Cloud library integration
+//! - Advanced filtering and tagging system
+//! - Reading statistics and recommendations
+
 mod address_bar;
 mod book;
 mod bottom_bar;

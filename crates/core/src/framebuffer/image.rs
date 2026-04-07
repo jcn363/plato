@@ -20,6 +20,10 @@ impl Pixmap {
     pub fn new(width: u32, height: u32, samples: usize) -> Pixmap {
         let len = samples * (width * height) as usize;
         let mut data = Vec::new();
+        // TODO: Consider returning Result<Pixmap, Error> instead of panicking
+        // Currently: panics on allocation failure (OOM on device)
+        // Better: Use try_new() in callers where OOM is possible
+        // Note: try_new() method already exists as fallback
         data.try_reserve_exact(len).unwrap_or_else(|_| {
             panic!(
                 "Failed to allocate {} bytes for pixmap ({}x{}x{})",
