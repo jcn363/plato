@@ -7,10 +7,6 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-#[allow(dead_code)]
-const KOBO_MEMORY_LIMIT: usize = 256 * 1024 * 1024;
-#[allow(dead_code)]
-const MAX_CACHED_PAGES: usize = 5;
 const PAGE_CACHE_SIZE_MB: usize = 20;
 const PRELOAD_AHEAD_PAGES: usize = 2;
 const PRELOAD_BEHIND_PAGES: usize = 1;

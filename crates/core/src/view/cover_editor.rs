@@ -15,29 +15,6 @@ use anyhow::Error;
 use image::DynamicImage;
 use std::path::PathBuf;
 
-// Note: Icon constants below are reserved for future UI implementation.
-// Currently unused but kept for reference in planned toolbar/button UI.
-// These will be used when the cover editor implements interactive buttons
-// for crop, rotate, brightness, contrast, grayscale, save, and navigation.
-#[allow(dead_code)]
-const ICON_CROP: &str = "enclosed_qr_code";
-#[allow(dead_code)]
-const ICON_ROTATE: &str = "enclosed_ccw";
-#[allow(dead_code)]
-const ICON_BRIGHTNESS: &str = "sun";
-#[allow(dead_code)]
-const ICON_CONTRAST: &str = "adjust";
-#[allow(dead_code)]
-const ICON_GRAYSCALE: &str = "enclosed_circle";
-#[allow(dead_code)]
-const ICON_SAVE: &str = "check";
-#[allow(dead_code)]
-const ICON_BACK: &str = "enclosed_back";
-#[allow(dead_code)]
-const ICON_PLUS: &str = "enclosed_plus";
-#[allow(dead_code)]
-const ICON_MINUS: &str = "enclosed_minus";
-
 enum EditorMode {
     SelectBook,
     EditCover,

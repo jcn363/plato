@@ -338,6 +338,36 @@ When facing multiple compilation errors, resolve in this order:
 - **No backward compatibility** — Do not add code to support old APIs, deprecated patterns, or legacy behavior unless explicitly required
 - **Project containment** — All created or used files and directories must be located inside the project root directory (`/home/user/Desktop/plato`); never create or access files outside the project workspace
 
+### Dead Code Investigation
+
+Regularly investigate and remove unnecessary dead code:
+
+1. **Find `#[allow(dead_code)]` attributes** — These indicate reserved future functionality or unused code. Review each:
+   ```bash
+   grep -r "#\[allow(dead_code)" crates/core/src --include="*.rs"
+   ```
+
+2. **Check for unused code patterns**:
+   - Unused constants with `#[allow(dead_code)]`
+   - Unused struct fields (prefix with `_` if intentional)
+   - Unused imports
+   - Unused methods on public types
+
+3. **Validate before removal**:
+   - Search for usages of the code in question
+   - Confirm it's not called via reflection or macros
+   - Check if it's part of a public API that must be maintained
+
+4. **Remove in order of priority**:
+   - Remove obviously unused constants first
+   - Then unused private functions and methods
+   - Finally, consider if public types should be kept for API compatibility
+
+5. **Run clippy with warnings as errors** to catch new dead code:
+   ```bash
+   RUSTFLAGS="-D warnings" cargo check --target x86_64-unknown-linux-gnu
+   ```
+
 ### Context Management
 
 - **Flush after each task** — After completing a focused task (fix, refactor, feature), ensure the context is clean:
