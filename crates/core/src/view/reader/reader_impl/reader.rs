@@ -157,7 +157,7 @@ use crate::document::{
     SimpleTocEntry, TextLocation, TocEntry, BYTES_PER_PAGE,
 };
 use crate::font::Fonts;
-use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
+use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::frontlight::LightLevels;
 use crate::geom::{halves, Axis, CycleDir, DiagDir, Dir, LinearDir, Region};
 use crate::geom::{BorderSpec, Boundary, CornerSpec, Point, Rectangle, Vec2};
@@ -203,7 +203,10 @@ use crate::view::{
 use crate::view::reader::bottom_bar::BottomBar;
 use crate::view::reader::tool_bar::ToolBar;
 
-use super::reader_core::{Contrast, RenderChunk, Search, Selection, State};
+use super::reader_core::{
+    Contrast, PageAnimKind, PageAnimation, RenderChunk, Resource, Search, Selection, State,
+    ViewPort,
+};
 use super::reader_rendering;
 use super::reader_search;
 
@@ -222,36 +225,6 @@ pub const ANNOTATION_DRIFT: f32 = 0.05;
 // ===========================================================================
 // Type Definitions
 // ===========================================================================
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PageAnimKind {
-    Slide,
-    Fade,
-    Flip,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct AnimState {
-    pub kind: PageAnimKind,
-    pub direction: LinearDir,
-    pub progress: f32,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum PageAnimation {
-    None,
-    Slide(AnimState),
-    Peel(AnimState),
-}
-
-#[derive(Debug)]
-struct Resource {
-    pixmap: Pixmap,
-    frame: Rectangle,
-    scale: f32,
-}
 
 #[allow(dead_code)]
 pub struct Reader {
@@ -284,25 +257,6 @@ pub struct Reader {
     finished: bool,
     animation: Option<PageAnimation>,
     previous_chunks: Vec<RenderChunk>,
-}
-
-#[derive(Debug)]
-struct ViewPort {
-    zoom_mode: ZoomMode,
-    scroll_mode: ScrollMode,
-    page_offset: Point,
-    margin_width: i32,
-}
-
-impl Default for ViewPort {
-    fn default() -> Self {
-        ViewPort {
-            zoom_mode: ZoomMode::FitToWidth,
-            scroll_mode: ScrollMode::Screen,
-            page_offset: pt!(0, 0),
-            margin_width: 0,
-        }
-    }
 }
 
 // ===========================================================================

@@ -6,7 +6,10 @@ mod results_bar;
 mod results_label;
 mod tool_bar;
 
-pub use reader_impl::{Contrast, Reader, Selection, State};
+pub use reader_impl::{
+    Contrast, PageAnimKind, PageAnimation, Reader, RenderChunk, Resource, Selection, State,
+    ViewPort,
+};
 
 pub use crate::view::{
     AppCmd, Bus, EntryId, EntryKind, Event, Hub, Id, RenderData, RenderQueue, SliderId, View,

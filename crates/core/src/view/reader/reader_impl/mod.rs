@@ -23,7 +23,9 @@
 
 // Core types and definitions
 pub mod reader_core;
-pub use reader_core::{Contrast, Selection, State};
+pub use reader_core::{
+    Contrast, PageAnimKind, PageAnimation, RenderChunk, Resource, Selection, State, ViewPort,
+};
 
 // Main implementation (to be split across modules)
 mod reader;
