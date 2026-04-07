@@ -27,7 +27,12 @@ INCOMPLETE IMPLEMENTATIONS:           QUANTIFIED OPPORTUNITIES:
 ├─ PDF Manipulator (2-3 days)        ├─ Immediate wins: ~1,350 lines saved
 ├─ Cover Editor (3-5 days)           ├─ Medium effort: Monolithic file splits
 ├─ Reader stubs (1-2 days)           ├─ Feature completion: 5 features
-└─ Feature settings (5 days)         └─ Performance: 30-50% improvement
+└─ Feature settings (5 days)       └─ Performance: 30-50% improvement
+
+COMPLETED (April 7, 2026):
+✅ Error handling - All constructors return Result instead of panicking
+✅ Type deduplication - ViewPort, PageAnimKind, etc. now from reader_core.rs
+✅ Dead code removal - Removed unused constants from cover_editor.rs
 
 CODE QUALITY ISSUES:                  MONOLITHIC FILES:
 ├─ 1,350 lines boilerplate           ├─ reader.rs: 4,168 lines → split to 5
