@@ -134,9 +134,7 @@ impl KoboFramebuffer2 {
             return Err(Error::from(io::Error::last_os_error()).context("can't map memory"));
         }
 
-        let display = File::open("/dev/disp");
-
-        if let Err(e) = display {
+        let display = File::open("/dev/disp").map_err(|e| {
             // SAFETY: Frame pointer and alloc_size are from a successful mmap call.
             let _ = unsafe { libc::munmap(frame, alloc_size) };
             // SAFETY: File descriptor was obtained from ion_map and is valid.
@@ -146,8 +144,8 @@ impl KoboFramebuffer2 {
             };
             // SAFETY: Ion device file descriptor is valid. Handle was obtained from a successful ion_alloc.
             let _ = unsafe { ion_free(ion.as_raw_fd(), &mut data) };
-            return Err(Error::from(e).context("can't open display device"));
-        }
+            Error::from(e).context("can't open display device")
+        })?;
 
         let frame_size = (var_info.yres * fix_info.line_length) as usize;
 
@@ -220,7 +218,7 @@ impl KoboFramebuffer2 {
 
         Ok(KoboFramebuffer2 {
             ion,
-            display: display.expect("failed to open display"),
+            display,
             fd_data: data,
             layer,
             frame,
