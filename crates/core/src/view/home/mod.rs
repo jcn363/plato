@@ -3,6 +3,7 @@ mod book;
 mod bottom_bar;
 mod directories_bar;
 mod directory;
+mod home_utils;
 mod library_label;
 mod navigation_bar;
 mod shelf;
@@ -311,7 +312,7 @@ impl Home {
                 return;
             };
             nav_bar.set_path(&self.current_directory, &dirs, rq, context);
-            self.adjust_shelf_top_edge();
+            home_utils::adjust_shelf_top_edge(&mut self.children, self.shelf_index - 2);
             rq.add(RenderData::new(
                 self.child(index + 1).id(),
                 *self.child(index + 1).rect(),
@@ -324,15 +325,7 @@ impl Home {
             ));
         }
 
-        self.update_shelf(true, hub, rq, context);
-        self.update_bottom_bar(rq, context);
-    }
-
-    fn adjust_shelf_top_edge(&mut self) {
-        let index = self.shelf_index - 2;
-        let y_shift = self.children[index].rect().max.y - self.children[index + 1].rect().min.y;
-        *self.children[index + 1].rect_mut() += pt!(0, y_shift);
-        self.children[index + 2].rect_mut().min.y = self.children[index + 1].rect().max.y;
+        home_utils::update_shelf_and_bottom_bar(true, self, hub, rq, context);
     }
 
     fn toggle_select_directory(
@@ -356,8 +349,7 @@ impl Home {
             return;
         }
         self.current_page = index;
-        self.update_shelf(false, hub, rq, context);
-        self.update_bottom_bar(rq, context);
+        home_utils::update_shelf_and_bottom_bar(false, self, hub, rq, context);
     }
 
     fn go_to_neighbor(
@@ -377,8 +369,7 @@ impl Home {
             _ => return,
         }
 
-        self.update_shelf(false, hub, rq, context);
-        self.update_bottom_bar(rq, context);
+        home_utils::update_shelf_and_bottom_bar(false, self, hub, rq, context);
     }
 
     fn go_to_status_change(
@@ -418,8 +409,7 @@ impl Home {
 
         if let Some(page) = page {
             self.current_page = page;
-            self.update_shelf(false, hub, rq, context);
-            self.update_bottom_bar(rq, context);
+            home_utils::update_shelf_and_bottom_bar(false, self, hub, rq, context);
         }
     }
 
@@ -451,8 +441,7 @@ impl Home {
         }
 
         if update {
-            self.update_shelf(false, hub, rq, context);
-            self.update_bottom_bar(rq, context);
+            home_utils::update_shelf_and_bottom_bar(false, self, hub, rq, context);
         }
     }
 
@@ -464,7 +453,7 @@ impl Home {
         {
             shelf.set_first_column(context.settings.libraries[selected_library].first_column);
         }
-        self.update_shelf(false, hub, rq, context);
+        home_utils::update_shelf_and_bottom_bar(false, self, hub, rq, context);
     }
 
     fn update_second_column(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
@@ -475,7 +464,7 @@ impl Home {
         {
             shelf.set_second_column(context.settings.libraries[selected_library].second_column);
         }
-        self.update_shelf(false, hub, rq, context);
+        home_utils::update_shelf_and_bottom_bar(false, self, hub, rq, context);
     }
 
     fn update_thumbnail_previews(
@@ -493,7 +482,7 @@ impl Home {
                 context.settings.libraries[selected_library].thumbnail_previews,
             );
         }
-        self.update_shelf(false, hub, rq, context);
+        home_utils::update_shelf_and_bottom_bar(false, self, hub, rq, context);
     }
 
     fn update_shelf(
@@ -546,7 +535,7 @@ impl Home {
     }
 
     fn update_top_bar(&mut self, search_visible: bool, rq: &mut RenderQueue) {
-        if let Some(index) = locate::<TopBar>(self) {
+        if let Some(index) = home_utils::find_child_index_by_type::<TopBar>(&self.children) {
             if let Some(top_bar) = self.children[index].as_mut().downcast_mut::<TopBar>() {
                 let name = if search_visible { "back" } else { "search" };
                 top_bar.update_root_icon(name, rq);
@@ -556,7 +545,7 @@ impl Home {
     }
 
     fn update_bottom_bar(&mut self, rq: &mut RenderQueue, context: &Context) {
-        if let Some(index) = rlocate::<BottomBar>(self) {
+        if let Some(index) = home_utils::find_child_index_by_type::<BottomBar>(&self.children) {
             let Some(bottom_bar) = self.children[index].as_mut().downcast_mut::<BottomBar>() else {
                 return;
             };
@@ -592,7 +581,7 @@ impl Home {
         let (small_thickness, big_thickness) = halves(thickness);
         let has_search_bar = self.children[self.shelf_index + 2].is::<SearchBar>();
 
-        if let Some(index) = rlocate::<Keyboard>(self) {
+        if let Some(index) = home_utils::find_child_index_by_type::<Keyboard>(&self.children) {
             if enable {
                 return;
             }
@@ -623,7 +612,8 @@ impl Home {
                 return;
             }
 
-            let Some(index) = rlocate::<BottomBar>(self) else {
+            let Some(index) = home_utils::find_child_index_by_type::<BottomBar>(&self.children)
+            else {
                 return;
             };
             let index = index - 1;
@@ -712,7 +702,7 @@ impl Home {
         );
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
 
-        if let Some(index) = locate::<AddressBar>(self) {
+        if let Some(index) = home_utils::find_child_index_by_type::<AddressBar>(&self.children) {
             if let Some(true) = enable {
                 return;
             }
@@ -828,7 +818,7 @@ impl Home {
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (small_thickness, _) = halves(thickness);
 
-        if let Some(index) = locate::<NavigationBar>(self) {
+        if let Some(index) = home_utils::find_child_index_by_type::<NavigationBar>(&self.children) {
             if let Some(true) = enable {
                 return;
             }
@@ -878,7 +868,7 @@ impl Home {
             self.shelf_index += 2;
             context.settings.home.navigation_bar = true;
 
-            self.adjust_shelf_top_edge();
+            home_utils::adjust_shelf_top_edge(&mut self.children, self.shelf_index - 2);
         }
 
         if update {
@@ -913,7 +903,7 @@ impl Home {
         let search_visible: bool;
         let mut has_keyboard = false;
 
-        if let Some(index) = rlocate::<SearchBar>(self) {
+        if let Some(index) = home_utils::find_child_index_by_type::<SearchBar>(&self.children) {
             if let Some(true) = enable {
                 return;
             }
@@ -991,7 +981,7 @@ impl Home {
             }
 
             if self.query.is_none() {
-                if rlocate::<Keyboard>(self).is_none() {
+                if home_utils::find_child_index_by_type::<Keyboard>(&self.children).is_none() {
                     self.toggle_keyboard(
                         true,
                         false,
@@ -1039,7 +1029,7 @@ impl Home {
             } else {
                 for i in self.shelf_index - 1..=self.shelf_index + 1 {
                     if i == self.shelf_index {
-                        self.update_shelf(true, hub, rq, context);
+                        home_utils::update_shelf_and_bottom_bar(true, self, hub, rq, context);
                         continue;
                     }
                     rq.add(RenderData::new(
@@ -1061,7 +1051,9 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::RenameDocument) {
+        if let Some(index) =
+            home_utils::find_child_index_by_view_id(&self.children, ViewId::RenameDocument)
+        {
             if let Some(true) = enable {
                 return;
             }
@@ -1118,7 +1110,9 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::GoToPage) {
+        if let Some(index) =
+            home_utils::find_child_index_by_view_id(&self.children, ViewId::GoToPage)
+        {
             if let Some(true) = enable {
                 return;
             }
@@ -2311,9 +2305,8 @@ impl View for Home {
                 true
             }
             Event::NavigationBarResized(_) => {
-                self.adjust_shelf_top_edge();
-                self.update_shelf(true, hub, rq, context);
-                self.update_bottom_bar(rq, context);
+                home_utils::adjust_shelf_top_edge(&mut self.children, self.shelf_index - 2);
+                home_utils::update_shelf_and_bottom_bar(true, self, hub, rq, context);
                 for i in self.shelf_index - 2..=self.shelf_index - 1 {
                     rq.add(RenderData::new(
                         self.child(i).id(),
