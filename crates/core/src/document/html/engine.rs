@@ -2532,7 +2532,7 @@ impl Engine {
     ) -> Option<Pixmap> {
         let width = (self.dims.0 as f32 * scale_factor) as u32;
         let height = (self.dims.1 as f32 * scale_factor) as u32;
-        let mut fb = Pixmap::try_new(width, height, samples)?;
+        let mut fb = Pixmap::new(width, height, samples).ok()?;
 
         for dc in page {
             match dc {

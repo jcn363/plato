@@ -19,10 +19,15 @@ let doc = crate::document::open_html(html)
 ```
 
 **Issue**: Panics on invalid HTML input, crashing entire application
-**Fix**: Return `Result<Reader, Error>` from `new_html()` method
-**Status**: TODO
+**Fix**: Return `Result<Reader, Error>` from `from_html()` method
+**Status**: ✅ FIXED (April 7, 2026)
 **Effort**: 2-3 hours
 **Impact**: Medium (affects HTML document loading)
+
+**Changes Made**:
+- Changed `from_html()` return type from `Reader` to `Result<Reader, Error>`
+- Added proper error handling with `.context()` for better diagnostics
+- Updated all 4 call sites in app.rs and emulator/src/main.rs to handle `Result`
 
 #### framebuffer/image.rs:24 - Pixmap Allocation
 **Location**: `crates/core/src/framebuffer/image.rs:24`
@@ -35,9 +40,14 @@ data.try_reserve_exact(len).unwrap_or_else(|_| {
 
 **Issue**: Panics on OOM, but `try_new()` method already exists
 **Fix**: Use `try_new()` in callers where OOM is acceptable, document when to use each
-**Status**: DOCUMENTED - consider replacing panics with proper error propagation
+**Status**: ✅ PARTIALLY FIXED (April 7, 2026)
 **Effort**: 1-2 hours
 **Impact**: Medium (affects rendering pipeline)
+
+**Changes Made**:
+- Added `try_new_result()` method that returns `Result<Pixmap, Error>` for callers needing proper error handling
+- Kept `try_new()` returning `Option<Pixmap>` for backwards compatibility
+- `new()` still panics (intentional for performance-critical hot paths)
 
 ---
 

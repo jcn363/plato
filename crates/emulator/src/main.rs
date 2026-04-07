@@ -505,62 +505,67 @@ fn main() -> Result<(), Error> {
                 }
                 Event::OpenHtml(ref html, ref link_uri) => {
                     view.children_mut().retain(|child| !child.is::<Menu>());
-                    let r = Reader::from_html(
+                    if let Ok(r) = Reader::from_html(
                         context.fb.rect(),
                         html,
                         link_uri.as_deref(),
                         &tx,
                         &mut context,
-                    );
-                    let mut next_view = Box::new(r) as Box<dyn View>;
-                    transfer_notifications(
-                        view.as_mut(),
-                        next_view.as_mut(),
-                        &mut rq,
-                        &mut context,
-                    );
-                    history.push(view as Box<dyn View>);
-                    view = next_view;
+                    ) {
+                        let mut next_view = Box::new(r) as Box<dyn View>;
+                        transfer_notifications(
+                            view.as_mut(),
+                            next_view.as_mut(),
+                            &mut rq,
+                            &mut context,
+                        );
+                        history.push(view as Box<dyn View>);
+                        view = next_view;
+                    }
                 }
                 Event::Select(EntryId::Launch(app_cmd)) => {
                     view.children_mut().retain(|child| !child.is::<Menu>());
-                    let mut next_view: Box<dyn View> = match app_cmd {
-                        AppCmd::Sketch => {
-                            Box::new(Sketch::new(context.fb.rect(), &mut rq, &mut context))
-                        }
-                        AppCmd::Calculator => Box::new(Calculator::new(
+                    let next_view: Option<Box<dyn View>> = match app_cmd {
+                        AppCmd::Sketch => Sketch::new(context.fb.rect(), &mut rq, &mut context)
+                            .map(|v| Box::new(v) as Box<dyn View>)
+                            .ok(),
+                        AppCmd::Calculator => Some(Box::new(Calculator::new(
                             context.fb.rect(),
                             &tx,
                             &mut rq,
                             &mut context,
-                        )?),
+                        )?)),
                         AppCmd::Dictionary {
                             ref query,
                             ref language,
-                        } => Box::new(Dictionary::new(
+                        } => Some(Box::new(Dictionary::new(
                             context.fb.rect(),
                             query,
                             language,
                             &tx,
                             &mut rq,
                             &mut context,
-                        )),
-                        AppCmd::EpubEditor { ref path, chapter } => Box::new(EpubEditor::new(
-                            context.fb.rect(),
-                            path.clone(),
-                            chapter,
-                            &tx,
-                            &mut rq,
-                            &mut context,
-                        )?),
-                        AppCmd::TouchEvents => {
-                            Box::new(TouchEvents::new(context.fb.rect(), &mut rq, &mut context))
+                        )?)),
+                        AppCmd::EpubEditor { ref path, chapter } => {
+                            Some(Box::new(EpubEditor::new(
+                                context.fb.rect(),
+                                path.clone(),
+                                chapter,
+                                &tx,
+                                &mut rq,
+                                &mut context,
+                            )?))
                         }
-                        AppCmd::RotationValues => Box::new(RotationValues::new(
+                        AppCmd::TouchEvents => Some(Box::new(TouchEvents::new(
                             context.fb.rect(),
                             &mut rq,
                             &mut context,
-                        )),
+                        ))),
+                        AppCmd::RotationValues => Some(Box::new(RotationValues::new(
+                            context.fb.rect(),
+                            &mut rq,
+                            &mut context,
+                        ))),
                         AppCmd::CoverEditor
                         | AppCmd::OpenCoverEditor(_)
                         | AppCmd::Statistics
@@ -569,32 +574,20 @@ fn main() -> Result<(), Error> {
                                 "Not implemented".to_string(),
                                 EntryId::Back,
                             )];
-                            let mut next_view: Box<dyn View> = Box::new(Menu::new(
+                            Some(Box::new(Menu::new(
                                 context.fb.rect(),
                                 ViewId::MainMenu,
                                 MenuKind::Contextual,
                                 entries,
                                 &mut context,
-                            ));
-                            transfer_notifications(
-                                view.as_mut(),
-                                next_view.as_mut(),
-                                &mut rq,
-                                &mut context,
-                            );
-                            history.push(view as Box<dyn View>);
-                            view = next_view;
-                            continue;
+                            )))
                         }
                     };
-                    transfer_notifications(
-                        view.as_mut(),
-                        next_view.as_mut(),
-                        &mut rq,
-                        &mut context,
-                    );
-                    history.push(view as Box<dyn View>);
-                    view = next_view;
+                    if let Some(mut next) = next_view {
+                        transfer_notifications(view.as_mut(), next.as_mut(), &mut rq, &mut context);
+                        history.push(view as Box<dyn View>);
+                        view = next;
+                    }
                 }
                 Event::Back => {
                     if let Some(v) = history.pop() {
@@ -697,16 +690,19 @@ fn main() -> Result<(), Error> {
                 Event::Select(EntryId::SystemInfo) => {
                     view.children_mut().retain(|child| !child.is::<Menu>());
                     let html = sys_info_as_html();
-                    let r = Reader::from_html(context.fb.rect(), &html, None, &tx, &mut context);
-                    let mut next_view = Box::new(r) as Box<dyn View>;
-                    transfer_notifications(
-                        view.as_mut(),
-                        next_view.as_mut(),
-                        &mut rq,
-                        &mut context,
-                    );
-                    history.push(view as Box<dyn View>);
-                    view = next_view;
+                    if let Ok(r) =
+                        Reader::from_html(context.fb.rect(), &html, None, &tx, &mut context)
+                    {
+                        let mut next_view = Box::new(r) as Box<dyn View>;
+                        transfer_notifications(
+                            view.as_mut(),
+                            next_view.as_mut(),
+                            &mut rq,
+                            &mut context,
+                        );
+                        history.push(view as Box<dyn View>);
+                        view = next_view;
+                    }
                 }
                 Event::Select(EntryId::Rotate(n))
                     if n != context.display.rotation && view.might_rotate() =>

@@ -221,19 +221,19 @@ impl View for CoverEditorView {
                     target_h as u32,
                     image::imageops::FilterType::Lanczos3,
                 );
-                let pixmap = Pixmap::from_dynamic_image(&scaled);
+                if let Some(pixmap) = Pixmap::from_dynamic_image(&scaled).ok() {
+                    let x0 = self.rect.min.x + (self.rect.width() as i32 - pixmap.width as i32) / 2;
+                    let y0 = self.rect.min.y + 100;
 
-                let x0 = self.rect.min.x + (self.rect.width() as i32 - pixmap.width as i32) / 2;
-                let y0 = self.rect.min.y + 100;
-
-                if let Some(r) = rect![
-                    pt!(x0, y0),
-                    pt!(x0 + pixmap.width as i32, y0 + pixmap.height as i32)
-                ]
-                .intersection(&rect)
-                {
-                    let frame = r - pt!(x0, y0);
-                    fb.draw_framed_pixmap(&pixmap, &frame, r.min);
+                    if let Some(r) = rect![
+                        pt!(x0, y0),
+                        pt!(x0 + pixmap.width as i32, y0 + pixmap.height as i32)
+                    ]
+                    .intersection(&rect)
+                    {
+                        let frame = r - pt!(x0, y0);
+                        fb.draw_framed_pixmap(&pixmap, &frame, r.min);
+                    }
                 }
             }
         }

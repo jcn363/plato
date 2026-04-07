@@ -27,7 +27,7 @@ use plato_core::view::common::{close_view, locate, locate_by_id, transfer_notifi
 use plato_core::view::common::{toggle_input_history_menu, toggle_keyboard_layout_menu};
 use plato_core::view::cover_editor::CoverEditorView;
 use plato_core::view::dialog::Dialog;
-use plato_core::view::dictionary::Dictionary as DictionaryApp;
+use plato_core::view::dictionary::Dictionary;
 use plato_core::view::epub_editor::EpubEditor;
 use plato_core::view::frontlight::FrontlightWindow;
 use plato_core::view::home::Home;
@@ -1075,36 +1075,39 @@ pub fn run() -> Result<(), Error> {
             }
             Event::Select(EntryId::SystemInfo) => {
                 let html = sys_info_as_html();
-                let r = Reader::from_html(context.fb.rect(), &html, None, &tx, &mut context);
-                goto_view(
-                    Box::new(r),
-                    &mut view,
-                    &mut history,
-                    context.display.rotation,
-                    context.fb.monochrome(),
-                    context.fb.dithered(),
-                    &mut rq,
-                    &mut context,
-                );
+                if let Ok(r) = Reader::from_html(context.fb.rect(), &html, None, &tx, &mut context)
+                {
+                    goto_view(
+                        Box::new(r),
+                        &mut view,
+                        &mut history,
+                        context.display.rotation,
+                        context.fb.monochrome(),
+                        context.fb.dithered(),
+                        &mut rq,
+                        &mut context,
+                    );
+                }
             }
             Event::OpenHtml(ref html, ref link_uri) => {
-                let r = Reader::from_html(
+                if let Ok(r) = Reader::from_html(
                     context.fb.rect(),
                     html,
                     link_uri.as_deref(),
                     &tx,
                     &mut context,
-                );
-                goto_view(
-                    Box::new(r),
-                    &mut view,
-                    &mut history,
-                    context.display.rotation,
-                    context.fb.monochrome(),
-                    context.fb.dithered(),
-                    &mut rq,
-                    &mut context,
-                );
+                ) {
+                    goto_view(
+                        Box::new(r),
+                        &mut view,
+                        &mut history,
+                        context.display.rotation,
+                        context.fb.monochrome(),
+                        context.fb.dithered(),
+                        &mut rq,
+                        &mut context,
+                    );
+                }
             }
             Event::Select(EntryId::Launch(app_cmd)) => {
                 let rotation = context.display.rotation;
@@ -1114,11 +1117,9 @@ pub fn run() -> Result<(), Error> {
                 let next_view: Option<Box<dyn View>> = match app_cmd {
                     AppCmd::Sketch => {
                         context.fb.set_monochrome(true);
-                        Some(Box::new(Sketch::new(
-                            context.fb.rect(),
-                            &mut rq,
-                            &mut context,
-                        )))
+                        Sketch::new(context.fb.rect(), &mut rq, &mut context)
+                            .map(|v| Box::new(v) as Box<dyn View>)
+                            .ok()
                     }
                     AppCmd::Calculator => {
                         Calculator::new(context.fb.rect(), &tx, &mut rq, &mut context)
@@ -1128,14 +1129,16 @@ pub fn run() -> Result<(), Error> {
                     AppCmd::Dictionary {
                         ref query,
                         ref language,
-                    } => Some(Box::new(DictionaryApp::new(
+                    } => Dictionary::new(
                         context.fb.rect(),
                         query,
                         language,
                         &tx,
                         &mut rq,
                         &mut context,
-                    ))),
+                    )
+                    .map(|v| Some(Box::new(v) as Box<dyn View>))
+                    .unwrap_or(None),
                     AppCmd::EpubEditor { ref path, chapter } => EpubEditor::new(
                         context.fb.rect(),
                         path.clone(),

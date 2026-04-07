@@ -3,6 +3,7 @@ mod display;
 mod events;
 mod lookup;
 
+use crate::anyhow::Error;
 use crate::color::BLACK;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
@@ -45,7 +46,7 @@ impl Dictionary {
         hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
-    ) -> Dictionary {
+    ) -> Result<Dictionary, Error> {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
         let dpi = CURRENT_DEVICE.dpi;
@@ -132,7 +133,7 @@ impl Dictionary {
             rect.max.y - small_height - small_thickness
         ];
 
-        let image = Image::new(image_rect, Pixmap::new(1, 1, 1));
+        let image = Image::new(image_rect, Pixmap::new(1, 1, 1)?);
         children.push(Box::new(image) as Box<dyn View>);
 
         let mut doc = HtmlDocument::new_from_memory("");
@@ -179,7 +180,7 @@ impl Dictionary {
             hub.send(Event::Define(query.to_string())).ok();
         }
 
-        Dictionary {
+        Ok(Dictionary {
             id,
             rect,
             children,
@@ -190,6 +191,6 @@ impl Dictionary {
             language: language.to_string(),
             target,
             focus: None,
-        }
+        })
     }
 }

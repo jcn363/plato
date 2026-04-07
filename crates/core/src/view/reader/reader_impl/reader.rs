@@ -173,6 +173,7 @@ use crate::settings::{
     SouthStripAction, WestStripAction, DEFAULT_FONT_FAMILY,
 };
 use crate::unit::{mm_to_px, scale_by_dpi};
+use anyhow::{Context as AnyhowContext, Error};
 use chrono::Local;
 use rand_core::Rng;
 use regex::Regex;
@@ -379,14 +380,9 @@ impl Reader {
         _link_uri: Option<&str>,
         _hub: &Hub,
         context: &mut Context,
-    ) -> Reader {
+    ) -> Result<Reader, Error> {
         let id = ID_FEEDER.next();
-        // TODO: Replace panic with proper error handling
-        // Currently: panics if HTML document opening fails
-        // Better: Return Result<Reader, Error> and handle in caller
-        // Rationale: Panics on invalid input crash the entire application
-        let doc = crate::document::open_html(html)
-            .unwrap_or_else(|_| panic!("Failed to open HTML document"));
+        let doc = crate::document::open_html(html).context("Failed to open HTML document")?;
         let doc = Arc::new(Mutex::new(doc));
         let pages_count = doc.lock().expect("doc lock").pages_count();
         let reflowable = doc.lock().expect("doc lock").is_reflowable();
@@ -413,7 +409,7 @@ impl Reader {
             ..Default::default()
         };
 
-        Reader {
+        Ok(Reader {
             id,
             rect,
             children,
@@ -443,7 +439,7 @@ impl Reader {
             finished: false,
             animation: None,
             previous_chunks: Vec::new(),
-        }
+        })
     }
 
     #[allow(dead_code)]

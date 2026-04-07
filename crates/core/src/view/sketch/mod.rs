@@ -53,7 +53,11 @@ pub struct Sketch {
 }
 
 impl Sketch {
-    pub fn new(rect: Rectangle, rq: &mut RenderQueue, context: &mut Context) -> Sketch {
+    pub fn new(
+        rect: Rectangle,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) -> Result<Sketch, Error> {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
         let dpi = CURRENT_DEVICE.dpi;
@@ -83,16 +87,16 @@ impl Sketch {
             .home
             .join(&context.settings.sketch.save_path);
         rq.add(RenderData::new(id, rect, UpdateMode::Full));
-        Sketch {
+        Ok(Sketch {
             id,
             rect,
             children,
-            pixmap: Pixmap::new(rect.width(), rect.height(), 1),
+            pixmap: Pixmap::new(rect.width(), rect.height(), 1)?,
             fingers: FxHashMap::default(),
             pen: context.settings.sketch.pen.clone(),
             save_path,
             filename: Local::now().format(FILENAME_PATTERN).to_string(),
-        }
+        })
     }
 
     fn toggle_title_menu(

@@ -1,7 +1,7 @@
 use super::{Framebuffer, UpdateMode};
 use crate::color::{Color, WHITE};
 use crate::geom::{lerp, Rectangle};
-use anyhow::Error;
+use anyhow::{format_err, Error};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -17,36 +17,20 @@ pub struct Pixmap {
 
 impl Pixmap {
     #[inline]
-    pub fn new(width: u32, height: u32, samples: usize) -> Pixmap {
+    pub fn new(width: u32, height: u32, samples: usize) -> Result<Pixmap, Error> {
         let len = samples * (width * height) as usize;
         let mut data = Vec::new();
-        // TODO: Consider returning Result<Pixmap, Error> instead of panicking
-        // Currently: panics on allocation failure (OOM on device)
-        // Better: Use try_new() in callers where OOM is possible
-        // Note: try_new() method already exists as fallback
-        data.try_reserve_exact(len).unwrap_or_else(|_| {
-            panic!(
+        data.try_reserve_exact(len).map_err(|_| {
+            format_err!(
                 "Failed to allocate {} bytes for pixmap ({}x{}x{})",
-                len, width, height, samples
-            );
-        });
+                len,
+                width,
+                height,
+                samples
+            )
+        })?;
         data.resize(len, WHITE.gray());
-        Pixmap {
-            width,
-            height,
-            samples,
-            data,
-            update_flag: false,
-        }
-    }
-
-    #[inline]
-    pub fn try_new(width: u32, height: u32, samples: usize) -> Option<Pixmap> {
-        let mut data = Vec::new();
-        let len = samples * (width * height) as usize;
-        data.try_reserve_exact(len).ok()?;
-        data.resize(len, WHITE.gray());
-        Some(Pixmap {
+        Ok(Pixmap {
             width,
             height,
             samples,
@@ -80,7 +64,7 @@ impl Pixmap {
         let decoder = png::Decoder::new(BufReader::new(file));
         let mut reader = decoder.read_info()?;
         let info = reader.info();
-        let mut pixmap = Pixmap::new(info.width, info.height, info.color_type.samples());
+        let mut pixmap = Pixmap::new(info.width, info.height, info.color_type.samples())?;
         reader.next_frame(pixmap.data_mut())?;
         Ok(pixmap)
     }
@@ -90,7 +74,7 @@ impl Pixmap {
         let rgba = img.to_rgba8();
         let (width, height) = (rgba.width(), rgba.height());
         let samples = 4;
-        let mut pixmap = Pixmap::new(width, height, samples);
+        let mut pixmap = Pixmap::new(width, height, samples)?;
         for (i, pixel) in rgba.pixels().enumerate() {
             let addr = i * samples;
             pixmap.data[addr] = pixel[0];
@@ -113,16 +97,16 @@ impl Pixmap {
             Some("png") => Self::from_png(path),
             _ => {
                 let img = image::open(path.as_ref())?;
-                Ok(Self::from_dynamic_image(&img))
+                Ok(Self::from_dynamic_image(&img)?)
             }
         }
     }
 
-    pub fn from_dynamic_image(img: &image::DynamicImage) -> Pixmap {
+    pub fn from_dynamic_image(img: &image::DynamicImage) -> Result<Pixmap, Error> {
         let rgba = img.to_rgba8();
         let (width, height) = (rgba.width(), rgba.height());
         let samples = 4;
-        let mut pixmap = Pixmap::new(width, height, samples);
+        let mut pixmap = Pixmap::new(width, height, samples)?;
         for (i, pixel) in rgba.pixels().enumerate() {
             let addr = i * samples;
             pixmap.data[addr] = pixel[0];
@@ -130,7 +114,7 @@ impl Pixmap {
             pixmap.data[addr + 2] = pixel[2];
             pixmap.data[addr + 3] = pixel[3];
         }
-        pixmap
+        Ok(pixmap)
     }
 
     #[inline]
