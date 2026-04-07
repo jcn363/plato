@@ -985,10 +985,11 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(ref mut r) = self.info.reader {
-            r.contrast_exponent = Some(exponent);
-        }
-        self.contrast.exponent = exponent;
+        super::reader_settings::update_contrast_exponent(
+            &mut self.info,
+            &mut self.contrast,
+            exponent,
+        );
         self.update(None, hub, rq, context);
         self.update_tool_bar(rq, context);
     }
@@ -1000,10 +1001,7 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(ref mut r) = self.info.reader {
-            r.contrast_gray = Some(gray);
-        }
-        self.contrast.gray = gray;
+        super::reader_settings::update_contrast_gray(&mut self.info, &mut self.contrast, gray);
         self.update(None, hub, rq, context);
         self.update_tool_bar(rq, context);
     }
@@ -1027,10 +1025,12 @@ impl Reader {
                 .map(|entry| entry.set_disabled(zoom_mode != ZoomMode::FitToWidth, rq));
         }
 
-        self.view_port.zoom_mode = zoom_mode;
-        if reset_page_offset {
-            self.view_port.page_offset = pt!(0, 0);
-        }
+        super::reader_settings::update_zoom_mode(
+            &mut self.view_port.zoom_mode,
+            &mut self.view_port.page_offset,
+            zoom_mode,
+            reset_page_offset,
+        );
         self.cache.clear();
         self.update(None, hub, rq, context);
     }
@@ -1047,8 +1047,11 @@ impl Reader {
         {
             return;
         }
-        self.view_port.scroll_mode = scroll_mode;
-        self.view_port.page_offset = pt!(0, 0);
+        super::reader_settings::update_scroll_mode(
+            &mut self.view_port.scroll_mode,
+            &mut self.view_port.page_offset,
+            scroll_mode,
+        );
         self.update(None, hub, rq, context);
     }
 

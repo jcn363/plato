@@ -945,3 +945,91 @@ pub(crate) fn toggle_title_menu(
         children.push(Box::new(title_menu) as Box<dyn View>);
     }
 }
+
+// ===========================================================================
+// Contrast Settings Helpers
+// ===========================================================================
+
+/// Update contrast exponent in reader info
+///
+/// Helper function to extract the repetitive contrast exponent update logic.
+/// Updates both the Info struct and a Contrast struct with the new value.
+///
+/// # Arguments
+/// - `info`: Reader info to update
+/// - `contrast`: Contrast settings to update
+/// - `exponent`: New contrast exponent value
+pub(crate) fn update_contrast_exponent(
+    info: &mut Info,
+    contrast: &mut super::reader_core::Contrast,
+    exponent: f32,
+) {
+    if let Some(ref mut r) = info.reader {
+        r.contrast_exponent = Some(exponent);
+    }
+    contrast.exponent = exponent;
+}
+
+/// Update contrast gray level in reader info
+///
+/// Helper function to extract the repetitive contrast gray update logic.
+/// Updates both the Info struct and a Contrast struct with the new value.
+///
+/// # Arguments
+/// - `info`: Reader info to update
+/// - `contrast`: Contrast settings to update
+/// - `gray`: New contrast gray value
+pub(crate) fn update_contrast_gray(
+    info: &mut Info,
+    contrast: &mut super::reader_core::Contrast,
+    gray: f32,
+) {
+    if let Some(ref mut r) = info.reader {
+        r.contrast_gray = Some(gray);
+    }
+    contrast.gray = gray;
+}
+
+// ===========================================================================
+// View Port Settings Helpers
+// ===========================================================================
+
+/// Update scroll mode in viewport
+///
+/// Helper function to update the scroll mode setting.
+/// Also resets page offset when changing modes.
+///
+/// # Arguments
+/// - `scroll_mode_ref`: Mutable reference to scroll mode field
+/// - `page_offset_ref`: Mutable reference to page offset field
+/// - `scroll_mode`: New scroll mode
+pub(crate) fn update_scroll_mode(
+    scroll_mode_ref: &mut ScrollMode,
+    page_offset_ref: &mut crate::geom::Point,
+    scroll_mode: ScrollMode,
+) {
+    *scroll_mode_ref = scroll_mode;
+    *page_offset_ref = crate::geom::Point { x: 0, y: 0 };
+}
+
+/// Update zoom mode in viewport
+///
+/// Helper function to update the zoom mode setting.
+/// Optionally resets page offset based on the reset flag.
+///
+/// # Arguments
+/// - `zoom_mode_ref`: Mutable reference to zoom mode field
+/// - `page_offset_ref`: Mutable reference to page offset field
+/// - `zoom_mode`: New zoom mode
+/// - `reset_page_offset`: Whether to reset page offset to (0, 0)
+pub(crate) fn update_zoom_mode(
+    zoom_mode_ref: &mut ZoomMode,
+    page_offset_ref: &mut crate::geom::Point,
+    zoom_mode: ZoomMode,
+    reset_page_offset: bool,
+) {
+    *zoom_mode_ref = zoom_mode;
+    if reset_page_offset {
+        *page_offset_ref = crate::geom::Point { x: 0, y: 0 };
+    }
+}
