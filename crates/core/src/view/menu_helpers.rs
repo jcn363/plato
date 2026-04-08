@@ -4,6 +4,38 @@ use crate::geom::Rectangle;
 use crate::view::menu::Menu;
 use crate::view::{RenderData, RenderQueue, View, ViewId};
 
+/// Generic helper to toggle a menu's visibility with children vector.
+///
+/// This variant works with &mut Vec<Box<dyn View>> directly, used in reader_settings.rs
+pub fn toggle_menu_vec<F>(
+    id: ViewId,
+    create_fn: F,
+    children: &mut Vec<Box<dyn View>>,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) where
+    F: FnOnce(&mut Context) -> Menu,
+{
+    if let Some(index) = children
+        .iter()
+        .position(|c| c.view_id().map_or(false, |i| i == id))
+    {
+        if let Some(true) = enable {
+            return;
+        }
+        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
+        children.remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+        let menu = create_fn(context);
+        rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
+        children.push(Box::new(menu) as Box<dyn View>);
+    }
+}
+
 /// Generic helper to toggle a menu's visibility with creation function.
 ///
 /// This eliminates boilerplate by combining:

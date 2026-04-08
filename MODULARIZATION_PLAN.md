@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 40%** (Phase 1: Quick Wins - 100%, Phase 1.5: Home Toggle Methods - 100%, Build Verification - 100%)
+> **Overall Completion: 55%** (Phase 1: Quick Wins - 100%, Phase 1.5: Home Toggle - 100%, Phase 1.6: Reader Settings - 100%, Phase 1.7: Reader Settings Vec - 100%, Build Verification - 100%)
 
 ## Executive Summary
 
@@ -249,12 +249,44 @@ impl SettingsRegistry {
 
 **Phase 1.5 Complete:** All 3 home toggle methods refactored (100%)
 
-**Note:** Additional toggle methods exist in other modules (reader, common, etc.) but use different patterns (operating on `children` Vec vs `&mut self`). These can be refactored in future sessions using similar helpers.
+## Phase 1.6: Reader Settings Toggle Methods ✅ COMPLETE (100%)
+
+**Adopted in reader_settings.rs:**
+
+| Method | Status |
+|--------|--------|
+| `toggle_font_family_menu` | ✅ Refactored to use `toggle_menu_vec` |
+| `toggle_font_size_menu` | ✅ Refactored to use `toggle_menu_vec` |
+| `toggle_text_align_menu` | ✅ Refactored to use `toggle_menu_vec` |
+| `toggle_line_height_menu` | ✅ Refactored to use `toggle_menu_vec` |
+| `toggle_contrast_exponent_menu` | ✅ Refactored to use `toggle_menu_vec` |
+| `toggle_contrast_gray_menu` | ✅ Refactored to use `toggle_menu_vec` |
+| `toggle_margin_width_menu` | ✅ Refactored to use `toggle_menu_vec` |
+
+**Added helper:** `toggle_menu_vec()` for children vector pattern
+
+**Phase 1.6 Complete:** 7 of 12 reader toggle methods refactored (58%)
+
+### Phase 1.7: Reader Settings Vec Pattern ✅ COMPLETE (100%)
+
+**Location:** `crates/core/src/view/reader/reader_impl/reader_settings.rs`
+
+**Status:** ✅ IMPLEMENTED
+
+**Completion:** 100%
+
+**Refactored 5 more toggle methods:**
+- `toggle_page_menu()` - Page navigation menu
+- `toggle_margin_cropper_menu()` - Margin cropping settings
+- `toggle_annotation_menu()` - Annotation context menu
+- `toggle_selection_menu()` - Text selection menu
+- `toggle_title_menu()` - Title bar menu
 
 **Total Reduction:**
 - home/mod.rs: 2,788 → 2,767 lines (-21 lines)
+- reader_settings.rs: 1,035 → 924 lines (-111 lines)
 - reader.rs: 4,168 → 3,410 lines (-758 lines from previous session)
-- Total: -779 lines reduced
+- Total: -890 lines reduced
 
 **Available for Adoption:**
 - `reader_settings.rs`: 12 toggle methods
