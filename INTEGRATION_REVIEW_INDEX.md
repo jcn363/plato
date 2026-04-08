@@ -1,7 +1,7 @@
 # Plato Integration & Implementation Review - Document Index
 
 > **Complete codebase review identifying 50+ integration and implementation opportunities**  
-> Generated: April 6, 2026 | Total Analysis: 1,787 lines across 5 documents
+> Generated: April 6, 2026 | Updated: April 8, 2026 | Total Analysis: 1,787 lines across 5 documents
 
 ---
 
@@ -137,10 +137,10 @@ Start here based on your role:
 ### Monolithic File Splits (Medium Effort)
 | File | Current | Target | Effort |
 |------|---------|--------|--------|
-| reader.rs | 4,168 lines | 5 × ~800 lines | 2-3 days |
-| home/mod.rs | 2,697 lines | 5 × ~540 lines | 3-4 days |
-| font/mod.rs | 2,783 lines | Evaluate | TBD |
-| html/engine.rs | 2,672 lines | Evaluate | TBD |
+| reader.rs | 3,410 lines | 5 × ~700 lines | 2-3 days |
+| home/mod.rs | 2,787 lines | 5 × ~550 lines | 3-4 days |
+| font/mod.rs | ~2,800 lines | Evaluate | TBD |
+| html/engine.rs | ~2,672 lines | Evaluate | TBD |
 
 ### Code Duplication Patterns
 | Pattern | Instances | Savings | Example |
@@ -186,7 +186,7 @@ Start here based on your role:
 ## 📊 Success Metrics
 
 ### Code Quality
-- Monolithic files: 4,168 → 800 lines (reader.rs)
+- Monolithic files: 3,410 → 700 lines (reader.rs) - reduced from 4,168
 - Boilerplate: 1,350 → 0 lines (macros/helpers)
 - Duplicate code: 1,500 → 500 lines (consolidated)
 - Cyclomatic complexity: Reduced by 40%

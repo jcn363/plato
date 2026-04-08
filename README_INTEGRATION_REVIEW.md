@@ -63,7 +63,7 @@ This directory contains a comprehensive analysis of integration opportunities, i
 |----------|-------|--------|
 | Incomplete implementations | 4 major | Users cannot access PDF manipulator features, cover editor features |
 | Code duplication patterns | 5 major | ~1,500 lines of duplicated code |
-| Monolithic files | 4 critical | 4,168 - 2,783 lines (exceeds recommended 1,200) |
+| Monolithic files | 4 critical | 3,410 - 2,787 lines (reduced from 4,168, still exceeds recommended 1,200) |
 | Missing integration | 6 gaps | Settings fragmented, event handling scattered, input validation duplicated |
 | Performance opportunities | 5+ areas | No metadata cache, no font cache, no I/O batching |
 | Architectural issues | 5 major | No settings registry, no resource management, inconsistent error handling |
@@ -78,8 +78,8 @@ This directory contains a comprehensive analysis of integration opportunities, i
 - Consolidate error handling: 200 lines
 
 **Medium Effort (Weeks 2-3):** Eliminate monolithic files
-- Split reader.rs (4,168 → 5 files): 2-3 days
-- Split home/mod.rs (2,697 → 5 files): 3-4 days
+- Split reader.rs (3,410 → 5 files): 2-3 days (reduced from 4,168)
+- Split home/mod.rs (2,787 → 5 files): 3-4 days
 - Create settings registry: 2-3 days
 - Complete PDF manipulator integration: 2-3 days
 - Unify event handling: 3-4 days
@@ -201,8 +201,8 @@ Week 6+ (Performance)
 ## Metrics & Success Criteria
 
 ### Before (Baseline)
-- View module: 24,750 lines across 70+ files
-- Largest file: 4,168 lines (reader.rs)
+- View module: ~25,000 lines across 70+ files
+- Largest file: 3,410 lines (reader.rs) - reduced from 4,168
 - Estimated boilerplate: ~1,350 lines
 - Estimated duplicate code: ~1,500 lines
 - Duplicate patterns: 5 major types (35-830 uses each)

@@ -611,7 +611,7 @@ self.children.push(Box::new(menu) as Box<dyn View>);
 
 **Critical (Immediate Action Needed):**
 
-**reader.rs (4,168 lines)**
+**reader.rs (3,410 lines)** - reduced from 4,168 via type deduplication
 ```
 Split into:
   - reader_core.rs (page navigation, state management)
@@ -621,7 +621,7 @@ Split into:
   - reader_search.rs (search functionality)
 ```
 
-**home/mod.rs (2,697 lines)**
+**home/mod.rs (2,787 lines)**
 ```
 Split into:
   - home_core.rs (main Home struct and construction)
@@ -766,12 +766,13 @@ Split into:
 
 ## METRICS
 
-**Current State:**
-- View module: 24,750 lines across 70+ files
-- Largest single file: 4,168 lines (reader.rs)
+**Current State (April 8, 2026):**
+- View module: ~25,000 lines across 70+ files
+- Largest single file: 3,410 lines (reader.rs) - reduced from 4,168
 - Estimated boilerplate: ~1,350 lines (render patterns, menus, toggles)
 - Estimated duplicate code: ~1,500 lines (gesture, error handling, clones)
 - Potential code reduction: ~2,850 lines (35% of largest files)
+- Total source files in core: 198
 
 **After Improvements:**
 - No file > 1,200 lines

@@ -1,6 +1,6 @@
 # Plato Integration Opportunities - Quick Reference
 
-> Updated: April 7, 2026 - Error handling and type deduplication COMPLETE
+> Updated: April 8, 2026 - Device support documentation and AGENTS.md updated
 
 ## Critical Issues (Fix Immediately)
 
@@ -84,27 +84,25 @@ self.children.push(Box::new(menu) as Box<dyn View>);
 
 ## Large Refactorings Needed
 
-### Split reader.rs (4,168 → 5 files of ~800 lines each)
+### Split reader.rs (3,410 → 5 files of ~700 lines each)
 
 **Current Structure:**
 - Lines 1-200: Structs and constants
 - Lines 201-1500: Core reader implementation
 - Lines 1501-2500: Event handling
-- Lines 2501-3500: Rendering
-- Lines 3501-3970: Gestures and animations
-- Lines 3970-4168: Stub methods
+- Lines 2501-3410: Rendering, gestures, and stubs
 
 **Proposed Split:**
-1. **reader_core.rs** (800 lines) - State, navigation, page management
-2. **reader_rendering.rs** (1000 lines) - Render methods, animation
+1. **reader_core.rs** (700 lines) - State, navigation, page management
+2. **reader_rendering.rs** (800 lines) - Render methods, animation
 3. **reader_gestures.rs** (600 lines) - Gesture handling, touch
 4. **reader_annotations.rs** (600 lines) - Annotation operations
-5. **reader_events.rs** (800 lines) - Event routing
+5. **reader_events.rs** (700 lines) - Event routing
 
 **Effort:** 2-3 days
 **Benefit:** Maintainability, clarity, testing
 
-### Split home/mod.rs (2,697 → 5 files of ~500 lines each)
+### Split home/mod.rs (2,787 → 5 files of ~550 lines each)
 
 **Current Structure:**
 - Lines 1-100: Modules and imports
@@ -113,7 +111,7 @@ self.children.push(Box::new(menu) as Box<dyn View>);
 - Lines 1001-1500: Menu creation/toggling (~500 dup lines)
 - Lines 1501-2000: Event handling
 - Lines 2001-2500: More event handling
-- Lines 2501-2697: Rendering
+- Lines 2501-2787: Rendering
 
 **Proposed Split:**
 1. **home_core.rs** (500 lines) - Struct definition, construction
@@ -215,15 +213,15 @@ self.children.push(Box::new(menu) as Box<dyn View>);
 
 | File | Lines | Status |
 |------|-------|--------|
-| reader_impl/reader.rs | 4,168 | CRITICAL - split |
-| home/mod.rs | 2,697 | CRITICAL - split |
-| font/mod.rs | 2,783 | HIGH - split |
-| document/html/engine.rs | 2,672 | HIGH - split |
+| reader_impl/reader.rs | 3,410 | CRITICAL - split |
+| home/mod.rs | 2,787 | CRITICAL - split |
+| font/mod.rs | ~2,800 | HIGH - split |
+| document/html/engine.rs | ~2,672 | HIGH - split |
 | document/html/layout.rs | 718 | MEDIUM |
 | document/html/parse.rs | 622 | MEDIUM |
 | home/directories_bar.rs | 620 | OK |
 
-**Total lines in view module:** 24,750
+**Total lines in view module:** ~25,000
 **Files over 500 lines:** 15+
 **Files over 1000 lines:** 4
 
