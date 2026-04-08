@@ -267,3 +267,21 @@ pub fn toggle_menu_self<F>(
         view.children_mut().push(Box::new(menu));
     }
 }
+
+/// Remove a view by ViewId with expose render queued.
+///
+/// This is a utility for event handlers that need to close a specific view.
+pub fn remove_view_by_id(view: &mut dyn View, id: ViewId, rq: &mut RenderQueue) -> bool {
+    if let Some(index) = view
+        .children()
+        .iter()
+        .position(|c| c.view_id().map_or(false, |i| i == id))
+    {
+        let rect = overlapping_rectangle(view.child(index));
+        rq.add(RenderData::expose(rect, UpdateMode::Gui));
+        view.children_mut().remove(index);
+        true
+    } else {
+        false
+    }
+}

@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 80%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, Code Analysis Complete - 100%)
+> **Overall Completion: 85%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, New Utilities - 100%)
 
 ## Executive Summary
 
@@ -326,6 +326,7 @@ impl SettingsRegistry {
 | `toggle_menu_ctx` | `&mut dyn View` with context closure |
 | `toggle_menu_item` | `&mut dyn View` with context + item |
 | `toggle_menu_self` | `&mut self` pattern with overlapping rect |
+| `remove_view_by_id` | Event handler view removal with expose |
 
 **Total Refactored:** 22 toggle methods across 6 modules
 
