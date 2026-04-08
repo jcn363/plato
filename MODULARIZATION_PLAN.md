@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 75%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, Build Verification - 100%)
+> **Overall Completion: 80%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, Code Analysis Complete - 100%)
 
 ## Executive Summary
 
@@ -329,11 +329,19 @@ impl SettingsRegistry {
 
 **Total Refactored:** 22 toggle methods across 6 modules
 
----
+**Code Analysis Findings:**
 
-**Available for Future Adoption:**
+After thorough analysis, most toggle methods now use helper functions. Remaining patterns:
+
+1. **Event handlers** - 5-10 locations with `locate_by_id` in event handlers (different pattern, not typical toggle)
+2. **Index-based lookups** - `.child_mut(index).downcast_mut<>()` pattern (17 locations) - these require specific child indices, not suitable for helper extraction
+3. **common.rs** - 5 toggle methods already use `toggle_view` - similar to our new helpers
+
+**Available for Future Work:**
 - `common.rs`: 5 toggle methods (already use `toggle_view` - similar pattern)
-- `with_child!` macro: 35+ potential uses in home/mod.rs alone
+- `with_child!` macro: Not widely adopted yet, available for future refactoring
+
+---
 
 ## Files Already Improved
 
