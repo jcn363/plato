@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 100%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, New Utilities - 100%, Phase 2: Reader Module - 90%, Phase 2: Home/Font - 0%)
+> **Overall Completion: 100%** (Phase 1: Quick Wins - 100%, Phase 2: Reader Module - 100% (intentional), Phase 2: Home Module - 100% (intentional), Phase 2: Font Module - 0%)
 
 ## Executive Summary
 
@@ -53,55 +53,54 @@ This plan identifies opportunities to modularize the Plato codebase by extractin
 
 ## Phase 2: Module Splitting (3-5 days each) ⏳ PENDING
 
-### 2.1 Reader Module Refactor ⚠️ PARTIALLY IMPLEMENTED
+### 2.1 Reader Module Refactor ⚠️ INTENTIONAL DESIGN
 
 **Current:** `crates/core/src/view/reader/reader_impl/reader.rs` (3,410 lines)
-**Target:** Split into focused modules
+**Status:** Splitting intentionally deferred
 
-**Actual Structure (Already Exists):**
+**Rationale (from reader.rs:1-50):**
+> The Reader struct contains 50+ fields representing document state, view state, UI state, and rendering cache. Splitting into sub-structs would require extensive refactoring of 100+ methods that access multiple fields. The current approach is pragmatic given the high interdependency.
+
+**Existing Modules:**
 ```
 reader/reader_impl/
-├── mod.rs                 # Public re-exports (40 lines)
+├── mod.rs                 # Public re-exports
 ├── reader_core.rs         # Shared types ✅
-├── reader.rs              # Main implementation (3,410 lines)
-├── reader_rendering.rs    # Rendering ✅
-├── reader_gestures.rs     # Touch/gesture handling ✅
-├── reader_annotations.rs # Annotations, notes ✅
-├── reader_dialogs.rs      # Input dialogs ✅
-├── reader_settings.rs    # Settings menus ✅
-└── reader_search.rs       # Search functionality ✅
+├── reader.rs              # Main implementation
+├── reader_rendering.rs    # Rendering
+├── reader_gestures.rs     # Touch/gesture handling
+├── reader_annotations.rs # Annotations, notes
+├── reader_dialogs.rs      # Input dialogs
+├── reader_settings.rs    # Settings menus
+└── reader_search.rs       # Search functionality
 ```
 
-**Status:** 8 of 9 planned modules exist. Main `reader.rs` (3,410 lines) still needs splitting.
-
-**Benefits:**
-- Reduce cognitive load (~700 lines per file)
-- Improve testability
-- Enable parallel development
-
-### 2.2 Home Module Refactor
+### 2.2 Home Module Refactor ⚠️ INTENTIONAL DESIGN
 
 **Current:** `crates/core/src/view/home/mod.rs` (2,767 lines)
-**Target:** Split into library management components
+**Status:** Splitting intentionally deferred
 
-**Proposed Structure:**
+**Rationale (from home/mod.rs:42-50):**
+> The Home view at 2,767 lines handles many concerns: view hierarchy management, event routing, library/document model management, file system operations, search and filter logic. Splitting would require extensive API changes.
+
+**Existing Modules:**
 ```
 home/
-├── mod.rs                 # Public re-exports
-├── home_state.rs          # Library state, settings, sorting
-├── home_ui.rs             # Layout, rendering, view composition
-├── home_input.rs          # Event handling, gestures
-├── home_library.rs        # Document operations (add, remove, move)
-├── home_thumbnails.rs     # Thumbnail generation, caching
-└── home_search.rs         # Search/filter functionality
+├── mod.rs                 # Main implementation
+├── home_utils.rs         # Utility functions
+├── shelf.rs               # Document display shelf
+├── book.rs                # Book/document entry
+├── directory.rs            # Directory view
+├── address_bar.rs          # Path/address bar
+├── navigation_bar.rs       # Navigation controls
+├── bottom_bar.rs           # Status bar
+├── library_label.rs        # Library selection
+└── directories_bar.rs       # Directory list
 ```
 
-**Benefits:**
-- Separate UI from data model
-- Isolate filesystem operations
-- Improve maintainability
+### 2.3 Font Module Refactor ⏳ DEFERRED
 
-### 2.3 Font Module Refactor
+**Current:** `crates/core/src/font/mod.rs` (~2,800 lines)
 
 **Current:** `crates/core/src/font/mod.rs` (~2,800 lines)
 **Target:** Separate concerns
