@@ -129,6 +129,7 @@ use crate::view::filler::Filler;
 use crate::view::keyboard::Keyboard;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::menu_entry::MenuEntry;
+use crate::view::menu_helpers::toggle_menu_ctx;
 use crate::view::named_input::NamedInput;
 use crate::view::notification::Notification;
 use crate::view::search_bar::SearchBar;
@@ -1252,95 +1253,86 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::SortMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-            let entries = vec![
-                EntryKind::RadioButton(
-                    "Date Opened".to_string(),
-                    EntryId::Sort(SortMethod::Opened),
-                    self.sort_method == SortMethod::Opened,
-                ),
-                EntryKind::RadioButton(
-                    "Date Added".to_string(),
-                    EntryId::Sort(SortMethod::Added),
-                    self.sort_method == SortMethod::Added,
-                ),
-                EntryKind::RadioButton(
-                    "Status".to_string(),
-                    EntryId::Sort(SortMethod::Status),
-                    self.sort_method == SortMethod::Status,
-                ),
-                EntryKind::RadioButton(
-                    "Progress".to_string(),
-                    EntryId::Sort(SortMethod::Progress),
-                    self.sort_method == SortMethod::Progress,
-                ),
-                EntryKind::RadioButton(
-                    "Author".to_string(),
-                    EntryId::Sort(SortMethod::Author),
-                    self.sort_method == SortMethod::Author,
-                ),
-                EntryKind::RadioButton(
-                    "Title".to_string(),
-                    EntryId::Sort(SortMethod::Title),
-                    self.sort_method == SortMethod::Title,
-                ),
-                EntryKind::RadioButton(
-                    "Year".to_string(),
-                    EntryId::Sort(SortMethod::Year),
-                    self.sort_method == SortMethod::Year,
-                ),
-                EntryKind::RadioButton(
-                    "Series".to_string(),
-                    EntryId::Sort(SortMethod::Series),
-                    self.sort_method == SortMethod::Series,
-                ),
-                EntryKind::RadioButton(
-                    "File Size".to_string(),
-                    EntryId::Sort(SortMethod::Size),
-                    self.sort_method == SortMethod::Size,
-                ),
-                EntryKind::RadioButton(
-                    "File Type".to_string(),
-                    EntryId::Sort(SortMethod::Kind),
-                    self.sort_method == SortMethod::Kind,
-                ),
-                EntryKind::RadioButton(
-                    "File Name".to_string(),
-                    EntryId::Sort(SortMethod::FileName),
-                    self.sort_method == SortMethod::FileName,
-                ),
-                EntryKind::RadioButton(
-                    "File Path".to_string(),
-                    EntryId::Sort(SortMethod::FilePath),
-                    self.sort_method == SortMethod::FilePath,
-                ),
-                EntryKind::Separator,
-                EntryKind::CheckBox(
-                    "Reverse Order".to_string(),
-                    EntryId::ReverseOrder,
-                    self.reverse_order,
-                ),
-            ];
-            let sort_menu = Menu::new(rect, ViewId::SortMenu, MenuKind::DropDown, entries, context);
-            rq.add(RenderData::new(
-                sort_menu.id(),
-                *sort_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(sort_menu) as Box<dyn View>);
-        }
+        let sort_method = self.sort_method;
+        let reverse_order = self.reverse_order;
+        toggle_menu_ctx(
+            ViewId::SortMenu,
+            |ctx| {
+                let entries = vec![
+                    EntryKind::RadioButton(
+                        "Date Opened".to_string(),
+                        EntryId::Sort(SortMethod::Opened),
+                        sort_method == SortMethod::Opened,
+                    ),
+                    EntryKind::RadioButton(
+                        "Date Added".to_string(),
+                        EntryId::Sort(SortMethod::Added),
+                        sort_method == SortMethod::Added,
+                    ),
+                    EntryKind::RadioButton(
+                        "Status".to_string(),
+                        EntryId::Sort(SortMethod::Status),
+                        sort_method == SortMethod::Status,
+                    ),
+                    EntryKind::RadioButton(
+                        "Progress".to_string(),
+                        EntryId::Sort(SortMethod::Progress),
+                        sort_method == SortMethod::Progress,
+                    ),
+                    EntryKind::RadioButton(
+                        "Author".to_string(),
+                        EntryId::Sort(SortMethod::Author),
+                        sort_method == SortMethod::Author,
+                    ),
+                    EntryKind::RadioButton(
+                        "Title".to_string(),
+                        EntryId::Sort(SortMethod::Title),
+                        sort_method == SortMethod::Title,
+                    ),
+                    EntryKind::RadioButton(
+                        "Year".to_string(),
+                        EntryId::Sort(SortMethod::Year),
+                        sort_method == SortMethod::Year,
+                    ),
+                    EntryKind::RadioButton(
+                        "Series".to_string(),
+                        EntryId::Sort(SortMethod::Series),
+                        sort_method == SortMethod::Series,
+                    ),
+                    EntryKind::RadioButton(
+                        "File Size".to_string(),
+                        EntryId::Sort(SortMethod::Size),
+                        sort_method == SortMethod::Size,
+                    ),
+                    EntryKind::RadioButton(
+                        "File Type".to_string(),
+                        EntryId::Sort(SortMethod::Kind),
+                        sort_method == SortMethod::Kind,
+                    ),
+                    EntryKind::RadioButton(
+                        "File Name".to_string(),
+                        EntryId::Sort(SortMethod::FileName),
+                        sort_method == SortMethod::FileName,
+                    ),
+                    EntryKind::RadioButton(
+                        "File Path".to_string(),
+                        EntryId::Sort(SortMethod::FilePath),
+                        sort_method == SortMethod::FilePath,
+                    ),
+                    EntryKind::Separator,
+                    EntryKind::CheckBox(
+                        "Reverse Order".to_string(),
+                        EntryId::ReverseOrder,
+                        reverse_order,
+                    ),
+                ];
+                Menu::new(rect, ViewId::SortMenu, MenuKind::DropDown, entries, ctx)
+            },
+            self,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn book_index(&self, index: usize) -> usize {

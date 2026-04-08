@@ -31,6 +31,7 @@ pub mod label;
 pub mod labeled_icon;
 pub mod menu;
 pub mod menu_entry;
+pub mod menu_helpers;
 pub mod named_input;
 pub mod notification;
 pub mod page_label;
