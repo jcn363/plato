@@ -263,6 +263,27 @@ impl SettingsRegistry {
 
 **Build Verification:** ✅ All builds pass with zero warnings/errors
 
+## Phase 1.5: Adoption Progress ✅ IN PROGRESS
+
+**Adopted in home/mod.rs:**
+
+| Method | Status | Lines Saved |
+|--------|--------|-------------|
+| `toggle_sort_menu` | ✅ Refactored to use `toggle_menu_ctx` | ~8 lines |
+| `toggle_book_menu` | ✅ Refactored to use `toggle_menu_item` | ~7 lines |
+| `toggle_library_menu` | ✅ Refactored to use `toggle_menu_ctx` | ~6 lines |
+
+**Total Reduction:**
+- home/mod.rs: 2,788 → 2,767 lines (-21 lines)
+- reader.rs: 4,168 → 3,410 lines (-758 lines from previous session)
+- Total: -779 lines reduced
+
+**Available for Adoption:**
+- `reader_settings.rs`: 12 toggle methods
+- `common.rs`: 5 toggle methods (toggle_main_menu, toggle_battery_menu, etc.)
+- `queue_render()`: 200+ potential uses in codebase
+- `with_child!` macro: 35+ potential uses in home/mod.rs alone
+
 **Next Steps for Adoption:**
 - Refactor existing code to use new helpers (reduces actual lines)
 - Monitor adoption progress through code reviews
