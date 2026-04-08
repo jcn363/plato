@@ -129,7 +129,7 @@ use crate::view::filler::Filler;
 use crate::view::keyboard::Keyboard;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::menu_entry::MenuEntry;
-use crate::view::menu_helpers::toggle_menu_ctx;
+use crate::view::menu_helpers::{toggle_menu_ctx, toggle_menu_item};
 use crate::view::named_input::NamedInput;
 use crate::view::notification::Notification;
 use crate::view::search_bar::SearchBar;
@@ -178,6 +178,15 @@ struct Fetcher {
     sort_method: Option<SortMethod>,
     first_column: Option<FirstColumn>,
     second_column: Option<SecondColumn>,
+}
+
+#[derive(Debug)]
+struct BookMenuData {
+    path: PathBuf,
+    author: String,
+    simple_status: SimpleStatus,
+    libraries: Vec<(usize, String)>,
+    library_home: PathBuf,
 }
 
 impl Home {
@@ -1352,106 +1361,102 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::BookMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
+        let book_index = self.book_index(index);
+        let info = &self.visible_books[book_index];
+        let path = info.file.path.clone();
+        let author = info.author.clone();
+        let simple_status = info.simple_status();
+        let selected_library = context.settings.selected_library;
+        let library_home = context.library.home.clone();
+        let libraries = context
+            .settings
+            .libraries
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| *i != selected_library)
+            .map(|(i, lib)| (i, lib.name.clone()))
+            .collect::<Vec<(usize, String)>>();
 
-            let book_index = self.book_index(index);
-            let info = &self.visible_books[book_index];
-            let path = &info.file.path;
+        toggle_menu_item(
+            ViewId::BookMenu,
+            |ctx, data: &BookMenuData| {
+                let mut entries = Vec::new();
 
-            let mut entries = Vec::new();
+                if let Some(parent) = data.path.parent() {
+                    entries.push(EntryKind::Command(
+                        "Select Parent".to_string(),
+                        EntryId::SelectDirectory(data.library_home.join(parent)),
+                    ));
+                }
 
-            if let Some(parent) = path.parent() {
-                entries.push(EntryKind::Command(
-                    "Select Parent".to_string(),
-                    EntryId::SelectDirectory(context.library.home.join(parent)),
-                ));
-            }
+                if !data.author.is_empty() {
+                    entries.push(EntryKind::Command(
+                        "Search Author".to_string(),
+                        EntryId::SearchAuthor(data.author.clone()),
+                    ));
+                }
 
-            if !info.author.is_empty() {
-                entries.push(EntryKind::Command(
-                    "Search Author".to_string(),
-                    EntryId::SearchAuthor(info.author.clone()),
-                ));
-            }
+                if !entries.is_empty() {
+                    entries.push(EntryKind::Separator);
+                }
 
-            if !entries.is_empty() {
+                let submenu: &[SimpleStatus] = match data.simple_status {
+                    SimpleStatus::New => &[SimpleStatus::Reading, SimpleStatus::Finished],
+                    SimpleStatus::Reading => &[SimpleStatus::New, SimpleStatus::Finished],
+                    SimpleStatus::Finished => &[SimpleStatus::New, SimpleStatus::Reading],
+                };
+
+                let submenu = submenu
+                    .iter()
+                    .map(|s| {
+                        EntryKind::Command(s.to_string(), EntryId::SetStatus(data.path.clone(), *s))
+                    })
+                    .collect();
+                entries.push(EntryKind::SubMenu("Mark As".to_string(), submenu));
                 entries.push(EntryKind::Separator);
-            }
 
-            let submenu: &[SimpleStatus] = match info.simple_status() {
-                SimpleStatus::New => &[SimpleStatus::Reading, SimpleStatus::Finished],
-                SimpleStatus::Reading => &[SimpleStatus::New, SimpleStatus::Finished],
-                SimpleStatus::Finished => &[SimpleStatus::New, SimpleStatus::Reading],
-            };
+                if !data.libraries.is_empty() {
+                    let copy_to = data
+                        .libraries
+                        .iter()
+                        .map(|(i, name)| {
+                            EntryKind::Command(name.clone(), EntryId::CopyTo(data.path.clone(), *i))
+                        })
+                        .collect::<Vec<EntryKind>>();
+                    let move_to = data
+                        .libraries
+                        .iter()
+                        .map(|(i, name)| {
+                            EntryKind::Command(name.clone(), EntryId::MoveTo(data.path.clone(), *i))
+                        })
+                        .collect::<Vec<EntryKind>>();
+                    entries.push(EntryKind::SubMenu("Copy To".to_string(), copy_to));
+                    entries.push(EntryKind::SubMenu("Move To".to_string(), move_to));
+                }
 
-            let submenu = submenu
-                .iter()
-                .map(|s| EntryKind::Command(s.to_string(), EntryId::SetStatus(path.clone(), *s)))
-                .collect();
-            entries.push(EntryKind::SubMenu("Mark As".to_string(), submenu));
-            entries.push(EntryKind::Separator);
+                entries.push(EntryKind::Command(
+                    "Rename".to_string(),
+                    EntryId::Rename(data.path.clone()),
+                ));
+                entries.push(EntryKind::Command(
+                    "Remove".to_string(),
+                    EntryId::Remove(data.path.clone()),
+                ));
 
-            let selected_library = context.settings.selected_library;
-            let libraries = context
-                .settings
-                .libraries
-                .iter()
-                .enumerate()
-                .filter(|(index, _)| *index != selected_library)
-                .map(|(index, lib)| (index, lib.name.clone()))
-                .collect::<Vec<(usize, String)>>();
-            if !libraries.is_empty() {
-                let copy_to = libraries
-                    .iter()
-                    .map(|(index, name)| {
-                        EntryKind::Command(name.clone(), EntryId::CopyTo(path.clone(), *index))
-                    })
-                    .collect::<Vec<EntryKind>>();
-                let move_to = libraries
-                    .iter()
-                    .map(|(index, name)| {
-                        EntryKind::Command(name.clone(), EntryId::MoveTo(path.clone(), *index))
-                    })
-                    .collect::<Vec<EntryKind>>();
-                entries.push(EntryKind::SubMenu("Copy To".to_string(), copy_to));
-                entries.push(EntryKind::SubMenu("Move To".to_string(), move_to));
-            }
-
-            entries.push(EntryKind::Command(
-                "Rename".to_string(),
-                EntryId::Rename(path.clone()),
-            ));
-            entries.push(EntryKind::Command(
-                "Remove".to_string(),
-                EntryId::Remove(path.clone()),
-            ));
-
-            let book_menu = Menu::new(
-                rect,
-                ViewId::BookMenu,
-                MenuKind::Contextual,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                book_menu.id(),
-                *book_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(book_menu) as Box<dyn View>);
-        }
+                Menu::new(rect, ViewId::BookMenu, MenuKind::Contextual, entries, ctx)
+            },
+            self,
+            BookMenuData {
+                path,
+                author,
+                simple_status,
+                libraries,
+                library_home,
+            },
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn toggle_library_menu(
@@ -1461,160 +1466,143 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::LibraryMenu) {
-            if let Some(true) = enable {
-                return;
-            }
+        let selected_library = context.settings.selected_library;
+        let library_settings = context.settings.libraries[selected_library].clone();
+        let show_hidden = context.library.show_hidden;
+        let library_home = context.library.home.clone();
+        let settings_libraries = context.settings.libraries.clone();
+        let lib_index = selected_library;
 
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
+        toggle_menu_ctx(
+            ViewId::LibraryMenu,
+            |ctx| {
+                let libraries: Vec<EntryKind> = settings_libraries
+                    .iter()
+                    .enumerate()
+                    .map(|(index, lib)| {
+                        EntryKind::RadioButton(
+                            lib.name.clone(),
+                            EntryId::LoadLibrary(index),
+                            index == lib_index,
+                        )
+                    })
+                    .collect();
 
-            let selected_library = context.settings.selected_library;
-            let library_settings = &context.settings.libraries[selected_library];
+                let database = if library_settings.mode == LibraryMode::Database {
+                    vec![
+                        EntryKind::Command("Import".to_string(), EntryId::Import),
+                        EntryKind::Command("Flush".to_string(), EntryId::Flush),
+                    ]
+                } else {
+                    Vec::new()
+                };
 
-            let libraries: Vec<EntryKind> = context
-                .settings
-                .libraries
-                .iter()
-                .enumerate()
-                .map(|(index, lib)| {
-                    EntryKind::RadioButton(
-                        lib.name.clone(),
-                        EntryId::LoadLibrary(index),
-                        index == selected_library,
-                    )
-                })
-                .collect();
+                let filesystem = if library_settings.mode == LibraryMode::Filesystem {
+                    vec![
+                        EntryKind::CheckBox(
+                            "Show Hidden".to_string(),
+                            EntryId::ToggleShowHidden,
+                            show_hidden,
+                        ),
+                        EntryKind::Separator,
+                        EntryKind::Command("Clean Up".to_string(), EntryId::CleanUp),
+                        EntryKind::Command("Flush".to_string(), EntryId::Flush),
+                        EntryKind::Command("Batch Select".to_string(), EntryId::ToggleBatchMode),
+                    ]
+                } else {
+                    vec![EntryKind::Command(
+                        "Batch Select".to_string(),
+                        EntryId::ToggleBatchMode,
+                    )]
+                };
 
-            let database = if library_settings.mode == LibraryMode::Database {
-                vec![
-                    EntryKind::Command("Import".to_string(), EntryId::Import),
-                    EntryKind::Command("Flush".to_string(), EntryId::Flush),
-                ]
-            } else {
-                Vec::new()
-            };
+                let mut entries = vec![EntryKind::SubMenu("Library".to_string(), libraries)];
 
-            let filesystem = if library_settings.mode == LibraryMode::Filesystem {
-                vec![
-                    EntryKind::CheckBox(
-                        "Show Hidden".to_string(),
-                        EntryId::ToggleShowHidden,
-                        context.library.show_hidden,
-                    ),
-                    EntryKind::Separator,
-                    EntryKind::Command("Clean Up".to_string(), EntryId::CleanUp),
-                    EntryKind::Command("Flush".to_string(), EntryId::Flush),
-                    EntryKind::Command("Batch Select".to_string(), EntryId::ToggleBatchMode),
-                ]
-            } else {
-                vec![EntryKind::Command(
-                    "Batch Select".to_string(),
-                    EntryId::ToggleBatchMode,
-                )]
-            };
-
-            let mut entries = vec![EntryKind::SubMenu("Library".to_string(), libraries)];
-
-            if !database.is_empty() {
-                entries.push(EntryKind::SubMenu("Database".to_string(), database));
-            }
-
-            if !filesystem.is_empty() {
-                entries.push(EntryKind::SubMenu("Filesystem".to_string(), filesystem));
-            }
-
-            let hooks: Vec<EntryKind> = context.settings.libraries[selected_library]
-                .hooks
-                .iter()
-                .map(|v| {
-                    EntryKind::Command(
-                        v.path.to_string_lossy().into_owned(),
-                        EntryId::ToggleSelectDirectory(context.library.home.join(&v.path)),
-                    )
-                })
-                .collect();
-
-            if !hooks.is_empty() {
-                entries.push(EntryKind::SubMenu("Toggle Select".to_string(), hooks));
-            }
-
-            entries.push(EntryKind::Separator);
-
-            let first_column = library_settings.first_column;
-            entries.push(EntryKind::SubMenu(
-                "First Column".to_string(),
-                vec![
-                    EntryKind::RadioButton(
-                        "Title and Author".to_string(),
-                        EntryId::FirstColumn(FirstColumn::TitleAndAuthor),
-                        first_column == FirstColumn::TitleAndAuthor,
-                    ),
-                    EntryKind::RadioButton(
-                        "File Name".to_string(),
-                        EntryId::FirstColumn(FirstColumn::FileName),
-                        first_column == FirstColumn::FileName,
-                    ),
-                ],
-            ));
-
-            let second_column = library_settings.second_column;
-            entries.push(EntryKind::SubMenu(
-                "Second Column".to_string(),
-                vec![
-                    EntryKind::RadioButton(
-                        "Progress".to_string(),
-                        EntryId::SecondColumn(SecondColumn::Progress),
-                        second_column == SecondColumn::Progress,
-                    ),
-                    EntryKind::RadioButton(
-                        "Year".to_string(),
-                        EntryId::SecondColumn(SecondColumn::Year),
-                        second_column == SecondColumn::Year,
-                    ),
-                ],
-            ));
-
-            entries.push(EntryKind::CheckBox(
-                "Thumbnail Previews".to_string(),
-                EntryId::ThumbnailPreviews,
-                library_settings.thumbnail_previews,
-            ));
-
-            let trash_path = context.library.home.join(TRASH_DIRNAME);
-            if let Ok(trash) = Library::new(trash_path, LibraryMode::Database)
-                .map_err(|e| log_error!("Can't inspect trash: {:#?}.", e))
-            {
-                if trash.is_empty() == Some(false) {
-                    entries.push(EntryKind::Separator);
-                    entries.push(EntryKind::Command(
-                        "Empty Trash".to_string(),
-                        EntryId::EmptyTrash,
-                    ));
+                if !database.is_empty() {
+                    entries.push(EntryKind::SubMenu("Database".to_string(), database));
                 }
-            }
 
-            let library_menu = Menu::new(
-                rect,
-                ViewId::LibraryMenu,
-                MenuKind::DropDown,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                library_menu.id(),
-                *library_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(library_menu) as Box<dyn View>);
-        }
+                if !filesystem.is_empty() {
+                    entries.push(EntryKind::SubMenu("Filesystem".to_string(), filesystem));
+                }
+
+                let hooks: Vec<EntryKind> = library_settings
+                    .hooks
+                    .iter()
+                    .map(|v| {
+                        EntryKind::Command(
+                            v.path.to_string_lossy().into_owned(),
+                            EntryId::ToggleSelectDirectory(library_home.join(&v.path)),
+                        )
+                    })
+                    .collect();
+
+                if !hooks.is_empty() {
+                    entries.push(EntryKind::SubMenu("Toggle Select".to_string(), hooks));
+                }
+
+                entries.push(EntryKind::Separator);
+
+                let first_column = library_settings.first_column;
+                entries.push(EntryKind::SubMenu(
+                    "First Column".to_string(),
+                    vec![
+                        EntryKind::RadioButton(
+                            "Title and Author".to_string(),
+                            EntryId::FirstColumn(FirstColumn::TitleAndAuthor),
+                            first_column == FirstColumn::TitleAndAuthor,
+                        ),
+                        EntryKind::RadioButton(
+                            "File Name".to_string(),
+                            EntryId::FirstColumn(FirstColumn::FileName),
+                            first_column == FirstColumn::FileName,
+                        ),
+                    ],
+                ));
+
+                let second_column = library_settings.second_column;
+                entries.push(EntryKind::SubMenu(
+                    "Second Column".to_string(),
+                    vec![
+                        EntryKind::RadioButton(
+                            "Progress".to_string(),
+                            EntryId::SecondColumn(SecondColumn::Progress),
+                            second_column == SecondColumn::Progress,
+                        ),
+                        EntryKind::RadioButton(
+                            "Year".to_string(),
+                            EntryId::SecondColumn(SecondColumn::Year),
+                            second_column == SecondColumn::Year,
+                        ),
+                    ],
+                ));
+
+                entries.push(EntryKind::CheckBox(
+                    "Thumbnail Previews".to_string(),
+                    EntryId::ThumbnailPreviews,
+                    library_settings.thumbnail_previews,
+                ));
+
+                let trash_path = library_home.join(TRASH_DIRNAME);
+                if let Ok(trash) = Library::new(trash_path, LibraryMode::Database)
+                    .map_err(|e| log_error!("Can't inspect trash: {:#?}.", e))
+                {
+                    if trash.is_empty() == Some(false) {
+                        entries.push(EntryKind::Separator);
+                        entries.push(EntryKind::Command(
+                            "Empty Trash".to_string(),
+                            EntryId::EmptyTrash,
+                        ));
+                    }
+                }
+
+                Menu::new(rect, ViewId::LibraryMenu, MenuKind::DropDown, entries, ctx)
+            },
+            self,
+            enable,
+            rq,
+            context,
+        );
     }
 
     fn add_document(&mut self, info: Info, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
