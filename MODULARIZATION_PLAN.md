@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 95%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, New Utilities - 100%, Phase 2: Deferred - 0%)
+> **Overall Completion: 95%** (Phase 1: Quick Wins - 100%, Phase 2: Reader Module - 90%, Phase 2: Home Module - 0%, Phase 2: Font Module - 0%)
 
 ## Executive Summary
 
@@ -53,24 +53,26 @@ This plan identifies opportunities to modularize the Plato codebase by extractin
 
 ## Phase 2: Module Splitting (3-5 days each) ⏳ PENDING
 
-### 2.1 Reader Module Refactor ⏳ DEFERRED
+### 2.1 Reader Module Refactor ⚠️ PARTIALLY IMPLEMENTED
 
 **Current:** `crates/core/src/view/reader/reader_impl/reader.rs` (3,410 lines)
 **Target:** Split into focused modules
 
-**Proposed Structure:**
+**Actual Structure (Already Exists):**
 ```
-reader/
-├── mod.rs                 # Public re-exports
-├── reader_core.rs         # Shared types (already started)
-├── reader_state.rs        # PageState, DisplaySettings, InteractionState
-├── reader_rendering.rs    # Rendering, animation, text extraction
-├── reader_input.rs        # Gesture, touch, input handling
-├── reader_annotations.rs  # Annotations, notes, highlights
-├── reader_dialogs.rs      # Input dialogs, text entry
-├── reader_settings.rs     # Settings menus, configuration
-└── reader_search.rs       # Search functionality
+reader/reader_impl/
+├── mod.rs                 # Public re-exports (40 lines)
+├── reader_core.rs         # Shared types ✅
+├── reader.rs              # Main implementation (3,410 lines)
+├── reader_rendering.rs    # Rendering ✅
+├── reader_gestures.rs     # Touch/gesture handling ✅
+├── reader_annotations.rs # Annotations, notes ✅
+├── reader_dialogs.rs      # Input dialogs ✅
+├── reader_settings.rs    # Settings menus ✅
+└── reader_search.rs       # Search functionality ✅
 ```
+
+**Status:** 8 of 9 planned modules exist. Main `reader.rs` (3,410 lines) still needs splitting.
 
 **Benefits:**
 - Reduce cognitive load (~700 lines per file)
