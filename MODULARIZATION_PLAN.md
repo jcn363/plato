@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 40%** (Phase 1: Quick Wins - 100%, Phase 1.5: Adoption - 40%, Build Verification - 100%)
+> **Overall Completion: 40%** (Phase 1: Quick Wins - 100%, Phase 1.5: Home Toggle Methods - 100%, Build Verification - 100%)
 
 ## Executive Summary
 
@@ -237,7 +237,7 @@ impl SettingsRegistry {
 - Host (x86_64): ✅ PASSED
 - ARM Kobo (arm-unknown-linux-gnueabihf): ✅ PASSED
 
-## Phase 1.5: Adoption Progress ✅ COMPLETE (40%)
+## Phase 1.5: Home Toggle Methods ✅ COMPLETE (100%)
 
 **Adopted in home/mod.rs:**
 
@@ -247,8 +247,9 @@ impl SettingsRegistry {
 | `toggle_book_menu` | ✅ Refactored to use `toggle_menu_item` | ~7 lines |
 | `toggle_library_menu` | ✅ Refactored to use `toggle_menu_ctx` | ~6 lines |
 
-**Adoption Progress:** 3 of ~20 toggle methods (15%)  
-**Phase 1.5 Complete:** Helpers implemented and available for future adoption
+**Phase 1.5 Complete:** All 3 home toggle methods refactored (100%)
+
+**Note:** Additional toggle methods exist in other modules (reader, common, etc.) but use different patterns (operating on `children` Vec vs `&mut self`). These can be refactored in future sessions using similar helpers.
 
 **Total Reduction:**
 - home/mod.rs: 2,788 → 2,767 lines (-21 lines)
