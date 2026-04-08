@@ -8,9 +8,9 @@ use crate::helpers::IsHidden;
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::settings::{ImportSettings, Pen};
 use crate::unit::scale_by_dpi;
-use crate::view::common::locate_by_id;
 use crate::view::icon::{Icon, ICONS_PIXMAPS};
 use crate::view::menu::{Menu, MenuKind};
+use crate::view::menu_helpers::toggle_menu_self;
 use crate::view::notification::Notification;
 use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
@@ -106,67 +106,57 @@ impl Sketch {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::SketchMenu) {
-            if let Some(true) = enable {
-                return;
-            }
+        let pen = self.pen.clone();
+        let save_path = self.save_path.clone();
 
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
+        let glob = match Glob::new("**/*.png") {
+            Ok(g) => g.compile_matcher(),
+            Err(_) => return,
+        };
+        let mut loadables: Vec<PathBuf> = WalkDir::new(&save_path)
+            .min_depth(1)
+            .into_iter()
+            .filter_map(|e| {
+                e.ok()
+                    .filter(|e| !e.is_hidden())
+                    .and_then(|e| e.path().file_name().map(PathBuf::from))
+            })
+            .filter(|p| glob.is_match(p))
+            .collect();
+        loadables.sort_by(|a, b| b.cmp(a));
 
-            let glob = match Glob::new("**/*.png") {
-                Ok(g) => g.compile_matcher(),
-                Err(_) => return,
-            };
-            let mut loadables: Vec<PathBuf> = WalkDir::new(&self.save_path)
-                .min_depth(1)
-                .into_iter()
-                .filter_map(|e| {
-                    e.ok()
-                        .filter(|e| !e.is_hidden())
-                        .and_then(|e| e.path().file_name().map(PathBuf::from))
-                })
-                .filter(|p| glob.is_match(p))
-                .collect();
-            loadables.sort_by(|a, b| b.cmp(a));
-
+        let sizes = {
             let mut sizes = vec![
                 EntryKind::CheckBox(
                     "Dynamic".to_string(),
                     EntryId::TogglePenDynamism,
-                    self.pen.dynamic,
+                    pen.dynamic,
                 ),
                 EntryKind::Separator,
             ];
-
             for s in PEN_SIZES.iter() {
                 sizes.push(EntryKind::RadioButton(
                     s.to_string(),
                     EntryId::SetPenSize(*s),
-                    self.pen.size == *s,
+                    pen.size == *s,
                 ));
             }
+            sizes
+        };
 
+        let colors = {
             let mut colors = vec![
                 EntryKind::RadioButton(
                     "White".to_string(),
                     EntryId::SetPenColor(WHITE),
-                    self.pen.color == WHITE,
+                    pen.color == WHITE,
                 ),
                 EntryKind::RadioButton(
                     "Black".to_string(),
                     EntryId::SetPenColor(BLACK),
-                    self.pen.color == BLACK,
+                    pen.color == BLACK,
                 ),
             ];
-
             for i in 1..=14 {
                 let level = i * 17;
                 if i % 7 == 1 {
@@ -176,52 +166,42 @@ impl Sketch {
                 colors.push(EntryKind::RadioButton(
                     format!("Gray {:02}", i),
                     EntryId::SetPenColor(color),
-                    self.pen.color == color,
+                    pen.color == color,
                 ));
             }
+            colors
+        };
 
-            let mut entries = vec![
-                EntryKind::SubMenu("Size".to_string(), sizes),
-                EntryKind::SubMenu("Color".to_string(), colors),
-                EntryKind::Separator,
-                EntryKind::Command("Save".to_string(), EntryId::Save),
-                EntryKind::Command("Refresh".to_string(), EntryId::Refresh),
-                EntryKind::Command("New".to_string(), EntryId::New),
-                EntryKind::Command("Quit".to_string(), EntryId::Quit),
-            ];
+        let mut entries = vec![
+            EntryKind::SubMenu("Size".to_string(), sizes),
+            EntryKind::SubMenu("Color".to_string(), colors),
+            EntryKind::Separator,
+            EntryKind::Command("Save".to_string(), EntryId::Save),
+            EntryKind::Command("Refresh".to_string(), EntryId::Refresh),
+            EntryKind::Command("New".to_string(), EntryId::New),
+            EntryKind::Command("Quit".to_string(), EntryId::Quit),
+        ];
 
-            if !loadables.is_empty() {
-                entries.insert(
-                    entries.len() - 1,
-                    EntryKind::SubMenu(
-                        "Load".to_string(),
-                        loadables
-                            .into_iter()
-                            .map(|e| {
-                                EntryKind::Command(
-                                    e.to_string_lossy().into_owned(),
-                                    EntryId::Load(e),
-                                )
-                            })
-                            .collect(),
-                    ),
-                );
-            }
-
-            let sketch_menu = Menu::new(
-                rect,
-                ViewId::SketchMenu,
-                MenuKind::Contextual,
-                entries,
-                context,
+        if !loadables.is_empty() {
+            entries.insert(
+                entries.len() - 1,
+                EntryKind::SubMenu(
+                    "Load".to_string(),
+                    loadables
+                        .into_iter()
+                        .map(|e| {
+                            EntryKind::Command(e.to_string_lossy().into_owned(), EntryId::Load(e))
+                        })
+                        .collect(),
+                ),
             );
-            rq.add(RenderData::new(
-                sketch_menu.id(),
-                *sketch_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(sketch_menu) as Box<dyn View>);
         }
+
+        let create_menu = |ctx: &mut Context| -> Menu {
+            Menu::new(rect, ViewId::SketchMenu, MenuKind::Contextual, entries, ctx)
+        };
+
+        toggle_menu_self(ViewId::SketchMenu, create_menu, self, enable, rq, context);
     }
 
     fn load(&mut self, filename: &PathBuf) -> Result<(), Error> {

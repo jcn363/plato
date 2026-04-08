@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 60%** (Phase 1: Quick Wins - 100%, Phase 1.5: Home Toggle - 100%, Phase 1.6: Reader Settings - 100%, Phase 1.7: Reader Settings Vec - 100%, Phase 1.8: More Module Adoption - 100%, Build Verification - 100%)
+> **Overall Completion: 65%** (Phase 1: Quick Wins - 100%, Phase 1.5: Home Toggle - 100%, Phase 1.6: Reader Settings - 100%, Phase 1.7: Reader Settings Vec - 100%, Phase 1.8: More Module Adoption - 100%, Phase 1.9: Sketch Module - 100%, Build Verification - 100%)
 
 ## Executive Summary
 
@@ -298,11 +298,22 @@ impl SettingsRegistry {
 - `reader_search.rs`: `toggle_search_menu()` - now uses `toggle_menu_vec`
 - `dictionary/display.rs`: `toggle_title_menu()`, `toggle_search_menu()`, `toggle_search_target_menu()` - now use `toggle_menu_self`
 - `calculator/display.rs`: `toggle_margin_width_menu()`, `toggle_font_size_menu()` - now use `toggle_menu_self`
+- `sketch/mod.rs`: `toggle_title_menu()` - now uses `toggle_menu_self`
 
 **Added new helper:** `toggle_menu_self()` for &mut self pattern
 
+### Phase 1.9: Sketch Module ✅ COMPLETE (100%)
+
+**Location:** `crates/core/src/view/sketch/mod.rs`
+
+**Status:** ✅ IMPLEMENTED
+
+**Completion:** 100%
+
+**Refactored:**
+- `toggle_title_menu()` - now uses `toggle_menu_self`
+
 **Available for Adoption:**
-- `reader_settings.rs`: 12 toggle methods
 - `common.rs`: 5 toggle methods (toggle_main_menu, toggle_battery_menu, etc.)
 - `queue_render()`: 200+ potential uses in codebase
 - `with_child!` macro: 35+ potential uses in home/mod.rs alone
