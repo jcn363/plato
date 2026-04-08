@@ -2,14 +2,14 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 85%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, New Utilities - 100%)
+> **Overall Completion: 90%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, New Utilities - 100%)
 
 ## Executive Summary
 
 This plan identifies opportunities to modularize the Plato codebase by extracting duplicated patterns, splitting monolithic files, and creating reusable components. Following analysis of 195 source files, the highest impact opportunities are:
 
 1. **Reader Module** (3,410 lines) - Extract nested structs, split into focused modules
-2. **Home Module** (2,787 lines) - Split into library management components  
+2. **Home Module** (2,767 lines) - Split into library management components  
 3. **Font Module** (2,783 lines) - Separate font operations from UI
 4. **HTML Engine** (2,672 lines) - Isolate parsing/rendering concerns
 5. **Common Patterns** - Extract duplicated code (~1,350 lines savable)
@@ -79,7 +79,7 @@ reader/
 
 ### 2.2 Home Module Refactor
 
-**Current:** `crates/core/src/view/home/mod.rs` (2,787 lines)
+**Current:** `crates/core/src/view/home/mod.rs` (2,767 lines)
 **Target:** Split into library management components
 
 **Proposed Structure:**
@@ -125,19 +125,6 @@ font/
 
 **Issue:** Settings scattered across modules, inconsistent access patterns
 **Solution:** Create centralized settings registry
-
-```rust
-pub struct SettingsRegistry {
-    reader: ReaderSettings,
-    home: HomeSettings,
-    // ... others
-}
-
-impl SettingsRegistry {
-    fn get<T: SettingsTrait>(&self) -> &T { /* ... */ }
-    fn update<T: SettingsTrait>(&mut self, update_fn: impl FnOnce(&mut T)) { /* ... */ }
-}
-```
 
 ### 3.2 Error Handling Consistency
 
@@ -218,7 +205,7 @@ impl SettingsRegistry {
 | Largest File Size | 4,168 lines | 3,410 lines | <1,000 lines | 18% reduction | 25% |
 | Duplicate Lines | ~1,350 lines | ~1,150 lines | 0 lines | 15% eliminated | 15% |
 | Module Count | ~15 modules | ~18 modules | ~25-30 modules | 20% increase | 20% |
-| Boilerplate Reduction | 0 | ~779 lines | ~1,350 lines | 58% | 58% |
+| Boilerplate Reduction | 0 | ~900 lines | ~1,350 lines | 67% | 67% |
 | Build Time | ~3 minutes | ~3 minutes | <2 minutes | 30%+ improvement | 0% |
 
 ## Phase 1 Completion Status ✅ COMPLETE (100%)
@@ -231,87 +218,11 @@ impl SettingsRegistry {
 | `toggle_menu_*` helpers | `view/menu_helpers.rs` | ✅ Implemented | 100% |
 | `queue_render()` method | `view/view_trait.rs:107-109` | ✅ Implemented | 100% |
 | `queue_child_render()` method | `view/view_trait.rs:121-125` | ✅ Implemented | 100% |
-| `add_menu()` helper | `view/common.rs:104-124` | ✅ Already existed | 100% |
+| `remove_view_by_id` helper | `view/menu_helpers.rs` | ✅ Implemented | 100% |
 
 **Build Verification:** ✅ All builds pass with zero warnings/errors
 - Host (x86_64): ✅ PASSED
 - ARM Kobo (arm-unknown-linux-gnueabihf): ✅ PASSED
-
-## Phase 1.5: Home Toggle Methods ✅ COMPLETE (100%)
-
-**Adopted in home/mod.rs:**
-
-| Method | Status | Lines Saved |
-|--------|--------|-------------|
-| `toggle_sort_menu` | ✅ Refactored to use `toggle_menu_ctx` | ~8 lines |
-| `toggle_book_menu` | ✅ Refactored to use `toggle_menu_item` | ~7 lines |
-| `toggle_library_menu` | ✅ Refactored to use `toggle_menu_ctx` | ~6 lines |
-
-**Phase 1.5 Complete:** All 3 home toggle methods refactored (100%)
-
-## Phase 1.6: Reader Settings Toggle Methods ✅ COMPLETE (100%)
-
-**Adopted in reader_settings.rs:**
-
-| Method | Status |
-|--------|--------|
-| `toggle_font_family_menu` | ✅ Refactored to use `toggle_menu_vec` |
-| `toggle_font_size_menu` | ✅ Refactored to use `toggle_menu_vec` |
-| `toggle_text_align_menu` | ✅ Refactored to use `toggle_menu_vec` |
-| `toggle_line_height_menu` | ✅ Refactored to use `toggle_menu_vec` |
-| `toggle_contrast_exponent_menu` | ✅ Refactored to use `toggle_menu_vec` |
-| `toggle_contrast_gray_menu` | ✅ Refactored to use `toggle_menu_vec` |
-| `toggle_margin_width_menu` | ✅ Refactored to use `toggle_menu_vec` |
-
-**Added helper:** `toggle_menu_vec()` for children vector pattern
-
-**Phase 1.6 Complete:** 7 of 12 reader toggle methods refactored (58%)
-
-### Phase 1.7: Reader Settings Vec Pattern ✅ COMPLETE (100%)
-
-**Location:** `crates/core/src/view/reader/reader_impl/reader_settings.rs`
-
-**Status:** ✅ IMPLEMENTED
-
-**Completion:** 100%
-
-**Refactored 5 more toggle methods:**
-- `toggle_page_menu()` - Page navigation menu
-- `toggle_margin_cropper_menu()` - Margin cropping settings
-- `toggle_annotation_menu()` - Annotation context menu
-- `toggle_selection_menu()` - Text selection menu
-- `toggle_title_menu()` - Title bar menu
-
-**Total Reduction:**
-- home/mod.rs: 2,788 → 2,767 lines (-21 lines)
-- reader_settings.rs: 1,035 → 924 lines (-111 lines)
-- reader.rs: 4,168 → 3,410 lines (-758 lines from previous session)
-- Total: -890 lines reduced
-
-### Phase 1.8: More Module Adoption ✅ COMPLETE (100%)
-
-**Status:** ✅ IMPLEMENTED
-
-**Completion:** 100%
-
-**Refactored toggle methods in:**
-- `reader_search.rs`: `toggle_search_menu()` - now uses `toggle_menu_vec`
-- `dictionary/display.rs`: `toggle_title_menu()`, `toggle_search_menu()`, `toggle_search_target_menu()` - now use `toggle_menu_self`
-- `calculator/display.rs`: `toggle_margin_width_menu()`, `toggle_font_size_menu()` - now use `toggle_menu_self`
-- `sketch/mod.rs`: `toggle_title_menu()` - now uses `toggle_menu_self`
-
-**Added new helper:** `toggle_menu_self()` for &mut self pattern
-
-### Phase 1.9: Sketch Module ✅ COMPLETE (100%)
-
-**Location:** `crates/core/src/view/sketch/mod.rs`
-
-**Status:** ✅ IMPLEMENTED
-
-**Completion:** 100%
-
-**Refactored:**
-- `toggle_title_menu()` - now uses `toggle_menu_self`
 
 ---
 
@@ -319,28 +230,50 @@ impl SettingsRegistry {
 
 **Available Helpers (all implemented in `menu_helpers.rs`):**
 
-| Helper | Use Case |
-|--------|----------|
-| `toggle_menu_vec` | `&mut Vec<Box<dyn View>>` pattern |
-| `toggle_menu_with` | `&mut dyn View` with no-arg closure |
-| `toggle_menu_ctx` | `&mut dyn View` with context closure |
-| `toggle_menu_item` | `&mut dyn View` with context + item |
-| `toggle_menu_self` | `&mut self` pattern with overlapping rect |
-| `remove_view_by_id` | Event handler view removal with expose |
+| Helper | Use Case | Lines Saved |
+|--------|----------|-------------|
+| `toggle_menu_vec` | `&mut Vec<Box<dyn View>>` pattern | ~8-15 per method |
+| `toggle_menu_with` | `&mut dyn View` with no-arg closure | ~12-18 per method |
+| `toggle_menu_ctx` | `&mut dyn View` with context closure | ~12-18 per method |
+| `toggle_menu_item` | `&mut dyn View` with context + item | ~12-18 per method |
+| `toggle_menu_self` | `&mut self` pattern with overlapping rect | ~10-15 per method |
+| `remove_view_by_id` | Event handler view removal with expose | ~8-12 per location |
 
 **Total Refactored:** 22 toggle methods across 6 modules
 
-**Code Analysis Findings:**
+### Refactoring Summary by Module
+
+| Module | Methods Refactored | Helper Used |
+|--------|-------------------|-------------|
+| reader_settings.rs | 12 methods | `toggle_menu_vec` |
+| home/mod.rs | 3 methods | `toggle_menu_ctx`/`toggle_menu_item` |
+| reader_search.rs | 1 method | `toggle_menu_vec` |
+| dictionary/display.rs | 3 methods | `toggle_menu_self` |
+| calculator/display.rs | 2 methods | `toggle_menu_self` |
+| sketch/mod.rs | 1 method | `toggle_menu_self` |
+
+### Line Count Reductions
+
+| File | Original | Current | Reduction |
+|------|----------|---------|-----------|
+| reader.rs | 4,168 | 3,410 | -758 |
+| reader_settings.rs | 1,035 | 913 | -122 |
+| home/mod.rs | 2,788 | 2,767 | -21 |
+| **Total** | | | **-901 lines** |
+
+### Code Analysis Findings
 
 After thorough analysis, most toggle methods now use helper functions. Remaining patterns:
 
-1. **Event handlers** - 5-10 locations with `locate_by_id` in event handlers (different pattern, not typical toggle)
-2. **Index-based lookups** - `.child_mut(index).downcast_mut<>()` pattern (17 locations) - these require specific child indices, not suitable for helper extraction
+1. **Event handlers** - 5-10 locations with `locate_by_id` in event handlers (different pattern)
+2. **Index-based lookups** - `.child_mut(index).downcast_mut<>()` pattern (17 locations) - require specific child indices
 3. **common.rs** - 5 toggle methods already use `toggle_view` - similar to our new helpers
+4. **Home toggle methods** - 6 methods (toggle_keyboard, toggle_address_bar, etc.) - different pattern (not menus)
 
-**Available for Future Work:**
+### Available for Future Work
 - `common.rs`: 5 toggle methods (already use `toggle_view` - similar pattern)
 - `with_child!` macro: Not widely adopted yet, available for future refactoring
+- Phase 2: Module Splitting (reader.rs, home/mod.rs)
 
 ---
 
@@ -365,8 +298,9 @@ After thorough analysis, most toggle methods now use helper functions. Remaining
 
 1. ~~Commit MODULARIZATION_PLAN.md~~ ✅ Done
 2. ~~Implement quick wins (macro, menu helpers, queue_render)~~ ✅ Done
-3. Adopt new helpers in existing code (ongoing, reduces lines)
-4. Move to Phase 2: Module Splitting
+3. ~~Adopt new helpers in existing code~~ ✅ Done
+4. Move to Phase 2: Module Splitting (deferred)
 
 ---
+
 *This plan enables incremental improvement while maintaining system stability and test coverage throughout the modularization process.*
