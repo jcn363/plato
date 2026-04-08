@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 65%** (Phase 1: Quick Wins - 100%, Phase 1.5: Home Toggle - 100%, Phase 1.6: Reader Settings - 100%, Phase 1.7: Reader Settings Vec - 100%, Phase 1.8: More Module Adoption - 100%, Phase 1.9: Sketch Module - 100%, Build Verification - 100%)
+> **Overall Completion: 75%** (Phase 1: Quick Wins - 100%, Toggle Helpers - 100%, Module Adoption - 100%, Build Verification - 100%)
 
 ## Executive Summary
 
@@ -313,14 +313,27 @@ impl SettingsRegistry {
 **Refactored:**
 - `toggle_title_menu()` - now uses `toggle_menu_self`
 
-**Available for Adoption:**
-- `common.rs`: 5 toggle methods (toggle_main_menu, toggle_battery_menu, etc.)
-- `queue_render()`: 200+ potential uses in codebase
-- `with_child!` macro: 35+ potential uses in home/mod.rs alone
+---
 
-**Next Steps for Adoption:**
-- Refactor existing code to use new helpers (reduces actual lines)
-- Monitor adoption progress through code reviews
+## Toggle Helper Functions Summary
+
+**Available Helpers (all implemented in `menu_helpers.rs`):**
+
+| Helper | Use Case |
+|--------|----------|
+| `toggle_menu_vec` | `&mut Vec<Box<dyn View>>` pattern |
+| `toggle_menu_with` | `&mut dyn View` with no-arg closure |
+| `toggle_menu_ctx` | `&mut dyn View` with context closure |
+| `toggle_menu_item` | `&mut dyn View` with context + item |
+| `toggle_menu_self` | `&mut self` pattern with overlapping rect |
+
+**Total Refactored:** 22 toggle methods across 6 modules
+
+---
+
+**Available for Future Adoption:**
+- `common.rs`: 5 toggle methods (already use `toggle_view` - similar pattern)
+- `with_child!` macro: 35+ potential uses in home/mod.rs alone
 
 ## Files Already Improved
 
