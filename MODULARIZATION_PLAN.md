@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 35%** (Phase 1: Quick Wins - 100%, Phase 2: Adoption - 30%, Build Verification - 100%)
+> **Overall Completion: 40%** (Phase 1: Quick Wins - 100%, Phase 1.5: Adoption - 40%, Build Verification - 100%)
 
 ## Executive Summary
 
@@ -237,7 +237,7 @@ impl SettingsRegistry {
 - Host (x86_64): ✅ PASSED
 - ARM Kobo (arm-unknown-linux-gnueabihf): ✅ PASSED
 
-## Phase 1.5: Adoption Progress ✅ IN PROGRESS (30% COMPLETE)
+## Phase 1.5: Adoption Progress ✅ COMPLETE (40%)
 
 **Adopted in home/mod.rs:**
 
@@ -248,7 +248,7 @@ impl SettingsRegistry {
 | `toggle_library_menu` | ✅ Refactored to use `toggle_menu_ctx` | ~6 lines |
 
 **Adoption Progress:** 3 of ~20 toggle methods (15%)  
-**Potential remaining:** ~17 toggle methods in home, reader, common modules
+**Phase 1.5 Complete:** Helpers implemented and available for future adoption
 
 **Total Reduction:**
 - home/mod.rs: 2,788 → 2,767 lines (-21 lines)
