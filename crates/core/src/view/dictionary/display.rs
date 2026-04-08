@@ -9,6 +9,7 @@ use crate::view::dictionary::Dictionary;
 use crate::view::filler::Filler;
 use crate::view::keyboard::Keyboard;
 use crate::view::menu::{Menu, MenuKind};
+use crate::view::menu_helpers::toggle_menu_self;
 use crate::view::named_input::NamedInput;
 use crate::view::{
     EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId, BIG_BAR_HEIGHT,
@@ -25,38 +26,20 @@ impl Dictionary {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::TitleMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-            let entries = vec![EntryKind::Command(
-                "Reload Dictionaries".to_string(),
-                EntryId::ReloadDictionaries,
-            )];
-            let title_menu = Menu::new(
+        let create_menu = |ctx: &mut Context| -> Menu {
+            Menu::new(
                 rect,
                 ViewId::TitleMenu,
                 MenuKind::DropDown,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                title_menu.id(),
-                *title_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(title_menu) as Box<dyn View>);
-        }
+                vec![EntryKind::Command(
+                    "Reload Dictionaries".to_string(),
+                    EntryId::ReloadDictionaries,
+                )],
+                ctx,
+            )
+        };
+
+        toggle_menu_self(ViewId::TitleMenu, create_menu, self, enable, rq, context);
     }
 
     pub fn toggle_search_menu(
@@ -66,39 +49,22 @@ impl Dictionary {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::SearchMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-            let entries = vec![EntryKind::CheckBox(
-                "Fuzzy".to_string(),
-                EntryId::ToggleFuzzy,
-                self.fuzzy,
-            )];
-            let search_menu = Menu::new(
+        let fuzzy = self.fuzzy;
+        let create_menu = |ctx: &mut Context| -> Menu {
+            Menu::new(
                 rect,
                 ViewId::SearchMenu,
                 MenuKind::Contextual,
-                entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                search_menu.id(),
-                *search_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.push(Box::new(search_menu) as Box<dyn View>);
-        }
+                vec![EntryKind::CheckBox(
+                    "Fuzzy".to_string(),
+                    EntryId::ToggleFuzzy,
+                    fuzzy,
+                )],
+                ctx,
+            )
+        };
+
+        toggle_menu_self(ViewId::SearchMenu, create_menu, self, enable, rq, context);
     }
 
     pub fn toggle_search_target_menu(
@@ -108,28 +74,16 @@ impl Dictionary {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::SearchTargetMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-            let mut entries = context
+        let target = self.target.clone();
+        let create_menu = |ctx: &mut Context| -> Menu {
+            let mut entries = ctx
                 .dictionaries
                 .keys()
                 .map(|k| {
                     EntryKind::RadioButton(
                         k.to_string(),
                         EntryId::SetSearchTarget(Some(k.to_string())),
-                        self.target == Some(k.to_string()),
+                        target == Some(k.to_string()),
                     )
                 })
                 .collect::<Vec<EntryKind>>();
@@ -139,23 +93,25 @@ impl Dictionary {
             entries.push(EntryKind::RadioButton(
                 "All".to_string(),
                 EntryId::SetSearchTarget(None),
-                self.target.is_none(),
+                target.is_none(),
             ));
-            let search_target_menu = Menu::new(
+            Menu::new(
                 rect,
                 ViewId::SearchTargetMenu,
                 MenuKind::DropDown,
                 entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                search_target_menu.id(),
-                *search_target_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(search_target_menu) as Box<dyn View>);
-        }
+                ctx,
+            )
+        };
+
+        toggle_menu_self(
+            ViewId::SearchTargetMenu,
+            create_menu,
+            self,
+            enable,
+            rq,
+            context,
+        );
     }
 
     pub fn toggle_keyboard(

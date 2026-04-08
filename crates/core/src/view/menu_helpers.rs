@@ -223,3 +223,47 @@ fn overlapping_rectangle(view: &dyn View) -> Rectangle {
     }
     rect
 }
+
+/// Generic helper to toggle a menu's visibility with &mut self pattern.
+///
+/// This variant works with methods that take &mut self and use locate_by_id internally.
+/// Similar to toggle_menu_with but uses overlapping_rectangle for expose calculation.
+///
+/// # Arguments
+///
+/// * `id` - The ViewId of the menu to toggle
+/// * `create_fn` - Function that creates the menu when needed
+/// * `view` - The parent view (&mut self)
+/// * `enable` - Optional boolean to force show/hide (None = toggle)
+/// * `rq` - Render queue for scheduling render operations
+/// * `context` - Application context for menu creation
+pub fn toggle_menu_self<F>(
+    id: ViewId,
+    create_fn: F,
+    view: &mut dyn View,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) where
+    F: FnOnce(&mut Context) -> Menu,
+{
+    if let Some(index) = view
+        .children()
+        .iter()
+        .position(|c| c.view_id().map_or(false, |i| i == id))
+    {
+        if let Some(true) = enable {
+            return;
+        }
+        let rect = overlapping_rectangle(view.child(index));
+        rq.add(RenderData::expose(rect, UpdateMode::Gui));
+        view.children_mut().remove(index);
+    } else {
+        if let Some(false) = enable {
+            return;
+        }
+        let menu = create_fn(context);
+        rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
+        view.children_mut().push(Box::new(menu));
+    }
+}

@@ -4,8 +4,8 @@ use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{halves, Rectangle};
 use crate::unit::scale_by_dpi;
-use crate::view::common::locate_by_id;
 use crate::view::menu::{Menu, MenuKind};
+use crate::view::menu_helpers::toggle_menu_self;
 use crate::view::top_bar::TopBar;
 use crate::view::view_trait::View;
 use crate::view::{
@@ -64,45 +64,34 @@ impl Calculator {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::MarginWidthMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
+        let margin_width = self.margin_width;
+        let create_menu = |_ctx: &mut Context| -> Menu {
             let entries = (0..=10)
                 .map(|mw| {
                     EntryKind::RadioButton(
                         format!("{}", mw),
                         EntryId::SetMarginWidth(mw),
-                        mw == self.margin_width,
+                        mw == margin_width,
                     )
                 })
                 .collect();
-            let margin_width_menu = Menu::new(
+            Menu::new(
                 rect,
                 ViewId::MarginWidthMenu,
                 MenuKind::DropDown,
                 entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                margin_width_menu.id(),
-                *margin_width_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(margin_width_menu) as Box<dyn View>);
-        }
+                _ctx,
+            )
+        };
+
+        toggle_menu_self(
+            ViewId::MarginWidthMenu,
+            create_menu,
+            self,
+            enable,
+            rq,
+            context,
+        );
     }
 
     pub(super) fn toggle_font_size_menu(
@@ -112,46 +101,28 @@ impl Calculator {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if let Some(index) = locate_by_id(self, ViewId::FontSizeMenu) {
-            if let Some(true) = enable {
-                return;
-            }
-
-            rq.add(RenderData::expose(
-                *self.child(index).rect(),
-                UpdateMode::Gui,
-            ));
-            self.children.remove(index);
-        } else {
-            if let Some(false) = enable {
-                return;
-            }
-
+        let font_size = self.font_size;
+        let create_menu = |_ctx: &mut Context| -> Menu {
             let entries = (0..=20)
                 .map(|v| {
                     let fs = 6.0 + v as f32 / 10.0;
                     EntryKind::RadioButton(
                         format!("{:.1}", fs),
                         EntryId::SetFontSize(v),
-                        (fs - self.font_size).abs() < 0.05,
+                        (fs - font_size).abs() < 0.05,
                     )
                 })
                 .collect();
-            let font_size_menu = Menu::new(
+            Menu::new(
                 rect,
                 ViewId::FontSizeMenu,
                 MenuKind::DropDown,
                 entries,
-                context,
-            );
-            rq.add(RenderData::new(
-                font_size_menu.id(),
-                *font_size_menu.rect(),
-                UpdateMode::Gui,
-            ));
-            self.children
-                .push(Box::new(font_size_menu) as Box<dyn View>);
-        }
+                _ctx,
+            )
+        };
+
+        toggle_menu_self(ViewId::FontSizeMenu, create_menu, self, enable, rq, context);
     }
 
     pub(super) fn reseed(&mut self, rq: &mut RenderQueue, context: &mut Context) {

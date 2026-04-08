@@ -14,7 +14,8 @@
 
 use crate::geom::{LinearDir, Rectangle};
 use crate::view::menu::{Menu, MenuKind};
-use crate::view::{EntryId, EntryKind, Id, RenderData, RenderQueue, View, ViewId};
+use crate::view::menu_helpers::toggle_menu_vec;
+use crate::view::{EntryId, EntryKind, Id, RenderData, RenderQueue, ViewId};
 
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
@@ -137,25 +138,14 @@ pub(crate) fn toggle_search_menu(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
-    if let Some(index) = children
-        .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == ViewId::SearchMenu))
-    {
-        if let Some(true) = enable {
-            return;
-        }
-        rq.add(RenderData::expose(*children[index].rect(), UpdateMode::Gui));
-        children.remove(index);
-    } else {
-        if let Some(false) = enable {
-            return;
-        }
-        let search_menu = create_search_menu(search_direction, rect, context);
-        rq.add(RenderData::new(
-            search_menu.id(),
-            *search_menu.rect(),
-            UpdateMode::Gui,
-        ));
-        children.push(Box::new(search_menu) as Box<dyn crate::view::View>);
-    }
+    let create_menu = |ctx: &mut Context| create_search_menu(search_direction, rect, ctx);
+
+    toggle_menu_vec(
+        ViewId::SearchMenu,
+        create_menu,
+        children,
+        enable,
+        rq,
+        context,
+    );
 }

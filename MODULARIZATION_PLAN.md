@@ -2,7 +2,7 @@
 
 > Following DRY (Don't Repeat Yourself) Principle
 > Last Updated: April 8, 2026
-> **Overall Completion: 55%** (Phase 1: Quick Wins - 100%, Phase 1.5: Home Toggle - 100%, Phase 1.6: Reader Settings - 100%, Phase 1.7: Reader Settings Vec - 100%, Build Verification - 100%)
+> **Overall Completion: 60%** (Phase 1: Quick Wins - 100%, Phase 1.5: Home Toggle - 100%, Phase 1.6: Reader Settings - 100%, Phase 1.7: Reader Settings Vec - 100%, Phase 1.8: More Module Adoption - 100%, Build Verification - 100%)
 
 ## Executive Summary
 
@@ -287,6 +287,19 @@ impl SettingsRegistry {
 - reader_settings.rs: 1,035 → 924 lines (-111 lines)
 - reader.rs: 4,168 → 3,410 lines (-758 lines from previous session)
 - Total: -890 lines reduced
+
+### Phase 1.8: More Module Adoption ✅ COMPLETE (100%)
+
+**Status:** ✅ IMPLEMENTED
+
+**Completion:** 100%
+
+**Refactored toggle methods in:**
+- `reader_search.rs`: `toggle_search_menu()` - now uses `toggle_menu_vec`
+- `dictionary/display.rs`: `toggle_title_menu()`, `toggle_search_menu()`, `toggle_search_target_menu()` - now use `toggle_menu_self`
+- `calculator/display.rs`: `toggle_margin_width_menu()`, `toggle_font_size_menu()` - now use `toggle_menu_self`
+
+**Added new helper:** `toggle_menu_self()` for &mut self pattern
 
 **Available for Adoption:**
 - `reader_settings.rs`: 12 toggle methods
