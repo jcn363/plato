@@ -61,7 +61,8 @@
 //! - Large libraries (1000+ books) can be slow to scroll
 //! - Search filtering is linear (O(n)) across all documents
 //!
-//! **TODO**: Implement lazy thumbnail loading and async search.
+//! **Note**: These optimizations were evaluated and deferred due to device constraints.
+//! Lazy loading and async operations add complexity that may outweigh benefits on limited RAM.
 //!
 //! ### Type Duplication
 //! Fixed: ViewId-based helper function now correctly matches views by ViewId

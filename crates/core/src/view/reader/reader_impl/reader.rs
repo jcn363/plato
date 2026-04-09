@@ -81,16 +81,8 @@
 //! ## Known Limitations & TODOs
 //!
 //! ### Type Duplication
-//! Some types are duplicated between reader.rs and reader_core.rs:
-//! - `ViewPort` (private in reader.rs, public in reader_core.rs)
-//! - `Contrast`, `PageAnimation`, etc.
-//!
-//! **TODO**: Consolidate these into a single canonical location in reader_core.rs
-//! and import throughout. This would reduce confusion and potential bugs.
-//!
-//! ### Panic Points
-//! - Line 1274: `unwrap_or_else(|_| panic!("Failed to open HTML document"))`
-//!   TODO: Replace with proper error propagation using `Result<>`
+//! Note: `ViewPort` is imported from `reader_core.rs` - consolidation in progress.
+//! Other types like `Contrast`, `PageAnimation` are also in reader_core.rs.
 //!
 //! ### Missing Optimizations
 //! - Page rendering doesn't parallelize across CPU cores
@@ -105,7 +97,7 @@
 //! - `set_monochrome()` - Not supported on Kobo e-readers (display API limitation)
 //! - `set_font_family()` for PDFs - MuPDF API limitation (stub provided)
 //!
-//! **Location**: Search for `#[allow(unused)]` in methods to find these stubs.
+//! **Location**: Search for `Not supported` in methods to find these stubs.
 //!
 //! ## Testing Notes
 //!
