@@ -517,3 +517,4 @@ Parallel programming can improve throughput for rendering, decoding, layout, and
 
 - **Ask questions** — if you have any questions or doubts, don't hesitate to ask. It's better to clarify requirements than to make incorrect assumptions
 - **Seek input** — when facing architectural decisions or unclear requirements, ask for direction before proceeding
+- **Report contradictions** — if you find any contradiction in the codebase or documentation, don't hesitate to ask for clarification
