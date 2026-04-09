@@ -297,6 +297,8 @@ When facing multiple compilation errors, resolve in this order:
 
 - **One task at a time** — avoid concurrent operations to maintain focus and reliability
 - **Decompose incrementally** — break complex tasks into manageable steps with frequent validation
+- **Ask questions** — if you have any questions or doubts, don't hesitate to ask. It's better to clarify requirements than to make incorrect assumptions
+- **Seek input** — when facing architectural decisions or unclear requirements, ask for direction before proceeding
 - **Prefer composition over inheritance** — build flexible systems through component composition and traits
 
 ## Build Verification
@@ -508,3 +510,10 @@ The Kobo Elipsa can benefit from parallel programming for workloads that are CPU
 ### Bottom line
 
 Parallel programming can improve throughput for rendering, decoding, layout, and background processing on the Kobo Elipsa, but benefits are bounded by eink refresh latency, limited RAM, power constraints, and threading overhead. Focus on coarse-grained parallel tasks, buffer reuse, and SIMD acceleration, and always validate on the actual device.
+
+---
+
+## Communication
+
+- **Ask questions** — if you have any questions or doubts, don't hesitate to ask. It's better to clarify requirements than to make incorrect assumptions
+- **Seek input** — when facing architectural decisions or unclear requirements, ask for direction before proceeding
