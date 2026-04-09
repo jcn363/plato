@@ -220,35 +220,35 @@ pub const ANNOTATION_DRIFT: f32 = 0.05;
 
 #[allow(dead_code)]
 pub struct Reader {
-    id: Id,
-    rect: Rectangle,
+    pub(crate) id: Id,
+    pub(crate) rect: Rectangle,
     children: Vec<Box<dyn View>>,
-    doc: Arc<Mutex<Box<dyn Document>>>,
-    cache: BTreeMap<usize, Resource>,
-    chunks: Vec<RenderChunk>,
-    text: FxHashMap<usize, Vec<BoundedText>>,
-    annotations: FxHashMap<usize, Vec<Annotation>>,
-    noninverted_regions: FxHashMap<usize, Vec<Boundary>>,
-    focus: Option<ViewId>,
-    search: Option<Search>,
-    search_direction: LinearDir,
-    held_buttons: FxHashSet<ButtonCode>,
-    selection: Option<Selection>,
-    target_annotation: Option<[TextLocation; 2]>,
-    history: VecDeque<usize>,
-    state: State,
-    info: Info,
-    current_page: usize,
-    pages_count: usize,
-    view_port: ViewPort,
-    contrast: Contrast,
-    synthetic: bool,
-    page_turns: usize,
-    reflowable: bool,
-    ephemeral: bool,
-    finished: bool,
-    animation: Option<PageAnimation>,
-    previous_chunks: Vec<RenderChunk>,
+    pub(crate) doc: Arc<Mutex<Box<dyn Document>>>,
+    pub(crate) cache: BTreeMap<usize, Resource>,
+    pub(crate) chunks: Vec<RenderChunk>,
+    pub(crate) text: FxHashMap<usize, Vec<BoundedText>>,
+    pub(crate) annotations: FxHashMap<usize, Vec<Annotation>>,
+    pub(crate) noninverted_regions: FxHashMap<usize, Vec<Boundary>>,
+    pub(crate) focus: Option<ViewId>,
+    pub(crate) search: Option<Search>,
+    pub(crate) search_direction: LinearDir,
+    pub(crate) held_buttons: FxHashSet<ButtonCode>,
+    pub(crate) selection: Option<Selection>,
+    pub(crate) target_annotation: Option<[TextLocation; 2]>,
+    pub(crate) history: VecDeque<usize>,
+    pub(crate) state: State,
+    pub(crate) info: Info,
+    pub(crate) current_page: usize,
+    pub(crate) pages_count: usize,
+    pub(crate) view_port: ViewPort,
+    pub(crate) contrast: Contrast,
+    pub(crate) synthetic: bool,
+    pub(crate) page_turns: usize,
+    pub(crate) reflowable: bool,
+    pub(crate) ephemeral: bool,
+    pub(crate) finished: bool,
+    pub(crate) animation: Option<PageAnimation>,
+    pub(crate) previous_chunks: Vec<RenderChunk>,
 }
 
 // ===========================================================================
@@ -1099,7 +1099,7 @@ impl Reader {
         self.update_tool_bar(rq, context);
     }
 
-    fn set_zoom_mode(
+    pub(crate) fn set_zoom_mode(
         &mut self,
         zoom_mode: ZoomMode,
         reset_page_offset: bool,
@@ -1128,7 +1128,7 @@ impl Reader {
         self.update(None, hub, rq, context);
     }
 
-    fn set_scroll_mode(
+    pub(crate) fn set_scroll_mode(
         &mut self,
         scroll_mode: ScrollMode,
         hub: &Hub,
@@ -1296,7 +1296,7 @@ impl Reader {
     // Quit and State Persistence
     // -----------------------------------------------------------------------
 
-    fn quit(&mut self, context: &mut Context) {
+    pub(crate) fn quit(&mut self, context: &mut Context) {
         if let Some(ref mut s) = self.search {
             s.running.store(false, atomic::Ordering::Relaxed);
         }
@@ -1347,7 +1347,7 @@ impl Reader {
     // Page Scaling (Pinch/Spread Zoom)
     // -----------------------------------------------------------------------
 
-    fn scale_page(
+    pub(crate) fn scale_page(
         &mut self,
         center: Point,
         factor: f32,
