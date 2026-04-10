@@ -27,6 +27,7 @@ pub mod settings;
 pub mod sync;
 mod unit;
 pub mod update;
+pub mod theme;
 pub mod view;
 
 pub use anyhow;

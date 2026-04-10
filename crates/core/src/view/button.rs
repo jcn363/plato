@@ -1,6 +1,6 @@
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use super::{BORDER_RADIUS_LARGE, THICKNESS_MEDIUM};
-use crate::color::{TEXT_INVERTED_HARD, TEXT_NORMAL};
+use crate::color::text_normal;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
@@ -84,11 +84,16 @@ impl View for Button {
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
         let dpi = CURRENT_DEVICE.dpi;
+        let dark = crate::theme::is_dark_mode();
 
         let scheme = if self.active {
-            TEXT_INVERTED_HARD
+            if dark {
+                crate::color::DARK_TEXT_INVERTED_HARD
+            } else {
+                crate::color::TEXT_INVERTED_HARD
+            }
         } else {
-            TEXT_NORMAL
+            text_normal(dark)
         };
         let foreground = if self.disabled { scheme[2] } else { scheme[1] };
 

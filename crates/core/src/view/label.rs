@@ -1,5 +1,5 @@
 use super::{Align, Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
-use crate::color::TEXT_NORMAL;
+use crate::color::text_normal;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
@@ -79,8 +79,9 @@ impl View for Label {
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
         let dpi = CURRENT_DEVICE.dpi;
+        let dark = crate::theme::is_dark_mode();
 
-        fb.draw_rectangle(&self.rect, TEXT_NORMAL[0]);
+        fb.draw_rectangle(&self.rect, text_normal(dark)[0]);
 
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let x_height = font.x_heights.0 as i32;
@@ -93,7 +94,7 @@ impl View for Label {
         let dy = (self.rect.height() as i32 - x_height) / 2;
         let pt = pt!(self.rect.min.x + dx, self.rect.max.y - dy);
 
-        font.render(fb, TEXT_NORMAL[1], &plan, pt);
+        font.render(fb, text_normal(dark)[1], &plan, pt);
     }
 
     fn resize(
