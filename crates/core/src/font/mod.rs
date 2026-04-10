@@ -20,7 +20,8 @@ mod freetype_error;
 mod freetype_sys;
 mod harfbuzz_sys;
 
-pub use freetype_error::{FreetypeError, FtError};
+pub use self::freetype_error::FreetypeError;
+pub use self::freetype_sys::FtError;
 
 // ===========================================================================
 // Imports and Re-exports
