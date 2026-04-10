@@ -1,6 +1,6 @@
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 use super::{BORDER_RADIUS_MEDIUM, SMALL_BAR_HEIGHT, THICKNESS_LARGE};
-use crate::color::{BLACK, TEXT_NORMAL, WHITE};
+use crate::color::{text_normal, BLACK, WHITE};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
@@ -127,12 +127,13 @@ impl View for Notification {
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let plan = font.plan(&self.text, Some(self.max_width), None);
         let x_height = font.x_heights.0 as i32;
+        let dark = crate::theme::is_dark_mode();
 
         let dx = (self.rect.width() as i32 - plan.width) as i32 / 2;
         let dy = (self.rect.height() as i32 - x_height) / 2;
         let pt = pt!(self.rect.min.x + dx, self.rect.max.y - dy);
 
-        font.render(fb, TEXT_NORMAL[1], &plan, pt);
+        font.render(fb, text_normal(dark)[1], &plan, pt);
     }
 
     fn resize(

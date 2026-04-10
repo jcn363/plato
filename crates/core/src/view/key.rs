@@ -3,7 +3,7 @@ use super::BORDER_RADIUS_LARGE;
 use super::{
     Bus, Event, Hub, Id, KeyboardEvent, RenderData, RenderQueue, TextKind, View, ViewId, ID_FEEDER,
 };
-use crate::color::{Color, KEYBOARD_BG, TEXT_INVERTED_HARD, TEXT_NORMAL};
+use crate::color::{keyboard_bg, text_normal, Color, TEXT_INVERTED_HARD};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, KBD_CHAR, KBD_LABEL};
@@ -278,11 +278,12 @@ impl View for Key {
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
         let dpi = CURRENT_DEVICE.dpi;
-        fb.draw_rectangle(&self.rect, KEYBOARD_BG);
+        let dark = crate::theme::is_dark_mode();
+        fb.draw_rectangle(&self.rect, keyboard_bg(dark));
         let scheme: [Color; 3] = if self.active ^ (self.pressure == 2) {
             TEXT_INVERTED_HARD
         } else {
-            TEXT_NORMAL
+            text_normal(dark)
         };
 
         let border_radius = scale_by_dpi(BORDER_RADIUS_LARGE, dpi) as i32;
