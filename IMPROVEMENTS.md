@@ -6,8 +6,6 @@
 |--------|--------|
 | **Build** | ✅ Clean (x86_64, ARM32, ARM64) |
 | **Clippy** | ✅ Clean (no warnings) |
-| **Unwrap/expect** | ✅ ~68 remaining (all justified: lock poisoning, FFI, fatal init) |
-| **Raw println!** | ✅ Cleaned (15 replaced with log macros or removed) |
 | **Tests** | ⚠️ Require native libs (mupdf, gumbo) |
 | **License** | ✅ MIT on all crates, deny.toml configured |
 | **Dependencies** | ✅ Mostly current (see [Dependency Management](#dependency-management)) |
@@ -22,7 +20,7 @@
 ### Code Quality
 - ✅ Format string improvements (build.rs, epub_edit)
 - ✅ Raw string literal cleanup (epub_edit)
-- ✅ `lazy_static` → `LazyLock` migration (13 instances across 9 files)
+- ✅ `lazy_static` → `LazyLock` migration (partial: 6 files migrated, 5 remaining require runtime config)
 - ✅ Result documentation (# Errors sections)
 - ✅ Option usage simplification (map().unwrap_or() → direct patterns)
 - ✅ `#[must_use]` attributes on geometry/color methods
@@ -52,11 +50,6 @@
 - ✅ Build fix: `context.online` → `flags.remove(DeviceFlags::ONLINE)` in emulator
 
 ## Remaining Items
-
-### Dead Code Summary
-- **49 total `#[allow(dead_code)]` attributes** identified across codebase
-- **Cleaned:** 41 removed/resolved in pdf_manipulator.rs and cover_editor.rs
-- **Remaining: 8** with documented justifications in specific modules (see below)
 
 ### Remaining — Justified `.expect()` Calls (~68 total)
 
@@ -116,6 +109,10 @@ These are defensible as "if this fails, the system is broken and should panic":
 - `bincode` 1.3.3 — RUSTSEC-2025-0141 via kl-hyphenate; low risk (not network-facing)
 
 #### Potential Features
+- ✅ **Dark mode toggle** - Add toggle component on Settings page
+- ✅ **Dark mode state management** - Add dark mode state to Settings/Context
+- ✅ **Dark theme CSS styles** - Implement dark theme colors in color.rs
+- ⚠️ **Theme-aware components** - Need refactoring 55+ view files to use theme functions
 - Dark mode transitions (smooth fade vs instant)
 - Reading statistics export
 - Cloud bookmark sync

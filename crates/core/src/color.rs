@@ -137,3 +137,67 @@ pub const READING_PROGRESS: Color = GRAY07;
 pub const PROGRESS_FULL: Color = GRAY05;
 pub const PROGRESS_EMPTY: Color = GRAY13;
 pub const PROGRESS_VALUE: Color = GRAY06;
+
+pub const DARK_BACKGROUND: Color = GRAY02;
+pub const DARK_FOREGROUND: Color = GRAY13;
+pub const DARK_TEXT_NORMAL: [Color; 3] = [GRAY13, GRAY02, GRAY08];
+pub const DARK_TEXT_BUMP_SMALL: [Color; 3] = [GRAY09, GRAY13, GRAY07];
+pub const DARK_TEXT_BUMP_LARGE: [Color; 3] = [GRAY09, GRAY13, GRAY08];
+pub const DARK_TEXT_INVERTED_SOFT: [Color; 3] = [GRAY07, GRAY13, GRAY13];
+pub const DARK_TEXT_INVERTED_HARD: [Color; 3] = [GRAY13, GRAY02, GRAY08];
+pub const DARK_KEYBOARD_BG: Color = GRAY03;
+pub const DARK_SEPARATOR: Color = GRAY05;
+
+#[inline]
+pub fn background(dark: bool) -> Color {
+    if dark {
+        DARK_BACKGROUND
+    } else {
+        WHITE
+    }
+}
+
+#[inline]
+pub fn foreground(dark: bool) -> Color {
+    if dark {
+        DARK_FOREGROUND
+    } else {
+        BLACK
+    }
+}
+
+#[inline]
+pub fn text_normal(dark: bool) -> [Color; 3] {
+    if dark {
+        DARK_TEXT_NORMAL
+    } else {
+        TEXT_NORMAL
+    }
+}
+
+#[inline]
+pub fn text_bump_small(dark: bool) -> [Color; 3] {
+    if dark {
+        DARK_TEXT_BUMP_SMALL
+    } else {
+        TEXT_BUMP_SMALL
+    }
+}
+
+#[inline]
+pub fn separator(dark: bool) -> Color {
+    if dark {
+        DARK_SEPARATOR
+    } else {
+        SEPARATOR_NORMAL
+    }
+}
+
+#[inline]
+pub fn keyboard_bg(dark: bool) -> Color {
+    if dark {
+        DARK_KEYBOARD_BG
+    } else {
+        KEYBOARD_BG
+    }
+}

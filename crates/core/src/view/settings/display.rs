@@ -4,7 +4,7 @@ use crate::view::button::Button;
 use crate::view::label::Label;
 use crate::view::{Align, Bus, EntryId, Event, RenderQueue, View};
 
-pub const CHILD_COUNT: usize = 12;
+pub const CHILD_COUNT: usize = 14;
 
 pub fn build_rows(
     rect: &Rectangle,
@@ -185,6 +185,33 @@ pub fn build_rows(
 
     y += small_height;
 
+    let label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "Dark Mode".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(label) as Box<dyn View>);
+
+    let ctrl_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let toggle = Button::new(
+        ctrl_rect,
+        Event::Select(EntryId::ToggleDarkMode),
+        if settings.dark_mode { "On" } else { "Off" }.to_string(),
+    );
+    children.push(Box::new(toggle) as Box<dyn View>);
+
+    y += small_height;
+
     (children, y)
 }
 
@@ -275,6 +302,21 @@ pub fn handle_event(
             if let Some(btn) = children[offset + 11].downcast_mut::<Button>() {
                 btn.update(
                     if context.fb.dithered() { "On" } else { "Off" }.to_string(),
+                    rq,
+                );
+            }
+            true
+        }
+        Event::Select(EntryId::ToggleDarkMode) => {
+            context.settings.dark_mode = !context.settings.dark_mode;
+            if let Some(btn) = children[offset + 13].downcast_mut::<Button>() {
+                btn.update(
+                    if context.settings.dark_mode {
+                        "On"
+                    } else {
+                        "Off"
+                    }
+                    .to_string(),
                     rq,
                 );
             }
