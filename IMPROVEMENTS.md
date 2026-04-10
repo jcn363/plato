@@ -20,7 +20,7 @@
 ### Code Quality
 - ✅ Format string improvements (build.rs, epub_edit)
 - ✅ Raw string literal cleanup (epub_edit)
-- ✅ `lazy_static` → `LazyLock` migration (partial: 6 files migrated, 5 remaining require runtime config)
+- ✅ `lazy_static` → `LazyLock` migration (partial: 6 files migrated, 5 remaining by design - depend on runtime `CURRENT_DEVICE`)
 - ✅ Result documentation (# Errors sections)
 - ✅ Option usage simplification (map().unwrap_or() → direct patterns)
 - ✅ `#[must_use]` attributes on geometry/color methods
@@ -133,7 +133,7 @@ These are defensible as "if this fails, the system is broken and should panic":
 
 | Package | plato-core | fetcher | Status |
 |---------|-----------|---------|--------|
-| `reqwest` | 0.12.28 | 0.13.2 | ⚠️ Unaligned (TLS breaking changes) |
+| `reqwest` | 0.13 | 0.13 | ✅ Aligned via workspace |
 
 ## Device-Specific Optimizations
 
