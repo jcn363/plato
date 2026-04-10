@@ -1,6 +1,6 @@
 use super::BORDER_RADIUS_MEDIUM;
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
-use crate::color::{TEXT_INVERTED_HARD, TEXT_NORMAL};
+use crate::color::{text_normal, TEXT_INVERTED_HARD};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
@@ -8,6 +8,7 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CornerSpec, CycleDir, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::{DeviceEvent, FingerStatus};
+use crate::theme;
 use crate::unit::scale_by_dpi;
 
 pub struct Preset {
@@ -88,7 +89,7 @@ impl View for Preset {
                 scale_by_dpi(BORDER_RADIUS_MEDIUM, dpi) as i32,
             )
         } else {
-            (TEXT_NORMAL, 0)
+            (text_normal(theme::is_dark_mode()), 0)
         };
 
         fb.draw_rounded_rectangle(&self.rect, &CornerSpec::Uniform(border_radius), scheme[0]);

@@ -2,7 +2,7 @@ use super::filler::Filler;
 use super::icon::Icon;
 use super::input_field::InputField;
 use super::{Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER, THICKNESS_MEDIUM};
-use crate::color::{SEPARATOR_NORMAL, TEXT_BUMP_SMALL};
+use crate::color::{separator, text_bump_small};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
@@ -39,19 +39,19 @@ impl SearchBar {
             search_rect,
             Event::ToggleNear(ViewId::SearchMenu, search_rect),
         )
-        .background(TEXT_BUMP_SMALL[0]);
+        .background(text_bump_small(crate::theme::is_dark_mode())[0]);
 
         children.push(Box::new(search_icon) as Box<dyn View>);
 
-        let separator = Filler::new(
+        let sep = Filler::new(
             rect![
                 pt!(rect.min.x + side, rect.min.y),
                 pt!(rect.min.x + side + thickness, rect.max.y)
             ],
-            SEPARATOR_NORMAL,
+            separator(crate::theme::is_dark_mode()),
         );
 
-        children.push(Box::new(separator) as Box<dyn View>);
+        children.push(Box::new(sep) as Box<dyn View>);
 
         let input_field = InputField::new(
             rect![
@@ -66,15 +66,15 @@ impl SearchBar {
 
         children.push(Box::new(input_field) as Box<dyn View>);
 
-        let separator = Filler::new(
+        let sep = Filler::new(
             rect![
                 pt!(rect.max.x - side - thickness, rect.min.y),
                 pt!(rect.max.x - side, rect.max.y)
             ],
-            SEPARATOR_NORMAL,
+            separator(crate::theme::is_dark_mode()),
         );
 
-        children.push(Box::new(separator) as Box<dyn View>);
+        children.push(Box::new(sep) as Box<dyn View>);
 
         let close_icon = Icon::new(
             "close",
@@ -84,7 +84,7 @@ impl SearchBar {
             ],
             Event::Close(ViewId::SearchBar),
         )
-        .background(TEXT_BUMP_SMALL[0]);
+        .background(text_bump_small(crate::theme::is_dark_mode())[0]);
 
         children.push(Box::new(close_icon) as Box<dyn View>);
 

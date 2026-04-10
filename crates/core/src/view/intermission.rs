@@ -1,5 +1,5 @@
 use super::{Bus, Event, Hub, Id, RenderQueue, View, ID_FEEDER};
-use crate::color::{TEXT_INVERTED_HARD, TEXT_NORMAL};
+use crate::color::{text_normal, TEXT_INVERTED_HARD};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{open, Location};
@@ -8,6 +8,7 @@ use crate::framebuffer::Framebuffer;
 use crate::geom::Rectangle;
 use crate::metadata::{sort, BookQuery, SortMethod};
 use crate::settings::{IntermKind, COVER_SPECIAL_PATH, LOGO_SPECIAL_PATH};
+use crate::theme;
 use std::path::PathBuf;
 
 pub struct Intermission {
@@ -75,7 +76,7 @@ impl View for Intermission {
         let scheme = if self.halt {
             TEXT_INVERTED_HARD
         } else {
-            TEXT_NORMAL
+            text_normal(theme::is_dark_mode())
         };
 
         fb.draw_rectangle(&self.rect, scheme[0]);

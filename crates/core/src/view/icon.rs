@@ -1,5 +1,5 @@
 use super::{Align, Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
-use crate::color::{Color, TEXT_INVERTED_HARD, TEXT_NORMAL};
+use crate::color::{text_normal, Color, TEXT_INVERTED_HARD};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::pdf::PdfOpener;
@@ -8,6 +8,7 @@ use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::{CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::{DeviceEvent, FingerStatus};
+use crate::theme;
 use crate::unit::scale_by_dpi_raw;
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
@@ -102,7 +103,7 @@ impl Icon {
             rect,
             children: Vec::new(),
             name: name.to_string(),
-            background: TEXT_NORMAL[0],
+            background: text_normal(theme::is_dark_mode())[0],
             align: Align::Center,
             corners: None,
             event,
@@ -181,7 +182,7 @@ impl View for Icon {
         let scheme = if self.active {
             TEXT_INVERTED_HARD
         } else {
-            TEXT_NORMAL
+            text_normal(theme::is_dark_mode())
         };
 
         let pixmap = match ICONS_PIXMAPS.get(&self.name[..]) {

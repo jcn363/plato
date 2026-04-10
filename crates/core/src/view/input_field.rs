@@ -3,13 +3,14 @@ use super::{
     Bus, EntryId, Event, Hub, Id, KeyboardEvent, RenderData, RenderQueue, TextKind, View, ViewId,
     ID_FEEDER,
 };
-use crate::color::{BLACK, TEXT_NORMAL};
+use crate::color::{text_normal, BLACK};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, FONT_SIZES, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, BorderSpec, LinearDir, Point, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 
 pub struct InputField {
@@ -319,7 +320,8 @@ impl View for InputField {
         let cursor_height = 2 * x_height;
         let max_width = self.rect.width().saturating_sub(2 * padding as u32) as i32;
 
-        fb.draw_rectangle(&self.rect, TEXT_NORMAL[0]);
+        let text_color = text_normal(theme::is_dark_mode());
+        fb.draw_rectangle(&self.rect, text_color[0]);
 
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
 
@@ -336,7 +338,7 @@ impl View for InputField {
         let (mut plan, foreground) = if self.text.is_empty() {
             (
                 font.plan(&self.placeholder, Some(max_width), None),
-                TEXT_NORMAL[2],
+                text_color[2],
             )
         } else {
             let display_text = if self.password {
@@ -349,7 +351,7 @@ impl View for InputField {
             };
             (
                 font.plan(&display_text, None, Some(&["-liga".to_string()])),
-                TEXT_NORMAL[1],
+                text_color[1],
             )
         };
 
@@ -396,7 +398,7 @@ impl View for InputField {
                 self.rect.min.x + padding + dx + 3 * thickness,
                 self.rect.max.y - big_dy + x_height
             );
-            font.render(fb, TEXT_NORMAL[1], &plan, pt);
+            font.render(fb, text_color[1], &plan, pt);
         }
     }
 

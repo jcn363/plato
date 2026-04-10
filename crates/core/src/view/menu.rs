@@ -4,7 +4,7 @@ use super::menu_entry::MenuEntry;
 use super::{Bus, Event, Hub, RenderData, RenderQueue, View};
 use super::{EntryKind, Id, ViewId, CLOSE_IGNITION_DELAY, ID_FEEDER};
 use super::{BORDER_RADIUS_MEDIUM, SMALL_BAR_HEIGHT, THICKNESS_LARGE, THICKNESS_MEDIUM};
-use crate::color::{BLACK, SEPARATOR_NORMAL, SEPARATOR_STRONG, WHITE};
+use crate::color::{separator, BLACK, SEPARATOR_STRONG, WHITE};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
@@ -57,10 +57,11 @@ impl Menu {
         let border_thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as i32;
         let border_radius = scale_by_dpi(BORDER_RADIUS_MEDIUM - THICKNESS_LARGE, dpi) as i32;
 
+        let dark = crate::theme::is_dark_mode();
         let sep_color = if context.fb.monochrome() {
             SEPARATOR_STRONG
         } else {
-            SEPARATOR_NORMAL
+            separator(dark)
         };
         let font = font_from_style(&mut context.fonts, &NORMAL_STYLE, dpi);
         let entry_height = font.x_heights.0 as i32 * 6;

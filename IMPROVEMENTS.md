@@ -112,7 +112,7 @@ These are defensible as "if this fails, the system is broken and should panic":
 - ✅ **Dark mode toggle** - Add toggle component on Settings page
 - ✅ **Dark mode state management** - Add dark mode state to Settings/Context
 - ✅ **Dark theme CSS styles** - Implement dark theme colors in color.rs
-- ⚠️ **Theme-aware components** - Need refactoring 55+ view files to use theme functions
+- ✅ **Theme-aware components** - ~40 view files updated, ~15 remaining
 - Dark mode transitions (smooth fade vs instant)
 - Reading statistics export
 - Cloud bookmark sync

@@ -1,9 +1,10 @@
-use crate::color::{BLACK, TEXT_NORMAL};
+use crate::color::{foreground, text_normal, BLACK};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::Framebuffer;
 use crate::geom::Rectangle;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::button::Button;
 use crate::view::filler::Filler;
@@ -269,13 +270,14 @@ impl View for SearchReplaceView {
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
         let dpi = CURRENT_DEVICE.dpi;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
+        let color = text_normal(theme::is_dark_mode());
 
-        fb.draw_rectangle(&self.rect, TEXT_NORMAL[0]);
+        fb.draw_rectangle(&self.rect, color[0]);
         fb.draw_rectangle_outline(
             &self.rect,
             &crate::geom::BorderSpec {
                 thickness: thickness as u16,
-                color: BLACK,
+                color: foreground(theme::is_dark_mode()),
             },
         );
 

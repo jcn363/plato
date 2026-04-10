@@ -1,5 +1,5 @@
+use crate::color::{text_normal, TEXT_INVERTED_HARD};
 use crate::color::{BLACK, READING_PROGRESS, WHITE};
-use crate::color::{TEXT_INVERTED_HARD, TEXT_NORMAL};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::pdf::PdfOpener;
@@ -11,6 +11,7 @@ use crate::geom::{halves, BorderSpec, CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::metadata::{Info, Status};
 use crate::settings::{FirstColumn, SecondColumn};
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER, THICKNESS_SMALL};
 use std::path::PathBuf;
@@ -125,7 +126,7 @@ impl View for Book {
         let scheme = if self.active {
             TEXT_INVERTED_HARD
         } else {
-            TEXT_NORMAL
+            text_normal(theme::is_dark_mode())
         };
 
         fb.draw_rectangle(&self.rect, scheme[0]);

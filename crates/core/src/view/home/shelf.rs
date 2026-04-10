@@ -1,5 +1,5 @@
 use super::book::Book;
-use crate::color::{SEPARATOR_NORMAL, WHITE};
+use crate::color::{background as bg, separator as sep};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::open;
@@ -10,6 +10,7 @@ use crate::geom::{halves, CycleDir, Dir, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::metadata::Info;
 use crate::settings::{FirstColumn, SecondColumn};
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
@@ -143,7 +144,7 @@ impl Shelf {
             if index < max_lines - 1 {
                 let separator = Filler::new(
                     rect![self.rect.min.x, y_max, self.rect.max.x, y_max + thickness],
-                    SEPARATOR_NORMAL,
+                    sep(theme::is_dark_mode()),
                 );
                 self.children.push(Box::new(separator) as Box<dyn View>);
             }
@@ -155,7 +156,7 @@ impl Shelf {
             let y_start = y_pos + if metadata.is_empty() { 0 } else { thickness };
             let filler = Filler::new(
                 rect![self.rect.min.x, y_start, self.rect.max.x, self.rect.max.y],
-                WHITE,
+                bg(theme::is_dark_mode()),
             );
             self.children.push(Box::new(filler) as Box<dyn View>);
         }

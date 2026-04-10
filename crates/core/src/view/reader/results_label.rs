@@ -1,9 +1,10 @@
-use crate::color::TEXT_NORMAL;
+use crate::color::text_normal;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
+use crate::theme;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 
 #[allow(dead_code)]
@@ -71,13 +72,10 @@ impl View for ResultsLabel {
         let dx = padding + (max_width - plan.width) / 2;
         let dy = (self.rect.height() as i32 - font.x_heights.0 as i32) / 2;
         let pt = pt!(self.rect.min.x + dx, self.rect.max.y - dy);
-        fb.draw_rectangle(&self.rect, TEXT_NORMAL[0]);
-        let color = if self.completed {
-            TEXT_NORMAL[1]
-        } else {
-            TEXT_NORMAL[2]
-        };
-        font.render(fb, color, &plan, pt);
+        let color = text_normal(theme::is_dark_mode());
+        fb.draw_rectangle(&self.rect, color[0]);
+        let text_color = if self.completed { color[1] } else { color[2] };
+        font.render(fb, text_color, &plan, pt);
     }
 
     fn rect(&self) -> &Rectangle {

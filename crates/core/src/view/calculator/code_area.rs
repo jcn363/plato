@@ -1,5 +1,5 @@
 use super::{Line, LineOrigin};
-use crate::color::TEXT_NORMAL;
+use crate::color::text_normal;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
@@ -7,6 +7,7 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CycleDir, Dir, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent};
+use crate::theme;
 use crate::unit::mm_to_px;
 use crate::view::{Bus, Event, Hub, Id, RenderQueue, View, ID_FEEDER};
 
@@ -115,9 +116,10 @@ impl View for CodeArea {
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
         let dpi = CURRENT_DEVICE.dpi;
+        let color = text_normal(theme::is_dark_mode());
 
         if let Some(irect) = self.rect.intersection(&rect) {
-            fb.draw_rectangle(&irect, TEXT_NORMAL[0]);
+            fb.draw_rectangle(&irect, color[0]);
         }
 
         let font = &mut fonts.monospace.regular;
@@ -145,7 +147,7 @@ impl View for CodeArea {
                 }
                 if y >= rect.min.y {
                     let plan = font.plan(&c.to_string(), None, None);
-                    font.render(fb, TEXT_NORMAL[1], &plan, pt!(x, y));
+                    font.render(fb, color[1], &plan, pt!(x, y));
                 }
                 x += char_width;
             }

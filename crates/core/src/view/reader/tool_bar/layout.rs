@@ -1,9 +1,10 @@
-use crate::color::SEPARATOR_NORMAL;
+use crate::color::separator as sep;
 use crate::device::CURRENT_DEVICE;
 use crate::geom::Rectangle;
 use crate::metadata::ReaderInfo;
 use crate::metadata::{DEFAULT_CONTRAST_EXPONENT, DEFAULT_CONTRAST_GRAY};
 use crate::settings::ReaderSettings;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::icon::Icon;
@@ -81,7 +82,7 @@ pub(super) fn build_reflowable_children(
     // Separator.
     let separator = Filler::new(
         rect![rect.min.x, rect.min.y + side, rect.max.x, rect.max.y - side],
-        SEPARATOR_NORMAL,
+        sep(theme::is_dark_mode()),
     );
     children.push(Box::new(separator) as Box<dyn View>);
 
@@ -210,7 +211,7 @@ pub(super) fn build_fixed_children(
     // Separator.
     let separator = Filler::new(
         rect![rect.min.x, rect.min.y + side, rect.max.x, rect.max.y - side],
-        SEPARATOR_NORMAL,
+        sep(theme::is_dark_mode()),
     );
     children.push(Box::new(separator) as Box<dyn View>);
 

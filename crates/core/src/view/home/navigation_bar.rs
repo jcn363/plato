@@ -1,11 +1,12 @@
 use super::directories_bar::DirectoriesBar;
-use crate::color::SEPARATOR_NORMAL;
+use crate::color::separator as sep;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{Dir, Point, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
@@ -141,13 +142,17 @@ impl NavigationBar {
                     y_max -= height;
 
                     let rect = rect![self.rect.min.x, y_max - thickness, self.rect.max.x, y_max];
-                    self.children
-                        .insert(index, Box::new(Filler::new(rect, SEPARATOR_NORMAL)));
+                    self.children.insert(
+                        index,
+                        Box::new(Filler::new(rect, sep(theme::is_dark_mode()))),
+                    );
                     y_max -= thickness;
                 } else {
                     let rect = rect![self.rect.min.x, y_max - thickness, self.rect.max.x, y_max];
-                    self.children
-                        .insert(index, Box::new(Filler::new(rect, SEPARATOR_NORMAL)));
+                    self.children.insert(
+                        index,
+                        Box::new(Filler::new(rect, sep(theme::is_dark_mode()))),
+                    );
                     y_max -= thickness;
 
                     let rect = rect![self.rect.min.x, y_max - height, self.rect.max.x, y_max];

@@ -1,4 +1,4 @@
-use crate::color::{SEPARATOR_NORMAL, TEXT_BUMP_SMALL};
+use crate::color::{separator as sep, text_bump_small as tbs};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
@@ -6,6 +6,7 @@ use crate::framebuffer::Framebuffer;
 use crate::geom::{CycleDir, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::icon::Icon;
@@ -32,7 +33,7 @@ impl InputBar {
             rect![rect.min, rect.min + side],
             Event::History(CycleDir::Previous, false),
         )
-        .background(TEXT_BUMP_SMALL[0]);
+        .background(tbs(theme::is_dark_mode())[0]);
         children.push(Box::new(prev_icon) as Box<dyn View>);
 
         let separator = Filler::new(
@@ -40,7 +41,7 @@ impl InputBar {
                 pt!(rect.min.x + side, rect.min.y),
                 pt!(rect.min.x + side + thickness, rect.max.y)
             ],
-            SEPARATOR_NORMAL,
+            sep(theme::is_dark_mode()),
         );
         children.push(Box::new(separator) as Box<dyn View>);
 
@@ -61,7 +62,7 @@ impl InputBar {
                 pt!(rect.max.x - side - thickness, rect.min.y),
                 pt!(rect.max.x - side, rect.max.y)
             ],
-            SEPARATOR_NORMAL,
+            sep(theme::is_dark_mode()),
         );
         children.push(Box::new(separator) as Box<dyn View>);
 
@@ -73,7 +74,7 @@ impl InputBar {
             ],
             Event::History(CycleDir::Next, false),
         )
-        .background(TEXT_BUMP_SMALL[0]);
+        .background(tbs(theme::is_dark_mode())[0]);
         children.push(Box::new(next_icon) as Box<dyn View>);
 
         InputBar { id, rect, children }
