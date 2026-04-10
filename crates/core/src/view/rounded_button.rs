@@ -1,7 +1,7 @@
 use super::icon::ICONS_PIXMAPS;
 use super::THICKNESS_MEDIUM;
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
-use crate::color::{TEXT_INVERTED_HARD, TEXT_NORMAL};
+use crate::color::text_normal;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
@@ -70,11 +70,16 @@ impl View for RoundedButton {
         let dpi = CURRENT_DEVICE.dpi;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as u16;
         let button_radius = self.rect.height() as i32 / 2;
+        let dark = crate::theme::is_dark_mode();
 
         let scheme = if self.active {
-            TEXT_INVERTED_HARD
+            if dark {
+                crate::color::DARK_TEXT_INVERTED_HARD
+            } else {
+                crate::color::TEXT_INVERTED_HARD
+            }
         } else {
-            TEXT_NORMAL
+            text_normal(dark)
         };
 
         let pixmap = match ICONS_PIXMAPS.get(&self.name[..]) {

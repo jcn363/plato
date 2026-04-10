@@ -1,6 +1,6 @@
 use super::icon::ICONS_PIXMAPS;
 use super::{Bus, EntryKind, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
-use crate::color::{TEXT_INVERTED_HARD, TEXT_NORMAL};
+use crate::color::text_normal;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE, SPECIAL_STYLE};
@@ -135,6 +135,7 @@ impl View for MenuEntry {
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
         let dpi = CURRENT_DEVICE.dpi;
+        let dark = crate::theme::is_dark_mode();
         let style = if matches!(self.kind, EntryKind::More(..)) {
             SPECIAL_STYLE
         } else {
@@ -145,9 +146,13 @@ impl View for MenuEntry {
         let padding = 4 * font.em() as i32;
 
         let scheme = if self.active {
-            TEXT_INVERTED_HARD
+            if dark {
+                crate::color::DARK_TEXT_INVERTED_HARD
+            } else {
+                crate::color::TEXT_INVERTED_HARD
+            }
         } else {
-            TEXT_NORMAL
+            text_normal(dark)
         };
         let foreground = if self.disabled { scheme[2] } else { scheme[1] };
 
