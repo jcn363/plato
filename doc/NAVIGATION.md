@@ -1,4 +1,6 @@
-## Naming pages
+# Navigation
+
+## Naming Pages
 
 To name a page, hold the current page indicator and select the *Name* entry. A page name can be an uppercase ASCII letter, a lowercase roman numeral or an arabic numeral.
 
@@ -54,4 +56,4 @@ Instead of the page number, you can specify one of the following characters:
 - `(` and `)` to jump to the first and last page.
 - `_` to jump to a random page.
 
-If a number ending with `%` is given it will be interpreted as a percentage of the book's pages count.
+If a number ending with `%` is given, it will be interpreted as a percentage of the book's page count.

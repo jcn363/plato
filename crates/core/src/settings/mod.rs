@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 pub use self::preset::{guess_frontlight, LightPreset};
-pub use self::theme::{ThemeMode, ThemeSettings};
+pub use self::theme::{ThemeMode, ThemeSchedule, ThemeSettings, TimeOfDay};
 pub use defaults::*;
 pub use display::*;
 pub use features::*;

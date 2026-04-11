@@ -1,3 +1,5 @@
+# Library
+
 ## Modes
 
 With both modes, the reading states are stored within the `.reading-states` directory.

@@ -2,11 +2,27 @@
 
 Thank you for your interest in contributing to Plato! This document outlines the guidelines and best practices for contributing to this project.
 
+See also:
+
+- [README.md](README.md) for project overview and supported targets
+- [doc/BUILD.md](doc/BUILD.md) for setup and build details
+- [AGENTS.md](AGENTS.md) for repository-specific coding guidance
+
 ## Development Setup
+
+### Workspace Layout
+- `crates/core` contains the shared engine and most source code
+- `crates/plato` is the device binary
+- `crates/emulator` is the SDL2 desktop emulator
+- `crates/importer` is the `plato-import` binary
+- `crates/fetcher` is the `article_fetcher` binary
+- `crates/epub_edit` is the EPUB editing library used by the UI
+- `epub_editor/` is a separate standalone CLI tool and is excluded from the Cargo workspace
 
 ### Prerequisites
 - Rust toolchain (stable)
 - Git
+- `wget`, `curl`, `pkg-config`, `unzip`, `jq`, `patchelf`
 - For ARM builds: Cross-compilation toolchain
 - For emulator: SDL2 development libraries
 
@@ -16,10 +32,10 @@ Thank you for your interest in contributing to Plato! This document outlines the
 cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
 
 # Build for 64-bit ARM (newer Kobo devices: Libra 2, Sage, Clara 2E, etc.)
-cargo build --target aarch64-unknown-linux-gnu --profile release-arm64
+cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
 
 # Build for host (development/testing)
-cargo build --target x86_64-unknown-linux-gnu
+cargo build --target x86_64-unknown-linux-gnu -p plato
 
 # Full build with native dependencies (downloads libs + MuPDF)
 ./build.sh
@@ -97,7 +113,7 @@ cargo test overlaping --target x86_64-unknown-linux-gnu
 
 ### Performance
 - Use `#[inline]` on hot-path small functions (pixel operations, geometry math, device checks)
-- Use `FxHashMap`/`FxHashSet` from `fxhash` instead of std `HashMap` for non-cryptographic use
+- Prefer `FxHashMap`/`FxHashSet` from `rustc_hash`, which is what the workspace currently uses
 - Pre-allocate buffers with `String::with_capacity` when size is known
 - Prefer `Cow<str>` for conditional string ownership
 
@@ -150,7 +166,7 @@ cargo test overlaping --target x86_64-unknown-linux-gnu
 - Add integration tests that exercise multiple components together
 
 ### General Patterns
-- Use `lazy_static!` for global statics requiring runtime initialization
+- Follow the surrounding module for statics: the codebase currently uses both `lazy_static!` and `std::sync::LazyLock`
 - Use `bitflags!` for flag enums
 - Prefer `BTreeMap`/`BTreeSet` for ordered collections; `IndexMap` for insertion-ordered maps
 - Keep `mod` declarations alphabetical; use `pub mod` for public API, plain `mod` for internal

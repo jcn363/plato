@@ -79,6 +79,7 @@ impl TopBar {
             ThemeMode::Dark => "theme-dark",
             ThemeMode::Sepia => "theme-sepia",
             ThemeMode::Auto => "theme-auto",
+            ThemeMode::Scheduled => "theme-scheduled",
         };
         let theme_indicator = Icon::new(
             theme_icon_name,
@@ -138,6 +139,7 @@ impl TopBar {
             ThemeMode::Dark => "theme-dark",
             ThemeMode::Sepia => "theme-sepia",
             ThemeMode::Auto => "theme-auto",
+            ThemeMode::Scheduled => "theme-scheduled",
         };
         self.theme_indicator.name = icon_name.to_string();
         rq.add(RenderData::new(

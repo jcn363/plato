@@ -828,6 +828,16 @@ pub fn run() -> Result<(), Error> {
                         }
                     }
                 }
+
+                if context.settings.theme_settings.mode == ThemeMode::Scheduled
+                    && context.settings.theme_settings.schedule.enabled
+                {
+                    let now = Local::now();
+                    theme::update_from_schedule(&context.settings.theme_settings.schedule, &now);
+                    if theme::is_dark_mode() != context.settings.dark_mode {
+                        context.settings.dark_mode = theme::is_dark_mode();
+                    }
+                }
             }
             Event::PrepareSuspend => {
                 tasks.retain(|task| task.id != TaskId::PrepareSuspend);
@@ -979,7 +989,9 @@ pub fn run() -> Result<(), Error> {
                     starts,
                     ends: _,
                 } => {
-                    if context.settings.theme_settings.mode == ThemeMode::Auto {
+                    if context.settings.theme_settings.mode == ThemeMode::Auto
+                        || context.settings.theme_settings.mode == ThemeMode::Scheduled
+                    {
                         let width = context.fb.dims().0 as i32;
                         if starts[0].x < width / 4 {
                             context.settings.theme_settings.mode = ThemeMode::Dark;

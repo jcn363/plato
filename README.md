@@ -1,10 +1,29 @@
+# Plato
+
 ![Logo](artworks/plato-logo.svg)
 
 This is an optimized version of the original [Plato](https://github.com/pettarin/plato) document reader for Kobo e-readers.
 
 *Plato* is a document reader for *Kobo*'s e-readers.
 
-Documentation: [GUIDE](doc/GUIDE.md), [MANUAL](doc/MANUAL.md), [BUILD](doc/BUILD.md), [NOT_IMPLEMENTED](doc/NOT_IMPLEMENTED.md) and [OCR_TTS](doc/OCR_TTS.md).
+The current source tree is a Cargo workspace with these crates:
+
+- `crates/core` (`plato-core`) for document handling, rendering, UI, device support, sync, and settings
+- `crates/plato` for the Kobo device binary
+- `crates/emulator` for the desktop SDL2 emulator
+- `crates/importer` for the `plato-import` tool
+- `crates/fetcher` for the `article_fetcher` binary
+- `crates/epub_edit` for EPUB editing support used by the in-app editor
+
+The repository also contains a standalone `epub_editor/` CLI tool that is built by `build.sh`, but it is excluded from the Cargo workspace.
+
+Documentation:
+
+- [Installation and configuration guide](doc/GUIDE.md)
+- [User manual](doc/MANUAL.md)
+- [Build instructions](doc/BUILD.md)
+- [Not implemented features](doc/NOT_IMPLEMENTED.md)
+- [OCR and TTS notes](doc/OCR_TTS.md)
 
 ## Supported firmwares
 
@@ -22,63 +41,43 @@ Any 4.*X*.*Y* firmware, with *X* ≥ 6, will do.
 - *Elipsa*.
 - *Nia*.
 - *Libra H₂O*.
+- *Forma 32GB*.
 - *Forma*.
 - *Clara HD*.
 - *Aura H₂O Edition 2*.
 - *Aura Edition 2*.
+- *Aura ONE Limited Edition*.
 - *Aura ONE*.
+- *Touch 2.0*.
 - *Glo HD*.
 - *Aura H₂O*.
 - *Aura*.
+- *Aura HD*.
+- *Mini*.
 - *Glo*.
+- *Touch A/B*.
 - *Touch C*.
-- *Touch B*.
 
 ## Supported formats
 
-- PDF, CBZ, FB2, MOBI, XPS and TXT via [MuPDF](https://mupdf.com/index.html).
-- ePUB through a built-in renderer.
+- ePUB through the built-in renderer.
+- HTML and HTM through the built-in HTML renderer.
+- PDF, CBZ, FB2, FBZ, MOBI, XPS, OXPS, and TXT via [MuPDF](https://mupdf.com/index.html).
 
 ## Features
 
-- Crop the margins.
-- Continuous fit-to-width zoom mode with line preserving cuts.
-- Rotate the screen (portrait ↔ landscape).
-- Adjust the contrast.
-- Define words using *dictd* dictionaries.
-- Annotations, highlights and bookmarks with notes.
-- Export annotations to Markdown or JSON format.
-- Retrieve articles from online sources through [hooks](doc/HOOKS.md) (an example *wallabag* [article fetcher](doc/ARTICLE_FETCHER.md) is provided).
-- RTL (Right-to-Left) text support for Arabic, Hebrew, and Persian languages.
-- Dark mode support for night reading.
-- Reading progress and statistics tracking with reading time and streaks.
-- Reading goals (daily minutes, weekly books).
-- Notes and sketch applications.
-- Metadata viewing for documents.
-- Book collections and series support.
-- Custom gesture configuration.
-- Night light scheduling with automatic warm light transitions.
-- Manga/comic mode with RTL page turning.
-- **Batch operations** (multi-select books for delete/move).
-- Book preview on long press.
-- Password-protected document support (auto-handled via MuPDF).
-- **Cover editor** for customizing book covers.
-- Plugin system for extensible hooks with network access control.
-- **Background WiFi sync** with WebDAV cloud synchronization.
-- **KoboCloud sync** for reading progress.
-- External SD card auto-import support.
-- **Statistics view** to track reading progress and streaks.
-- **EPUB Editor** with undo/redo and preview functionality.
-- **MuPDF native search** option for PDF text search.
-- **PDF Tools** for page deletion, rotation, extraction, merging, reordering, redaction, resource extraction, and annotation export.
-- **Progressive document loading** with LRU caching for large PDFs.
-- **Redaction support** for securely removing content from PDFs.
-- **Resource extraction** for analyzing images and fonts in PDFs.
-- **Export annotations to PDF** - Embed highlights/notes in new PDF file.
+- Built-in home screen, reader, dictionary, calculator, sketch, statistics, EPUB editor, cover editor, and PDF tools views.
+- Configurable libraries, hooks, Wi-Fi scripts, dictionaries, CSS overrides, hyphenation bounds, and keyboard layouts.
+- Reading features including annotations, highlights, bookmarks, search, table of contents, page naming, margin cropping, and fit-to-width reading.
+- Theme and display controls including inversion, dark/theme modes, frontlight integration, rotation, and dithering controls.
+- Library features including metadata extraction, thumbnail previews, batch delete/move, removable-storage import, and article fetching hooks.
+- Sync and extension infrastructure including WebDAV sync, KoboCloud sync, shell/python plugin triggers, and plugin network permission checks.
+- PDF-specific tooling including page delete/rotate/extract/reorder/merge operations, redaction, resource extraction, PDF/A inspection, and PDF annotation export.
+- Progressive document loading support for large PDFs.
 
 [![Tn01](artworks/thumbnail01.png)](artworks/screenshot01.png) [![Tn02](artworks/thumbnail02.png)](artworks/screenshot02.png) [![Tn03](artworks/thumbnail03.png)](artworks/screenshot03.png) [![Tn04](artworks/thumbnail04.png)](artworks/screenshot04.png)
 
-### Optimizations
+## Optimizations
 
 - **Build System** - Resolved linker failures by expanding `mupdf_wrapper.c` with 20+ custom FFI functions (PDF manipulation, annotations, redactions, image/font extraction); wrapper is now automatically linked via `build.rs`
 - **Safe FFI Wrappers** - Added `mupdf.rs`, `freetype.rs`, `harfbuzz.rs` with RAII/Drop semantics for safe resource management; `pdf.rs` and `pdf_manipulator.rs` migrated to use safe wrappers
@@ -97,7 +96,7 @@ Any 4.*X*.*Y* firmware, with *X* ≥ 6, will do.
 - **Input** - Added `#[inline]` to button status conversion
 - **Modern Rust** - Migrated 13 `lazy_static!` instances to `std::sync::LazyLock` for constants, regex patterns, translations, and dithering matrices
 
-### Build Targets
+## Build Targets
 
 ```bash
 # Build for 32-bit ARM (original Kobo devices) — DEFAULT
@@ -118,20 +117,24 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 # Run the desktop emulator (requires SDL2)
 ./run-emulator.sh
 
+# Install the importer helper
+./install-importer.sh
+
 # Run tests (requires host target)
 cargo test --target x86_64-unknown-linux-gnu
 ```
 
-### Performance Optimizations
+## Performance Optimizations
 
 Recent performance improvements include:
+
 - Added NEON SIMD and VFP4 optimizations for 32-bit Kobo devices
 - Inlined hot-path functions for pixel operations, geometry calculations, and device capabilities
 - Migrated to `std::sync::LazyLock` for better performance with constants and regex patterns
 - Optimized memory usage with reduced MuPDF context cache and grayscale thumbnails
 - Added progressive document loading with LRU caching for large PDFs
 
-### Testing
+## Testing
 
 Since the default target is ARM, all test commands on the host require `--target x86_64-unknown-linux-gnu`:
 
@@ -152,7 +155,7 @@ cargo test -p plato-core geom::tests --target x86_64-unknown-linux-gnu
 cargo test overlaping --target x86_64-unknown-linux-gnu
 ```
 
-### Credits
+## Credits
 
 This project is based on the excellent work of the original Plato developer. See the [upstream project](https://github.com/pettarin/plato) for the original implementation.
 

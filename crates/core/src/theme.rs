@@ -1,7 +1,8 @@
 use std::sync::LazyLock;
 
 use crate::color;
-use crate::settings::ThemeMode;
+use crate::settings::{ThemeMode, ThemeSchedule};
+use chrono::{DateTime, Local, Timelike};
 
 static DARK_MODE: LazyLock<std::sync::Mutex<bool>> = LazyLock::new(|| std::sync::Mutex::new(false));
 static THEME_MODE: LazyLock<std::sync::Mutex<ThemeMode>> =
@@ -39,7 +40,7 @@ pub fn set_theme_mode(mode: ThemeMode) {
         ThemeMode::Dark => {
             *DARK_MODE.lock().unwrap() = true;
         }
-        ThemeMode::Auto => {}
+        ThemeMode::Auto | ThemeMode::Scheduled => {}
     }
 }
 
@@ -61,6 +62,26 @@ pub fn update_from_light_sensor(light_level: u16) {
         let dark = light_level < threshold;
         *DARK_MODE.lock().unwrap() = dark;
     }
+}
+
+#[inline]
+pub fn update_from_schedule(schedule: &ThemeSchedule, current_time: &DateTime<Local>) {
+    if *THEME_MODE.lock().unwrap() != ThemeMode::Scheduled || !schedule.enabled {
+        return;
+    }
+
+    let time = current_time.time();
+    let now_minutes = (time.hour() as u16) * 60 + (time.minute() as u16);
+    let start_minutes = schedule.dark_start.as_minutes();
+    let end_minutes = schedule.dark_end.as_minutes();
+
+    let is_dark = if start_minutes <= end_minutes {
+        now_minutes >= start_minutes && now_minutes < end_minutes
+    } else {
+        now_minutes >= start_minutes || now_minutes < end_minutes
+    };
+
+    *DARK_MODE.lock().unwrap() = is_dark;
 }
 
 #[inline]

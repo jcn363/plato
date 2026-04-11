@@ -1,111 +1,74 @@
-# Plato Integration Review - Progress Tracker
+# Plato Integration Progress
 
-> Last Updated: April 8, 2026
+> Current-source update based on the checked-out branch state
 
----
+## Completed
 
-## Completed Items
+- Common view helpers now exist for repeated child/menu patterns:
+  - `with_child!`
+  - `add_menu()`
+  - `menu_helpers::{toggle_menu_vec, toggle_menu_with, toggle_menu_ctx, toggle_menu_item, toggle_menu_self}`
+- Reader support modules exist under `crates/core/src/view/reader/reader_impl/`, so the codebase has already started a split away from one monolithic reader file.
+- PDF manipulation and cover editing both have underlying implementation code in place, even though the UI exposure remains incomplete.
 
-### Documentation Updates (April 8, 2026)
+## Open
 
-**Status:** ✅ COMPLETE
+### Reader migration cleanup
 
-- **AGENTS.md** — Added comprehensive device support table (30+ models), core module structure, framebuffer implementations, settings architecture, view system, dictionary system, OPDS catalog, plugin system, sync system, third-party libraries, and scripts inventory
-- **README.md** — Updated device list (added Forma 32GB, Aura ONE Limited Ed, Touch 2.0, Aura HD, Mini, Touch A), added HTML format support, added E-ink touch target and rendering quality optimizations, added clippy validation command
-- **CONTRIBUTING.md** — Added system dependencies to prerequisites
+- `reader.rs` is still `3403` lines.
+- The file still ends with a stub-method block.
+- Extracted reader modules are present, but many helpers remain inactive or dead-code-gated.
 
-### Error Handling Improvements (April 7, 2026)
+### Home modularization
 
-**Status:** ✅ COMPLETE
+- `home/mod.rs` is still `2769` lines.
 
-- `Reader::from_html()` - NOW RETURNS `Result<Reader, Error>` INSTEAD OF PANICKING
-- `Pixmap::new()` - NOW RETURNS `Result<Pixmap, Error>` INSTEAD OF PANICKING  
-- `Sketch::new()` - NOW RETURNS `Result<Sketch, Error>`
-- `Dictionary::new()` - NOW RETURNS `Result<Dictionary, Error>`
-- `from_dynamic_image()` - NOW RETURNS `Result<Pixmap, Error>`
-- `KoboFramebuffer2` - FIXED ERROR HANDLING IN DEVICE OPENING
+### PDF tools UI completion
 
-**Files Modified:**
-- `crates/core/src/view/reader/reader_impl/reader.rs`
-- `crates/core/src/framebuffer/image.rs`
-- `crates/core/src/framebuffer/kobo2.rs`
-- `crates/core/src/view/sketch/mod.rs`
-- `crates/core/src/view/dictionary/mod.rs`
+- `pdf_manipulator.rs` still contains parked file-selection/action-selection code.
+- The manipulation flow is not fully surfaced through a reachable UI.
 
-### Type Deduplication (April 7, 2026)
+### Cover editor product decision
 
-**Status:** ✅ COMPLETE
+- The editor contains real image-editing helpers.
+- The view is still partially parked behind `#[allow(dead_code)]` and lacks a complete editing UI.
 
-- Removed duplicate `ViewPort`, `PageAnimKind`, `AnimState`, `PageAnimation`, `Resource` from reader.rs
-- Now imports all from `reader_core.rs` as single source of truth
-- Added comprehensive module documentation to reader_core.rs
+## Verification
 
-**Files Modified:**
-- `crates/core/src/view/reader/reader_impl/reader.rs`
-- `crates/core/src/view/reader/reader_impl/reader_core.rs`
-- `crates/core/src/view/reader/reader_impl/mod.rs`
-- `crates/core/src/view/reader/mod.rs`
+Current verification status on the checked-out branch:
 
-### Dead Code Removal (April 7, 2026)
+- `cargo check --target x86_64-unknown-linux-gnu` passes
+- `cargo check --target arm-unknown-linux-gnueabihf -p plato` passes
+- `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato` passes after rebuilding `mupdf_wrapper`
 
-**Status:** ✅ COMPLETE
+Notes:
 
-- Removed unused icon constants from cover_editor.rs (reserved for future UI)
-- Removed unused constants `KOBO_MEMORY_LIMIT` and `MAX_CACHED_PAGES` from progressive_loader.rs
+- A true clean ARM rebuild requires regenerating the native `mupdf_wrapper` archive after `cargo clean`, because Cargo does not rebuild it automatically.
+- Clean clippy and additional target claims should still be refreshed only after rerunning those exact commands.
 
-**Files Modified:**
-- `crates/core/src/view/cover_editor.rs`
-- `crates/core/src/document/progressive_loader.rs`
+## Deferred
 
----
+- Large framework work for settings registries
+- Broad event-system unification
+- Generic input-validation architecture
+- Non-measured performance refactors
 
-## Pending Items
-
-### Reader Struct Consolidation (Phase 4)
-
-**Status:** ⏸️ DEFERRED
-
-- Nested structs (`PageState`, `DisplaySettings`, `InteractionState`) defined in reader_core.rs
-- Marked with `#[allow(dead_code)]` for future incremental migration
-- 19 Reader fields are heavily interdependent (37+ references)
-- Requires extensive refactoring across codebase
-
-**Estimated Effort:** 20-30 hours
-
-### Home Module Splitting (Phase 5)
-
-**Status:** ⏸️ NOT STARTED
-
-- home/mod.rs at 2,787 lines - needs modularization
-- Estimated effort: 20-30 hours
-
----
-
-## Monolithic Files (Updated April 8, 2026)
+## Monolithic Files
 
 | File | Current Lines | Status |
-|------|-------------|--------|
-| reader.rs | 3,410 | Stable - types deduplicated |
-| home/mod.rs | 2,787 | Needs work |
-| font/mod.rs | ~2,800 | High priority |
-| html/engine.rs | ~2,672 | High priority |
-
----
-
-## Build Verification
-
-All builds verified on April 7, 2026:
-
-- ✅ `cargo fmt`
-- ✅ `cargo clippy -- -D warnings`  
-- ✅ `RUSTFLAGS="-D warnings" cargo check --target x86_64-unknown-linux-gnu`
-- ✅ `RUSTFLAGS="-D warnings" cargo check --target arm-unknown-linux-gnueabihf`
-- ✅ `./build.sh` (ARM Kobo build)
-
----
+|------|---------------|--------|
+| `reader_impl/reader.rs` | 3403 | Open |
+| `view/home/mod.rs` | 2769 | Open |
+| `font/mod.rs` | 2400 | Open |
+| `document/html/engine.rs` | 2672 | Open |
+| `document/html/layout.rs` | 718 | Informational |
 
 ## Next Steps
 
-1. Commit and push documentation updates
-2. Continue with any pending items from INTEGRATION_OPPORTUNITIES.md
-3. Consider testing infrastructure improvements
+1. Retire stale backlog items that are already implemented.
+2. Keep verification notes synchronized with actual rerun results.
+3. Address the remaining real UI and structural gaps:
+   - reader stub cleanup
+   - home modularization
+   - PDF tools workflow
+   - cover editor scope/completion

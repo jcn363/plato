@@ -1,5 +1,7 @@
 # Build
 
+This document covers the supported ways to build Plato for Kobo devices and for host development.
+
 Start by cloning the repository:
 
 ```sh
@@ -27,7 +29,9 @@ rustup target add aarch64-unknown-linux-gnu
 rustup target add x86_64-unknown-linux-gnu
 ```
 
-### Build Phase
+The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `crates/importer`, `crates/fetcher`, and `crates/epub_edit`. The separate `epub_editor/` directory is not a workspace member and is built by the shell scripts.
+
+## Build Phase
 
 ```sh
 ./build.sh
@@ -36,7 +40,7 @@ rustup target add x86_64-unknown-linux-gnu
 This script will:
 1. Download pre-compiled ARM libraries to `libs/`
 2. Build the MuPDF wrapper (`mupdf_wrapper/`) which provides additional FFI functions not in the pre-compiled `libmupdf.so`
-3. Build the EPUB editor
+3. Build the standalone `epub_editor/` CLI tool
 4. Build the main `plato` binary
 
 The MuPDF wrapper (`libmupdf_wrapper.a`) is automatically linked during the Rust build process via `crates/core/build.rs`. If you modify `mupdf_wrapper/mupdf_wrapper.c`, rebuild it with:
@@ -46,7 +50,7 @@ cd mupdf_wrapper
 TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh
 ```
 
-### Alternative Build Commands
+## Alternative Build Commands
 
 You can also build directly with Cargo for specific targets:
 
@@ -59,9 +63,18 @@ cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
 
 # Build for host (development/testing)
 cargo build --target x86_64-unknown-linux-gnu -p plato
+
+# Build the desktop emulator binary
+cargo build --target x86_64-unknown-linux-gnu -p emulator
+
+# Build the importer helper
+cargo build --target x86_64-unknown-linux-gnu -p importer
+
+# Build the article fetcher
+cargo build --target x86_64-unknown-linux-gnu -p fetcher
 ```
 
-### Distribution
+## Distribution
 
 ```sh
 ./dist.sh

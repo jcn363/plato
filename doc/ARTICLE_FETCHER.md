@@ -1,3 +1,5 @@
+# Article Fetcher
+
 A *wallabag* article fetcher is distributed in the release archive, in `bin/article_fetcher`.
 
 ## Configuration

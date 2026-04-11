@@ -1,157 +1,126 @@
-# Plato Codebase Improvement Opportunities
+# Plato Codebase Improvement Summary
 
 ## Current Status
 
-| Metric | Status |
-|--------|--------|
-| **Build** | ✅ Clean (x86_64, ARM32, ARM64) |
-| **Clippy** | ✅ Clean (no warnings) |
-| **Tests** | ⚠️ Require native libs (mupdf, gumbo) |
-| **License** | ✅ MIT on all crates, deny.toml configured |
-| **Dependencies** | ✅ Mostly current (see [Dependency Management](#dependency-management)) |
+| Area | Status |
+|------|--------|
+| Build verification | Restored on current branch |
+| Host `cargo check` | Passes |
+| Documentation backlog | Needs source-driven cleanup |
+| Structural refactors | Partial and still in progress |
+| Dependency alignment | Mixed; not fully unified |
 
-## Completed Improvements
+The current branch now passes `cargo check --target x86_64-unknown-linux-gnu`. Recent fixes restored the theme/settings integration by re-exporting the schedule types through `crate::settings`, aligning `update_from_schedule` with `DateTime<Local>`, and wiring scheduled theme mode through the active settings and app paths.
 
-### Documentation
-- ✅ Module-level docs: `reader_impl/`, `document/html/`, `font/`, `gesture.rs`
-- ✅ Function-level docs: `context.rs` (# Errors/# Panics), `pdf.rs`, `geom/*.rs` (examples)
-- ✅ Section comments: `reader.rs` (9 sections), `font/mod.rs` (8 sections)
+## Completed
 
-### Code Quality
-- ✅ Format string improvements (build.rs, epub_edit)
-- ✅ Raw string literal cleanup (epub_edit)
-- ✅ `lazy_static` → `LazyLock` migration (partial: 6 files migrated, 5 remaining by design - depend on runtime `CURRENT_DEVICE`)
-- ✅ Result documentation (# Errors sections)
-- ✅ Option usage simplification (map().unwrap_or() → direct patterns)
-- ✅ `#[must_use]` attributes on geometry/color methods
-- ✅ DeviceFlags bitflag for Context struct booleans
-- ✅ Pre-allocation (`with_capacity()`) across 20+ locations
-- ✅ `.expect()` reduction: 50+ instances replaced with `if let`, `match`, `.unwrap_or()`, `.map_or()` across 20+ files in `view/`, `document/html/`, `calculator/`, `fetcher/`
-- ✅ Raw `println!` cleanup: 15 instances replaced with `log_info!`, `log_warn!`, or proper assertions across `sync.rs`, `library/scan.rs`, `library/maintenance.rs`, `view/rotation_values/mod.rs`, `framebuffer/kobo1.rs`, `document/html/css.rs`, `view/home/directories_bar.rs`
-- ✅ Dead code cleanup: Removed incomplete file browser integration (button, event handler, dead field); marked incomplete ManipulationMode enum variants as reserved for future implementation; documented ICON constants as future UI buttons
+These items are still verifiable in the current source tree:
 
-### Dependencies
-- ✅ `nix` 0.30.1 → 0.31.2
-- ✅ `zip` 7.0.0 → 8.5.0
-- ✅ `rand_core` 0.9.x → 0.10, `rand_xoshiro` 0.7.0 → 0.8.0
-- ✅ `quick-xml` 0.37.0 → 0.39.2
-- ✅ `indexmap` 2.13.0 → 2.13.1
-- ✅ `chrono` 0.4.42 → 0.4.44
-- ✅ `fxhash` → `rustc-hash` 2.1.2 (RUSTSEC-2025-0057 resolved)
-- ✅ MIT license added to all 6 crates
-- ✅ `deny.toml` for cargo-deny
-- ✅ Workspace dependency alignment (`[workspace.dependencies]`)
+- Safe wrapper modules for MuPDF, FreeType, and HarfBuzz exist under `crates/core/src/document/mupdf` and `crates/core/src/font`.
+- `pdf.rs` and `pdf_manipulator.rs` use the safe wrapper layer rather than calling raw MuPDF bindings directly.
+- ARM64 build profile support exists in the workspace and build docs.
+- `with_child!` is implemented in `crates/core/src/view/common.rs`.
+- `add_menu()` is implemented in `crates/core/src/view/common.rs`.
+- Generic menu toggle helpers exist in `crates/core/src/view/menu_helpers.rs`.
+- Reader helper modules exist in `crates/core/src/view/reader/reader_impl/`, but the migration is only partial.
+- The plugin system is implemented and wired enough to load scripts, infer triggers, and enforce `allow_network`.
+- External storage settings and auto-import logic are implemented and referenced from the home view.
+- Scheduled theme mode is implemented in the active code paths:
+  - `crates/core/src/settings/theme.rs`
+  - `crates/core/src/theme.rs`
+  - `crates/core/src/view/settings/display.rs`
+  - `crates/core/src/view/top_bar.rs`
+  - `crates/plato/src/app.rs`
+- The orphan duplicate `Home` definition in `crates/core/src/view/home/home.rs` has been removed, so `batch_mode` no longer has a second stale definition outside the active module tree.
 
-### Architecture
-- ✅ Safe FFI wrappers: `mupdf.rs`, `freetype.rs`, `harfbuzz.rs` with RAII/Drop
-- ✅ `pdf.rs` and `pdf_manipulator.rs` migrated to safe wrappers
-- ✅ AArch64 (ARM64) support for newer Kobo devices
-- ✅ Build system: `mupdf_wrapper.c` expanded with 20+ custom FFI functions
-- ✅ Build fix: `context.online` → `flags.remove(DeviceFlags::ONLINE)` in emulator
+## Open Structural Issues
 
-## Remaining Items
+### Reader migration is incomplete
 
-### Remaining — Justified `.expect()` Calls (~68 total)
+- `crates/core/src/view/reader/reader_impl/reader.rs` is still `3403` lines.
+- The file still ends with a large stub-method block that duplicates real reader behavior behind placeholder render calls.
+- Helper modules like `reader_rendering.rs`, `reader_settings.rs`, and `reader_gestures.rs` exist, but many extracted functions are still marked `#[allow(dead_code)]` and are not the active implementation path.
 
-These are defensible as "if this fails, the system is broken and should panic":
+Recommended next action:
+- Decide whether the reader split will continue or be rolled back.
+- If it continues, move active logic out of the stub block and remove dead extracted helpers as they are replaced.
 
-| Module | Count | Justification |
-|--------|-------|---------------|
-| `gesture.rs` | 12 | Input handling invariants |
-| `document/progressive_loader.rs` | 13 | Document loading invariants |
-| `document/html/engine.rs` | 18 | HTML rendering pipeline invariants |
-| `dictionary/indexing.rs` | 12 | Test assertions |
-| `input.rs` | 6 | Input event invariants |
-| `dictionary/mod.rs` | 9 | Test assertions |
-| `document/html/xml.rs` | 4 | XML parse tree invariants |
-| `view/reader/reader_impl/reader.rs` | 4 | Lock poisoning (unrecoverable) |
-| `context.rs` | 0 | ✅ Cleaned up |
-| `view/home/shelf.rs` | 1 | Lock poisoning (unrecoverable) |
-| `view/icon.rs` | 2 | Fatal `lazy_static!` init |
-| `document/html/style.rs` | 2 | XML parse tree invariants |
-| `document/html/parse.rs` | 1 | Static regex (hardcoded pattern) |
-| `sync.rs` | 1 | Static regex (hardcoded pattern) |
-| `metadata/query.rs` | 1 | Static regex (hardcoded pattern) |
-| `document/epub/document.rs` | 1 | URI invariant |
-| `document/html/dom.rs` | 0 | ✅ Cleaned up |
-| `document/html/mod.rs` | 1 | URI invariant |
-| `font/mod.rs` | 1 | FFI CString invariant |
-| `geom/rectangle.rs` | 1 | Conversion invariant |
-| `framebuffer/kobo2.rs` | 1 | Display init (fatal) |
-| `framebuffer/transform.rs` | 2 | Test-only noise texture |
-| `document/pdf_manipulator.rs` | 1 | MuPDF context init (fatal) |
-| `view/icon.rs` | 2 | Fatal `lazy_static!` init |
-| Other modules | ~5 | Device init, FFI, invariants |
+Acceptance condition:
+- No duplicate reader interface layer remains in `reader.rs`.
+- Extracted reader modules contain active code paths rather than parked helpers.
 
-### Deferred — Not Worth the Complexity
-- **Object pooling** — Render chunks cached via LRU; geometry objects are Copy/Clone stack types; E-ink refresh latency dominates
-- **Gesture algorithm optimization** — Already O(1) throughout
-- **Text layout optimization** — Uses Knuth-Plass (TeX standard) via `paragraph-breaker`
-- **Image scaling optimization** — MuPDF bilinear + Lanczos3 already appropriate
-- **FreeType/HarfBuzz separation** — Already cleanly separated at FFI and safe-wrapper levels
-- **Bitmap font modules** — No bitmap font usage exists; all outline fonts
+### Home view is still oversized and has duplicated state
 
-### Future Opportunities
+- `crates/core/src/view/home/mod.rs` is still `2769` lines.
+- The home view remains a large concentration point for event handling, menus, and batch operations.
 
-#### Test Coverage
-- Property-based testing (proptest/quickcheck) for geometry, PDF layout, font metrics, gestures
-- Integration tests for document loading, UI transitions, input handling, settings persistence
-- *Blocker:* Tests require native libs (mupdf, gumbo) not available on host
+Recommended next action:
+- Split by active responsibility rather than by arbitrary file size.
 
-#### File Splitting (evaluated, not feasible)
-- `reader.rs` (4168 LOC) — tightly coupled state machine; extraction not practical
-- `font/mod.rs` (2783 LOC) — FreetypeError coupling prevents clean extraction
-- `html/engine.rs` (2678 LOC) — rendering pipeline requires full context
+Acceptance condition:
+- Home responsibilities are partitioned by behavior, not duplicated across wrapper/core types.
 
-#### Dependency Updates (deferred)
-- `reqwest` 0.12.28 → 0.13.x — Breaking TLS feature changes, requires ARM testing
-- `toml` 0.9.x → 1.x — Major API changes (crate renamed to `toml-edit` for editing)
-- `bincode` 1.3.3 — RUSTSEC-2025-0141 via kl-hyphenate; low risk (not network-facing)
+### PDF tools UI is only partially surfaced
 
-#### Potential Features
-- ✅ **Dark mode toggle** - Add toggle component on Settings page
-- ✅ **Dark mode state management** - Add dark mode state to Settings/Context
-- ✅ **Dark theme CSS styles** - Implement dark theme colors in color.rs
-- ✅ **Theme-aware components** - ~40 view files updated, ~15 remaining
-- Dark mode transitions (smooth fade vs instant)
-- Reading statistics export
-- Cloud bookmark sync
-- Custom gesture configuration UI
-- Annotation export to Markdown
-- Stylus notes/sketches (Elipsa)
+- `crates/core/src/view/pdf_manipulator.rs` still has dead-code manipulation modes.
+- `show_actions()` is still unused.
+- Redaction and manipulation paths still depend on hard-coded defaults rather than interactive file/action input.
 
-## Dependency Management
+Recommended next action:
+- Either integrate PDF tools with a real file-selection flow or explicitly scope the view down to currently-supported operations.
 
-### Security Advisories
+Acceptance condition:
+- Every visible PDF tools action is reachable from the UI and uses user-selected inputs.
 
-| Package | Advisory | Status | Risk |
-|---------|----------|--------|------|
-| ~~`fxhash`~~ | RUSTSEC-2025-0057 | ✅ Replaced with `rustc-hash` | Resolved |
-| `bincode` (via kl-hyphenate) | RUSTSEC-2025-0141 | ⚠️ Unmaintained | Low (offline use) |
+### Cover editor is implemented below the UI surface but still partial
 
-### Version Alignment
+- `crates/core/src/view/cover_editor.rs` contains real editing helpers for crop, rotate, brightness, contrast, grayscale, and save.
+- The view is still broadly guarded by `#[allow(dead_code)]`.
+- There is no interactive toolbar or surfaced editing workflow matching the helper capabilities.
 
-| Package | plato-core | fetcher | Status |
-|---------|-----------|---------|--------|
-| `reqwest` | 0.13 | 0.13 | ✅ Aligned via workspace |
+Recommended next action:
+- Choose one direction: complete the UI flow or reduce the feature to a simpler, intentionally limited cover replacement tool.
 
-## Device-Specific Optimizations
+Acceptance condition:
+- The user-facing feature set matches the implemented code path and no longer depends on parked dead-code scaffolding.
 
-| Optimization | Status | Details |
-|-------------|--------|---------|
-| Display refresh batching | ✅ Implemented | `MAX_UPDATE_DELAY` (600ms) deduplicates updates |
-| Font cache eviction | N/A | No explicit font cache; fonts loaded on demand |
-| Filesystem sync | N/A | Standard `std::fs` without explicit `fsync()` |
+## Deferred by Design
 
-## Codebase Overview
+These are not good near-term priorities based on the current code:
 
-| Crate | Purpose | Files | LOC |
-|-------|---------|-------|-----|
-| plato-core | Core library | 188 | ~53k |
-| plato | Kobo binary | — | — |
-| emulator | SDL2 desktop | — | — |
-| importer | Document import | — | — |
-| fetcher | Article fetcher | — | — |
-| epub_edit | EPUB editing | — | — |
+- Object pooling for views or geometry values.
+- Gesture algorithm optimization beyond the current constant-time path.
+- Large "settings registry" or UI-generation framework work.
+- Broad "event handler unification" without a concrete defect driving it.
+- Input validation framework extraction across all view inputs.
+- Bitmap font specialization work.
+- Smooth theme transition animations.
+- Per-document theme preferences.
 
-**Total dependencies:** ~423 (including transitive)
+These may be revisited later, but they should not appear as active backlog items unless a current bug or implementation effort depends on them.
+
+## Verification Status
+
+- Host `cargo check --target x86_64-unknown-linux-gnu` currently passes on the checked-out branch.
+- Clean clippy or cross-target claims should still be made only after rerunning those commands explicitly.
+
+## Dependencies
+
+### Current Notes
+
+- `plato-core` uses `reqwest 0.12`.
+- `fetcher` uses `reqwest 0.13.1`.
+- This is not "aligned via workspace" and should be documented as a deliberate split or a pending cleanup.
+- `fxhash` replacement with `rustc-hash` remains true in the current source.
+- The workspace still contains documented security/dependency hygiene work, but claims should reflect the actual manifests, not earlier review snapshots.
+
+## Stale or Retired Claims
+
+The following should no longer be tracked as open opportunities:
+
+- Missing `with_child!` macro.
+- Missing `add_menu()` helper.
+- Missing generic menu toggle helpers.
+- Blanket claims that plugin or external storage settings are "unclear" when source integration exists.
+
+These are now historical review notes, not current backlog items.

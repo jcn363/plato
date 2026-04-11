@@ -213,6 +213,7 @@ pub fn build_rows(
             ThemeMode::Dark => "On".to_string(),
             ThemeMode::Sepia => "Sepia".to_string(),
             ThemeMode::Auto => "Auto".to_string(),
+            ThemeMode::Scheduled => "Schedule".to_string(),
         },
     );
     children.push(Box::new(toggle) as Box<dyn View>);
@@ -349,7 +350,8 @@ pub fn handle_event(
                 ThemeMode::Light => ThemeMode::Dark,
                 ThemeMode::Dark => ThemeMode::Sepia,
                 ThemeMode::Sepia => ThemeMode::Auto,
-                ThemeMode::Auto => ThemeMode::Light,
+                ThemeMode::Auto => ThemeMode::Scheduled,
+                ThemeMode::Scheduled => ThemeMode::Light,
             };
             context.settings.theme_settings.mode = new_mode;
             theme::set_theme_mode(new_mode);
@@ -373,6 +375,11 @@ pub fn handle_event(
                     context.settings.dark_mode = dark;
                     theme::set_dark_mode(dark);
                 }
+                ThemeMode::Scheduled => {
+                    let now = chrono::Local::now();
+                    theme::update_from_schedule(&context.settings.theme_settings.schedule, &now);
+                    context.settings.dark_mode = theme::is_dark_mode();
+                }
             }
 
             if let Some(btn) = children[offset + 13].downcast_mut::<Button>() {
@@ -382,6 +389,7 @@ pub fn handle_event(
                         ThemeMode::Dark => "On".to_string(),
                         ThemeMode::Sepia => "Sepia".to_string(),
                         ThemeMode::Auto => "Auto".to_string(),
+                        ThemeMode::Scheduled => "Schedule".to_string(),
                     },
                     rq,
                 );
