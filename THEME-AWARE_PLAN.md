@@ -1,100 +1,142 @@
-# Plato Theme-Aware Conversion Plan
+# Plato Theme-Aware System
 
-## Current Status
-✅ **FULLY IMPLEMENTED** - All core theme infrastructure is complete with **zero warnings**
+## Overview
 
-### Completed Implementation:
+The Plato e-reader now supports a comprehensive theme system with light/dark/auto modes, light sensor integration, gesture controls, and persistent settings.
 
-**Core Theme Infrastructure:**
-- ✅ Global dark mode state in `crate::theme` (`is_dark_mode()`, `set_dark_mode()`)
-- ✅ Theme mode with auto/light/dark options (`theme_mode()`, `set_theme_mode()`)
-- ✅ Auto threshold for light sensor (`auto_threshold()`, `set_auto_threshold()`)
-- ✅ Light sensor integration (`update_from_light_sensor()`)
-- ✅ Theme-aware color helpers in `crate::theme`:
-  - `background(dark: bool) -> Color` - returns BLACK in dark mode, WHITE in light
-  - `foreground(dark: bool) -> Color` - returns WHITE in dark mode, BLACK in light
-- ✅ Theme-aware color helpers in `crate::color`:
-  - `background(dark) -> Color`
-  - `foreground(dark) -> Color`
-  - All other theme-aware color helpers
+## Features Implemented
 
-**Settings Integration:**
-- ✅ ThemeSettings struct with mode and auto_threshold fields
-- ✅ ThemeMode enum: Light, Dark, Auto
-- ✅ Settings UI: Toggle cycles through Off → On → Auto
-- ✅ Auto Threshold: Button to adjust sensitivity (50-200, step 50)
+### 1. Theme Modes
+- **Light Mode**: White background, black text
+- **Dark Mode**: Black background, white text  
+- **Auto Mode**: Automatic switching based on ambient light sensor
 
-**Persistence Integration:**
-- ✅ Initial app startup: Theme initialized from settings
-- ✅ Settings toggle: Theme updated when user changes mode
-- ✅ USB connect: Theme re-synced when settings reloaded
-- ✅ Settings auto-save: All theme preferences preserved
+### 2. Auto Theme (Light Sensor)
+- Uses device's ambient light sensor to automatically switch themes
+- Configurable threshold (50-200, default 100)
+- Polls light level on battery check events (~30 seconds)
+- Lower threshold = darker environment needed to trigger dark mode
 
-**Auto Theme Feature:**
-- ✅ Light sensor integration on CheckBattery events
-- ✅ Automatic dark mode based on ambient light level
-- ✅ Configurable threshold (default 100, range 50-200)
+### 3. Theme Toggle Gesture
+- **Two-finger swipe from left edge**: Switch to dark mode
+- **Two-finger swipe from right edge**: Switch to light mode
+- Only works when in Auto mode (exits auto to manual selection)
+
+### 4. Theme Indicator
+- Icon in top bar shows current mode (sun/moon/auto icon)
+- Tap icon to cycle through modes (same as settings toggle)
+
+### 5. Settings UI
+- Toggle cycles: Off (Light) → On (Dark) → Auto
+- Auto Threshold button: Adjust sensitivity (50-200, step 50)
+
+### 6. Persistence
+- All theme settings saved to Settings.toml
+- Survives app restart and USB reconnect
+- Settings auto-saved on suspend/exit
+
+## Architecture
+
+### Core Theme Module (`crates/core/src/theme.rs`)
+
+```rust
+// Theme state management
+pub fn is_dark_mode() -> bool          // Current dark/light state
+pub fn set_dark_mode(enabled: bool)    // Set dark/light manually
+pub fn theme_mode() -> ThemeMode        // Current mode (Light/Dark/Auto)
+pub fn set_theme_mode(mode: ThemeMode) // Set mode
+pub fn auto_threshold() -> u16         // Get auto threshold
+pub fn set_auto_threshold(threshold: u16) // Set auto threshold
+pub fn update_from_light_sensor(level: u16) // Update from light sensor
+
+// Color helpers (used by views)
+pub fn background(dark: bool) -> Color
+pub fn foreground(dark: bool) -> Color
+```
+
+### Settings Module (`crates/core/src/settings/theme.rs`)
+
+```rust
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum ThemeMode {
+    Light,
+    Dark,
+    Auto,
+}
+
+pub struct ThemeSettings {
+    pub mode: ThemeMode,
+    pub auto_threshold: u16,  // Light level threshold for auto mode
+}
+```
+
+### Key Integration Points
+
+| Location | Purpose |
+|----------|---------|
+| `app.rs:130` | Initialize theme on startup |
+| `app.rs:703` | Re-sync theme on USB reconnect |
+| `app.rs:824` | Poll light sensor for auto theme |
+| `app.rs:977` | Handle two-finger swipe gesture |
+| `display.rs:311` | Handle settings toggle |
+| `top_bar.rs` | Render theme indicator icon |
 
 ## Files Modified
 
-### Theme Module (`crates/core/src/theme.rs`)
-- Added `theme_mode()`, `set_theme_mode()` for mode state
-- Added `auto_threshold()`, `set_auto_threshold()` for sensitivity
-- Added `update_from_light_sensor()` for auto theme
+### Core Theme
+- `crates/core/src/theme.rs` - Theme state management, color helpers
+- `crates/core/src/settings/theme.rs` - ThemeMode enum, ThemeSettings struct
+- `crates/core/src/color.rs` - Theme-aware color functions (pre-existing)
 
-### Settings Module (`crates/core/src/settings/`)
-- Added `theme.rs` with ThemeMode enum and ThemeSettings struct
-- Updated `mod.rs` to include theme settings in Settings struct
+### Views
+- `crates/core/src/view/settings/display.rs` - Settings UI
+- `crates/core/src/view/top_bar.rs` - Theme indicator
+- `crates/core/src/view/entries.rs` - EntryId additions
 
-### Settings Display (`crates/core/src/view/settings/display.rs`)
-- Added Theme Mode toggle (cycles: Off/On/Auto)
-- Added Auto Threshold button
-- Updated event handlers for new UI
+### App Integration
+- `crates/plato/src/app.rs` - Startup, USB reconnect, gesture handling
 
-### App Integration (`crates/plato/src/app.rs`)
-- Initialize theme state from settings on startup
-- Re-sync theme state when settings reloaded on USB connect
-- Check light sensor for auto theme on battery check events
+### Icons
+- `icons/theme-light.svg` - Sun icon for light mode
+- `icons/theme-dark.svg` - Moon icon for dark mode
+- `icons/theme-auto.svg` - Auto icon for auto mode
 
-### Entry IDs (`crates/core/src/view/entries.rs`)
-- Added SetAutoThemeThreshold entry
+## Usage
+
+### From Settings
+1. Go to Settings → Display
+2. Tap "Dark Mode" toggle to cycle: Off → On → Auto
+3. Tap "Auto Threshold" to adjust sensitivity
+
+### From Gesture
+1. In Auto mode, use two-finger swipe from screen edges
+2. Left edge → Dark mode
+3. Right edge → Light mode
+
+### From Top Bar
+1. Tap theme icon (left of menu icon)
+2. Cycles through modes
 
 ## Build Verification
 
-- ✅ **ARM Build (32-bit)**: Passes with zero warnings
-- ✅ **Cargo fmt**: Runs successfully
+```bash
+# ARM build (Kobo 32-bit)
+cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
 
-## Implementation Notes
+# ARM64 build (newer Kobo devices)
+cargo build --target aarch64-unknown-linux-gnu --profile release-arm64
 
-### Theme Helper Functions in `theme.rs`
-```rust
-#[inline]
-pub fn background(dark: bool) -> crate::color::Color {
-    if dark { crate::color::BLACK } else { crate::color::WHITE }
-}
-
-#[inline]
-pub fn foreground(dark: bool) -> crate::color::Color {
-    if dark { crate::color::WHITE } else { crate::color::BLACK }
-}
+# Host build (development)
+cargo build --target x86_64-unknown-linux-gnu
 ```
 
-### Usage in Views
-```rust
-use crate::theme;
-use crate::color::{background, foreground};
+- ✅ ARM Build: Zero warnings
+- ✅ Cargo fmt: Passes
 
-// In render method:
-fb.draw_rectangle(&self.rect, background(theme::is_dark_mode()));
-font.render(fb, foreground(theme::is_dark_mode()), &plan, pt);
-```
+## Future Enhancements
 
-### Persistence Flow
-1. **App Startup**: `theme::set_dark_mode(settings.dark_mode)` at `app.rs:130`
-2. **User Toggle**: `theme::set_dark_mode(context.settings.dark_mode)` at `display.rs:313`
-3. **Settings Saved**: Automatic on suspend/exit via `save_toml()`
-4. **USB Reconnect**: Re-sync via `theme::set_dark_mode(dark_mode)` at `app.rs:700`
-
-## Timeline
-
-- ✅ **Phase 1-5**: COMPLETE - Theme system fully implemented with persistence
+Potential improvements not yet implemented:
+- Sepia theme (third option beyond light/dark)
+- Inverted book covers in dark mode
+- Scheduled theme (sunset/sunrise times)
+- Smooth theme transition animations
