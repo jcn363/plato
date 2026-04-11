@@ -186,7 +186,9 @@ impl View for Book {
                         self.rect.min.y + x_height / 2 + dy
                     );
                     fb.draw_pixmap(&pixmap, pt);
-                    if fb.inverted() {
+                    let invert_cover =
+                        fb.inverted() || theme::is_dark_mode() || theme::is_sepia_mode();
+                    if invert_cover {
                         let rect = pixmap.rect() + pt;
                         fb.invert_region(&rect);
                     }
