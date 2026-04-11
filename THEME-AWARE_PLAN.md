@@ -159,11 +159,11 @@ All theme features implemented in this release:
 | Persistence | ✅ Complete |
 | Gesture toggle | ✅ Complete |
 | Theme indicator in top bar | ✅ Complete |
+| Inverted book covers in dark/sepia | ✅ Complete |
 
 ## Future Enhancements
 
 Potential improvements for future releases:
-- Inverted book covers in dark mode
 - Scheduled theme (sunset/sunrise times)
 - Smooth theme transition animations
 - Per-document theme preferences
