@@ -2,13 +2,14 @@
 
 ## Overview
 
-The Plato e-reader now supports a comprehensive theme system with light/dark/auto modes, light sensor integration, gesture controls, and persistent settings.
+The Plato e-reader now supports a comprehensive theme system with light/dark/sepia/auto modes, light sensor integration, gesture controls, and persistent settings.
 
 ## Features Implemented
 
 ### 1. Theme Modes
-- **Light Mode**: White background, black text
-- **Dark Mode**: Black background, white text  
+- **Light Mode**: White background (#FFFFFF), black text
+- **Dark Mode**: Dark gray background (#222222), light gray text
+- **Sepia Mode**: Warm beige background (#F4E4BC), dark brown text (#5C5C5C)
 - **Auto Mode**: Automatic switching based on ambient light sensor
 
 ### 2. Auto Theme (Light Sensor)
@@ -19,15 +20,15 @@ The Plato e-reader now supports a comprehensive theme system with light/dark/aut
 
 ### 3. Theme Toggle Gesture
 - **Two-finger swipe from left edge**: Switch to dark mode
-- **Two-finger swipe from right edge**: Switch to light mode
+- **Two-finger swipe from right edge**: Switch to sepia mode
 - Only works when in Auto mode (exits auto to manual selection)
 
 ### 4. Theme Indicator
-- Icon in top bar shows current mode (sun/moon/auto icon)
+- Icon in top bar shows current mode (sun/moon/sepia/auto icon)
 - Tap icon to cycle through modes (same as settings toggle)
 
 ### 5. Settings UI
-- Toggle cycles: Off (Light) → On (Dark) → Auto
+- Toggle cycles: Off (Light) → On (Dark) → Sepia → Auto
 - Auto Threshold button: Adjust sensitivity (50-200, step 50)
 
 ### 6. Persistence
@@ -42,8 +43,9 @@ The Plato e-reader now supports a comprehensive theme system with light/dark/aut
 ```rust
 // Theme state management
 pub fn is_dark_mode() -> bool          // Current dark/light state
+pub fn is_sepia_mode() -> bool         // Current sepia state
 pub fn set_dark_mode(enabled: bool)    // Set dark/light manually
-pub fn theme_mode() -> ThemeMode        // Current mode (Light/Dark/Auto)
+pub fn theme_mode() -> ThemeMode        // Current mode (Light/Dark/Sepia/Auto)
 pub fn set_theme_mode(mode: ThemeMode) // Set mode
 pub fn auto_threshold() -> u16         // Get auto threshold
 pub fn set_auto_threshold(threshold: u16) // Set auto threshold
@@ -52,6 +54,8 @@ pub fn update_from_light_sensor(level: u16) // Update from light sensor
 // Color helpers (used by views)
 pub fn background(dark: bool) -> Color
 pub fn foreground(dark: bool) -> Color
+pub fn sepia_background() -> Color
+pub fn sepia_foreground() -> Color
 ```
 
 ### Settings Module (`crates/core/src/settings/theme.rs`)
@@ -61,6 +65,7 @@ pub fn foreground(dark: bool) -> Color
 pub enum ThemeMode {
     Light,
     Dark,
+    Sepia,
     Auto,
 }
 
@@ -68,6 +73,14 @@ pub struct ThemeSettings {
     pub mode: ThemeMode,
     pub auto_threshold: u16,  // Light level threshold for auto mode
 }
+```
+
+### Color Module (`crates/core/src/color.rs`)
+
+```rust
+// Sepia theme colors
+pub const SEPIA_BACKGROUND: Color = GRAYF4  // 0xF4
+pub const SEPIA_FOREGROUND: Color = GRAY5C  // 0x5C
 ```
 
 ### Key Integration Points
