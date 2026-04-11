@@ -10,18 +10,31 @@
   - `menu_helpers::{toggle_menu_vec, toggle_menu_with, toggle_menu_ctx, toggle_menu_item, toggle_menu_self}`
 - Reader support modules exist under `crates/core/src/view/reader/reader_impl/`, so the codebase has already started a split away from one monolithic reader file.
 - PDF manipulation can now be launched for a selected PDF, and cover editing can now be launched for a selected EPUB, but both features remain incomplete from a product/UI perspective.
+- **Test Segregation (Mandatory)**: Initial refactoring completed for:
+  - `crates/core/src/dictionary/mod.rs` → `mod_tests.rs`
+  - `crates/core/src/device.rs` → `device_tests.rs`
+  - `crates/core/src/dictionary/indexing.rs` → `indexing_tests.rs`
 
 ## Open
 
 ### Reader migration cleanup
 
-- `reader.rs` is still `3403` lines.
+- `reader.rs` is still `3403` lines (AGENTS.md target: < 1000 lines).
 - The file still ends with a stub-method block.
 - Extracted reader modules are present, but many helpers remain inactive or dead-code-gated.
 
 ### Home modularization
 
-- `home/mod.rs` is still `2769` lines.
+- `home/mod.rs` is still `2769` lines (AGENTS.md target: < 1000 lines).
+
+### Font module refactoring
+
+- `font/mod.rs` is `2400` lines (AGENTS.md target: < 1000 lines).
+- Must migrate from direct FFI to safe wrappers in `crates/core/src/font/`.
+
+### Test Segregation
+
+- All unit tests must be extracted into sibling files named `{module}_tests.rs`.
 
 ### PDF tools UI completion
 

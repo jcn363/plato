@@ -24,11 +24,16 @@ KEY FINDINGS
    - Event handling not unified (3000+ lines scattered)
    - Input validation not centralized across 5 components
 
-3. CODE QUALITY ISSUES
-   - Monolithic files: reader.rs (4,168 lines), home/mod.rs (2,697 lines)
+3. CODE QUALITY ISSUES & MANDATE ALIGNMENT
+   - Monolithic Files (AGENTS.md 1000-line limit): 
+     - reader.rs (3,403 lines)
+     - home/mod.rs (2,769 lines)
+     - font/mod.rs (2,400 lines)
+     - html/engine.rs (2,672 lines)
+   - Test Segregation (AGENTS.md mandatory rule): Unit tests are currently embedded in production code and must be extracted to sibling `_tests.rs` files.
+   - Safe Wrapper Migration (AGENTS.md mandatory rule): `font/mod.rs` still uses direct FFI and must migrate to the safe wrappers in `crates/core/src/font/`.
    - Est. boilerplate: ~1,350 lines (render patterns, menus, toggles)
    - Est. duplicate code: ~1,500 lines (gestures, error handling, clones)
-   - Total view module: 24,750 lines across 70+ files
 
 4. PERFORMANCE GAPS
    - Caching not fully utilized (metadata, fonts, search results)

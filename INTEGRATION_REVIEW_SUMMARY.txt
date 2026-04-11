@@ -34,11 +34,12 @@ COMPLETED (April 7, 2026):
 ✅ Type deduplication - ViewPort, PageAnimKind, etc. now from reader_core.rs
 ✅ Dead code removal - Removed unused constants from cover_editor.rs
 
-CODE QUALITY ISSUES:                  MONOLITHIC FILES:
-├─ 1,350 lines boilerplate           ├─ reader.rs: 4,168 lines → split to 5
-├─ 1,500 lines duplicate code        ├─ home/mod.rs: 2,697 lines → split to 5
-├─ 35+ locate_by_id patterns         ├─ font/mod.rs: 2,783 lines (HIGH)
-├─ 6 identical toggle methods        └─ html/engine.rs: 2,672 lines (HIGH)
+CODE QUALITY & MANDATE ALIGNMENT:      MONOLITHIC FILES (AGENTS.md Target: <1000):
+├─ 1,350 lines boilerplate           ├─ reader.rs: 3,403 lines → split to 5
+├─ 1,500 lines duplicate code        ├─ home/mod.rs: 2,769 lines → split to 5
+├─ Unit Test Segregation (MANDATORY) ├─ font/mod.rs: 2,400 lines (SAFE WRAPPER)
+└─ Safe Wrapper Migration (MANDATORY)└─ html/engine.rs: 2,672 lines (HIGH)
+
 └─ 830+ scattered render ops
 
 PERFORMANCE GAPS:                     ARCHITECTURAL ISSUES:

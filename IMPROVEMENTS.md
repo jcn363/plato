@@ -35,23 +35,33 @@ These items are still verifiable in the current source tree:
 
 ## Open Structural Issues
 
+### Adherence to AGENTS.md Mandates
+
+The following structural issues currently violate the mandatory rules in `AGENTS.md`:
+
+- **Monolithic Files (1000-line limit)**: Several files significantly exceed the 1000-line limit and must be split into submodules.
+- **Test Segregation**: Initial extraction of unit tests to sibling files completed for `device.rs`, `dictionary/mod.rs`, and `dictionary/indexing.rs`. Remaining embedded tests still need to be migrated.
+- **Safe Wrapper Migration**: `font/mod.rs` still uses direct FFI calls and must be refactored to use the safe wrappers in `crates/core/src/font/`.
+
 ### Reader migration is incomplete
 
-- `crates/core/src/view/reader/reader_impl/reader.rs` is still `3403` lines.
+- `crates/core/src/view/reader/reader_impl/reader.rs` is still `3403` lines (Target: < 1000 lines).
 - The file still ends with a large stub-method block that duplicates real reader behavior behind placeholder render calls.
 - Helper modules like `reader_rendering.rs`, `reader_settings.rs`, and `reader_gestures.rs` exist, but many extracted functions are still marked `#[allow(dead_code)]` and are not the active implementation path.
 
 Recommended next action:
 - Decide whether the reader split will continue or be rolled back.
 - If it continues, move active logic out of the stub block and remove dead extracted helpers as they are replaced.
+- Ensure all functions in the new modules are under 50 lines.
 
 Acceptance condition:
 - No duplicate reader interface layer remains in `reader.rs`.
 - Extracted reader modules contain active code paths rather than parked helpers.
+- File is under 1000 lines.
 
 ### Home view is still oversized and has duplicated state
 
-- `crates/core/src/view/home/mod.rs` is still `2769` lines.
+- `crates/core/src/view/home/mod.rs` is still `2769` lines (Target: < 1000 lines).
 - The home view remains a large concentration point for event handling, menus, and batch operations.
 
 Recommended next action:
@@ -59,6 +69,19 @@ Recommended next action:
 
 Acceptance condition:
 - Home responsibilities are partitioned by behavior, not duplicated across wrapper/core types.
+- File is under 1000 lines.
+
+### Safe Wrapper Migration for Fonts
+
+- `font/mod.rs` is `2400` lines and still uses direct FFI calls (e.g., `FtFace`).
+
+Recommended next action:
+- Replace `FontLibrary`, `FontOpener`, and `Font` with implementations that use the safe wrappers in `crates/core/src/font/`.
+- Split the monolithic `font/mod.rs` into smaller modules.
+
+Acceptance condition:
+- Zero direct FFI calls in `font/mod.rs`.
+- File is under 1000 lines.
 
 ### PDF tools UI is only partially surfaced
 

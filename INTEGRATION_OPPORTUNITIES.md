@@ -61,7 +61,7 @@ The reader refactor stopped halfway. `crates/core/src/view/reader/reader_impl/re
 
 **Problem**
 
-The home view is still oversized and still duplicates batch-selection state.
+The home view is still oversized (2769 lines) and violates the `AGENTS.md` 1000-line mandate.
 
 **Evidence**
 
@@ -69,7 +69,7 @@ The home view is still oversized and still duplicates batch-selection state.
 
 **Recommended action**
 
-- Fix state ownership first, then split the home view by behavior:
+- Split the home view by behavior to reach < 1000 lines:
   - shared state / construction
   - event handling
   - batch operations
@@ -84,9 +84,51 @@ The home view is still oversized and still duplicates batch-selection state.
 
 **Acceptance condition**
 
-- Home file boundaries reflect active responsibilities.
+- Home file is under 1000 lines.
 
-### 3. PDF tools need a real surfaced workflow
+### 3. Safe Wrapper Migration for Fonts
+
+**Problem**
+
+`font/mod.rs` (2400 lines) violates the `AGENTS.md` 1000-line mandate and the mandatory rule to use safe wrappers instead of direct FFI.
+
+**Evidence**
+
+- `crates/core/src/font/mod.rs`: `2400` lines
+- Direct usage of `FtFace` and other raw FFI types.
+
+**Recommended action**
+
+- Replace direct FFI calls with the safe wrappers in `crates/core/src/font/`.
+- Split the monolithic `font/mod.rs` into smaller modules to reach < 1000 lines.
+
+**Acceptance condition**
+
+- Zero direct FFI calls in `font/mod.rs`.
+- All modules under 1000 lines.
+
+### 4. Unit Test Segregation
+
+**Problem**
+
+Unit tests are currently embedded in production code, violating the `AGENTS.md` mandatory rule for sibling test files.
+
+**Evidence**
+
+- Grep for `#[test]` shows many tests inside production `.rs` files.
+- No `_tests.rs` files exist in `crates/core/src`.
+
+**Recommended action**
+
+- Extract all unit tests into sibling files named `{module}_tests.rs`.
+- Ensure test files use `mod {module};` or `use super::*;` to access production code.
+
+**Acceptance condition**
+
+- Zero `#[test]` blocks in production source files.
+
+### 5. PDF tools need a real surfaced workflow
+
 
 **Problem**
 

@@ -20,16 +20,28 @@
 ### Reader
 
 - File: `crates/core/src/view/reader/reader_impl/reader.rs`
-- Current size: `3403` lines
+- Current size: `3403` lines (Target: < 1000)
 - Active issue: file still ends with a duplicate stub-method block
 - Follow-up: complete or unwind the partial reader split
 
 ### Home
 
 - File: `crates/core/src/view/home/mod.rs`
-- Current size: `2769` lines
+- Current size: `2769` lines (Target: < 1000)
 - Active issue: the active home implementation is still oversized
 - Follow-up: split by active responsibility, not just line count
+
+### Fonts
+
+- File: `crates/core/src/font/mod.rs`
+- Current size: `2400` lines (Target: < 1000)
+- Active issue: uses direct FFI instead of safe wrappers
+- Follow-up: migrate to safe wrappers and split into submodules
+
+### Test Segregation
+
+- Active issue: unit tests are currently embedded in production code
+- Follow-up: extract all tests into sibling `{module}_tests.rs` files
 
 ### PDF Tools
 
