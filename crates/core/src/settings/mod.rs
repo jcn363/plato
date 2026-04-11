@@ -5,6 +5,7 @@ mod interface;
 mod library;
 mod preset;
 mod reading;
+mod theme;
 mod tools;
 
 use crate::frontlight::LightLevels;
@@ -15,6 +16,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 pub use self::preset::{guess_frontlight, LightPreset};
+pub use self::theme::{ThemeMode, ThemeSettings};
 pub use defaults::*;
 pub use display::*;
 pub use features::*;
@@ -32,6 +34,7 @@ pub struct Settings {
     pub wifi: bool,
     pub inverted: bool,
     pub dark_mode: bool,
+    pub theme_settings: ThemeSettings,
     pub sleep_cover: bool,
     pub sleep_cover_fill: bool,
     pub auto_share: bool,
@@ -250,6 +253,7 @@ impl Default for Settings {
             wifi: false,
             inverted: false,
             dark_mode: false,
+            theme_settings: ThemeSettings::default(),
             sleep_cover: true,
             sleep_cover_fill: true,
             auto_share: false,

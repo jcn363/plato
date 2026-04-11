@@ -7,62 +7,62 @@
 
 **Core Theme Infrastructure:**
 - ✅ Global dark mode state in `crate::theme` (`is_dark_mode()`, `set_dark_mode()`)
+- ✅ Theme mode with auto/light/dark options (`theme_mode()`, `set_theme_mode()`)
+- ✅ Auto threshold for light sensor (`auto_threshold()`, `set_auto_threshold()`)
+- ✅ Light sensor integration (`update_from_light_sensor()`)
 - ✅ Theme-aware color helpers in `crate::theme`:
   - `background(dark: bool) -> Color` - returns BLACK in dark mode, WHITE in light
   - `foreground(dark: bool) -> Color` - returns WHITE in dark mode, BLACK in light
 - ✅ Theme-aware color helpers in `crate::color`:
   - `background(dark) -> Color`
   - `foreground(dark) -> Color`
-  - `text_normal(dark) -> [Color; 3]`
-  - `text_bump_small(dark) -> [Color; 3]`
-  - `separator(dark)`
-  - `keyboard_bg(dark)`
-  - `text_inverted_hard(dark) -> [Color; 3]`
-  - `text_inverted_soft(dark) -> [Color; 3]`
-  - `text_bump_large(dark) -> [Color; 3]`
-  - `separator_strong(dark)`
-  - `reading_progress(dark)`
-  - `progress_full(dark)`
-  - `progress_empty(dark)`
-  - `progress_value(dark)`
-  - `battery_fill(dark)`
+  - All other theme-aware color helpers
 
-**View Component Updates (All Completed):**
-- ✅ All view components updated to use theme-aware colors
-- ✅ All unused imports removed
-- ✅ All variable naming fixed
+**Settings Integration:**
+- ✅ ThemeSettings struct with mode and auto_threshold fields
+- ✅ ThemeMode enum: Light, Dark, Auto
+- ✅ Settings UI: Toggle cycles through Off → On → Auto
+- ✅ Auto Threshold: Button to adjust sensitivity (50-200, step 50)
 
 **Persistence Integration:**
-- ✅ Initial app startup: Theme initialized from `settings.dark_mode` (`app.rs:130`)
-- ✅ Settings toggle: Theme updated when user changes dark mode (`display.rs:313`)
-- ✅ USB connect: Theme re-synced when settings reloaded (`app.rs:700`)
-- ✅ Settings auto-save: Dark mode preserved on suspend/exit
+- ✅ Initial app startup: Theme initialized from settings
+- ✅ Settings toggle: Theme updated when user changes mode
+- ✅ USB connect: Theme re-synced when settings reloaded
+- ✅ Settings auto-save: All theme preferences preserved
+
+**Auto Theme Feature:**
+- ✅ Light sensor integration on CheckBattery events
+- ✅ Automatic dark mode based on ambient light level
+- ✅ Configurable threshold (default 100, range 50-200)
 
 ## Files Modified
 
 ### Theme Module (`crates/core/src/theme.rs`)
-- Added `background(dark: bool) -> Color` helper
-- Added `foreground(dark: bool) -> Color` helper
+- Added `theme_mode()`, `set_theme_mode()` for mode state
+- Added `auto_threshold()`, `set_auto_threshold()` for sensitivity
+- Added `update_from_light_sensor()` for auto theme
 
-### Color Module (`crates/core/src/color.rs`)
-- Already had all theme-aware helpers implemented
+### Settings Module (`crates/core/src/settings/`)
+- Added `theme.rs` with ThemeMode enum and ThemeSettings struct
+- Updated `mod.rs` to include theme settings in Settings struct
+
+### Settings Display (`crates/core/src/view/settings/display.rs`)
+- Added Theme Mode toggle (cycles: Off/On/Auto)
+- Added Auto Threshold button
+- Updated event handlers for new UI
 
 ### App Integration (`crates/plato/src/app.rs`)
 - Initialize theme state from settings on startup
 - Re-sync theme state when settings reloaded on USB connect
+- Check light sensor for auto theme on battery check events
 
-### Settings View (`crates/core/src/view/settings/display.rs`)
-- Update theme state when user toggles dark mode
-
-### View Components Updated (30+ files)
-- Updated imports and function calls to use theme-aware colors
+### Entry IDs (`crates/core/src/view/entries.rs`)
+- Added SetAutoThemeThreshold entry
 
 ## Build Verification
 
 - ✅ **ARM Build (32-bit)**: Passes with zero warnings
 - ✅ **Cargo fmt**: Runs successfully
-- ⚠️ **ARM64 Build**: Requires cross-compilation toolchain (aarch64-linux-gnu-gcc)
-- ⚠️ **Host Build**: Requires native libraries (mupdf_wrapper)
 
 ## Implementation Notes
 

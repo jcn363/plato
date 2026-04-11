@@ -1,11 +1,12 @@
 use crate::context::Context;
 use crate::geom::Rectangle;
+use crate::settings::ThemeMode;
 use crate::theme;
 use crate::view::button::Button;
 use crate::view::label::Label;
 use crate::view::{Align, Bus, EntryId, Event, RenderQueue, View};
 
-pub const CHILD_COUNT: usize = 14;
+pub const CHILD_COUNT: usize = 18;
 
 pub fn build_rows(
     rect: &Rectangle,
@@ -207,9 +208,41 @@ pub fn build_rows(
     let toggle = Button::new(
         ctrl_rect,
         Event::Select(EntryId::ToggleDarkMode),
-        if settings.dark_mode { "On" } else { "Off" }.to_string(),
+        match settings.theme_settings.mode {
+            ThemeMode::Light => "Off".to_string(),
+            ThemeMode::Dark => "On".to_string(),
+            ThemeMode::Auto => "Auto".to_string(),
+        },
     );
     children.push(Box::new(toggle) as Box<dyn View>);
+
+    y += small_height;
+
+    let label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "Auto Threshold".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(label) as Box<dyn View>);
+
+    let ctrl_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let threshold_str = format!("{}", settings.theme_settings.auto_threshold);
+    let threshold_btn = Button::new(
+        ctrl_rect,
+        Event::Select(EntryId::SetAutoThemeThreshold),
+        threshold_str,
+    );
+    children.push(Box::new(threshold_btn) as Box<dyn View>);
 
     y += small_height;
 
@@ -309,18 +342,66 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::ToggleDarkMode) => {
-            context.settings.dark_mode = !context.settings.dark_mode;
-            theme::set_dark_mode(context.settings.dark_mode);
+            use crate::settings::ThemeMode;
+            let current_mode = context.settings.theme_settings.mode;
+            let new_mode = match current_mode {
+                ThemeMode::Light => ThemeMode::Dark,
+                ThemeMode::Dark => ThemeMode::Auto,
+                ThemeMode::Auto => ThemeMode::Light,
+            };
+            context.settings.theme_settings.mode = new_mode;
+            theme::set_theme_mode(new_mode);
+
+            match new_mode {
+                ThemeMode::Light => {
+                    context.settings.dark_mode = false;
+                    theme::set_dark_mode(false);
+                }
+                ThemeMode::Dark => {
+                    context.settings.dark_mode = true;
+                    theme::set_dark_mode(true);
+                }
+                ThemeMode::Auto => {
+                    let dark = if crate::device::CURRENT_DEVICE.has_lightsensor() {
+                        context.lightsensor.level().unwrap_or(100)
+                            < context.settings.theme_settings.auto_threshold
+                    } else {
+                        false
+                    };
+                    context.settings.dark_mode = dark;
+                    theme::set_dark_mode(dark);
+                }
+            }
+
             if let Some(btn) = children[offset + 13].downcast_mut::<Button>() {
                 btn.update(
-                    if context.settings.dark_mode {
-                        "On"
-                    } else {
-                        "Off"
-                    }
-                    .to_string(),
+                    match new_mode {
+                        ThemeMode::Light => "Off".to_string(),
+                        ThemeMode::Dark => "On".to_string(),
+                        ThemeMode::Auto => "Auto".to_string(),
+                    },
                     rq,
                 );
+            }
+            true
+        }
+        Event::Select(EntryId::SetAutoThemeThreshold) => {
+            let current = context.settings.theme_settings.auto_threshold;
+            let new_threshold = if current >= 200 { 50 } else { current + 50 };
+            context.settings.theme_settings.auto_threshold = new_threshold;
+            theme::set_auto_threshold(new_threshold);
+
+            if let Some(btn) = children[offset + 15].downcast_mut::<Button>() {
+                btn.update(format!("{}", new_threshold), rq);
+            }
+
+            if context.settings.theme_settings.mode == ThemeMode::Auto
+                && crate::device::CURRENT_DEVICE.has_lightsensor()
+            {
+                if let Ok(level) = context.lightsensor.level() {
+                    theme::update_from_light_sensor(level);
+                    context.settings.dark_mode = theme::is_dark_mode();
+                }
             }
             true
         }

@@ -21,7 +21,9 @@ use plato_core::input::{
 use plato_core::library::Library;
 use plato_core::lightsensor::{KoboLightSensor, LightSensor};
 use plato_core::rtc::Rtc;
-use plato_core::settings::{ButtonScheme, IntermKind, RotationLock, Settings, SETTINGS_PATH};
+use plato_core::settings::{
+    ButtonScheme, IntermKind, RotationLock, Settings, ThemeMode, SETTINGS_PATH,
+};
 use plato_core::theme;
 use plato_core::view::calculator::Calculator;
 use plato_core::view::common::{close_view, locate, locate_by_id, transfer_notifications};
@@ -127,6 +129,8 @@ fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
         plato_core::i18n::set_language(lang);
     }
 
+    theme::set_theme_mode(settings.theme_settings.mode);
+    theme::set_auto_threshold(settings.theme_settings.auto_threshold);
     theme::set_dark_mode(settings.dark_mode);
 
     let library_settings = &settings.libraries[settings.selected_library];
@@ -698,6 +702,10 @@ pub fn run() -> Result<(), Error> {
                         {
                             let dark_mode = settings.dark_mode;
                             context.settings = settings;
+                            theme::set_theme_mode(context.settings.theme_settings.mode);
+                            theme::set_auto_threshold(
+                                context.settings.theme_settings.auto_threshold,
+                            );
                             theme::set_dark_mode(dark_mode);
                         }
                         if context.settings.wifi {
@@ -807,6 +815,17 @@ pub fn run() -> Result<(), Error> {
                             &mut context,
                         );
                         view.children_mut().push(Box::new(notif) as Box<dyn View>);
+                    }
+                }
+
+                if context.settings.theme_settings.mode == ThemeMode::Auto
+                    && CURRENT_DEVICE.has_lightsensor()
+                {
+                    if let Ok(level) = context.lightsensor.level() {
+                        theme::update_from_light_sensor(level);
+                        if theme::is_dark_mode() != context.settings.dark_mode {
+                            context.settings.dark_mode = theme::is_dark_mode();
+                        }
                     }
                 }
             }
