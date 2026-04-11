@@ -1,5 +1,5 @@
 use super::chapter_label::ChapterLabel;
-use crate::color::WHITE;
+use crate::color;
 use crate::context::Context;
 use crate::document::{Document, Neighbors, TocEntry};
 use crate::font::Fonts;
@@ -7,6 +7,8 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, CycleDir, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
+use crate::theme;
+
 use crate::view::filler::Filler;
 use crate::view::icon::Icon;
 use crate::view::page_label::PageLabel;
@@ -42,7 +44,7 @@ impl BottomBar {
         let prev_rect = rect![rect.min, rect.min + side];
 
         if is_prev_disabled {
-            let prev_filler = Filler::new(prev_rect, WHITE);
+            let prev_filler = Filler::new(prev_rect, color::background(theme::is_dark_mode()));
             children.push(Box::new(prev_filler) as Box<dyn View>);
         } else {
             let prev_icon = Icon::new("arrow-left", prev_rect, Event::Page(CycleDir::Previous));
@@ -77,7 +79,7 @@ impl BottomBar {
         let next_rect = rect![rect.max - side, rect.max];
 
         if is_next_disabled {
-            let next_filler = Filler::new(next_rect, WHITE);
+            let next_filler = Filler::new(next_rect, color::background(theme::is_dark_mode()));
             children.push(Box::new(next_filler) as Box<dyn View>);
         } else {
             let next_icon = Icon::new(
@@ -123,7 +125,7 @@ impl BottomBar {
             let index = 0;
             let prev_rect = *self.child(index).rect();
             if is_prev_disabled {
-                let prev_filler = Filler::new(prev_rect, WHITE);
+                let prev_filler = Filler::new(prev_rect, color::background(theme::is_dark_mode()));
                 self.children[index] = Box::new(prev_filler) as Box<dyn View>;
             } else {
                 let prev_icon = Icon::new("arrow-left", prev_rect, Event::Page(CycleDir::Previous));
@@ -139,7 +141,7 @@ impl BottomBar {
             let index = self.len() - 1;
             let next_rect = *self.child(index).rect();
             if is_next_disabled {
-                let next_filler = Filler::new(next_rect, WHITE);
+                let next_filler = Filler::new(next_rect, color::background(theme::is_dark_mode()));
                 self.children[index] = Box::new(next_filler) as Box<dyn View>;
             } else {
                 let next_icon = Icon::new("arrow-right", next_rect, Event::Page(CycleDir::Next));

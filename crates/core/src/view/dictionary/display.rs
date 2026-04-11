@@ -1,8 +1,9 @@
-use crate::color::BLACK;
+use crate::color::foreground;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{halves, Rectangle};
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::common::{locate, locate_by_id};
 use crate::view::dictionary::Dictionary;
@@ -171,7 +172,7 @@ impl Dictionary {
                     self.rect.max.x,
                     kb_rect.min.y
                 ],
-                BLACK,
+                foreground(theme::is_dark_mode()),
             );
             self.children
                 .insert(index, Box::new(separator) as Box<dyn View>);

@@ -3,7 +3,7 @@ use super::BORDER_RADIUS_LARGE;
 use super::{
     Bus, Event, Hub, Id, KeyboardEvent, RenderData, RenderQueue, TextKind, View, ViewId, ID_FEEDER,
 };
-use crate::color::{keyboard_bg, text_normal, Color, TEXT_INVERTED_HARD};
+use crate::color::{keyboard_bg, text_inverted_hard, text_normal, Color};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, KBD_CHAR, KBD_LABEL};
@@ -281,7 +281,7 @@ impl View for Key {
         let dark = crate::theme::is_dark_mode();
         fb.draw_rectangle(&self.rect, keyboard_bg(dark));
         let scheme: [Color; 3] = if self.active ^ (self.pressure == 2) {
-            TEXT_INVERTED_HARD
+            text_inverted_hard(dark)
         } else {
             text_normal(dark)
         };

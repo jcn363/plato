@@ -147,6 +147,12 @@ pub const DARK_TEXT_INVERTED_SOFT: [Color; 3] = [GRAY07, GRAY13, GRAY13];
 pub const DARK_TEXT_INVERTED_HARD: [Color; 3] = [GRAY13, GRAY02, GRAY08];
 pub const DARK_KEYBOARD_BG: Color = GRAY03;
 pub const DARK_SEPARATOR: Color = GRAY05;
+pub const DARK_SEPARATOR_STRONG: Color = GRAY02;
+pub const DARK_READING_PROGRESS: Color = GRAY02;
+pub const DARK_PROGRESS_FULL: Color = GRAY02;
+pub const DARK_PROGRESS_EMPTY: Color = GRAY10;
+pub const DARK_PROGRESS_VALUE: Color = GRAY04;
+pub const DARK_BATTERY_FILL: Color = GRAY02;
 
 #[inline]
 pub fn background(dark: bool) -> Color {
@@ -199,5 +205,86 @@ pub fn keyboard_bg(dark: bool) -> Color {
         DARK_KEYBOARD_BG
     } else {
         KEYBOARD_BG
+    }
+}
+
+#[inline]
+pub fn text_inverted_hard(dark: bool) -> [Color; 3] {
+    if dark {
+        DARK_TEXT_INVERTED_HARD
+    } else {
+        TEXT_INVERTED_HARD
+    }
+}
+
+#[inline]
+pub fn text_inverted_soft(dark: bool) -> [Color; 3] {
+    if dark {
+        DARK_TEXT_INVERTED_SOFT
+    } else {
+        TEXT_INVERTED_SOFT
+    }
+}
+
+#[inline]
+pub fn text_bump_large(dark: bool) -> [Color; 3] {
+    if dark {
+        DARK_TEXT_BUMP_LARGE
+    } else {
+        TEXT_BUMP_LARGE
+    }
+}
+
+#[inline]
+pub fn separator_strong(dark: bool) -> Color {
+    if dark {
+        DARK_SEPARATOR_STRONG
+    } else {
+        SEPARATOR_STRONG
+    }
+}
+
+#[inline]
+pub fn reading_progress(dark: bool) -> Color {
+    if dark {
+        DARK_READING_PROGRESS
+    } else {
+        READING_PROGRESS
+    }
+}
+
+#[inline]
+pub fn progress_full(dark: bool) -> Color {
+    if dark {
+        DARK_PROGRESS_FULL
+    } else {
+        PROGRESS_FULL
+    }
+}
+
+#[inline]
+pub fn progress_empty(dark: bool) -> Color {
+    if dark {
+        DARK_PROGRESS_EMPTY
+    } else {
+        PROGRESS_EMPTY
+    }
+}
+
+#[inline]
+pub fn progress_value(dark: bool) -> Color {
+    if dark {
+        DARK_PROGRESS_VALUE
+    } else {
+        PROGRESS_VALUE
+    }
+}
+
+#[inline]
+pub fn battery_fill(dark: bool) -> Color {
+    if dark {
+        DARK_BATTERY_FILL
+    } else {
+        BATTERY_FILL
     }
 }

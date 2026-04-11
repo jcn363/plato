@@ -1,5 +1,5 @@
 use super::directory::Directory;
-use crate::color::TEXT_BUMP_SMALL;
+use crate::color::text_bump_small;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Font, Fonts, NORMAL_STYLE};
@@ -7,6 +7,7 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{big_half, divide, small_half, CycleDir, Dir, Point, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::log_warn;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::icon::{Icon, ICONS_PIXMAPS};
@@ -367,7 +368,7 @@ impl DirectoriesBar {
             max_line_width,
             max_lines,
         } = *layout;
-        let background = TEXT_BUMP_SMALL[0];
+        let background = text_bump_small(theme::is_dark_mode())[0];
         let vertical_space = self.rect.height() as i32 - max_lines as i32 * x_height;
         let baselines = divide(vertical_space, max_lines as i32 + 1);
         let directories_count = directories.len();

@@ -1,5 +1,5 @@
 use super::{Bus, Event, Hub, Id, RenderQueue, View, ID_FEEDER};
-use crate::color::{text_normal, TEXT_INVERTED_HARD};
+use crate::color::{text_inverted_hard, text_normal};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{open, Location};
@@ -74,7 +74,7 @@ impl View for Intermission {
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
         let scheme = if self.halt {
-            TEXT_INVERTED_HARD
+            text_inverted_hard(theme::is_dark_mode())
         } else {
             text_normal(theme::is_dark_mode())
         };

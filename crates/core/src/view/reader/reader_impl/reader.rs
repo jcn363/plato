@@ -141,7 +141,7 @@
 // Imports and Constants
 // ===========================================================================
 
-use crate::color::{BLACK, WHITE};
+use crate::color::{background, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{
@@ -164,6 +164,7 @@ use crate::settings::{
     guess_frontlight, BottomRightGestureAction, EastStripAction, SouthEastCornerAction,
     SouthStripAction, WestStripAction, DEFAULT_FONT_FAMILY,
 };
+use crate::theme;
 use crate::unit::{mm_to_px, scale_by_dpi};
 use anyhow::{Context as AnyhowContext, Error};
 use chrono::Local;
@@ -2806,7 +2807,7 @@ impl View for Reader {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, _fonts: &mut Fonts) {
-        fb.draw_rectangle(&rect, WHITE);
+        fb.draw_rectangle(&rect, background(theme::is_dark_mode()));
 
         for chunk in &self.chunks {
             let Resource {
@@ -2981,9 +2982,9 @@ impl View for Reader {
                 &CornerSpec::Uniform(radius),
                 &BorderSpec {
                     thickness,
-                    color: WHITE,
+                    color: background(theme::is_dark_mode()),
                 },
-                &BLACK,
+                &foreground(theme::is_dark_mode()),
             );
         }
     }

@@ -1,10 +1,12 @@
-use crate::color::WHITE;
+use crate::color;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::pdf_manipulator::PdfManipulator;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
+use crate::theme;
+
 use crate::unit::scale_by_dpi;
 use crate::view::button::Button;
 use crate::view::common::locate_by_id;
@@ -491,7 +493,7 @@ impl View for PdfManipulatorView {
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
         if let Some(r) = self.rect().intersection(&rect) {
-            fb.draw_rectangle(&r, WHITE);
+            fb.draw_rectangle(&r, color::background(theme::is_dark_mode()));
         }
         for child in self.children().iter() {
             child.render(fb, rect, fonts);

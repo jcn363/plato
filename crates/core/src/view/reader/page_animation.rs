@@ -1,4 +1,3 @@
-use crate::color::WHITE;
 use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::Point;

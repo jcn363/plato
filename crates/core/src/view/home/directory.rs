@@ -1,10 +1,11 @@
-use crate::color::{BLACK, TEXT_BUMP_SMALL, WHITE};
+use crate::color::text_bump_small;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::Framebuffer;
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::{Align, Bus, Event, Hub, Id, RenderQueue, View, ID_FEEDER};
 use crate::view::{BORDER_RADIUS_SMALL, THICKNESS_SMALL};
@@ -66,7 +67,7 @@ impl View for Directory {
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
         let dpi = CURRENT_DEVICE.dpi;
-        fb.draw_rectangle(&self.rect, TEXT_BUMP_SMALL[0]);
+        fb.draw_rectangle(&self.rect, text_bump_small(theme::is_dark_mode())[0]);
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let x_height = font.x_heights.0 as i32;
         let text = self
@@ -95,14 +96,14 @@ impl View for Directory {
                 &CornerSpec::Uniform(border_radius),
                 &BorderSpec {
                     thickness: border_thickness,
-                    color: BLACK,
+                    color: crate::color::foreground(theme::is_dark_mode()),
                 },
-                &WHITE,
+                &crate::color::background(theme::is_dark_mode()),
             );
         }
 
         let pt = pt!(self.rect.min.x + dx, self.rect.max.y - dy);
-        font.render(fb, TEXT_BUMP_SMALL[1], &plan, pt);
+        font.render(fb, text_bump_small(theme::is_dark_mode())[1], &plan, pt);
     }
 
     fn rect(&self) -> &Rectangle {

@@ -2,13 +2,14 @@ use super::button::Button;
 use super::label::Label;
 use super::{Align, Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
 use super::{BORDER_RADIUS_MEDIUM, CLOSE_IGNITION_DELAY, THICKNESS_LARGE};
-use crate::color::{BLACK, WHITE};
+use crate::color::{background, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::Framebuffer;
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use std::thread;
 
@@ -153,9 +154,9 @@ impl View for Dialog {
             &CornerSpec::Uniform(border_radius),
             &BorderSpec {
                 thickness: border_thickness,
-                color: BLACK,
+                color: foreground(theme::is_dark_mode()),
             },
-            &WHITE,
+            &background(theme::is_dark_mode()),
         );
     }
 

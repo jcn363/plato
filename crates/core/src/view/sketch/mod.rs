@@ -1,4 +1,5 @@
-use crate::color::{Color, BLACK, WHITE};
+use crate::color::Color;
+use crate::color::{background, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
@@ -7,6 +8,7 @@ use crate::geom::{CornerSpec, Point, Rectangle};
 use crate::helpers::IsHidden;
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::settings::{ImportSettings, Pen};
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::icon::{Icon, ICONS_PIXMAPS};
 use crate::view::menu::{Menu, MenuKind};
@@ -148,13 +150,13 @@ impl Sketch {
             let mut colors = vec![
                 EntryKind::RadioButton(
                     "White".to_string(),
-                    EntryId::SetPenColor(WHITE),
-                    pen.color == WHITE,
+                    EntryId::SetPenColor(background(theme::is_dark_mode())),
+                    pen.color == background(theme::is_dark_mode()),
                 ),
                 EntryKind::RadioButton(
                     "Black".to_string(),
-                    EntryId::SetPenColor(BLACK),
-                    pen.color == BLACK,
+                    EntryId::SetPenColor(foreground(theme::is_dark_mode())),
+                    pen.color == foreground(theme::is_dark_mode()),
                 ),
             ];
             for i in 1..=14 {
@@ -372,7 +374,7 @@ impl View for Sketch {
                 true
             }
             Event::Select(EntryId::New) => {
-                self.pixmap.clear(WHITE);
+                self.pixmap.clear(background(theme::is_dark_mode()));
                 self.filename = Local::now().format(FILENAME_PATTERN).to_string();
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true

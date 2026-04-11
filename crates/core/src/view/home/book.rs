@@ -1,5 +1,5 @@
-use crate::color::{text_normal, TEXT_INVERTED_HARD};
-use crate::color::{BLACK, READING_PROGRESS, WHITE};
+use crate::color::{background, foreground, reading_progress};
+use crate::color::{text_inverted_hard, text_normal};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::pdf::PdfOpener;
@@ -124,7 +124,7 @@ impl View for Book {
         let dpi = CURRENT_DEVICE.dpi;
 
         let scheme = if self.active {
-            TEXT_INVERTED_HARD
+            text_inverted_hard(theme::is_dark_mode())
         } else {
             text_normal(theme::is_dark_mode())
         };
@@ -270,9 +270,9 @@ impl View for Book {
                 match self.info.status() {
                     Status::New | Status::Finished => {
                         let color = if self.info.reader.is_none() {
-                            WHITE
+                            background(theme::is_dark_mode())
                         } else {
-                            BLACK
+                            foreground(theme::is_dark_mode())
                         };
                         fb.draw_rounded_rectangle_with_border(
                             &rect![
@@ -282,7 +282,7 @@ impl View for Book {
                             &CornerSpec::Uniform(small_radius),
                             &BorderSpec {
                                 thickness,
-                                color: BLACK,
+                                color: foreground(theme::is_dark_mode()),
                             },
                             &color,
                         );
@@ -300,13 +300,13 @@ impl View for Book {
                             &CornerSpec::Uniform(small_radius),
                             &BorderSpec {
                                 thickness,
-                                color: BLACK,
+                                color: foreground(theme::is_dark_mode()),
                             },
                             &|x, _| {
                                 if x < x_offset {
-                                    READING_PROGRESS
+                                    reading_progress(theme::is_dark_mode())
                                 } else {
-                                    WHITE
+                                    background(theme::is_dark_mode())
                                 }
                             },
                         );

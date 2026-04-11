@@ -204,7 +204,7 @@ pub(super) fn build_fixed_children(
             rect.max.x,
             rect.min.y + side
         ],
-        crate::color::WHITE,
+        crate::color::background(theme::is_dark_mode()),
     );
     children.push(Box::new(filler) as Box<dyn View>);
 
@@ -235,7 +235,7 @@ pub(super) fn build_fixed_children(
             rect.min.x + side + small_padding,
             rect.max.y
         ],
-        crate::color::WHITE,
+        crate::color::background(theme::is_dark_mode()),
     );
     children.push(Box::new(filler) as Box<dyn View>);
 
@@ -260,7 +260,7 @@ pub(super) fn build_fixed_children(
             rect.max.x - 2 * side,
             rect.max.y
         ],
-        crate::color::WHITE,
+        crate::color::background(theme::is_dark_mode()),
     );
     children.push(Box::new(filler) as Box<dyn View>);
 

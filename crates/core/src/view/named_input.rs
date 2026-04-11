@@ -3,13 +3,13 @@ use super::input_field::InputField;
 use super::label::Label;
 use super::{Align, Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
 use super::{BORDER_RADIUS_MEDIUM, THICKNESS_LARGE};
-use crate::color::{BLACK, WHITE};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::Framebuffer;
 use crate::geom::{big_half, halves, BorderSpec, CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::theme::{self, background, foreground};
 use crate::unit::scale_by_dpi;
 
 pub struct NamedInput {
@@ -139,9 +139,9 @@ impl View for NamedInput {
             &CornerSpec::Uniform(border_radius),
             &BorderSpec {
                 thickness: border_thickness,
-                color: BLACK,
+                color: foreground(theme::is_dark_mode()),
             },
-            &WHITE,
+            &background(theme::is_dark_mode()),
         );
     }
 

@@ -1,8 +1,9 @@
-use crate::color::WHITE;
+use crate::color;
 use crate::context::Context;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::Rectangle;
+use crate::theme;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 
 pub struct Image {
@@ -41,21 +42,22 @@ impl View for Image {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, _fonts: &mut Fonts) {
+        let bg = color::background(theme::is_dark_mode());
         let x0 = self.rect.min.x + (self.rect.width() - self.pixmap.width) as i32 / 2;
         let y0 = self.rect.min.y + (self.rect.height() - self.pixmap.height) as i32 / 2;
         let x1 = x0 + self.pixmap.width as i32;
         let y1 = y0 + self.pixmap.height as i32;
         if let Some(r) = rect![self.rect.min, pt!(x1, y0)].intersection(&rect) {
-            fb.draw_rectangle(&r, WHITE);
+            fb.draw_rectangle(&r, bg);
         }
         if let Some(r) = rect![self.rect.min.x, y0, x0, self.rect.max.y].intersection(&rect) {
-            fb.draw_rectangle(&r, WHITE);
+            fb.draw_rectangle(&r, bg);
         }
         if let Some(r) = rect![pt!(x0, y1), self.rect.max].intersection(&rect) {
-            fb.draw_rectangle(&r, WHITE);
+            fb.draw_rectangle(&r, bg);
         }
         if let Some(r) = rect![x1, self.rect.min.y, self.rect.max.x, y1].intersection(&rect) {
-            fb.draw_rectangle(&r, WHITE);
+            fb.draw_rectangle(&r, bg);
         }
         if let Some(r) = rect![x0, y0, x1, y1].intersection(&rect) {
             let frame = r - pt!(x0, y0);

@@ -1,4 +1,4 @@
-use crate::color::{BLACK, GRAY12, WHITE};
+use crate::color::{background, battery_fill, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
@@ -6,6 +6,7 @@ use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::{BorderSpec, CornerSpec, Point, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::metadata::Margin;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::rounded_button::RoundedButton;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
@@ -191,10 +192,12 @@ impl View for MarginCropper {
         let dx = (self.rect.width() as i32 - self.pixmap.width as i32) / 2;
         let dy = (self.rect.height() as i32 - self.pixmap.height as i32) / 2;
 
-        fb.draw_rectangle(&self.rect, WHITE);
+        fb.draw_rectangle(&self.rect, background(theme::is_dark_mode()));
         fb.draw_pixmap(&self.pixmap, pt!(dx, dy));
 
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as u16;
+
+        let batt_fill = battery_fill(theme::is_dark_mode());
 
         fb.draw_blended_rectangle(
             &rect![
@@ -203,7 +206,7 @@ impl View for MarginCropper {
                 self.frame.min.x,
                 self.frame.max.y
             ],
-            GRAY12,
+            batt_fill,
             0.4,
         );
         fb.draw_blended_rectangle(
@@ -213,7 +216,7 @@ impl View for MarginCropper {
                 self.frame.max.x,
                 self.rect.max.y
             ],
-            GRAY12,
+            batt_fill,
             0.4,
         );
         fb.draw_blended_rectangle(
@@ -223,7 +226,7 @@ impl View for MarginCropper {
                 self.rect.max.x,
                 self.rect.max.y
             ],
-            GRAY12,
+            batt_fill,
             0.4,
         );
         fb.draw_blended_rectangle(
@@ -233,7 +236,7 @@ impl View for MarginCropper {
                 self.rect.max.x,
                 self.frame.min.y
             ],
-            GRAY12,
+            batt_fill,
             0.4,
         );
 
@@ -241,7 +244,7 @@ impl View for MarginCropper {
             &self.frame,
             &BorderSpec {
                 thickness: thickness as u16,
-                color: BLACK,
+                color: foreground(theme::is_dark_mode()),
             },
         );
 
@@ -267,9 +270,9 @@ impl View for MarginCropper {
                     &CornerSpec::Uniform(button_radius),
                     &BorderSpec {
                         thickness: thickness as u16,
-                        color: BLACK,
+                        color: foreground(theme::is_dark_mode()),
                     },
-                    &WHITE,
+                    &background(theme::is_dark_mode()),
                 );
             }
         }

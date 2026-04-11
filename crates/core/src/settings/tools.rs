@@ -1,5 +1,6 @@
-use crate::color::{Color, BLACK};
+use crate::color::Color;
 use crate::device::CURRENT_DEVICE;
+use crate::theme;
 use crate::unit::mm_to_px;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -35,7 +36,7 @@ impl Default for Pen {
     fn default() -> Self {
         Pen {
             size: 2,
-            color: BLACK,
+            color: theme::foreground(theme::is_dark_mode()),
             dynamic: true,
             amplitude: 4.0,
             min_speed: 0.0,

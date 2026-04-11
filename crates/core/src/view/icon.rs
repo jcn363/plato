@@ -1,5 +1,5 @@
 use super::{Align, Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
-use crate::color::{text_normal, Color, TEXT_INVERTED_HARD};
+use crate::color::{background, text_inverted_hard, text_normal, Color};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::pdf::PdfOpener;
@@ -103,7 +103,7 @@ impl Icon {
             rect,
             children: Vec::new(),
             name: name.to_string(),
-            background: text_normal(theme::is_dark_mode())[0],
+            background: background(theme::is_dark_mode()),
             align: Align::Center,
             corners: None,
             event,
@@ -180,7 +180,7 @@ impl View for Icon {
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
         let scheme = if self.active {
-            TEXT_INVERTED_HARD
+            text_inverted_hard(theme::is_dark_mode())
         } else {
             text_normal(theme::is_dark_mode())
         };

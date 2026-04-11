@@ -4,13 +4,14 @@ use super::menu_entry::MenuEntry;
 use super::{Bus, Event, Hub, RenderData, RenderQueue, View};
 use super::{EntryKind, Id, ViewId, CLOSE_IGNITION_DELAY, ID_FEEDER};
 use super::{BORDER_RADIUS_MEDIUM, SMALL_BAR_HEIGHT, THICKNESS_LARGE, THICKNESS_MEDIUM};
-use crate::color::{separator, BLACK, SEPARATOR_STRONG, WHITE};
+use crate::color::{separator, separator_strong};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{big_half, small_half, BorderSpec, CornerSpec, Point, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::theme::{self, background, foreground};
 use crate::unit::scale_by_dpi;
 use std::thread;
 
@@ -59,7 +60,7 @@ impl Menu {
 
         let dark = crate::theme::is_dark_mode();
         let sep_color = if context.fb.monochrome() {
-            SEPARATOR_STRONG
+            separator_strong(dark)
         } else {
             separator(dark)
         };
@@ -370,9 +371,9 @@ impl View for Menu {
                 &corners,
                 &BorderSpec {
                     thickness: border_thickness,
-                    color: BLACK,
+                    color: foreground(theme::is_dark_mode()),
                 },
-                &WHITE,
+                &background(theme::is_dark_mode()),
             );
 
             let y_b = if self.dir.is_positive() {
@@ -392,23 +393,23 @@ impl View for Menu {
             let mut a = b + pt!(-side, self.dir * side);
             let mut c = a + pt!(2 * side, 0);
 
-            fb.draw_triangle(&[a, b, c], BLACK);
+            fb.draw_triangle(&[a, b, c], foreground(theme::is_dark_mode()));
             let drift = (border_thickness as f32 * ::std::f32::consts::SQRT_2) as i32;
 
             b += pt!(0, self.dir * drift);
             a += pt!(drift, 0);
             c -= pt!(drift, 0);
 
-            fb.draw_triangle(&[a, b, c], WHITE);
+            fb.draw_triangle(&[a, b, c], background(theme::is_dark_mode()));
         } else {
             fb.draw_rounded_rectangle_with_border(
                 &self.rect,
                 &corners,
                 &BorderSpec {
                     thickness: border_thickness,
-                    color: BLACK,
+                    color: foreground(theme::is_dark_mode()),
                 },
-                &WHITE,
+                &background(theme::is_dark_mode()),
             );
         }
     }

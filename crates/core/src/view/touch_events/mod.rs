@@ -1,9 +1,11 @@
-use crate::color::{BLACK, GRAY05, GRAY10, WHITE};
+use crate::color::Color;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CornerSpec, Dir, Rectangle, Region};
+use crate::theme;
+
 use crate::unit::scale_by_dpi;
 use crate::view::icon::Icon;
 use crate::view::notification::Notification;
@@ -69,6 +71,23 @@ impl View for TouchEvents {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, _fonts: &mut Fonts) {
+        let bg = crate::color::background(theme::is_dark_mode());
+        let fg = crate::color::foreground(theme::is_dark_mode());
+        let gray05 = if theme::is_dark_mode() {
+            fg.apply(|c| ((c as u16 * 205 + bg.gray() as u16 * 50) / 255) as u8)
+                .gray()
+        } else {
+            bg.apply(|c| ((c as u16 * 50 + fg.gray() as u16 * 205) / 255) as u8)
+                .gray()
+        };
+        let gray10 = if theme::is_dark_mode() {
+            fg.apply(|c| ((c as u16 * 180 + bg.gray() as u16 * 75) / 255) as u8)
+                .gray()
+        } else {
+            bg.apply(|c| ((c as u16 * 75 + fg.gray() as u16 * 180) / 255) as u8)
+                .gray()
+        };
+
         for x in rect.min.x..rect.max.x {
             for y in rect.min.y..rect.max.y {
                 let color = match Region::from_point(
@@ -77,10 +96,10 @@ impl View for TouchEvents {
                     self.strip_width,
                     self.corner_width,
                 ) {
-                    Region::Corner(..) => BLACK,
-                    Region::Strip(Dir::West) | Region::Strip(Dir::East) => GRAY05,
-                    Region::Strip(Dir::South) | Region::Strip(Dir::North) => GRAY10,
-                    Region::Center => WHITE,
+                    Region::Corner(..) => fg,
+                    Region::Strip(Dir::West) | Region::Strip(Dir::East) => Color::Gray(gray05),
+                    Region::Strip(Dir::South) | Region::Strip(Dir::North) => Color::Gray(gray10),
+                    Region::Center => bg,
                 };
                 fb.set_pixel(x as u32, y as u32, color);
             }

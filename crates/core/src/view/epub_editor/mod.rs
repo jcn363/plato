@@ -4,13 +4,14 @@
 //! chapter content directly on their device. It's designed to fix errors
 //! encountered while reading EPUB books.
 
-use crate::color::BLACK;
+use crate::color;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{halves, Rectangle};
 use crate::impl_view_boilerplate;
 use crate::log_error;
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::common::toggle_main_menu;
 use crate::view::filler::Filler;
@@ -116,7 +117,7 @@ impl EpubEditor {
                 rect.max.x,
                 rect.min.y + side + 1
             ],
-            BLACK,
+            color::foreground(theme::is_dark_mode()),
         );
         children.push(Box::new(separator) as Box<dyn View>);
 
@@ -260,7 +261,7 @@ impl EpubEditor {
             self.rect.max.x,
             self.rect.max.y - small_height
         ];
-        let separator = Filler::new(sep_rect, BLACK);
+        let separator = Filler::new(sep_rect, crate::color::foreground(theme::is_dark_mode()));
         self.children.push(Box::new(separator) as Box<dyn View>);
 
         let kb_rect = rect![

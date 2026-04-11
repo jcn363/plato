@@ -1,10 +1,10 @@
-use crate::color::WHITE;
 use crate::context::Context;
 use crate::font::Fonts;
 use crate::framebuffer::Framebuffer;
 use crate::geom::{divide, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
+use crate::theme;
 use crate::view::filler::Filler;
 use crate::view::labeled_icon::LabeledIcon;
 use crate::view::{Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
@@ -26,7 +26,7 @@ impl BottomBar {
         let mut x_offset = rect.min.x;
         let filler = Filler::new(
             rect![x_offset, rect.min.y, x_offset + paddings[0], rect.max.y],
-            WHITE,
+            theme::background(theme::is_dark_mode()),
         );
         x_offset += paddings[0];
         children.push(Box::new(filler) as Box<dyn View>);
@@ -48,7 +48,7 @@ impl BottomBar {
 
         let filler = Filler::new(
             rect![x_offset, rect.min.y, x_offset + paddings[1], rect.max.y],
-            WHITE,
+            theme::background(theme::is_dark_mode()),
         );
         children.push(Box::new(filler) as Box<dyn View>);
         x_offset += paddings[1];
@@ -70,7 +70,7 @@ impl BottomBar {
 
         let filler = Filler::new(
             rect![x_offset, rect.min.y, x_offset + paddings[2], rect.max.y],
-            WHITE,
+            theme::background(theme::is_dark_mode()),
         );
         children.push(Box::new(filler) as Box<dyn View>);
 

@@ -1,10 +1,10 @@
-use crate::color::WHITE;
 use crate::context::Context;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CycleDir, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
+use crate::theme::{self, background};
 use crate::view::filler::Filler;
 use crate::view::icon::Icon;
 use crate::view::label::Label;
@@ -31,7 +31,7 @@ impl BottomBar {
             let prev_icon = Icon::new("arrow-left", prev_rect, Event::Page(CycleDir::Previous));
             children.push(Box::new(prev_icon) as Box<dyn View>);
         } else {
-            let prev_filler = Filler::new(prev_rect, WHITE);
+            let prev_filler = Filler::new(prev_rect, background(theme::is_dark_mode()));
             children.push(Box::new(prev_filler) as Box<dyn View>);
         }
 
@@ -54,7 +54,7 @@ impl BottomBar {
             );
             children.push(Box::new(next_icon) as Box<dyn View>);
         } else {
-            let next_filler = Filler::new(next_rect, WHITE);
+            let next_filler = Filler::new(next_rect, background(theme::is_dark_mode()));
             children.push(Box::new(next_filler) as Box<dyn View>);
         }
 
@@ -75,7 +75,7 @@ impl BottomBar {
                 let prev_icon = Icon::new("arrow-left", prev_rect, Event::Page(CycleDir::Previous));
                 self.children[index] = Box::new(prev_icon) as Box<dyn View>;
             } else {
-                let prev_filler = Filler::new(prev_rect, WHITE);
+                let prev_filler = Filler::new(prev_rect, background(theme::is_dark_mode()));
                 self.children[index] = Box::new(prev_filler) as Box<dyn View>;
             }
             self.has_prev = has_prev;
@@ -89,7 +89,7 @@ impl BottomBar {
                 let next_icon = Icon::new("arrow-right", next_rect, Event::Page(CycleDir::Next));
                 self.children[index] = Box::new(next_icon) as Box<dyn View>;
             } else {
-                let next_filler = Filler::new(next_rect, WHITE);
+                let next_filler = Filler::new(next_rect, background(theme::is_dark_mode()));
                 self.children[index] = Box::new(next_filler) as Box<dyn View>;
             }
             self.has_next = has_next;

@@ -1,11 +1,12 @@
 use super::{Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
-use crate::color::{BLACK, WHITE};
+use crate::color::{background, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
 use crate::gesture::GestureEvent;
+use crate::theme;
 use crate::view::Bus;
 
 #[allow(dead_code)]
@@ -64,7 +65,7 @@ impl View for ChapterLabel {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        fb.draw_rectangle(&self.rect, WHITE);
+        fb.draw_rectangle(&self.rect, background(theme::is_dark_mode()));
         if !self.title.is_empty() {
             let dpi = CURRENT_DEVICE.dpi;
             let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
@@ -81,9 +82,9 @@ impl View for ChapterLabel {
             let dx = padding + (max_width - title_plan.width - progress_plan.width) / 2;
             let dy = (self.rect.height() as i32 - font.x_heights.0 as i32) / 2;
             let mut pt = pt!(self.rect.min.x + dx, self.rect.max.y - dy);
-            font.render(fb, BLACK, &title_plan, pt);
+            font.render(fb, foreground(theme::is_dark_mode()), &title_plan, pt);
             pt.x += title_plan.width;
-            font.render(fb, BLACK, &progress_plan, pt);
+            font.render(fb, foreground(theme::is_dark_mode()), &progress_plan, pt);
         }
     }
 

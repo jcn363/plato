@@ -2,13 +2,14 @@ use super::icon::ICONS_PIXMAPS;
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 use super::{BORDER_RADIUS_SMALL, THICKNESS_LARGE, THICKNESS_MEDIUM};
 use crate::battery::Status;
-use crate::color::{BATTERY_FILL, BLACK, WHITE};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::theme;
+
 use crate::unit::scale_by_dpi;
 use std::time::{Duration, Instant};
 
@@ -100,7 +101,7 @@ impl View for Battery {
         let mut pt = self.rect.min + pt!(dx, dy);
         let batt_rect = rect![pt, pt + pt!(batt_width, batt_height)];
 
-        fb.draw_rectangle(&self.rect, WHITE);
+        fb.draw_rectangle(&self.rect, crate::color::background(theme::is_dark_mode()));
 
         let max_fill_width = batt_width - 2 * border_thickness;
         let fill_width = (self.capacity.clamp(0.0, 100.0) / 100.0 * max_fill_width as f32) as i32;
@@ -113,15 +114,15 @@ impl View for Battery {
             &CornerSpec::Uniform(border_radius),
             &BorderSpec {
                 thickness: border_thickness as u16,
-                color: BLACK,
+                color: crate::color::foreground(theme::is_dark_mode()),
             },
             &|x, _| {
                 if x <= x_offset_fill {
-                    BATTERY_FILL
+                    crate::color::battery_fill(theme::is_dark_mode())
                 } else if x <= x_offset_edge {
-                    BLACK
+                    crate::color::foreground(theme::is_dark_mode())
                 } else {
-                    WHITE
+                    crate::color::background(theme::is_dark_mode())
                 }
             },
         );
@@ -137,9 +138,9 @@ impl View for Battery {
             &CornerSpec::East(border_radius / 2),
             &BorderSpec {
                 thickness: border_thickness as u16,
-                color: BLACK,
+                color: crate::color::foreground(theme::is_dark_mode()),
             },
-            &WHITE,
+            &crate::color::background(theme::is_dark_mode()),
         );
 
         pt = self.rect.min + pt!(dx, dy) + pt!(border_thickness);
@@ -155,7 +156,7 @@ impl View for Battery {
                     (max_fill_width - pixmap.width as i32) / 2,
                     (fill_height - pixmap.height as i32) / 2
                 );
-                fb.draw_blended_pixmap(pixmap, pt, BLACK);
+                fb.draw_blended_pixmap(pixmap, pt, crate::color::foreground(theme::is_dark_mode()));
             }
         }
     }

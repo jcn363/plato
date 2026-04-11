@@ -1,6 +1,5 @@
 use super::preset::{Preset, PresetKind};
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
-use crate::color::WHITE;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
@@ -8,6 +7,7 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CycleDir, Dir, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::settings::LightPreset;
+use crate::theme::{self, background};
 
 pub struct PresetsList {
     id: Id,
@@ -135,7 +135,7 @@ impl View for PresetsList {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
-        fb.draw_rectangle(&self.rect, WHITE);
+        fb.draw_rectangle(&self.rect, background(theme::is_dark_mode()));
     }
 
     fn is_background(&self) -> bool {

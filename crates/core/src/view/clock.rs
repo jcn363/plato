@@ -1,11 +1,12 @@
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
-use crate::color::{BLACK, WHITE};
+use crate::color::{background, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
 use crate::gesture::GestureEvent;
+use crate::theme;
 use chrono::{DateTime, Local};
 
 pub struct Clock {
@@ -71,8 +72,8 @@ impl View for Clock {
         let dy = (self.rect.height() as i32 - font.x_heights.0 as i32) / 2;
         let pt = pt!(self.rect.min.x + dx, self.rect.max.y - dy);
 
-        fb.draw_rectangle(&self.rect, WHITE);
-        font.render(fb, BLACK, &plan, pt);
+        fb.draw_rectangle(&self.rect, background(theme::is_dark_mode()));
+        font.render(fb, foreground(theme::is_dark_mode()), &plan, pt);
     }
 
     fn rect(&self) -> &Rectangle {

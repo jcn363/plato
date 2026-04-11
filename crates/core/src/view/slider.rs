@@ -1,13 +1,14 @@
 use super::{
     Bus, Event, Hub, Id, RenderData, RenderQueue, SliderId, View, ID_FEEDER, THICKNESS_SMALL,
 };
-use crate::color::{BLACK, PROGRESS_EMPTY, PROGRESS_FULL, PROGRESS_VALUE, WHITE};
+use crate::color::{progress_empty, progress_full, progress_value};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, SLIDER_VALUE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, BorderSpec, CornerSpec, Rectangle};
 use crate::input::{DeviceEvent, FingerStatus};
+use crate::theme;
 use crate::unit::scale_by_dpi;
 
 const PROGRESS_HEIGHT: f32 = 16.0;
@@ -127,7 +128,7 @@ impl View for Slider {
             + small_radius
             + ((self.rect.width() as f32 - button_diameter as f32) * progress) as i32;
 
-        fb.draw_rectangle(&self.rect, WHITE);
+        fb.draw_rectangle(&self.rect, crate::color::background(theme::is_dark_mode()));
 
         let (small_mini_radius, big_mini_radius) = halves(progress_height);
         let (small_padding, big_padding) = halves(self.rect.height() as i32 - progress_height);
@@ -143,13 +144,13 @@ impl View for Slider {
             &CornerSpec::Uniform(small_mini_radius),
             &BorderSpec {
                 thickness: border_thickness,
-                color: BLACK,
+                color: crate::color::foreground(theme::is_dark_mode()),
             },
             &|x, _| {
                 if x < x_offset {
-                    PROGRESS_FULL
+                    progress_full(theme::is_dark_mode())
                 } else {
-                    PROGRESS_EMPTY
+                    progress_empty(theme::is_dark_mode())
                 }
             },
         );
@@ -161,14 +162,18 @@ impl View for Slider {
             x_offset + big_radius,
             self.rect.max.y - big_padding
         ];
-        let fill_color = if self.active { BLACK } else { WHITE };
+        let fill_color = if self.active {
+            crate::color::foreground(theme::is_dark_mode())
+        } else {
+            crate::color::background(theme::is_dark_mode())
+        };
 
         fb.draw_rounded_rectangle_with_border(
             &rect,
             &CornerSpec::Uniform(small_radius),
             &BorderSpec {
                 thickness: 2 * border_thickness,
-                color: BLACK,
+                color: crate::color::foreground(theme::is_dark_mode()),
             },
             &fill_color,
         );
@@ -187,7 +192,7 @@ impl View for Slider {
             x_offset + x_drift,
             self.rect.min.y + x_height.max(small_padding)
         );
-        font.render(fb, PROGRESS_VALUE, &plan, pt);
+        font.render(fb, progress_value(theme::is_dark_mode()), &plan, pt);
     }
 
     fn rect(&self) -> &Rectangle {

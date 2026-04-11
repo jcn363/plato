@@ -1,11 +1,12 @@
 use super::results_label::ResultsLabel;
-use crate::color::WHITE;
+use crate::color;
 use crate::context::Context;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, CycleDir, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
+use crate::theme;
 use crate::view::filler::Filler;
 use crate::view::icon::Icon;
 use crate::view::page_label::PageLabel;
@@ -39,7 +40,7 @@ impl ResultsBar {
         let prev_rect = rect![rect.min, rect.min + side];
 
         if is_prev_disabled {
-            let prev_filler = Filler::new(prev_rect, WHITE);
+            let prev_filler = Filler::new(prev_rect, color::background(theme::is_dark_mode()));
             children.push(Box::new(prev_filler) as Box<dyn View>);
         } else {
             let prev_icon = Icon::new(
@@ -75,7 +76,7 @@ impl ResultsBar {
         let next_rect = rect![rect.max - side, rect.max];
 
         if is_next_disabled {
-            let next_filler = Filler::new(next_rect, WHITE);
+            let next_filler = Filler::new(next_rect, color::background(theme::is_dark_mode()));
             children.push(Box::new(next_filler) as Box<dyn View>);
         } else {
             let next_icon = Icon::new(
@@ -121,7 +122,7 @@ impl ResultsBar {
             let index = 0;
             let prev_rect = *self.child(index).rect();
             if is_prev_disabled {
-                let prev_filler = Filler::new(prev_rect, WHITE);
+                let prev_filler = Filler::new(prev_rect, color::background(theme::is_dark_mode()));
                 self.children[index] = Box::new(prev_filler) as Box<dyn View>;
             } else {
                 let prev_icon = Icon::new(
@@ -141,7 +142,7 @@ impl ResultsBar {
             let index = self.len() - 1;
             let next_rect = *self.child(index).rect();
             if is_next_disabled {
-                let next_filler = Filler::new(next_rect, WHITE);
+                let next_filler = Filler::new(next_rect, color::background(theme::is_dark_mode()));
                 self.children[index] = Box::new(next_filler) as Box<dyn View>;
             } else {
                 let next_icon =

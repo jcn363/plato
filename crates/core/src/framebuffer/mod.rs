@@ -6,8 +6,9 @@ mod linuxfb_sys;
 mod mxcfb_sys;
 mod sunxi_sys;
 mod transform;
+use crate::theme;
 
-use crate::color::{Color, BLACK, WHITE};
+use crate::color::{background, foreground, Color};
 use crate::geom::{lerp, nearest_segment_point, surface_area, Point, Rectangle};
 use crate::geom::{BorderSpec, ColorSource, CornerSpec, Vec2};
 use anyhow::Error;
@@ -266,10 +267,10 @@ pub trait Framebuffer {
                 let px = x - rect.min.x + pt.x;
                 let py = y - rect.min.y + pt.y;
                 let source_color = pixmap.get_pixel(x as u32, y as u32);
-                let color = if source_color == BLACK {
-                    BLACK
-                } else if source_color == WHITE {
-                    WHITE
+                let color = if source_color.gray() == 0 {
+                    foreground(theme::is_dark_mode())
+                } else if source_color.gray() == 255 {
+                    background(theme::is_dark_mode())
                 } else {
                     transform::transform_dither_g2(x as u32, y as u32, source_color)
                 };

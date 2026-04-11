@@ -111,7 +111,7 @@ use self::bottom_bar::BottomBar;
 use self::navigation_bar::NavigationBar;
 use self::shelf::Shelf;
 use super::top_bar::TopBar;
-use crate::color::BLACK;
+
 use crate::context::{Context, DeviceFlags};
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
@@ -123,6 +123,7 @@ use crate::library::Library;
 use crate::log_error;
 use crate::metadata::{sort, BookQuery, Info, Metadata, SimpleStatus, SortMethod};
 use crate::settings::{FirstColumn, Hook, LibraryMode, SecondColumn};
+use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::common::{locate, locate_by_id, rlocate};
 use crate::view::common::{toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
@@ -242,7 +243,7 @@ impl Home {
                 rect.max.x,
                 rect.min.y + small_height + big_thickness
             ],
-            BLACK,
+            crate::color::foreground(theme::is_dark_mode()),
         );
         children.push(Box::new(separator) as Box<dyn View>);
 
@@ -264,7 +265,7 @@ impl Home {
 
             let separator = Filler::new(
                 rect![rect.min.x, y_start, rect.max.x, y_start + thickness],
-                BLACK,
+                crate::color::foreground(theme::is_dark_mode()),
             );
             children.push(Box::new(separator) as Box<dyn View>);
             y_start += thickness;
@@ -290,7 +291,7 @@ impl Home {
 
             let separator = Filler::new(
                 rect![rect.min.x, y_start, rect.max.x, y_start + thickness],
-                BLACK,
+                crate::color::foreground(theme::is_dark_mode()),
             );
             children.push(Box::new(separator) as Box<dyn View>);
             y_start += thickness;
@@ -333,7 +334,7 @@ impl Home {
                 rect.max.x,
                 rect.max.y - small_height + big_thickness
             ],
-            BLACK,
+            crate::color::foreground(theme::is_dark_mode()),
         );
         children.push(Box::new(separator) as Box<dyn View>);
 
@@ -744,7 +745,7 @@ impl Home {
                     self.rect.max.x,
                     kb_rect.min.y
                 ],
-                BLACK,
+                crate::color::foreground(theme::is_dark_mode()),
             );
             self.children
                 .insert(index, Box::new(separator) as Box<dyn View>);
@@ -852,7 +853,7 @@ impl Home {
 
             let sp_rect = *self.child(1).rect() + pt!(0, small_height);
 
-            let separator = Filler::new(sp_rect, BLACK);
+            let separator = Filler::new(sp_rect, crate::color::foreground(theme::is_dark_mode()));
             self.children
                 .insert(2, Box::new(separator) as Box<dyn View>);
 
@@ -954,7 +955,7 @@ impl Home {
             };
             let sp_rect = *self.child(sep_index).rect() + pt!(0, small_height);
 
-            let separator = Filler::new(sp_rect, BLACK);
+            let separator = Filler::new(sp_rect, crate::color::foreground(theme::is_dark_mode()));
             self.children
                 .insert(sep_index + 1, Box::new(separator) as Box<dyn View>);
 
@@ -1064,7 +1065,7 @@ impl Home {
             self.children
                 .insert(self.shelf_index + 1, Box::new(search_bar) as Box<dyn View>);
 
-            let separator = Filler::new(sp_rect, BLACK);
+            let separator = Filler::new(sp_rect, crate::color::foreground(theme::is_dark_mode()));
             self.children
                 .insert(self.shelf_index + 1, Box::new(separator) as Box<dyn View>);
 

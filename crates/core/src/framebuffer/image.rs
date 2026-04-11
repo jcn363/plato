@@ -1,6 +1,7 @@
 use super::{Framebuffer, UpdateMode};
-use crate::color::{Color, WHITE};
+use crate::color::{background, Color};
 use crate::geom::{lerp, Rectangle};
+use crate::theme;
 use anyhow::{format_err, Error};
 use std::fs::File;
 use std::io::BufReader;
@@ -29,7 +30,7 @@ impl Pixmap {
                 samples
             )
         })?;
-        data.resize(len, WHITE.gray());
+        data.resize(len, background(theme::is_dark_mode()).gray());
         Ok(Pixmap {
             width,
             height,
@@ -120,7 +121,7 @@ impl Pixmap {
     #[inline]
     pub fn get_pixel(&self, x: u32, y: u32) -> Color {
         if self.data.is_empty() {
-            return WHITE;
+            return background(theme::is_dark_mode());
         }
         let addr = self.samples * (y * self.width + x) as usize;
         if self.samples == 1 {

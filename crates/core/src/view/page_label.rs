@@ -1,5 +1,4 @@
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
-use crate::color::{BLACK, WHITE};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::BYTES_PER_PAGE;
@@ -7,6 +6,7 @@ use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
 use crate::gesture::GestureEvent;
+use crate::theme::{self, background, foreground};
 
 pub struct PageLabel {
     id: Id,
@@ -122,8 +122,8 @@ impl View for PageLabel {
         let dx = padding + (max_width - plan.width) / 2;
         let dy = (self.rect.height() as i32 - font.x_heights.0 as i32) / 2;
         let pt = pt!(self.rect.min.x + dx, self.rect.max.y - dy);
-        fb.draw_rectangle(&self.rect, WHITE);
-        font.render(fb, BLACK, &plan, pt);
+        fb.draw_rectangle(&self.rect, background(theme::is_dark_mode()));
+        font.render(fb, foreground(theme::is_dark_mode()), &plan, pt);
     }
 
     fn rect(&self) -> &Rectangle {

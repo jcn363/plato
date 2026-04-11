@@ -1,11 +1,12 @@
 use super::{bottom_bar::BottomBar, code_area::CodeArea, input_bar::InputBar};
-use crate::color::BLACK;
+use crate::color::foreground;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, CycleDir, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::theme;
 use crate::unit::{mm_to_px, scale_by_dpi};
 use crate::view::filler::Filler;
 use crate::view::keyboard::Keyboard;
@@ -150,7 +151,7 @@ impl Calculator {
                 rect.max.x,
                 rect.min.y + side + big_thickness
             ],
-            BLACK,
+            foreground(theme::is_dark_mode()),
         );
         children.push(Box::new(separator) as Box<dyn View>);
 
@@ -198,12 +199,12 @@ impl Calculator {
         let code_area = CodeArea::new(code_area_rect, font_size, margin_width);
         children.push(Box::new(code_area) as Box<dyn View>);
 
-        let separator = Filler::new(sp_rect2, BLACK);
+        let separator = Filler::new(sp_rect2, foreground(theme::is_dark_mode()));
         children.push(Box::new(separator) as Box<dyn View>);
 
         children.push(Box::new(input_bar) as Box<dyn View>);
 
-        let separator = Filler::new(sp_rect, BLACK);
+        let separator = Filler::new(sp_rect, foreground(theme::is_dark_mode()));
         children.push(Box::new(separator) as Box<dyn View>);
 
         children.push(Box::new(keyboard) as Box<dyn View>);
@@ -215,7 +216,7 @@ impl Calculator {
                 rect.max.x,
                 rect.max.y - side + big_thickness
             ],
-            BLACK,
+            foreground(theme::is_dark_mode()),
         );
         children.push(Box::new(separator) as Box<dyn View>);
 
