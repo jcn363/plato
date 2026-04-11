@@ -118,13 +118,13 @@ pub const SEPIA_FOREGROUND: Color = GRAY5C  // 0x5C
 
 ### From Settings
 1. Go to Settings → Display
-2. Tap "Dark Mode" toggle to cycle: Off → On → Auto
+2. Tap "Dark Mode" toggle to cycle: Off → On → Sepia → Auto
 3. Tap "Auto Threshold" to adjust sensitivity
 
 ### From Gesture
 1. In Auto mode, use two-finger swipe from screen edges
 2. Left edge → Dark mode
-3. Right edge → Light mode
+3. Right edge → Sepia mode
 
 ### From Top Bar
 1. Tap theme icon (left of menu icon)
@@ -146,10 +146,24 @@ cargo build --target x86_64-unknown-linux-gnu
 - ✅ ARM Build: Zero warnings
 - ✅ Cargo fmt: Passes
 
+## Theme System Summary
+
+All theme features implemented in this release:
+
+| Feature | Status |
+|---------|--------|
+| Light/Dark themes | ✅ Complete |
+| Sepia theme | ✅ Complete |
+| Auto theme (light sensor) | ✅ Complete |
+| Settings UI | ✅ Complete |
+| Persistence | ✅ Complete |
+| Gesture toggle | ✅ Complete |
+| Theme indicator in top bar | ✅ Complete |
+
 ## Future Enhancements
 
-Potential improvements not yet implemented:
-- Sepia theme (third option beyond light/dark)
+Potential improvements for future releases:
 - Inverted book covers in dark mode
 - Scheduled theme (sunset/sunrise times)
 - Smooth theme transition animations
+- Per-document theme preferences
