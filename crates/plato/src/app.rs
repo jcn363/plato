@@ -22,6 +22,7 @@ use plato_core::library::Library;
 use plato_core::lightsensor::{KoboLightSensor, LightSensor};
 use plato_core::rtc::Rtc;
 use plato_core::settings::{ButtonScheme, IntermKind, RotationLock, Settings, SETTINGS_PATH};
+use plato_core::theme;
 use plato_core::view::calculator::Calculator;
 use plato_core::view::common::{close_view, locate, locate_by_id, transfer_notifications};
 use plato_core::view::common::{toggle_input_history_menu, toggle_keyboard_layout_menu};
@@ -125,6 +126,8 @@ fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
     if let Some(lang) = plato_core::i18n::Language::from_code(&settings.language) {
         plato_core::i18n::set_language(lang);
     }
+
+    theme::set_dark_mode(settings.dark_mode);
 
     let library_settings = &settings.libraries[settings.selected_library];
     let library = Library::new(&library_settings.path, library_settings.mode)?;

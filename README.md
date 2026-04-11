@@ -117,7 +117,19 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 
 # Run the desktop emulator (requires SDL2)
 ./run-emulator.sh
+
+# Run tests (requires host target)
+cargo test --target x86_64-unknown-linux-gnu
 ```
+
+### Performance Optimizations
+
+Recent performance improvements include:
+- Added NEON SIMD and VFP4 optimizations for 32-bit Kobo devices
+- Inlined hot-path functions for pixel operations, geometry calculations, and device capabilities
+- Migrated to `std::sync::LazyLock` for better performance with constants and regex patterns
+- Optimized memory usage with reduced MuPDF context cache and grayscale thumbnails
+- Added progressive document loading with LRU caching for large PDFs
 
 ### Testing
 

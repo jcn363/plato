@@ -1,5 +1,6 @@
 use crate::context::Context;
 use crate::geom::Rectangle;
+use crate::theme;
 use crate::view::button::Button;
 use crate::view::label::Label;
 use crate::view::{Align, Bus, EntryId, Event, RenderQueue, View};
@@ -309,6 +310,7 @@ pub fn handle_event(
         }
         Event::Select(EntryId::ToggleDarkMode) => {
             context.settings.dark_mode = !context.settings.dark_mode;
+            theme::set_dark_mode(context.settings.dark_mode);
             if let Some(btn) = children[offset + 13].downcast_mut::<Button>() {
                 btn.update(
                     if context.settings.dark_mode {

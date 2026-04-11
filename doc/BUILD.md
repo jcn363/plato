@@ -20,9 +20,11 @@ Install *rustup*:
 curl https://sh.rustup.rs -sSf | sh
 ```
 
-Install the appropriate target:
+Install the appropriate targets:
 ```sh
 rustup target add arm-unknown-linux-gnueabihf
+rustup target add aarch64-unknown-linux-gnu
+rustup target add x86_64-unknown-linux-gnu
 ```
 
 ### Build Phase
@@ -44,6 +46,21 @@ cd mupdf_wrapper
 TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh
 ```
 
+### Alternative Build Commands
+
+You can also build directly with Cargo for specific targets:
+
+```bash
+# Build for 32-bit ARM (original Kobo devices) — DEFAULT
+cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
+
+# Build for 64-bit ARM (newer Kobo devices: Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
+cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
+
+# Build for host (development/testing)
+cargo build --target x86_64-unknown-linux-gnu -p plato
+```
+
 ### Distribution
 
 ```sh
@@ -61,6 +78,27 @@ Install one additional dependency: *SDL2*.
 You can then run the emulator with:
 ```sh
 ./run-emulator.sh
+```
+
+### Testing
+
+Since the default target is ARM, all test commands on the host require `--target x86_64-unknown-linux-gnu`:
+
+```bash
+# Run all tests
+cargo test --target x86_64-unknown-linux-gnu
+
+# Run tests for a specific crate
+cargo test -p plato-core --target x86_64-unknown-linux-gnu
+
+# Run a single test by name
+cargo test -p plato-core test_device_canonical_rotation --target x86_64-unknown-linux-gnu
+
+# Run tests in a specific module
+cargo test -p plato-core geom::tests --target x86_64-unknown-linux-gnu
+
+# Run tests matching a pattern
+cargo test overlaping --target x86_64-unknown-linux-gnu
 ```
 
 ### Importer
