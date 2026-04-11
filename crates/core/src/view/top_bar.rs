@@ -4,17 +4,28 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
+use crate::settings::ThemeMode;
 use crate::view::battery::Battery;
 use crate::view::clock::Clock;
 use crate::view::icon::Icon;
 use crate::view::label::Label;
 use crate::view::{Align, Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 
-#[derive(Debug)]
 pub struct TopBar {
     id: Id,
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
+    theme_indicator: Icon,
+}
+
+impl std::fmt::Debug for TopBar {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TopBar")
+            .field("id", &self.id)
+            .field("rect", &self.rect)
+            .field("children", &self.children.len())
+            .finish()
+    }
 }
 
 impl TopBar {
@@ -63,6 +74,17 @@ impl TopBar {
         );
         children.push(Box::new(frontlight_icon) as Box<dyn View>);
 
+        let theme_icon_name = match context.settings.theme_settings.mode {
+            ThemeMode::Light => "theme-light",
+            ThemeMode::Dark => "theme-dark",
+            ThemeMode::Auto => "theme-auto",
+        };
+        let theme_indicator = Icon::new(
+            theme_icon_name,
+            rect![rect.max - pt!(side, side), rect.max],
+            Event::Select(crate::view::EntryId::ToggleDarkMode),
+        );
+
         let menu_rect = rect![rect.max - side, rect.max];
         let menu_icon = Icon::new(
             "menu",
@@ -71,7 +93,12 @@ impl TopBar {
         );
         children.push(Box::new(menu_icon) as Box<dyn View>);
 
-        TopBar { id, rect, children }
+        TopBar {
+            id,
+            rect,
+            children,
+            theme_indicator,
+        }
     }
 
     pub fn update_root_icon(&mut self, name: &str, rq: &mut RenderQueue) {
@@ -104,6 +131,20 @@ impl TopBar {
         rq.add(RenderData::new(icon.id(), *icon.rect(), UpdateMode::Gui));
     }
 
+    pub fn update_theme_indicator(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+        let icon_name = match context.settings.theme_settings.mode {
+            ThemeMode::Light => "theme-light",
+            ThemeMode::Dark => "theme-dark",
+            ThemeMode::Auto => "theme-auto",
+        };
+        self.theme_indicator.name = icon_name.to_string();
+        rq.add(RenderData::new(
+            self.theme_indicator.id(),
+            *self.theme_indicator.rect(),
+            UpdateMode::Gui,
+        ));
+    }
+
     pub fn update_clock_label(&mut self, rq: &mut RenderQueue) {
         if let Some(clock_label) = self.children[2].downcast_mut::<Clock>() {
             clock_label.update(rq);
@@ -118,6 +159,7 @@ impl TopBar {
 
     pub fn reseed(&mut self, rq: &mut RenderQueue, context: &mut Context) {
         self.update_frontlight_icon(rq, context);
+        self.update_theme_indicator(rq, context);
         self.update_clock_label(rq);
         self.update_battery_widget(rq, context);
     }
@@ -151,7 +193,10 @@ impl View for TopBar {
         }
     }
 
-    fn render(&self, _fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {}
+    fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
+        self.theme_indicator
+            .render(fb, *self.theme_indicator.rect(), _fonts);
+    }
 
     fn resize(&mut self, rect: Rectangle, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         let side = rect.height() as i32;
