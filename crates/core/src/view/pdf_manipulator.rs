@@ -117,9 +117,18 @@ impl PdfManipulatorView {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
     }
 
-    /// Display available PDF manipulation actions for selected file.
-    /// Currently unused - awaiting file browser integration to provide file selection.
-    #[allow(dead_code)]
+    pub fn for_file(
+        rect: Rectangle,
+        file_path: PathBuf,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) -> Result<PdfManipulatorView, Error> {
+        let mut view = PdfManipulatorView::new(rect, rq, context)?;
+        view.selected_file = Some(file_path.clone());
+        view.show_actions(file_path, rq, context);
+        Ok(view)
+    }
+
     fn show_actions(&mut self, file_path: PathBuf, rq: &mut RenderQueue, context: &mut Context) {
         self.mode = ManipulationMode::SelectAction(file_path.clone());
 

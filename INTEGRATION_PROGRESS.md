@@ -9,7 +9,7 @@
   - `add_menu()`
   - `menu_helpers::{toggle_menu_vec, toggle_menu_with, toggle_menu_ctx, toggle_menu_item, toggle_menu_self}`
 - Reader support modules exist under `crates/core/src/view/reader/reader_impl/`, so the codebase has already started a split away from one monolithic reader file.
-- PDF manipulation and cover editing both have underlying implementation code in place, even though the UI exposure remains incomplete.
+- PDF manipulation can now be launched for a selected PDF, and cover editing can now be launched for a selected EPUB, but both features remain incomplete from a product/UI perspective.
 
 ## Open
 
@@ -25,13 +25,13 @@
 
 ### PDF tools UI completion
 
-- `pdf_manipulator.rs` still contains parked file-selection/action-selection code.
-- The manipulation flow is not fully surfaced through a reachable UI.
+- `pdf_manipulator.rs` is now reachable from selected-document flows, but still contains parked file-selection/action-selection code.
+- The manipulation flow is still not fully parameterized through the UI.
 
 ### Cover editor product decision
 
 - The editor contains real image-editing helpers.
-- The view is still partially parked behind `#[allow(dead_code)]` and lacks a complete editing UI.
+- The view is now reachable from selected-document flow for EPUBs, but is still partially parked behind `#[allow(dead_code)]` and lacks a complete editing UI.
 
 ## Verification
 

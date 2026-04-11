@@ -62,8 +62,8 @@ Acceptance condition:
 
 ### PDF tools UI is only partially surfaced
 
-- `crates/core/src/view/pdf_manipulator.rs` still has dead-code manipulation modes.
-- `show_actions()` is still unused.
+- `crates/core/src/view/pdf_manipulator.rs` can now be launched for a selected PDF from the reader title menu and the home book menu.
+- The view still has dead-code manipulation modes and incomplete parameter collection.
 - Redaction and manipulation paths still depend on hard-coded defaults rather than interactive file/action input.
 
 Recommended next action:
@@ -75,6 +75,7 @@ Acceptance condition:
 ### Cover editor is implemented below the UI surface but still partial
 
 - `crates/core/src/view/cover_editor.rs` contains real editing helpers for crop, rotate, brightness, contrast, grayscale, and save.
+- The view can now be launched for a selected EPUB from the home book menu.
 - The view is still broadly guarded by `#[allow(dead_code)]`.
 - There is no interactive toolbar or surfaced editing workflow matching the helper capabilities.
 

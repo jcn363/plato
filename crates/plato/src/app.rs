@@ -1224,6 +1224,20 @@ pub fn run() -> Result<(), Error> {
                             }
                         }
                     }
+                    AppCmd::OpenPdfManipulator(ref path) => {
+                        match PdfManipulatorView::for_file(
+                            context.fb.rect(),
+                            path.clone(),
+                            &mut rq,
+                            &mut context,
+                        ) {
+                            Ok(view) => Some(Box::new(view) as Box<dyn View>),
+                            Err(e) => {
+                                log_error!("Failed to open PDF Tools: {}", e);
+                                None
+                            }
+                        }
+                    }
                     AppCmd::TouchEvents => Some(Box::new(TouchEvents::new(
                         context.fb.rect(),
                         &mut rq,
@@ -1234,11 +1248,20 @@ pub fn run() -> Result<(), Error> {
                         &mut rq,
                         &mut context,
                     ))),
-                    AppCmd::OpenCoverEditor(ref _path) => Some(Box::new(CoverEditorView::new(
-                        context.fb.rect(),
-                        &mut rq,
-                        &mut context,
-                    ))),
+                    AppCmd::OpenCoverEditor(ref path) => {
+                        match CoverEditorView::for_book(
+                            context.fb.rect(),
+                            path.clone(),
+                            &mut rq,
+                            &mut context,
+                        ) {
+                            Ok(view) => Some(Box::new(view) as Box<dyn View>),
+                            Err(e) => {
+                                log_error!("Failed to open Cover Editor: {}", e);
+                                None
+                            }
+                        }
+                    }
                 };
 
                 if let Some(next_view) = next_view {

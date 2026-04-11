@@ -8,7 +8,6 @@ use crate::geom::Rectangle;
 use crate::settings::CoverEditorSettings;
 use crate::unit::scale_by_dpi;
 use crate::view::top_bar::TopBar;
-use crate::view::{AppCmd, EntryId};
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use crate::view::{BORDER_RADIUS_SMALL, SMALL_BAR_HEIGHT};
 use anyhow::Error;
@@ -78,6 +77,17 @@ impl CoverEditorView {
             _current_book_path: None,
             _temp_path: None,
         }
+    }
+
+    pub fn for_book(
+        rect: Rectangle,
+        path: PathBuf,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) -> Result<CoverEditorView, Error> {
+        let mut view = CoverEditorView::new(rect, rq, context);
+        view.select_book(path)?;
+        Ok(view)
     }
 
     pub fn select_book(&mut self, path: PathBuf) -> Result<(), Error> {
@@ -162,14 +172,6 @@ impl View for CoverEditorView {
                     return true;
                 }
                 return false;
-            }
-            Event::Select(EntryId::Launch(AppCmd::OpenCoverEditor(path))) => {
-                if let Err(e) = self.select_book(path.clone()) {
-                    bus.push_back(Event::Render(format!("Failed to open cover: {}", e)));
-                } else {
-                    rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
-                }
-                return true;
             }
             _ => {}
         }

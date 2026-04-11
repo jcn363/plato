@@ -569,7 +569,8 @@ fn main() -> Result<(), Error> {
                         AppCmd::CoverEditor
                         | AppCmd::OpenCoverEditor(_)
                         | AppCmd::Statistics
-                        | AppCmd::PdfManipulator => {
+                        | AppCmd::PdfManipulator
+                        | AppCmd::OpenPdfManipulator(_) => {
                             let entries = vec![EntryKind::Command(
                                 "Not implemented".to_string(),
                                 EntryId::Back,

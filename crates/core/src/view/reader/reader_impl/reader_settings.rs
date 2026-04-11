@@ -795,13 +795,23 @@ pub(crate) fn toggle_title_menu(
     }
 
     if file_kind == "epub" {
-        if let Some(path) = file_path {
+        if let Some(path) = file_path.as_ref() {
             entries.push(EntryKind::Command(
                 "Edit EPUB".to_string(),
                 EntryId::Launch(AppCmd::EpubEditor {
-                    path,
+                    path: path.clone(),
                     chapter: None,
                 }),
+            ));
+            entries.push(EntryKind::Separator);
+        }
+    }
+
+    if file_kind == "pdf" {
+        if let Some(path) = file_path.as_ref() {
+            entries.push(EntryKind::Command(
+                "PDF Tools".to_string(),
+                EntryId::Launch(AppCmd::OpenPdfManipulator(path.clone().into())),
             ));
             entries.push(EntryKind::Separator);
         }

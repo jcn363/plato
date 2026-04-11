@@ -133,6 +133,7 @@ pub enum AppCmd {
     OpenCoverEditor(std::path::PathBuf),
     Statistics,
     PdfManipulator,
+    OpenPdfManipulator(std::path::PathBuf),
     TouchEvents,
     RotationValues,
 }

@@ -135,7 +135,7 @@ use crate::view::menu_helpers::{toggle_menu_ctx, toggle_menu_item};
 use crate::view::named_input::NamedInput;
 use crate::view::notification::Notification;
 use crate::view::search_bar::SearchBar;
-use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
+use crate::view::{AppCmd, Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
@@ -185,6 +185,7 @@ struct Fetcher {
 #[derive(Debug)]
 struct BookMenuData {
     path: PathBuf,
+    kind: String,
     author: String,
     simple_status: SimpleStatus,
     libraries: Vec<(usize, String)>,
@@ -1366,6 +1367,7 @@ impl Home {
         let book_index = self.book_index(index);
         let info = &self.visible_books[book_index];
         let path = info.file.path.clone();
+        let kind = info.file.kind.clone();
         let author = info.author.clone();
         let simple_status = info.simple_status();
         let selected_library = context.settings.selected_library;
@@ -1445,11 +1447,26 @@ impl Home {
                     EntryId::Remove(data.path.clone()),
                 ));
 
+                if data.kind == "epub" {
+                    entries.push(EntryKind::Separator);
+                    entries.push(EntryKind::Command(
+                        "Cover Editor".to_string(),
+                        EntryId::Launch(AppCmd::OpenCoverEditor(data.path.clone())),
+                    ));
+                } else if data.kind == "pdf" {
+                    entries.push(EntryKind::Separator);
+                    entries.push(EntryKind::Command(
+                        "PDF Tools".to_string(),
+                        EntryId::Launch(AppCmd::OpenPdfManipulator(data.path.clone())),
+                    ));
+                }
+
                 Menu::new(rect, ViewId::BookMenu, MenuKind::Contextual, entries, ctx)
             },
             self,
             BookMenuData {
                 path,
+                kind,
                 author,
                 simple_status,
                 libraries,

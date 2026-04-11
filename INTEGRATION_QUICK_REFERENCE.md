@@ -34,13 +34,13 @@
 ### PDF Tools
 
 - File: `crates/core/src/view/pdf_manipulator.rs`
-- Active issue: dead-code file/action selection flow and hard-coded manipulation defaults
+- Active issue: now reachable for selected PDFs, but still carries dead-code action flow and hard-coded manipulation defaults
 - Follow-up: connect a real user workflow or reduce the surfaced scope
 
 ### Cover Editor
 
 - File: `crates/core/src/view/cover_editor.rs`
-- Active issue: editing helpers exist, but the UI flow is still partial and dead-code-gated
+- Active issue: now reachable for selected EPUBs, but the editing UI is still partial and dead-code-gated
 - Follow-up: complete the UI or intentionally narrow the feature
 
 ## Verification

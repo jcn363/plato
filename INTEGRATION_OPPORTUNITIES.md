@@ -95,8 +95,8 @@ The PDF tools view contains real manipulation logic, but the UI flow is incomple
 **Evidence**
 
 - `crates/core/src/view/pdf_manipulator.rs` still uses `#[allow(dead_code)]` on manipulation modes.
-- `show_actions()` is still marked unused.
-- File-selection and action-selection flow is not fully connected.
+- The view can now be launched from selected-document contexts, so `show_actions()` is active.
+- File-selection and action-selection flow is still not fully connected for the broader workflow.
 - Some manipulations still use hard-coded defaults rather than user-driven parameters.
 
 **Recommended action**
@@ -127,6 +127,7 @@ The cover editor has real image-editing helpers but no complete user-facing edit
 **Evidence**
 
 - `crates/core/src/view/cover_editor.rs` contains `apply_crop`, `apply_rotate`, `apply_brightness`, `apply_contrast`, `apply_grayscale`, and `save_cover`.
+- The view can now be launched from the home book menu for selected EPUBs.
 - The view and impl are still broadly marked `#[allow(dead_code)]`.
 - The editing helpers are not backed by a surfaced toolbar/menu system.
 
