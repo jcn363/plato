@@ -974,6 +974,26 @@ pub fn run() -> Result<(), Error> {
                     exit_status = ExitStatus::PowerOff;
                     break;
                 }
+                GestureEvent::MultiSwipe {
+                    dir: _,
+                    starts,
+                    ends: _,
+                } => {
+                    if context.settings.theme_settings.mode == ThemeMode::Auto {
+                        let width = context.fb.dims().0 as i32;
+                        if starts[0].x < width / 4 {
+                            context.settings.theme_settings.mode = ThemeMode::Dark;
+                            theme::set_theme_mode(ThemeMode::Dark);
+                            theme::set_dark_mode(true);
+                            context.settings.dark_mode = true;
+                        } else if starts[0].x > (width * 3) / 4 {
+                            context.settings.theme_settings.mode = ThemeMode::Light;
+                            theme::set_theme_mode(ThemeMode::Light);
+                            theme::set_dark_mode(false);
+                            context.settings.dark_mode = false;
+                        }
+                    }
+                }
                 GestureEvent::MultiTap(mut points) => {
                     if points[0].x > points[1].x {
                         points.swap(0, 1);
