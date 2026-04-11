@@ -696,7 +696,9 @@ pub fn run() -> Result<(), Error> {
                         if let Ok(settings) = load_toml::<Settings, _>(path)
                             .map_err(|e| log_error!("Can't load settings: {:#}.", e))
                         {
+                            let dark_mode = settings.dark_mode;
                             context.settings = settings;
+                            theme::set_dark_mode(dark_mode);
                         }
                         if context.settings.wifi {
                             Command::new("scripts/wifi-enable.sh").status().ok();

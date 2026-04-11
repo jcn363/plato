@@ -1,7 +1,7 @@
 # Plato Theme-Aware Conversion Plan
 
 ## Current Status
-✅ **FULLY IMPLEMENTED** - All core theme infrastructure is complete and building with **zero warnings**
+✅ **FULLY IMPLEMENTED** - All core theme infrastructure is complete with **zero warnings**
 
 ### Completed Implementation:
 
@@ -32,6 +32,12 @@
 - ✅ All unused imports removed
 - ✅ All variable naming fixed
 
+**Persistence Integration:**
+- ✅ Initial app startup: Theme initialized from `settings.dark_mode` (`app.rs:130`)
+- ✅ Settings toggle: Theme updated when user changes dark mode (`display.rs:313`)
+- ✅ USB connect: Theme re-synced when settings reloaded (`app.rs:700`)
+- ✅ Settings auto-save: Dark mode preserved on suspend/exit
+
 ## Files Modified
 
 ### Theme Module (`crates/core/src/theme.rs`)
@@ -40,6 +46,13 @@
 
 ### Color Module (`crates/core/src/color.rs`)
 - Already had all theme-aware helpers implemented
+
+### App Integration (`crates/plato/src/app.rs`)
+- Initialize theme state from settings on startup
+- Re-sync theme state when settings reloaded on USB connect
+
+### Settings View (`crates/core/src/view/settings/display.rs`)
+- Update theme state when user toggles dark mode
 
 ### View Components Updated (30+ files)
 - Updated imports and function calls to use theme-aware colors
@@ -76,7 +89,12 @@ fb.draw_rectangle(&self.rect, background(theme::is_dark_mode()));
 font.render(fb, foreground(theme::is_dark_mode()), &plan, pt);
 ```
 
+### Persistence Flow
+1. **App Startup**: `theme::set_dark_mode(settings.dark_mode)` at `app.rs:130`
+2. **User Toggle**: `theme::set_dark_mode(context.settings.dark_mode)` at `display.rs:313`
+3. **Settings Saved**: Automatic on suspend/exit via `save_toml()`
+4. **USB Reconnect**: Re-sync via `theme::set_dark_mode(dark_mode)` at `app.rs:700`
+
 ## Timeline
 
-- ✅ **Phase 1-3** (Helpers, Components, Cleanup): COMPLETE - Zero warnings achieved
-- ⚠️ **Future Work**: ARM64 cross-compile, theme persistence across reboots
+- ✅ **Phase 1-5**: COMPLETE - Theme system fully implemented with persistence
