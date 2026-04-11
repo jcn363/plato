@@ -77,6 +77,7 @@ impl TopBar {
         let theme_icon_name = match context.settings.theme_settings.mode {
             ThemeMode::Light => "theme-light",
             ThemeMode::Dark => "theme-dark",
+            ThemeMode::Sepia => "theme-sepia",
             ThemeMode::Auto => "theme-auto",
         };
         let theme_indicator = Icon::new(
@@ -135,6 +136,7 @@ impl TopBar {
         let icon_name = match context.settings.theme_settings.mode {
             ThemeMode::Light => "theme-light",
             ThemeMode::Dark => "theme-dark",
+            ThemeMode::Sepia => "theme-sepia",
             ThemeMode::Auto => "theme-auto",
         };
         self.theme_indicator.name = icon_name.to_string();

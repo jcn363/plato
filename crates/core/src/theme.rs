@@ -1,5 +1,6 @@
 use std::sync::LazyLock;
 
+use crate::color;
 use crate::settings::ThemeMode;
 
 static DARK_MODE: LazyLock<std::sync::Mutex<bool>> = LazyLock::new(|| std::sync::Mutex::new(false));
@@ -11,6 +12,11 @@ static AUTO_THRESHOLD: LazyLock<std::sync::Mutex<u16>> =
 #[inline]
 pub fn is_dark_mode() -> bool {
     *DARK_MODE.lock().unwrap()
+}
+
+#[inline]
+pub fn is_sepia_mode() -> bool {
+    *THEME_MODE.lock().unwrap() == ThemeMode::Sepia
 }
 
 #[inline]
@@ -26,6 +32,15 @@ pub fn set_dark_mode(enabled: bool) {
 #[inline]
 pub fn set_theme_mode(mode: ThemeMode) {
     *THEME_MODE.lock().unwrap() = mode;
+    match mode {
+        ThemeMode::Light | ThemeMode::Sepia => {
+            *DARK_MODE.lock().unwrap() = false;
+        }
+        ThemeMode::Dark => {
+            *DARK_MODE.lock().unwrap() = true;
+        }
+        ThemeMode::Auto => {}
+    }
 }
 
 #[inline]
@@ -49,19 +64,29 @@ pub fn update_from_light_sensor(light_level: u16) {
 }
 
 #[inline]
-pub fn background(dark: bool) -> crate::color::Color {
+pub fn background(dark: bool) -> color::Color {
     if dark {
-        crate::color::BLACK
+        color::DARK_BACKGROUND
     } else {
-        crate::color::WHITE
+        color::WHITE
     }
 }
 
 #[inline]
-pub fn foreground(dark: bool) -> crate::color::Color {
+pub fn foreground(dark: bool) -> color::Color {
     if dark {
-        crate::color::WHITE
+        color::DARK_FOREGROUND
     } else {
-        crate::color::BLACK
+        color::BLACK
     }
+}
+
+#[inline]
+pub fn sepia_background() -> color::Color {
+    color::SEPIA_BACKGROUND
+}
+
+#[inline]
+pub fn sepia_foreground() -> color::Color {
+    color::SEPIA_FOREGROUND
 }

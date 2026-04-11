@@ -211,6 +211,7 @@ pub fn build_rows(
         match settings.theme_settings.mode {
             ThemeMode::Light => "Off".to_string(),
             ThemeMode::Dark => "On".to_string(),
+            ThemeMode::Sepia => "Sepia".to_string(),
             ThemeMode::Auto => "Auto".to_string(),
         },
     );
@@ -346,14 +347,15 @@ pub fn handle_event(
             let current_mode = context.settings.theme_settings.mode;
             let new_mode = match current_mode {
                 ThemeMode::Light => ThemeMode::Dark,
-                ThemeMode::Dark => ThemeMode::Auto,
+                ThemeMode::Dark => ThemeMode::Sepia,
+                ThemeMode::Sepia => ThemeMode::Auto,
                 ThemeMode::Auto => ThemeMode::Light,
             };
             context.settings.theme_settings.mode = new_mode;
             theme::set_theme_mode(new_mode);
 
             match new_mode {
-                ThemeMode::Light => {
+                ThemeMode::Light | ThemeMode::Sepia => {
                     context.settings.dark_mode = false;
                     theme::set_dark_mode(false);
                 }
@@ -378,6 +380,7 @@ pub fn handle_event(
                     match new_mode {
                         ThemeMode::Light => "Off".to_string(),
                         ThemeMode::Dark => "On".to_string(),
+                        ThemeMode::Sepia => "Sepia".to_string(),
                         ThemeMode::Auto => "Auto".to_string(),
                     },
                     rq,

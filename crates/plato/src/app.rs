@@ -987,8 +987,8 @@ pub fn run() -> Result<(), Error> {
                             theme::set_dark_mode(true);
                             context.settings.dark_mode = true;
                         } else if starts[0].x > (width * 3) / 4 {
-                            context.settings.theme_settings.mode = ThemeMode::Light;
-                            theme::set_theme_mode(ThemeMode::Light);
+                            context.settings.theme_settings.mode = ThemeMode::Sepia;
+                            theme::set_theme_mode(ThemeMode::Sepia);
                             theme::set_dark_mode(false);
                             context.settings.dark_mode = false;
                         }

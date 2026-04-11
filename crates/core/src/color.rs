@@ -116,6 +116,8 @@ pub const GRAY12: Color = gray!(0xCC);
 pub const GRAY13: Color = gray!(0xDD);
 pub const GRAY14: Color = gray!(0xEE);
 pub const GRAY15: Color = gray!(0xFF);
+pub const GRAYF4: Color = gray!(244);
+pub const GRAY5C: Color = gray!(92);
 
 pub const BLACK: Color = GRAY00;
 pub const WHITE: Color = GRAY15;
@@ -153,6 +155,9 @@ pub const DARK_PROGRESS_FULL: Color = GRAY02;
 pub const DARK_PROGRESS_EMPTY: Color = GRAY10;
 pub const DARK_PROGRESS_VALUE: Color = GRAY04;
 pub const DARK_BATTERY_FILL: Color = GRAY02;
+
+pub const SEPIA_BACKGROUND: Color = GRAYF4;
+pub const SEPIA_FOREGROUND: Color = GRAY5C;
 
 #[inline]
 pub fn background(dark: bool) -> Color {
