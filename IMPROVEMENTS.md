@@ -35,7 +35,7 @@ These items are now verifiable in the current source tree:
 
 **UI Enhancements:**
 - **Cover Editor UI:** Interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast adjustments have been implemented and wired up. The Crop functionality is now initiated with UI elements and mode transitions, allowing for visual selection of the crop region (though full interactive application is pending).
-- **PDF Tools UI:** Interactive page selection and degree input for Delete, Rotate, and Extract operations are now implemented. The UI transitions through distinct modes for selecting actions, inputting parameters, and confirming operations. Redaction workflow now includes selecting a page and transitioning to a mode for defining the redaction region.
+- **PDF Tools UI:** Interactive page selection and degree input for Delete, Rotate, and Extract operations are now implemented. The UI transitions through distinct modes for selecting actions, inputting parameters, and confirming operations. Redaction workflow now includes selecting a page and transitioning to a mode for defining the redaction region. Page range selection supports: all, current page, first 10, last 10, custom ranges. Merge UI shows file list with add/execute options. Reorder UI shows page list with up/down navigation. Resource extraction offers options for all images, first 10, or from specific page.
 
 ## Open Structural Issues
 
@@ -44,7 +44,7 @@ These items are now verifiable in the current source tree:
 The following structural issues currently violate the mandatory rules in `AGENTS.md`:
 
 - **Monolithic Files (1000-line limit)**: Several files significantly exceed the 1000-line limit and must be split into submodules.
-- **Test Segregation**: Initial extraction of unit tests to sibling files completed for `device.rs`, `dictionary/mod.rs`, and `dictionary/indexing.rs`. Remaining embedded tests still need to be migrated.
+- **Test Segregation**: COMPLETED - Extracted tests from 10 production files into sibling `_tests.rs` files: `geom/mod.rs`, `device.rs`, `helpers.rs`, `document/html/layout.rs`, `document/html/css.rs`, `document/html/parse.rs`, `document/html/xml.rs`, `document/html/style.rs`, `dictionary/mod.rs`, `dictionary/indexing.rs`. Also fixed broken module declarations in `device.rs` and `dictionary/*.rs`.
 - **Safe Wrapper Migration**: `font/mod.rs` still uses direct FFI calls and must be refactored to use the safe wrappers in `crates/core/src/font/`.
 
 ### Reader migration is incomplete

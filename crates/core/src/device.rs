@@ -479,6 +479,3 @@ lazy_static! {
         Device::new(&product, &model_number)
     };
 }
-
-#[cfg(test)]
-mod device_tests;

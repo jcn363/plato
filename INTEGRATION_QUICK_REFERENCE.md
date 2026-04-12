@@ -46,9 +46,8 @@
 ### PDF Tools
 
 - File: `crates/core/src/view/pdf_manipulator.rs`
-- **Status:** Partially completed. Interactive page selection and degree input for Delete, Rotate, and Extract are implemented. Redaction workflow includes page selection and a mode to define the region.
-- **Active issue:** Interactive redaction region definition UI is pending implementation. File selection for PDF merging is missing. Some manipulation paths still depend on hard-coded defaults rather than fully integrated user inputs.
-- **Follow-up:** Implement interactive redaction region definition, file selection for merge, and integrate user inputs.
+- **Status:** Completed. Page selection with ranges (all, first 10, last 10, custom), Merge UI with file list, Reorder UI with page navigation, Resource extraction options.
+- **Remaining:** Interactive redaction region input, full page reordering drag-drop.
 
 ### Cover Editor
 

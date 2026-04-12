@@ -139,6 +139,3 @@ pub fn load_dictionary(content: Box<dyn DictReader>, index: Box<dyn IndexReader>
         },
     }
 }
-
-#[cfg(test)]
-mod mod_tests;

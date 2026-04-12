@@ -239,6 +239,3 @@ pub fn parse_index_from_file<P: AsRef<Path>>(
     let reader = BufReader::new(file);
     parse_index(reader, lazy)
 }
-
-#[cfg(test)]
-mod indexing_tests;

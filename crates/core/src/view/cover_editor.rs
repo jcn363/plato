@@ -10,8 +10,8 @@ use crate::settings::CoverEditorSettings;
 use crate::unit::scale_by_dpi;
 use crate::view::entries::EntryId;
 use crate::view::top_bar::TopBar;
+use crate::view::SMALL_BAR_HEIGHT;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
-use crate::view::{BORDER_RADIUS_SMALL, SMALL_BAR_HEIGHT};
 use anyhow::Error;
 use image::{DynamicImage, GenericImageView};
 use std::path::PathBuf;
@@ -34,7 +34,8 @@ pub struct CoverEditorView {
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
     cover_editor: CoverEditorLib,
-    settings: CoverEditorSettings,
+    #[allow(dead_code)]
+    _settings: CoverEditorSettings,
     mode: EditorMode,
     crop_state: CropState,
     current_image: Option<DynamicImage>,
@@ -71,7 +72,7 @@ impl CoverEditorView {
             rect,
             children,
             cover_editor: CoverEditorLib::new(&context.settings.cover_editor),
-            settings: context.settings.cover_editor.clone(),
+            _settings: context.settings.cover_editor.clone(),
             mode: EditorMode::SelectBook,
             crop_state: CropState::None,
             current_image: None,
@@ -107,8 +108,8 @@ impl CoverEditorView {
     fn apply_crop_rect(&mut self, rq: &mut RenderQueue, rect: Rectangle) {
         if let Some(ref mut img) = self.current_image {
             let (img_w, img_h): (u32, u32) = img.dimensions();
-            let target_w = self.cover_editor.get_cover_dimensions().0;
-            let target_h = self.cover_editor.get_cover_dimensions().1;
+            let _target_w = self.cover_editor.get_cover_dimensions().0;
+            let _target_h = self.cover_editor.get_cover_dimensions().1;
             let scale_x = img_w as f32 / self.rect.width() as f32;
             let scale_y = img_h as f32 / self.rect.height() as f32;
             let x = ((rect.min.x as f32 * scale_x) as u32).min(img_w.saturating_sub(1));
@@ -140,6 +141,7 @@ impl CoverEditorView {
         }
     }
 
+    #[allow(dead_code)]
     fn apply_brightness(&mut self, rq: &mut RenderQueue, value: i32) {
         if let Some(ref mut img) = self.current_image {
             *img = self.cover_editor.adjust_brightness(img, value);
@@ -147,6 +149,7 @@ impl CoverEditorView {
         }
     }
 
+    #[allow(dead_code)]
     fn apply_contrast(&mut self, rq: &mut RenderQueue, value: f32) {
         if let Some(ref mut img) = self.current_image {
             *img = self.cover_editor.adjust_contrast(img, value);
