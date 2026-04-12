@@ -65,6 +65,10 @@ impl Font {
         )
     }
 
+    pub fn load_glyph(&self, glyph_index: u32, flags: i32) -> Result<()> {
+        self.face.load_glyph(glyph_index, flags)
+    }
+
     pub fn create_hb_font(&self) -> HbFont {
         unsafe { HbFont::from_ft_face(&*self.face.face_ptr()) }
     }
