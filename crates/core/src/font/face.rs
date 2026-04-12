@@ -3,6 +3,8 @@ use crate::font::library::FontLibrary;
 use crate::font::freetype::Face;
 use crate::font::harfbuzz::Font as HbFont;
 use crate::font::RenderPlan;
+use anyhow::Result;
+use std::convert::TryInto;
 
 pub struct Font {
     #[allow(dead_code)] library: Rc<FontLibrary>,
@@ -48,5 +50,22 @@ impl Font {
 
     pub fn style_name(&self) -> Option<String> {
         self.face.style_name()
+    }
+
+    pub fn get_char_index(&self, char_code: u32) -> u32 {
+        self.face.get_char_index(char_code)
+    }
+
+    pub fn set_char_size(&self, width: u32, height: u32, hdpi: u32, vdpi: u32) -> Result<()> {
+        self.face.set_char_size(
+            width.try_into().unwrap_or(0), 
+            height.try_into().unwrap_or(0), 
+            hdpi.try_into().unwrap_or(0), 
+            vdpi.try_into().unwrap_or(0)
+        )
+    }
+
+    pub fn face_ptr(&self) -> *mut crate::font::freetype_sys::FtFace {
+        self.face.face_ptr()
     }
 }
