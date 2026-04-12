@@ -65,6 +65,10 @@ impl Font {
         )
     }
 
+    pub fn create_hb_font(&self) -> HbFont {
+        unsafe { HbFont::from_ft_face(&*self.face.face_ptr()) }
+    }
+
     pub fn face_ptr(&self) -> *mut crate::font::freetype_sys::FtFace {
         self.face.face_ptr()
     }
