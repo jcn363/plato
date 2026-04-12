@@ -65,6 +65,10 @@ impl Font {
         )
     }
 
+    pub fn set_pixel_sizes(&self, width: u32, height: u32) -> Result<()> {
+        self.face.set_pixel_sizes(width, height)
+    }
+
     pub fn load_glyph(&self, glyph_index: u32, flags: i32) -> Result<()> {
         self.face.load_glyph(glyph_index, flags)
     }
