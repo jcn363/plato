@@ -169,19 +169,26 @@ Unit tests are currently embedded in production code, violating the `AGENTS.md` 
 
 ### 7. Restore verification
 
+**Status:** Completed (2026-04-12)
+
 **Problem**
 
-Verification claims can drift quickly on this branch and must be kept tied to rerun commands.
+Verification claims must be tied to exact commands run and current dates.
 
 **Evidence**
 
-- Host verification passes after theme/settings fixes.
-- ARM verification also passes, but a clean ARM rebuild additionally requires rebuilding `mupdf_wrapper` after `cargo clean`.
+- Host verification passes (2026-04-12):
+  - `cargo check --target x86_64-unknown-linux-gnu` - Pass
+  - `cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings` - Pass
+- ARM Kobo verification passes (2026-04-12):
+  - `cd mupdf_wrapper && ./build-kobo.sh` (rebuild wrapper)
+  - `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato` - Pass
+- Any `cargo clean` requires wrapper rebuild before ARM build.
 
 **Recommended action**
 
-- Do not mark any integration document as "clean build verified" without naming the exact commands rerun.
-- When `cargo clean` is part of the verification flow, include the native wrapper rebuild step for Kobo targets.
+- Document exact commands and date in verification sections.
+- Include native wrapper rebuild for ARM targets in verification flow.
 
 **Acceptance condition**
 

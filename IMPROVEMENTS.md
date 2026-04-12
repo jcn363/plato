@@ -135,8 +135,23 @@ These may be revisited later, but they should not appear as active backlog items
 
 ## Verification Status
 
-- Host `cargo check --target x86_64-unknown-linux-gnu` currently passes on the checked-out branch.
-- Clean clippy or cross-target claims should still be made only after rerunning those commands explicitly.
+### Host Verification (x86_64 Linux)
+- **Command:** `cargo check --target x86_64-unknown-linux-gnu`
+- **Command:** `cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings`
+- **Result:** Pass (2026-04-12)
+- No errors or warnings on host target.
+
+### ARM Kobo Verification (32-bit ARM)
+- **Pre-build:** Rebuild mupdf_wrapper with `cd mupdf_wrapper && ./build-kobo.sh`
+- **Command:** `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
+- **Result:** Pass (2026-04-12)
+- Requires native wrapper rebuild after `cargo clean`.
+
+### Verification Claims Policy
+
+- Document the exact commands run and date.
+- Include native wrapper rebuild for ARM targets.
+- Update this section when verification is rerun.
 
 ## Dependencies
 
