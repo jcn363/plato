@@ -5,21 +5,30 @@ use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::Rectangle;
+use crate::input::{DeviceEvent, FingerStatus};
 use crate::settings::CoverEditorSettings;
 use crate::unit::scale_by_dpi;
+use crate::view::entries::EntryId;
 use crate::view::top_bar::TopBar;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use crate::view::{BORDER_RADIUS_SMALL, SMALL_BAR_HEIGHT};
 use anyhow::Error;
-use image::DynamicImage;
+use image::{DynamicImage, GenericImageView};
 use std::path::PathBuf;
 
+#[derive(Clone, PartialEq)]
 enum EditorMode {
     SelectBook,
     EditCover,
+    CropMode,
 }
 
-#[allow(dead_code)]
+#[derive(Clone, PartialEq)]
+enum CropState {
+    None,
+    Selecting { start: (i32, i32), end: (i32, i32) },
+}
+
 pub struct CoverEditorView {
     id: Id,
     rect: Rectangle,
@@ -27,18 +36,16 @@ pub struct CoverEditorView {
     cover_editor: CoverEditorLib,
     settings: CoverEditorSettings,
     mode: EditorMode,
+    crop_state: CropState,
     current_image: Option<DynamicImage>,
-    _current_book_path: Option<PathBuf>,
-    _temp_path: Option<PathBuf>,
+    book_path: Option<PathBuf>,
 }
 
-#[allow(dead_code)]
 impl CoverEditorView {
     pub fn new(rect: Rectangle, rq: &mut RenderQueue, context: &mut Context) -> CoverEditorView {
         let id = ID_FEEDER.next();
         let dpi = CURRENT_DEVICE.dpi;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-        let _border_radius = scale_by_dpi(BORDER_RADIUS_SMALL, dpi) as i32;
 
         let mut children = Vec::new();
 
@@ -57,13 +64,6 @@ impl CoverEditorView {
         );
         children.push(Box::new(top_bar) as Box<dyn View>);
 
-        let _content_rect = rect![
-            rect.min.x,
-            rect.min.y + top_bar_height,
-            rect.max.x,
-            rect.max.y
-        ];
-
         rq.add(RenderData::new(id, rect, UpdateMode::Full));
 
         CoverEditorView {
@@ -73,9 +73,9 @@ impl CoverEditorView {
             cover_editor: CoverEditorLib::new(&context.settings.cover_editor),
             settings: context.settings.cover_editor.clone(),
             mode: EditorMode::SelectBook,
+            crop_state: CropState::None,
             current_image: None,
-            _current_book_path: None,
-            _temp_path: None,
+            book_path: None,
         }
     }
 
@@ -93,16 +93,38 @@ impl CoverEditorView {
     pub fn select_book(&mut self, path: PathBuf) -> Result<(), Error> {
         let cover = cover_editor::extract_cover_from_epub(&path)?;
         self.current_image = Some(cover);
-        self._current_book_path = Some(path);
+        self.book_path = Some(path);
         self.mode = EditorMode::EditCover;
         Ok(())
     }
 
-    fn apply_crop(&mut self, rq: &mut RenderQueue, x: u32, y: u32, width: u32, height: u32) {
+    fn enter_crop_mode(&mut self, rq: &mut RenderQueue) {
+        self.mode = EditorMode::CropMode;
+        self.crop_state = CropState::None;
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    }
+
+    fn apply_crop_rect(&mut self, rq: &mut RenderQueue, rect: Rectangle) {
         if let Some(ref mut img) = self.current_image {
-            *img = self.cover_editor.crop(img, x, y, width, height);
-            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+            let (img_w, img_h): (u32, u32) = img.dimensions();
+            let target_w = self.cover_editor.get_cover_dimensions().0;
+            let target_h = self.cover_editor.get_cover_dimensions().1;
+            let scale_x = img_w as f32 / self.rect.width() as f32;
+            let scale_y = img_h as f32 / self.rect.height() as f32;
+            let x = ((rect.min.x as f32 * scale_x) as u32).min(img_w.saturating_sub(1));
+            let y = ((rect.min.y as f32 * scale_y) as u32).min(img_h.saturating_sub(1));
+            let w = ((rect.width() as f32 * scale_x) as u32)
+                .max(1)
+                .min(img_w.saturating_sub(x));
+            let h = ((rect.height() as f32 * scale_y) as u32)
+                .max(1)
+                .min(img_h.saturating_sub(y));
+            if w > 0 && h > 0 {
+                *img = self.cover_editor.crop(img, x, y, w, h);
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+            }
         }
+        self.mode = EditorMode::EditCover;
     }
 
     fn apply_rotate(&mut self, rq: &mut RenderQueue, degrees: u32) {
@@ -140,9 +162,7 @@ impl CoverEditorView {
     }
 
     fn save_cover(&mut self, rq: &mut RenderQueue) -> Result<(), Error> {
-        if let (Some(ref img), Some(ref book_path)) =
-            (&self.current_image, &self._current_book_path)
-        {
+        if let (Some(ref img), Some(ref book_path)) = (&self.current_image, &self.book_path) {
             let temp_cover_path = std::env::temp_dir().join("temp_cover.jpg");
             self.cover_editor.save_as_cover(img, &temp_cover_path)?;
             cover_editor::set_cover_in_epub(book_path, &temp_cover_path)?;
@@ -164,12 +184,86 @@ impl View for CoverEditorView {
     ) -> bool {
         match evt {
             Event::Back => {
-                if let EditorMode::EditCover = self.mode {
+                if self.mode == EditorMode::CropMode {
+                    self.mode = EditorMode::EditCover;
+                    self.crop_state = CropState::None;
+                    rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                    return true;
+                }
+                if self.mode == EditorMode::EditCover {
                     self.mode = EditorMode::SelectBook;
                     self.current_image = None;
-                    self._current_book_path = None;
+                    self.book_path = None;
                     rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
                     return true;
+                }
+                return false;
+            }
+            Event::Select(EntryId::CoverRotate90) => {
+                self.apply_rotate(rq, 90);
+                return true;
+            }
+            Event::Select(EntryId::CoverRotate180) => {
+                self.apply_rotate(rq, 180);
+                return true;
+            }
+            Event::Select(EntryId::CoverRotate270) => {
+                self.apply_rotate(rq, 270);
+                return true;
+            }
+            Event::Select(EntryId::CoverGrayscale) => {
+                self.apply_grayscale(rq);
+                return true;
+            }
+            Event::Select(EntryId::CoverCrop) => {
+                self.enter_crop_mode(rq);
+                return true;
+            }
+            Event::Select(EntryId::CoverSave) => {
+                if let Err(e) = self.save_cover(rq) {
+                    bus.push_back(Event::Render(format!("Save error: {}", e)));
+                }
+                return true;
+            }
+            Event::Device(DeviceEvent::Finger {
+                status, position, ..
+            }) => {
+                if self.mode == EditorMode::CropMode {
+                    match status {
+                        FingerStatus::Down => {
+                            self.crop_state = CropState::Selecting {
+                                start: (position.x, position.y),
+                                end: (position.x, position.y),
+                            };
+                            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                            return true;
+                        }
+                        FingerStatus::Motion => {
+                            if let CropState::Selecting { start, .. } = &self.crop_state {
+                                self.crop_state = CropState::Selecting {
+                                    start: *start,
+                                    end: (position.x, position.y),
+                                };
+                                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                                return true;
+                            }
+                        }
+                        FingerStatus::Up => {
+                            if let CropState::Selecting { start, end } = &self.crop_state {
+                                let x0 = start.0.min(end.0);
+                                let y0 = start.1.min(end.1);
+                                let x1 = start.0.max(end.0);
+                                let y1 = start.1.max(end.1);
+                                if x1 - x0 > 10 && y1 - y0 > 10 {
+                                    let crop_rect = Rectangle::new(pt!(x0, y0), pt!(x1, y1));
+                                    self.apply_crop_rect(rq, crop_rect);
+                                }
+                                self.crop_state = CropState::None;
+                                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                                return true;
+                            }
+                        }
+                    }
                 }
                 return false;
             }
@@ -192,7 +286,7 @@ impl View for CoverEditorView {
             child.render(fb, rect, fonts);
         }
 
-        if let EditorMode::EditCover = self.mode {
+        if let EditorMode::EditCover | EditorMode::CropMode = self.mode {
             if let Some(ref img) = self.current_image {
                 let (target_w, target_h) = self.cover_editor.get_cover_dimensions();
                 let scaled = img.resize_to_fill(
@@ -240,9 +334,5 @@ impl View for CoverEditorView {
 }
 
 impl Drop for CoverEditorView {
-    fn drop(&mut self) {
-        if let Some(ref path) = self._temp_path {
-            std::fs::remove_dir_all(path).ok();
-        }
-    }
+    fn drop(&mut self) {}
 }

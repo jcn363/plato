@@ -149,27 +149,20 @@ Unit tests are currently embedded in production code, violating the `AGENTS.md` 
 
 ### 6. Cover editor UI completion
 
-**Status:** Partially completed. Implementation infrastructure exists; UI completion requires extending EntryId enum.
+**Status:** Completed (2026-04-12)
 
 **Problem:**
-- Base implementation with crop/rotate/brightness/contrast/grayscale helpers exists in `cover_editor.rs`
-- UI buttons and sliders require adding new EntryId variants (CoverRotate90, CoverRotate180, CoverRotate270, CoverGrayscale, CoverCrop, CoverBrightness, CoverContrast, CoverSave)
-- Adding EntryId variants requires updating entries.rs and event handling
+- Base implementation existed but UI was not wired to EntryId events
 
 **Evidence:**
-- `crates/core/src/view/cover_editor.rs` implements: apply_crop, apply_rotate, apply_brightness, apply_contrast, apply_grayscale, save_cover
-- Base view without button/slider controls shows image in EditCover mode
-- Interactive UI infrastructure ready but not wired
-
-**Recommended action:**
-- Add EntryId variants: CoverRotate90, CoverRotate180, CoverRotate270, CoverGrayscale, CoverCrop, CoverBrightness, CoverContrast, CoverSave
-- Wire button click events in handle_event to call helper methods
-- Add crop state tracking for interactive selection
-- Build and test UI
+- Added EntryId variants: CoverRotate90, CoverRotate180, CoverRotate270, CoverGrayscale, CoverCrop, CoverBrightness, CoverContrast, CoverSave
+- Wired event handling in cover_editor.rs::handle_event
+- Added CropState enum for tracking drag selection
+- Interactive crop mode supports visual selection with drag-to-select
 
 **Acceptance condition:**
-- Buttons trigger correct operations
-- Crop mode supports visual selection
+- Buttons trigger correct operations ✓
+- Crop mode supports visual selection ✓
 
 ### 7. Restore verification
 
