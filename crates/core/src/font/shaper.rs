@@ -15,6 +15,10 @@ impl Shaper {
         self.0.shape(font, features);
     }
 
+    pub fn create_buffer() -> Buffer {
+        Buffer::new()
+    }
+
     pub fn length(&self) -> u32 {
         self.0.length()
     }
