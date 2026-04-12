@@ -8,6 +8,10 @@ impl FontLibrary {
     pub fn new() -> Result<Self> {
         Library::new().map(FontLibrary).map_err(|e| e.into())
     }
+
+    pub fn new_library() -> Result<Self> {
+        Self::new()
+    }
     
     pub fn library(&self) -> &Library {
         &self.0
