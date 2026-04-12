@@ -77,6 +77,14 @@ impl Font {
         unsafe { HbFont::from_ft_face(&*self.face.face_ptr()) }
     }
 
+    pub fn get_mm_var(&self) -> Result<crate::font::freetype::MmVar> {
+        self.face.get_mm_var()
+    }
+
+    pub fn set_var_design_coordinates(&self, coords: &[i32]) -> Result<()> {
+        self.face.set_var_design_coordinates(coords)
+    }
+
     pub fn bitmap(&self) -> &crate::font::freetype_sys::FtBitmap {
         &self.face.glyph().bitmap
     }
