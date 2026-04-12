@@ -65,6 +65,11 @@ impl Font {
         )
     }
     
+    pub fn destroy_hb_font(&self, font: HbFont) {
+        // Explicitly consume and destroy the HarfBuzz font.
+        drop(font);
+    }
+
     pub fn done_face(&self) {
         // Explicit cleanup for the underlying face pointer
         // In the fully migrated architecture, Drop should handle this.
