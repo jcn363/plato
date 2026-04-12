@@ -31,6 +31,10 @@ impl Shaper {
         self.0.guess_segment_properties();
     }
 
+    pub fn script(&self) -> crate::font::harfbuzz_sys::HbScript {
+        self.0.script()
+    }
+
     pub fn length(&self) -> u32 {
         self.0.length()
     }
