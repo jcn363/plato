@@ -14,6 +14,18 @@ impl Shaper {
         self.0.guess_segment_properties();
         self.0.shape(font, features);
     }
+
+    pub fn length(&self) -> u32 {
+        self.0.length()
+    }
+
+    pub fn glyph_infos(&self) -> Vec<crate::font::harfbuzz_sys::HbGlyphInfo> {
+        self.0.glyph_infos()
+    }
+
+    pub fn glyph_positions(&self) -> Vec<crate::font::harfbuzz_sys::HbGlyphPosition> {
+        self.0.glyph_positions()
+    }
     
     pub fn buffer(&self) -> &Buffer {
         &self.0
