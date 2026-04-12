@@ -8,20 +8,57 @@ This plan outlines the migration of the font module (`crates/core/src/font/mod.r
 
 ## Current State Analysis
 
+### Safe Wrapper Modules
+
+The following safe wrapper modules exist but are **NOT yet used** by `font/mod.rs`:
+
+- `freetype.rs`: Provides `Library` and `Face` structs with proper Drop implementations for RAII
+- `harfbuzz.rs`: Provides `Font` and `Buffer` structs with proper Drop implementations
+
+These modules wrap FFI calls with safe Rust abstractions but are currently unused by the main font code.
+
 ### Problems in `font/mod.rs`
-1. **Size violation**: 2,400 lines (exceeds 1,000 line limit)
-2. **Direct FFI usage**: Throughout the file, raw FreeType (`FT_*`) and HarfBuzz (`hb_*`) calls are made
+1. **Size violation**: 2,402 lines (exceeds 1,000 line limit by 140%)
+2. **Direct FFI usage**: 33 direct FreeType (`FT_*`) calls made throughout
 3. **Unsafe pointer management**: Structs directly hold `*mut FtLibrary`, `*mut FtFace`, `*mut HbFont` pointers
 4. **Missing RAII**: Manual resource management instead of leveraging Drop implementations
 5. **Monolithic design**: All font handling logic in a single file
+6. **Duplicate definitions**: Re-implements functionality already available in safe wrappers
+7. **Type conflicts**: Can't simply import wrappers due to struct field name conflicts
+
+### Complexity Assessment
+This is a **large-scale refactor** (17-26 hours estimated) involving:
+- 52 type mismatches from the initial attempt
+- Multiple struct field renames (lib, face, font fields)
+- Method signature changes throughout 2,400 line file
+- harfbuzz wrapper has same names as raw pointer fields
+- Drop implementations need careful handling to prevent double-free
+
+**Recommended approach**: incremental migration by component
 
 ### Existing Safe Wrappers
-The following safe wrapper modules already exist:
+The following safe wrapper modules **already exist and compile**:
 - `freetype.rs`: Provides `Library` and `Face` structs with proper Drop implementations
 - `harfbuzz.rs`: Provides `Font` and `Buffer` structs with proper Drop implementations
 - These modules wrap FFI calls with safe Rust abstractions
 
+**The problem**: `font/mod.rs` does NOT import or use these wrappers - it reimplements everything with raw FFI!
+
 ## Migration Strategy
+
+### Step 1: Add the module declarations
+Add `mod freetype;` and `mod harfbuzz;` to font/mod.rs and import them.
+
+### Step 2: Replace FontLibrary with freetype::Library
+- Current: `FontLibrary(*mut FtLibrary)` with manual FT_Init_FreeType/FT_Done_FreeType
+- Replacement: Use `freetype::Library` which has automatic Drop
+
+### Step 3: Replace Font with freetype::Face
+- Current: `face: *mut FtFace` with manual loading/cleanup
+- Replacement: Use `freetype::Face` via `library.new_face(path, index)?`
+
+### Step 4: Update all FT_* calls
+Replace 33 direct FFI calls with safe wrapper method calls.
 
 ### Phase 1: Preparation and Analysis
 1. **Identify all FFI usage points** in `font/mod.rs`
@@ -142,13 +179,45 @@ impl Font {
 4. **Check that Drop implementations** work correctly for automatic cleanup
 5. **Validate performance** is not degraded by the abstraction layer
 
+## Implementation Strategy
+
+This is a complex refactor that should be done incrementally:
+
+### Phase 1: Prepare (2-3 hours)
+1. Rename struct fields to avoid conflicts (lib→ft_lib, face→ft_face, font→hb_font)
+2. Add module imports without changing usage
+3. Test build
+
+### Phase 2: FontLibrary → freetype::Library (3-4 hours)
+1. Replace FontLibrary with direct use of freetype::Library
+2. Replace FontOpener to use wrapper
+3. Update all initialization code
+
+### Phase 3: FontFace → freetype::Face (4-5 hours)
+1. Replace face field type
+2. Update all FT_* calls for faces
+3. Leverage automatic Drop
+
+### Phase 4: Font hb_font → harfbuzz::Font (3-4 hours)
+1. Replace font field type  
+2. Update all hb_* calls
+3. Leverage automatic Drop
+
+### Phase 5: Verify (2-3 hours)
+1. Test build on all targets
+2. Run font-related tests
+3. Verify no memory leaks
+
 ## Acceptance Criteria
-1. ✅ Zero direct FFI calls (`FT_*`, `hb_*`) in `src/font/` directory
-2. ✅ All font modules under 1,000 lines each
-3. ✅ All font-related structs use safe wrappers instead of raw pointers
-4. ✅ Proper RAII resource management through Drop implementations
-5. ✅ All existing font functionality preserved and working
-6. ✅ No regression in text rendering, shaping, or font loading performance
+1. ⬜ Zero direct FFI calls (`FT_*`, `hb_*`) in `src/font/` directory
+2. ⬜ All font modules under 1,000 lines each
+3. ⬜ All font-related structs use safe wrappers instead of raw pointers
+4. ⬜ Proper RAII resource management through Drop implementations
+5. ⬜ All existing font functionality preserved and working
+6. ⬜ No regression in text rendering, shaping, or font loading performance
+
+## Status: Not Started
+This refactor requires significantcareful work. Estimated 17-26 hours.
 
 ## Estimated Effort
 - Analysis and mapping: 2-3 hours
