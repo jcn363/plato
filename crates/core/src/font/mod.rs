@@ -24,6 +24,7 @@ pub mod harfbuzz;
 pub mod library;
 pub mod rasterizer;
 pub mod shaper;
+pub mod face;
 
 pub use self::freetype_error::FreetypeError;
 pub use self::freetype_sys::FtError;
