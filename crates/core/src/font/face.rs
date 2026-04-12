@@ -65,6 +65,10 @@ impl Font {
         )
     }
     
+    pub fn load_char(&self, char_code: u32, flags: i32) -> Result<()> {
+        self.face.load_char(char_code, flags)
+    }
+
     pub fn changed(&self, hb_font: &HbFont) {
         hb_font.changed();
     }
