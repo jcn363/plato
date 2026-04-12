@@ -77,7 +77,11 @@ impl Font {
         unsafe { HbFont::from_ft_face(&*self.face.face_ptr()) }
     }
 
-    pub fn face_ptr(&self) -> *mut crate::font::freetype_sys::FtFace {
-        self.face.face_ptr()
+    pub fn bitmap(&self) -> &crate::font::freetype_sys::FtBitmap {
+        &self.face.glyph().bitmap
+    }
+
+    pub fn glyph_metrics(&self) -> &crate::font::freetype_sys::FtGlyphMetrics {
+        &self.face.glyph().metrics
     }
 }
