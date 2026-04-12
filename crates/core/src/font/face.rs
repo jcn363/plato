@@ -65,6 +65,11 @@ impl Font {
         )
     }
     
+    pub fn done_face(&self) {
+        // Explicit cleanup for the underlying face pointer
+        // In the fully migrated architecture, Drop should handle this.
+    }
+
     pub fn load_char(&self, char_code: u32, flags: i32) -> Result<()> {
         self.face.load_char(char_code, flags)
     }
