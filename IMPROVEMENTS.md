@@ -102,16 +102,12 @@ Recommended next action:
 Acceptance condition:
 - Every visible PDF tools action is reachable from the UI and uses user-selected inputs.
 
-### Cover editor is infrastructure-ready but needs EntryId variants wired to UI
+### Cover editor UI completion
 
-- `crates/core/src/view/cover_editor.rs` implements: apply_crop, apply_rotate, apply_brightness, apply_contrast, apply_grayscale, save_cover
-- Base view renders image in EditCover mode
-- Needs EntryId variants: CoverRotate90, CoverRotate180, CoverRotate270, CoverGrayscale, CoverCrop, CoverBrightness, CoverContrast, CoverSave
-- Needs event handling wired to call helper methods
-
-Recommended next action:
-- Add EntryId variants to entries.rs
-- Wire button click events in handle_event to call helper methods
+- `crates/core/src/view/cover_editor.rs` now has interactive controls for Rotate, Grayscale, Save, Brightness, Contrast adjustments and Crop functionality with visual selection and application
+- The view can be launched for a selected EPUB from the home book menu
+- All helper capabilities are surfaced via the UI
+- No remaining `#[allow(dead_code)]` scaffolding in core functionality
 
 Acceptance condition:
 - The user-facing feature set matches the implemented code path.
