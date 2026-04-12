@@ -77,6 +77,14 @@ impl Font {
         unsafe { HbFont::from_ft_face(&*self.face.face_ptr()) }
     }
 
+    pub fn get_sfnt_name_count(&self) -> u32 {
+        self.face.get_sfnt_name_count()
+    }
+
+    pub fn get_sfnt_name(&self, index: u32) -> Option<crate::font::freetype_sys::FtSfntName> {
+        self.face.get_sfnt_name(index)
+    }
+
     pub fn get_mm_var(&self) -> Result<crate::font::freetype::MmVar> {
         self.face.get_mm_var()
     }
