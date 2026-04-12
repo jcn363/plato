@@ -5,14 +5,14 @@ use crate::font::harfbuzz::Font as HbFont;
 use crate::font::RenderPlan;
 
 pub struct Font {
-    library: Rc<FontLibrary>,
+    #[allow(dead_code)] library: Rc<FontLibrary>,
     face: Face,
-    hb_font: HbFont,
+    #[allow(dead_code)] hb_font: HbFont,
     pub size: u32,
     pub dpi: u16,
     pub ellipsis: RenderPlan,
     pub x_heights: (u32, u32),
-    space_codepoint: u32,
+    #[allow(dead_code)] space_codepoint: u32,
 }
 
 impl Font {
@@ -32,5 +32,13 @@ impl Font {
             x_heights,
             space_codepoint,
         }
+    }
+
+    pub fn family_name(&self) -> Option<String> {
+        self.face.family_name()
+    }
+
+    pub fn style_name(&self) -> Option<String> {
+        self.face.style_name()
     }
 }
