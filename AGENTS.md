@@ -231,7 +231,8 @@ where
 
 ### General Patterns
 
-- Use `lazy_static!` for global statics that require runtime initialization
+- Use `std::sync::LazyLock` for global statics that require runtime initialization (constants, regex, etc.).
+- Some global statics that depend on runtime hardware configuration (like `CURRENT_DEVICE`) still require `lazy_static!` or similar late initialization.
 - Use `bitflags!` for flag enums
 - Prefer `BTreeMap`/`BTreeSet` for ordered collections; `IndexMap` for insertion-ordered maps
 - Keep `mod` declarations alphabetical; use `pub mod` for public API, plain `mod` for internal

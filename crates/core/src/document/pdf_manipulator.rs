@@ -26,7 +26,7 @@ impl Default for PdfManipulator {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct MemoryWarning {
     pub file_size_mb: u64,
     pub page_count: usize,
@@ -34,7 +34,7 @@ pub struct MemoryWarning {
     pub is_large_page_count: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct OperationProgress {
     pub current: usize,
     pub total: usize,
@@ -433,7 +433,7 @@ impl PdfManipulator {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct RedactionRegion {
     pub page: usize,
     pub x: f32,
@@ -578,7 +578,7 @@ impl RedactionEditor {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct ExtractedImage {
     pub page: usize,
     pub index: usize,
@@ -587,7 +587,7 @@ pub struct ExtractedImage {
     pub data: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct ExtractedFont {
     pub name: String,
     pub data: Vec<u8>,
@@ -771,7 +771,7 @@ impl ResourceExtractor {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct ResourceSummary {
     pub total_pages: usize,
     pub total_images: usize,
@@ -794,7 +794,7 @@ impl Default for ResourceSummary {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct PdfAnnotation {
     pub page: usize,
     pub annot_type: String,

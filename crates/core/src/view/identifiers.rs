@@ -78,6 +78,7 @@ pub enum ViewId {
     EpubEditorReplaceInput,
     PdfManipulator,
     PdfManipulatorMenu,
+    PdfProgress,
     MessageNotif(Id),
     SubMenu(u8),
 }

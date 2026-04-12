@@ -17,17 +17,35 @@ fn main() {
         println!("cargo:rustc-link-search=libs");
         println!("cargo:rustc-link-lib=dylib=stdc++");
         println!("cargo:rustc-link-lib=mupdf_wrapper");
-    // Handle the Linux and macOS platforms.
+        // Handle the Linux and macOS platforms.
     } else {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
         match target_os.as_ref() {
             "linux" => {
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/Linux");
+                println!("cargo:rustc-link-search=libs");
                 println!("cargo:rustc-link-lib=dylib=stdc++");
+                println!("cargo:rustc-link-lib=mupdf");
+                println!("cargo:rustc-link-lib=z");
+                println!("cargo:rustc-link-lib=bz2");
+                println!("cargo:rustc-link-lib=jpeg");
+                println!("cargo:rustc-link-lib=png16");
+                println!("cargo:rustc-link-lib=gumbo");
+                println!("cargo:rustc-link-lib=openjp2");
+                println!("cargo:rustc-link-lib=jbig2dec");
             }
             "macos" => {
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/Darwin");
+                println!("cargo:rustc-link-search=libs");
                 println!("cargo:rustc-link-lib=dylib=c++");
+                println!("cargo:rustc-link-lib=mupdf");
+                println!("cargo:rustc-link-lib=z");
+                println!("cargo:rustc-link-lib=bz2");
+                println!("cargo:rustc-link-lib=jpeg");
+                println!("cargo:rustc-link-lib=png16");
+                println!("cargo:rustc-link-lib=gumbo");
+                println!("cargo:rustc-link-lib=openjp2");
+                println!("cargo:rustc-link-lib=jbig2dec");
             }
             _ => panic!("Unsupported platform: {}", target_os),
         }

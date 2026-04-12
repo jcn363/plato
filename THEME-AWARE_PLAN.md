@@ -31,7 +31,13 @@ The Plato e-reader now supports a comprehensive theme system with light/dark/sep
 - Toggle cycles: Off (Light) → On (Dark) → Sepia → Auto
 - Auto Threshold button: Adjust sensitivity (50-200, step 50)
 
-### 6. Persistence
+### 6. Scheduled Theme Mode
+- Automatically switch themes based on time of day
+- Configurable sunset/sunrise times or fixed times
+- Integrated with settings for custom scheduling
+- Persistence across reboots and USB reconnects
+
+### 7. Persistence
 - All theme settings saved to Settings.toml
 - Survives app restart and USB reconnect
 - Settings auto-saved on suspend/exit
@@ -45,11 +51,12 @@ The Plato e-reader now supports a comprehensive theme system with light/dark/sep
 pub fn is_dark_mode() -> bool          // Current dark/light state
 pub fn is_sepia_mode() -> bool         // Current sepia state
 pub fn set_dark_mode(enabled: bool)    // Set dark/light manually
-pub fn theme_mode() -> ThemeMode        // Current mode (Light/Dark/Sepia/Auto)
+pub fn theme_mode() -> ThemeMode        // Current mode (Light/Dark/Sepia/Auto/Scheduled)
 pub fn set_theme_mode(mode: ThemeMode) // Set mode
 pub fn auto_threshold() -> u16         // Get auto threshold
 pub fn set_auto_threshold(threshold: u16) // Set auto threshold
 pub fn update_from_light_sensor(level: u16) // Update from light sensor
+pub fn update_from_schedule(schedule: &ThemeSchedule, current_time: &DateTime<Local>) // Update from schedule
 
 // Color helpers (used by views)
 pub fn background(dark: bool) -> Color
@@ -67,11 +74,19 @@ pub enum ThemeMode {
     Dark,
     Sepia,
     Auto,
+    Scheduled,
+}
+
+pub struct ThemeSchedule {
+    pub enabled: bool,
+    pub sunrise: (u8, u8),
+    pub sunset: (u8, u8),
 }
 
 pub struct ThemeSettings {
     pub mode: ThemeMode,
     pub auto_threshold: u16,  // Light level threshold for auto mode
+    pub schedule: ThemeSchedule,
 }
 ```
 
@@ -90,6 +105,7 @@ pub const SEPIA_FOREGROUND: Color = GRAY5C  // 0x5C
 | `app.rs:130` | Initialize theme on startup |
 | `app.rs:703` | Re-sync theme on USB reconnect |
 | `app.rs:824` | Poll light sensor for auto theme |
+| `app.rs:832` | Update theme from schedule |
 | `app.rs:977` | Handle two-finger swipe gesture |
 | `display.rs:311` | Handle settings toggle |
 | `top_bar.rs` | Render theme indicator icon |
@@ -97,17 +113,17 @@ pub const SEPIA_FOREGROUND: Color = GRAY5C  // 0x5C
 ## Files Modified
 
 ### Core Theme
-- `crates/core/src/theme.rs` - Theme state management, color helpers
-- `crates/core/src/settings/theme.rs` - ThemeMode enum, ThemeSettings struct
+- `crates/core/src/theme.rs` - Theme state management, color helpers, schedule logic
+- `crates/core/src/settings/theme.rs` - ThemeMode enum, ThemeSettings and ThemeSchedule structs
 - `crates/core/src/color.rs` - Theme-aware color functions (pre-existing)
 
 ### Views
-- `crates/core/src/view/settings/display.rs` - Settings UI
+- `crates/core/src/view/settings/display.rs` - Settings UI for modes and schedule
 - `crates/core/src/view/top_bar.rs` - Theme indicator
 - `crates/core/src/view/entries.rs` - EntryId additions
 
 ### App Integration
-- `crates/plato/src/app.rs` - Startup, USB reconnect, gesture handling
+- `crates/plato/src/app.rs` - Startup, USB reconnect, gesture handling, schedule polling
 
 ### Icons
 - `icons/theme-light.svg` - Sun icon for light mode
@@ -118,11 +134,12 @@ pub const SEPIA_FOREGROUND: Color = GRAY5C  // 0x5C
 
 ### From Settings
 1. Go to Settings → Display
-2. Tap "Dark Mode" toggle to cycle: Off → On → Sepia → Auto
+2. Tap "Dark Mode" toggle to cycle: Off → On → Sepia → Auto → Scheduled
 3. Tap "Auto Threshold" to adjust sensitivity
+4. Tap "Schedule" to configure sunset/sunrise times
 
 ### From Gesture
-1. In Auto mode, use two-finger swipe from screen edges
+1. In Auto or Scheduled mode, use two-finger swipe from screen edges
 2. Left edge → Dark mode
 3. Right edge → Sepia mode
 
@@ -155,6 +172,7 @@ All theme features implemented in this release:
 | Light/Dark themes | ✅ Complete |
 | Sepia theme | ✅ Complete |
 | Auto theme (light sensor) | ✅ Complete |
+| Scheduled theme | ✅ Complete |
 | Settings UI | ✅ Complete |
 | Persistence | ✅ Complete |
 | Gesture toggle | ✅ Complete |
@@ -164,6 +182,6 @@ All theme features implemented in this release:
 ## Future Enhancements
 
 Potential improvements for future releases:
-- Scheduled theme (sunset/sunrise times)
 - Smooth theme transition animations
 - Per-document theme preferences
+- Custom color theme support

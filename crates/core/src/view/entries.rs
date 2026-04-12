@@ -163,6 +163,8 @@ pub enum EntryId {
     Back,
     ToggleBatchMode,
     OpenFileBrowser,
+    SelectFile(PathBuf),
+    OpenRedactionEditor(PathBuf, usize),
 }
 
 impl EntryId {
@@ -279,6 +281,8 @@ impl EntryId {
             EntryId::Back => "Back",
             EntryId::ToggleBatchMode => "ToggleBatchMode",
             EntryId::OpenFileBrowser => "OpenFileBrowser",
+            EntryId::SelectFile(_) => "SelectFile",
+            EntryId::OpenRedactionEditor(_, _) => "OpenRedactionEditor",
         }
     }
 }

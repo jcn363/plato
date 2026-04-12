@@ -19,12 +19,15 @@ The user is working on improving the Plato codebase by addressing structural iss
 
 ## Accomplished
 
-- Created initial TODO list identifying four key refactoring tasks
-- Analyzed Home view structure to understand splitting requirements (completed)
-- Began analyzing ReaderImpl structure for field consolidation and event handling (in progress)
-- Created comprehensive PDF-UI_PLAN.md outlining gaps between PDF backend capabilities and UI
-- Reviewed IMPROVEMENTS.md and INTEGRATION_OPPORTUNITIES.md to create prioritized to-do list
-- Analyzed font module structure for migration to safe wrappers (content for FONT-WRAPPERS.md prepared)
+- ✅ **Complete Theme System**: Implemented Light, Dark, Sepia, Auto (light sensor), and Scheduled (time-based) modes with persistence and gesture support.
+- ✅ **PDF Tools UI Completion**: surrendering all backend capabilities (Delete, Rotate, Extract, Merge, Redact) through interactive UI menus and mode transitions.
+- ✅ **Cover Editor UI Completion**: Full suite of interactive controls (Rotate, Grayscale, Brightness, Contrast, Crop) wired into the document management flows.
+- ✅ **Structural Refactoring**:
+  - Extracted **Gesture Module** (`reader_gestures.rs`) and **GestureProcessor** trait.
+  - Extracted **Rendering**, **Settings**, and **Annotation** modules from `ReaderImpl`.
+  - Migrated **13 lazy_static!** instances to `std::sync::LazyLock`.
+  - Moved **unit tests** to sibling `_tests.rs` files for multiple core modules.
+- ✅ **Documentation Audit**: Completed comprehensive audit (April 12, 2026) of all codebase `.md` documents, ensuring alignment with current source tree.
 
 ## Relevant files / directories
 

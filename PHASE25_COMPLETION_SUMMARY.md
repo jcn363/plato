@@ -33,10 +33,16 @@
 - `build_toc_aux()` - Recursive TOC entry builder
 - **Lines extracted**: 62
 
+#### 4. **Gesture Module** (reader_gestures.rs)
+- `scale_page` - Page scaling logic
+- `pinch/swipe logic` - Multi-finger gesture processing
+- `GestureProcessor` trait - Abstracting gesture events
+- **Lines extracted**: 84
+
 ### Architecture Improvements
 
 1. **Modularity Enhanced**
-   - Clear separation of concerns (annotations, rendering, settings)
+   - Clear separation of concerns (annotations, rendering, settings, gestures)
    - Each module handles specific domain
    - Helper functions accept parameters instead of requiring mutable Reader
 
@@ -49,6 +55,7 @@
    - `text_rect()` used by both `selection_rect()` and `render_results()`
    - `find_page_by_name()` used by TOC building functions
    - `scaling_factor()` used by margin calculation
+   - `GestureProcessor` used for both reader and theme gestures
 
 4. **Delegation Pattern Established**
    - Reader methods now delegate to extracted helpers
@@ -65,6 +72,8 @@ faab37c - Extract selection_rect() to reader_rendering module
 d8b5e31 - Extract annotation helpers to reader_annotations module
 c3c3eba - Extract text utility functions to reader_rendering module
 55441c9 - Extract render_results() to reader_search module
+2b67553 - Extract gesture handling to reader_gestures.rs
+1ad227e - Add GestureProcessor trait
 ```
 
 ## Remaining Opportunities
@@ -77,10 +86,6 @@ c3c3eba - Extract text utility functions to reader_rendering module
 2. Search menu and functionality (toggle_search_menu, search, etc.)
    - ~100 lines
    - Already has stubs ready for full implementation
-
-3. Gesture event handling (scale_page, pinch/swipe logic)
-   - ~80 lines
-   - Can go to reader_gestures module
 
 ### Medium-Value Extractions (30-60 lines)
 1. Contrast/zoom setting functions (set_contrast_exponent, set_zoom_mode)

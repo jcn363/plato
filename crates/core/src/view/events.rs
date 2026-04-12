@@ -109,6 +109,8 @@ pub enum Event {
     Cancel,
     Reseed,
     Render(String),
+    Progress(usize, usize, String),
+    PdfManipulateDone(Result<PathBuf, String>),
     Back,
     Quit,
     WakeUp,

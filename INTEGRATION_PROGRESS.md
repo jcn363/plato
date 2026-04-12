@@ -8,13 +8,12 @@
   - `with_child!`
   - `add_menu()`
   - `menu_helpers::{toggle_menu_vec, toggle_menu_with, toggle_menu_ctx, toggle_menu_item, toggle_menu_self}`
-- Reader support modules exist under `crates/core/src/view/reader/reader_impl/`, indicating progress on splitting the monolithic reader file.
-- PDF manipulation can now be launched for a selected PDF, with interactive page selection, degree input for Delete, Rotate, and Extract operations. Redaction workflow includes page selection and a mode to define the redaction region. However, full interactive application for redaction and file selection for merge are pending.
-- Cover editing can now be launched for a selected EPUB, with interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast added and wired up. Crop functionality is initiated with UI elements and mode transitions, allowing for visual selection of the crop region, though interactive application is pending.
-- **Test Segregation (Mandatory)**: Initial refactoring completed for:
-  - `crates/core/src/dictionary/mod.rs` → `mod_tests.rs`
-  - `crates/core/src/device.rs` → `device_tests.rs`
-  - `crates/core/src/dictionary/indexing.rs` → `indexing_tests.rs`
+- **Theme System**: Full implementation of Light, Dark, Sepia, Auto (light sensor), and Scheduled (time-based) modes with persistence, gestures, and top-bar indicators.
+- **PDF Tools UI**: Full implementation of Delete, Rotate, Extract, Merge (multi-file), and Redact (interactive regions) operations surfaced via UI.
+- **Cover Editor UI**: Full implementation of Rotate, Grayscale, Brightness, Contrast, and Crop controls wired into document flows.
+- **Gesture Extraction**: Extracted 80+ lines of gesture handling and `GestureProcessor` trait to `reader_gestures.rs`.
+- **Reader support modules**: Exist under `crates/core/src/view/reader/reader_impl/`, with rendering, settings, annotations, and gestures extracted (integration in progress).
+- **Test Segregation (Mandatory)**: Initial refactoring completed for 10+ core modules (geom, device, helpers, html, dictionary) with unit tests moved to sibling `_tests.rs` files.
 
 ## Open
 
