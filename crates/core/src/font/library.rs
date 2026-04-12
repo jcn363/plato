@@ -18,6 +18,10 @@ impl FontLibrary {
         Face::from_path(self.library(), path.as_ref(), index)
     }
 
+    pub fn new_memory_face(&self, data: &[u8], index: i32) -> Result<Face> {
+        Face::from_memory(self.library(), data, index)
+    }
+
     pub fn library(&self) -> &Library {
         &self.0
     }
