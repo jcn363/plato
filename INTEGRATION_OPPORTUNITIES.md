@@ -149,23 +149,27 @@ Unit tests are currently embedded in production code, violating the `AGENTS.md` 
 
 ### 6. Cover editor UI completion
 
-**Status:** Substantially completed. Interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast are implemented. Crop functionality is initiated with UI elements and mode transitions, allowing visual selection (application is placeholder).
+**Status:** Partially completed. Implementation infrastructure exists; UI completion requires extending EntryId enum.
 
 **Problem:**
-- Interactive cropping region application is pending.
-- Some helper functions might still be guarded by `#[allow(dead_code)]`.
+- Base implementation with crop/rotate/brightness/contrast/grayscale helpers exists in `cover_editor.rs`
+- UI buttons and sliders require adding new EntryId variants (CoverRotate90, CoverRotate180, CoverRotate270, CoverGrayscale, CoverCrop, CoverBrightness, CoverContrast, CoverSave)
+- Adding EntryId variants requires updating entries.rs and event handling
 
 **Evidence:**
-- `crates/core/src/view/cover_editor.rs` has added UI for initiating crop and visual selection feedback.
-- `apply_crop_selection` is a placeholder.
+- `crates/core/src/view/cover_editor.rs` implements: apply_crop, apply_rotate, apply_brightness, apply_contrast, apply_grayscale, save_cover
+- Base view without button/slider controls shows image in EditCover mode
+- Interactive UI infrastructure ready but not wired
 
 **Recommended action:**
-- Implement the interactive application of the crop selection.
-- Address any remaining `#[allow(dead_code)]` scaffolding.
+- Add EntryId variants: CoverRotate90, CoverRotate180, CoverRotate270, CoverGrayscale, CoverCrop, CoverBrightness, CoverContrast, CoverSave
+- Wire button click events in handle_event to call helper methods
+- Add crop state tracking for interactive selection
+- Build and test UI
 
 **Acceptance condition:**
-- The user-facing feature set matches the implemented code path.
-- All implemented helper capabilities (including interactive Crop application) are surfaced via the UI.
+- Buttons trigger correct operations
+- Crop mode supports visual selection
 
 ### 7. Restore verification
 
