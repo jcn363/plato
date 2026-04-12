@@ -64,6 +64,10 @@ impl Font {
             vdpi.try_into().unwrap_or(0)
         )
     }
+    
+    pub fn changed(&self, hb_font: &HbFont) {
+        hb_font.changed();
+    }
 
     pub fn set_pixel_sizes(&self, width: u32, height: u32) -> Result<()> {
         self.face.set_pixel_sizes(width, height)
