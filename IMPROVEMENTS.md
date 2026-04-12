@@ -14,7 +14,7 @@ The current branch now passes `cargo check --target x86_64-unknown-linux-gnu`. R
 
 ## Completed
 
-These items are still verifiable in the current source tree:
+These items are now verifiable in the current source tree:
 
 - Safe wrapper modules for MuPDF, FreeType, and HarfBuzz exist under `crates/core/src/document/mupdf` and `crates/core/src/font`.
 - `pdf.rs` and `pdf_manipulator.rs` use the safe wrapper layer rather than calling raw MuPDF bindings directly.
@@ -32,6 +32,10 @@ These items are still verifiable in the current source tree:
   - `crates/core/src/view/top_bar.rs`
   - `crates/plato/src/app.rs`
 - The orphan duplicate `Home` definition in `crates/core/src/view/home/home.rs` has been removed, so `batch_mode` no longer has a second stale definition outside the active module tree.
+
+**UI Enhancements:**
+- **Cover Editor UI:** Interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast adjustments have been implemented and wired up. The Crop functionality is now initiated with UI elements and mode transitions, allowing for visual selection of the crop region (though full interactive application is pending).
+- **PDF Tools UI:** Interactive page selection and degree input for Delete, Rotate, and Extract operations are now implemented. The UI transitions through distinct modes for selecting actions, inputting parameters, and confirming operations. Redaction workflow now includes selecting a page and transitioning to a mode for defining the redaction region.
 
 ## Open Structural Issues
 
@@ -85,28 +89,34 @@ Acceptance condition:
 
 ### PDF tools UI is only partially surfaced
 
-- `crates/core/src/view/pdf_manipulator.rs` can now be launched for a selected PDF from the reader title menu and the home book menu.
-- The view still has dead-code manipulation modes and incomplete parameter collection.
-- Redaction and manipulation paths still depend on hard-coded defaults rather than interactive file/action input.
+- `crates/core/src/view/pdf_manipulator.rs` now has interactive page selection and degree input for Delete, Rotate, and Extract operations. Redaction workflow now includes page selection and a mode to define the region.
+- However, interactive redaction region definition needs full implementation.
+- UI for merge file selection is still incomplete.
+- Some manipulation paths still depend on hard-coded defaults rather than fully integrated user inputs.
 
 Recommended next action:
-- Either integrate PDF tools with a real file-selection flow or explicitly scope the view down to currently-supported operations.
+- Implement interactive redaction region definition.
+- Implement file selection for PDF merging.
+- Fully integrate user inputs into all manipulation paths.
 
 Acceptance condition:
 - Every visible PDF tools action is reachable from the UI and uses user-selected inputs.
 
 ### Cover editor is implemented below the UI surface but still partial
 
-- `crates/core/src/view/cover_editor.rs` contains real editing helpers for crop, rotate, brightness, contrast, grayscale, and save.
+- `crates/core/src/view/cover_editor.rs` now has interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast. The Crop functionality is initiated with UI elements and mode transitions, allowing visual selection of a crop region (though interactive application is a placeholder).
 - The view can now be launched for a selected EPUB from the home book menu.
-- The view is still broadly guarded by `#[allow(dead_code)]`.
-- There is no interactive toolbar or surfaced editing workflow matching the helper capabilities.
+- The view is still broadly guarded by `#[allow(dead_code)]` in some helper functions.
+- The "Crop" helper capability is not yet fully exposed via UI (interactive region application is pending).
 
 Recommended next action:
-- Choose one direction: complete the UI flow or reduce the feature to a simpler, intentionally limited cover replacement tool.
+- Address any remaining `#[allow(dead_code)]` scaffolding.
+- Implement the interactive application of the crop selection.
+- **A placeholder for pending interactive crop application has been implemented.**
 
 Acceptance condition:
-- The user-facing feature set matches the implemented code path and no longer depends on parked dead-code scaffolding.
+- The user-facing feature set matches the implemented code path.
+- All implemented helper capabilities (including interactive Crop application) are surfaced via the UI.
 
 ## Deferred by Design
 

@@ -2,11 +2,10 @@
 
 ## Status Vocabulary
 
-This backlog uses four statuses only:
-
 - `Completed`
 - `Open`
 - `Deferred`
+- `Blocked`
 - `Stale/Retired`
 
 ## Completed Previously
@@ -31,7 +30,7 @@ The reader refactor stopped halfway. `crates/core/src/view/reader/reader_impl/re
 
 - `crates/core/src/view/reader/reader_impl/reader.rs`: `3403` lines
 - Stub block starts near the end of the file under `// Stub Method Declarations (Reader trait interface)`
-- Extracted modules exist:
+- Extracted reader modules exist:
   - `reader_rendering.rs`
   - `reader_gestures.rs`
   - `reader_settings.rs`
@@ -127,69 +126,48 @@ Unit tests are currently embedded in production code, violating the `AGENTS.md` 
 
 - Zero `#[test]` blocks in production source files.
 
-### 5. PDF tools need a real surfaced workflow
+### 5. PDF tools UI workflow completion
 
+**Status:** Partially completed. Interactive page selection and degree input for Delete, Rotate, and Extract operations are implemented. Redaction workflow now includes page selection and transitions to a mode for defining the redaction region.
 
-**Problem**
+**Problem:**
+- Interactive redaction region definition UI is pending implementation.
+- File selection for PDF merging is missing.
+- Some manipulation paths still depend on hard-coded defaults rather than fully integrated user inputs.
 
-The PDF tools view contains real manipulation logic, but the UI flow is incomplete and still depends on parked code.
+**Evidence:**
+- `crates/core/src/view/pdf_manipulator.rs` now transitions to `DefineRedactionRegion` mode after page selection for redaction.
+- `process_manipulation` has placeholders for user input, but the UI for Redaction region input and Merge file selection is not yet fully implemented.
 
-**Evidence**
+**Recommended action:**
+- Implement interactive redaction region definition UI (e.g., input fields for coordinates or predefined region selection).
+- Implement file selection flow for PDF merging.
+- Ensure all manipulation paths fully integrate user inputs.
 
-- `crates/core/src/view/pdf_manipulator.rs` still uses `#[allow(dead_code)]` on manipulation modes.
-- The view can now be launched from selected-document contexts, so `show_actions()` is active.
-- File-selection and action-selection flow is still not fully connected for the broader workflow.
-- Some manipulations still use hard-coded defaults rather than user-driven parameters.
+**Acceptance condition:**
+- Every PDF tool action is reachable from the UI and uses user-selected inputs.
 
-**Recommended action**
+### 6. Cover editor UI completion
 
-- Define a single supported workflow:
-  - choose PDF
-  - choose action
-  - provide action-specific parameters
-  - run operation
-  - show result path or error
+**Status:** Substantially completed. Interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast are implemented. Crop functionality is initiated with UI elements and mode transitions, allowing visual selection (application is placeholder).
 
-**Implementation order**
+**Problem:**
+- Interactive cropping region application is pending.
+- Some helper functions might still be guarded by `#[allow(dead_code)]`.
 
-1. Decide whether to integrate with an existing file browser or launch from a selected document context.
-2. Remove unreachable menus.
-3. Replace hard-coded defaults with explicit user inputs.
+**Evidence:**
+- `crates/core/src/view/cover_editor.rs` has added UI for initiating crop and visual selection feedback.
+- `apply_crop_selection` is a placeholder.
 
-**Acceptance condition**
+**Recommended action:**
+- Implement the interactive application of the crop selection.
+- Address any remaining `#[allow(dead_code)]` scaffolding.
 
-- Every PDF tool visible in the UI is reachable and parameterized by user choice.
+**Acceptance condition:**
+- The user-facing feature set matches the implemented code path.
+- All implemented helper capabilities (including interactive Crop application) are surfaced via the UI.
 
-### 4. Cover editor needs either completion or scope reduction
-
-**Problem**
-
-The cover editor has real image-editing helpers but no complete user-facing editing flow.
-
-**Evidence**
-
-- `crates/core/src/view/cover_editor.rs` contains `apply_crop`, `apply_rotate`, `apply_brightness`, `apply_contrast`, `apply_grayscale`, and `save_cover`.
-- The view can now be launched from the home book menu for selected EPUBs.
-- The view and impl are still broadly marked `#[allow(dead_code)]`.
-- The editing helpers are not backed by a surfaced toolbar/menu system.
-
-**Recommended action**
-
-- Choose one product direction:
-  - full interactive editor
-  - or intentionally limited cover replacement with a smaller UI
-
-**Implementation order**
-
-1. Define the supported user flow.
-2. Remove dead scaffolding that falls outside that flow.
-3. Surface only the operations that are actually supported.
-
-**Acceptance condition**
-
-- The cover editor’s advertised capability matches the reachable UI.
-
-### 5. Restore verification before claiming integration progress
+### 7. Restore verification
 
 **Problem**
 
@@ -197,20 +175,13 @@ Verification claims can drift quickly on this branch and must be kept tied to re
 
 **Evidence**
 
-- Host verification now passes after the theme/settings fixes.
+- Host verification passes after theme/settings fixes.
 - ARM verification also passes, but a clean ARM rebuild additionally requires rebuilding `mupdf_wrapper` after `cargo clean`.
-- Earlier review snapshots were stale because they described failing verification after the issue had already been fixed.
 
 **Recommended action**
 
 - Do not mark any integration document as "clean build verified" without naming the exact commands rerun.
 - When `cargo clean` is part of the verification flow, include the native wrapper rebuild step for Kobo targets.
-
-**Implementation order**
-
-1. Re-run the target-specific commands you intend to claim.
-2. For Kobo release builds, rebuild `mupdf_wrapper` if the clean step removed it.
-3. Only then refresh any build-health claims.
 
 **Acceptance condition**
 
@@ -235,4 +206,6 @@ Remove these from future review summaries unless they regress:
 - Missing `with_child!`
 - Missing `add_menu()`
 - Missing generic menu toggle helpers
-- Generic statements that plugin settings, external storage, or cover editor settings are "not integrated" without checking current call sites
+- Generic statements that plugin settings, external storage, or cover editor settings are "not integrated" without checking current call sites.
+
+These are now historical review notes, not current backlog items.

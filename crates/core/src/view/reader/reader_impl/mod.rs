@@ -28,13 +28,13 @@ pub use reader_core::{
 };
 
 // Main implementation (to be split across modules)
-mod reader;
+pub mod reader;
 pub use reader::Reader;
 
 // Feature modules (WIP)
-mod reader_annotations;
-mod reader_dialogs;
-mod reader_gestures;
-mod reader_rendering;
-mod reader_search;
-mod reader_settings;
+pub mod reader_annotations;
+pub mod reader_dialogs;
+pub mod reader_gestures;
+pub mod reader_rendering;
+pub mod reader_search;
+pub mod reader_settings;

@@ -8,8 +8,9 @@
   - `with_child!`
   - `add_menu()`
   - `menu_helpers::{toggle_menu_vec, toggle_menu_with, toggle_menu_ctx, toggle_menu_item, toggle_menu_self}`
-- Reader support modules exist under `crates/core/src/view/reader/reader_impl/`, so the codebase has already started a split away from one monolithic reader file.
-- PDF manipulation can now be launched for a selected PDF, and cover editing can now be launched for a selected EPUB, but both features remain incomplete from a product/UI perspective.
+- Reader support modules exist under `crates/core/src/view/reader/reader_impl/`, indicating progress on splitting the monolithic reader file.
+- PDF manipulation can now be launched for a selected PDF, with interactive page selection, degree input for Delete, Rotate, and Extract operations. Redaction workflow includes page selection and a mode to define the redaction region. However, full interactive application for redaction and file selection for merge are pending.
+- Cover editing can now be launched for a selected EPUB, with interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast added and wired up. Crop functionality is initiated with UI elements and mode transitions, allowing for visual selection of the crop region, though interactive application is pending.
 - **Test Segregation (Mandatory)**: Initial refactoring completed for:
   - `crates/core/src/dictionary/mod.rs` → `mod_tests.rs`
   - `crates/core/src/device.rs` → `device_tests.rs`
@@ -20,7 +21,7 @@
 ### Reader migration cleanup
 
 - `reader.rs` is still `3403` lines (AGENTS.md target: < 1000 lines).
-- The file still ends with a stub-method block.
+- The file still ends with a stub-method block that duplicates reader behavior.
 - Extracted reader modules are present, but many helpers remain inactive or dead-code-gated.
 
 ### Home modularization
@@ -38,21 +39,22 @@
 
 ### PDF tools UI completion
 
-- `pdf_manipulator.rs` is now reachable from selected-document flows, but still contains parked file-selection/action-selection code.
-- The manipulation flow is still not fully parameterized through the UI.
+- `pdf_manipulator.rs` is now reachable from selected-document contexts. Interactive page selection and degree input for Delete, Rotate, and Extract are implemented. Redaction workflow now includes page selection and a mode to define the redaction region.
+- **Pending:** Interactive redaction region definition UI, file selection for PDF merging, and full parameter integration for all manipulation paths.
 
 ### Cover editor product decision
 
-- The editor contains real image-editing helpers.
-- The view is now reachable from selected-document flow for EPUBs, but is still partially parked behind `#[allow(dead_code)]` and lacks a complete editing UI.
+- `crates/core/src/view/cover_editor.rs` now has interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast.
+- Crop functionality is initiated with UI elements and mode transitions, allowing visual selection.
+- **Pending:** Interactive application of the crop selection, and addressing remaining `#[allow(dead_code)]` scaffolding.
 
 ## Verification
 
 Current verification status on the checked-out branch:
 
-- `cargo check --target x86_64-unknown-linux-gnu` passes
-- `cargo check --target arm-unknown-linux-gnueabihf -p plato` passes
-- `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato` passes after rebuilding `mupdf_wrapper`
+- `cargo check --target x86_64-unknown-linux-gnu`: passes
+- `cargo check --target arm-unknown-linux-gnueabihf -p plato`: passes
+- `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`: passes after rebuilding `mupdf_wrapper`
 
 Notes:
 
@@ -63,8 +65,8 @@ Notes:
 
 - Large framework work for settings registries
 - Broad event-system unification
-- Generic input-validation architecture
-- Non-measured performance refactors
+- Cross-cutting input-validation framework
+- Broad speculative performance refactors
 
 ## Monolithic Files
 
@@ -80,8 +82,4 @@ Notes:
 
 1. Retire stale backlog items that are already implemented.
 2. Keep verification notes synchronized with actual rerun results.
-3. Address the remaining real UI and structural gaps:
-   - reader stub cleanup
-   - home modularization
-   - PDF tools workflow
-   - cover editor scope/completion
+3. Address the remaining real UI and structural gaps (as listed in Open sections).

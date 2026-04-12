@@ -1,10 +1,11 @@
-mod bottom_bar;
 mod chapter_label;
 mod margin_cropper;
 mod reader_impl;
 mod results_bar;
 mod results_label;
-mod tool_bar;
+pub mod tool_bar; // Made public
+
+pub mod bottom_bar; // Made public
 
 pub use reader_impl::{
     Contrast, PageAnimKind, PageAnimation, Reader, RenderChunk, Resource, Selection, State,

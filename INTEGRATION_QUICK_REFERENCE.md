@@ -13,7 +13,7 @@
 - `with_child!` exists in `crates/core/src/view/common.rs`
 - `add_menu()` exists in `crates/core/src/view/common.rs`
 - Menu toggle helpers exist in `crates/core/src/view/menu_helpers.rs`
-- Reader support modules exist in `crates/core/src/view/reader/reader_impl/`
+- Reader support modules exist in `crates/core/src/view/reader/reader_impl/`, indicating progress on splitting the monolithic reader file.
 
 ## Open
 
@@ -46,14 +46,16 @@
 ### PDF Tools
 
 - File: `crates/core/src/view/pdf_manipulator.rs`
-- Active issue: now reachable for selected PDFs, but still carries dead-code action flow and hard-coded manipulation defaults
-- Follow-up: connect a real user workflow or reduce the surfaced scope
+- **Status:** Partially completed. Interactive page selection and degree input for Delete, Rotate, and Extract are implemented. Redaction workflow includes page selection and a mode to define the region.
+- **Active issue:** Interactive redaction region definition UI is pending implementation. File selection for PDF merging is missing. Some manipulation paths still depend on hard-coded defaults rather than fully integrated user inputs.
+- **Follow-up:** Implement interactive redaction region definition, file selection for merge, and integrate user inputs.
 
 ### Cover Editor
 
 - File: `crates/core/src/view/cover_editor.rs`
-- Active issue: now reachable for selected EPUBs, but the editing UI is still partial and dead-code-gated
-- Follow-up: complete the UI or intentionally narrow the feature
+- **Status:** Substantially completed. Interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast are implemented. Crop functionality is initiated with UI elements and mode transitions, allowing visual selection.
+- **Active issue:** Interactive cropping region application is pending. Some helper functions might still be guarded by `#[allow(dead_code)]`.
+- **Follow-up:** Implement interactive crop application and address remaining dead code.
 
 ## Verification
 
