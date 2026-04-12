@@ -218,10 +218,14 @@ This is a complex refactor that should be done incrementally:
 
 ## Status: In Progress
 - Phase 1 (Modularization & Setup): Completed.
-- Phase 2 (Incrementally Replace FFI): In progress.
-- Phase 3-5: Not started.
+- Phase 2 (Library Migration): Completed.
+- Phase 3 (Face & Font Migration): Completed.
+- Phase 4 (Method Implementation): In progress.
+- Phase 5: Not started.
 
-The monolithic `mod.rs` still contains the bulk of the FFI logic; the next major step is to begin moving logic into the newly created `library.rs`, `rasterizer.rs`, and `shaper.rs` modules.
+Current progress: 
+- `FontLibrary` and `Font` are now using safe wrappers.
+- Remaining FFI calls in `mod.rs` (approx 61) are being systematically migrated to safe wrapper methods in `face.rs`, `rasterizer.rs`, and `shaper.rs`.
 
 ## Estimated Effort
 - Analysis and mapping: 2-3 hours

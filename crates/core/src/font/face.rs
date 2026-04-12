@@ -34,6 +34,14 @@ impl Font {
         }
     }
 
+    pub fn num_glyphs(&self) -> i32 {
+        self.face.num_glyphs()
+    }
+
+    pub fn units_per_em(&self) -> u16 {
+        self.face.units_per_em()
+    }
+
     pub fn family_name(&self) -> Option<String> {
         self.face.family_name()
     }
