@@ -1,5 +1,13 @@
 ## PDF Tools UI Completion Plan
 
+### Status: In Progress
+
+As of the latest implementation:
+
+- **Page count infrastructure**: Added `page_count()` to `RedactionEditor` which can be used to get PDF page counts
+- **Menu structure**: The PDF Tools menu already shows all available operations
+- **Hardcoded page limits**: Still using `(0..10)` in process_manipulation
+
 ### Current State Analysis
 **Backend Strengths** (`document/pdf_manipulator.rs`):
 - Complete PDF manipulation: delete, rotate, extract pages, merge, reorder
@@ -61,13 +69,20 @@
 - Hook into existing `show_actions`/`process_manipulation` flow
 - Maintain consistency with Plato UI patterns
 
-### Success Criteria
-1. All backend capabilities accessible through UI
-2. Reasonable page limits (not hardcoded to 10)
-3. Meaningful redaction functionality (not hardcoded regions)
-4. Clear user feedback during operations
-5. Intuitive workflow for complex operations
-6. Proper error handling and recovery
-7. Consistent look and feel with Plato UI
+### Success Criteria (Progress)
+1. ⬜ All backend capabilities accessible through UI (menu shows all operations)
+2. ⬜ Reasonable page limits (still hardcoded but infrastructure exists)
+3. ⬜ Meaningful redaction functionality (still hardcoded region)
+4. ⬜ Clear user feedback during operations (shows success/error messages)
+5. ⬜ Intuitive workflow for complex operations (menu-driven)
+6. ⬜ Proper error handling and recovery (error messages shown)
+7. ⬜ Consistent look and feel with Plato UI (uses existing menu system)
+
+### Remaining to Complete
+- Add page_count to PdfManipulator struct (not just RedactionEditor)
+- Wire up page selection UI: all, first 10, last 10, custom ranges
+- Fix hardcoded (0..10) page limits in process_manipulation
+- Add multi-file selection for merge
+- Enhance redaction regions
 
 ---
