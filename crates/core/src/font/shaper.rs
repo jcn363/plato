@@ -27,6 +27,10 @@ impl Shaper {
         self.0.set_direction(direction);
     }
 
+    pub fn guess_segment_properties(&mut self) {
+        self.0.guess_segment_properties();
+    }
+
     pub fn length(&self) -> u32 {
         self.0.length()
     }
