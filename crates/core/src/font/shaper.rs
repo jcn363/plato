@@ -23,6 +23,10 @@ impl Shaper {
         drop(buffer);
     }
 
+    pub fn set_direction(&mut self, direction: crate::font::harfbuzz_sys::HbDirection) {
+        self.0.set_direction(direction);
+    }
+
     pub fn length(&self) -> u32 {
         self.0.length()
     }
