@@ -95,6 +95,10 @@ impl Font {
         unsafe { HbFont::from_ft_face(&*self.face.face_ptr()) }
     }
 
+    pub fn create_hb_font_from_raw(face_ptr: *mut crate::font::freetype_sys::FtFace) -> HbFont {
+        unsafe { HbFont::from_ft_face(&*face_ptr) }
+    }
+
     pub fn get_sfnt_name_count(&self) -> u32 {
         self.face.get_sfnt_name_count()
     }
