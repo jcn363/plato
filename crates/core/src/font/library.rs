@@ -1,5 +1,6 @@
 use std::rc::Rc;
-use crate::font::freetype::Library;
+use std::path::Path;
+use crate::font::freetype::{Library, Face};
 use anyhow::Result;
 
 pub struct FontLibrary(Library);
@@ -13,6 +14,10 @@ impl FontLibrary {
         Self::new()
     }
     
+    pub fn new_face<P: AsRef<Path>>(&self, path: P, index: i32) -> Result<Face> {
+        Face::from_path(self.library(), path.as_ref(), index)
+    }
+
     pub fn library(&self) -> &Library {
         &self.0
     }
