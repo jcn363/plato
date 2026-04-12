@@ -19,6 +19,11 @@
 mod freetype_error;
 mod freetype_sys;
 mod harfbuzz_sys;
+pub mod freetype;
+pub mod harfbuzz;
+pub mod library;
+pub mod rasterizer;
+pub mod shaper;
 
 pub use self::freetype_error::FreetypeError;
 pub use self::freetype_sys::FtError;

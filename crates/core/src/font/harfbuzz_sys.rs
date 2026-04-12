@@ -61,7 +61,7 @@ extern "C" {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HbGlyphInfo {
     pub codepoint: u32,
     mask: u32,
@@ -71,7 +71,7 @@ pub struct HbGlyphInfo {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HbGlyphPosition {
     pub x_advance: i32,
     pub y_advance: i32,

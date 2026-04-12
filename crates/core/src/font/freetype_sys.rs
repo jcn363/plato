@@ -177,12 +177,12 @@ pub struct FtVector {
 }
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct FtBBox {
-    x_min: FtPos,
-    y_min: FtPos,
-    x_max: FtPos,
-    y_max: FtPos,
+    pub x_min: FtPos,
+    pub y_min: FtPos,
+    pub x_max: FtPos,
+    pub y_max: FtPos,
 }
 
 #[repr(C)]
@@ -272,41 +272,41 @@ pub struct FtList {
 #[repr(C)]
 #[derive(Debug)]
 pub struct FtFace {
-    num_faces: libc::c_long,
-    face_index: libc::c_long,
+    pub num_faces: libc::c_long,
+    pub face_index: libc::c_long,
 
-    face_flags: libc::c_long,
-    style_flags: libc::c_long,
+    pub face_flags: libc::c_long,
+    pub style_flags: libc::c_long,
 
-    num_glyphs: libc::c_long,
+    pub num_glyphs: libc::c_long,
 
     pub family_name: *mut libc::c_char,
     pub style_name: *mut libc::c_char,
 
-    num_fixed_sizes: libc::c_int,
-    available_sizes: *mut FtBitmapSize,
+    pub num_fixed_sizes: libc::c_int,
+    pub available_sizes: *mut FtBitmapSize,
 
-    num_charmaps: libc::c_int,
-    charmaps: *mut FtCharMap,
+    pub num_charmaps: libc::c_int,
+    pub charmaps: *mut FtCharMap,
 
-    generic: FtGeneric,
+    pub generic: FtGeneric,
 
-    bbox: FtBBox,
+    pub bbox: FtBBox,
 
-    units_per_em: libc::c_ushort,
-    ascender: libc::c_short,
-    descender: libc::c_short,
-    height: libc::c_short,
+    pub units_per_em: libc::c_ushort,
+    pub ascender: libc::c_short,
+    pub descender: libc::c_short,
+    pub height: libc::c_short,
 
-    max_advance_width: libc::c_short,
-    max_advance_height: libc::c_short,
+    pub max_advance_width: libc::c_short,
+    pub max_advance_height: libc::c_short,
 
-    underline_position: libc::c_short,
-    underline_thickness: libc::c_short,
+    pub underline_position: libc::c_short,
+    pub underline_thickness: libc::c_short,
 
     pub glyph: *mut FtGlyphSlot,
     pub size: *mut FtSize,
-    charmap: *mut FtCharMap,
+    pub charmap: *mut FtCharMap,
 
     driver: *mut FtDriver,
     memory: *mut FtMemory,
