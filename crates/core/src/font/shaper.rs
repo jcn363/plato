@@ -19,6 +19,10 @@ impl Shaper {
         Buffer::new()
     }
 
+    pub fn destroy_buffer(buffer: Buffer) {
+        drop(buffer);
+    }
+
     pub fn length(&self) -> u32 {
         self.0.length()
     }
