@@ -35,6 +35,7 @@ pub use self::freetype_sys::FtError;
 
 use self::freetype_sys::*;
 use self::harfbuzz_sys::*;
+use self::library::FontLibrary;
 
 use crate::color::Color;
 use crate::device::CURRENT_DEVICE;
@@ -1582,10 +1583,8 @@ fn script_from_code(code: u32) -> HbScript {
 }
 
 // ===========================================================================
-// FontLibrary, FontOpener, and Font Core Types
+// FontOpener, and Font Core Types
 // ===========================================================================
-
-pub struct FontLibrary(*mut FtLibrary);
 
 pub struct FontOpener(Rc<FontLibrary>);
 
@@ -1604,16 +1603,8 @@ pub struct Font {
 
 impl FontOpener {
     pub fn new() -> Result<FontOpener, Error> {
-        // SAFETY: FFI call to FreeType library. Creating a new library instance is always valid.
-        unsafe {
-            let mut lib = ptr::null_mut();
-            let ret = FT_Init_FreeType(&mut lib);
-            if ret != FT_ERR_OK {
-                Err(Error::from(FreetypeError::from(ret)))
-            } else {
-                Ok(FontOpener(Rc::new(FontLibrary(lib))))
-            }
-        }
+        let lib = FontLibrary::new()?;
+        Ok(FontOpener(Rc::new(lib)))
     }
 
     pub fn open<P: AsRef<Path>>(&self, path: P) -> Result<Font, Error> {
@@ -1622,18 +1613,15 @@ impl FontOpener {
             let mut face = ptr::null_mut();
             let c_path = CString::new(path.as_ref().as_os_str().as_bytes())
                 .expect("CString contains null byte");
-            let ret = FT_New_Face((self.0).0, c_path.as_ptr(), 0, &mut face);
-            if ret != FT_ERR_OK {
-                return Err(Error::from(FreetypeError::from(ret)));
-            }
-            let font = ptr::null_mut();
+            let _ret = self.0.new_face(path.as_ref(), 0)?;
+            let _font = ptr::null_mut();
             let ellipsis = RenderPlan::default();
             let x_heights = (0, 0);
             let space_codepoint = FT_Get_Char_Index(face, ' ' as libc::c_ulong);
             Ok(Font {
                 lib: self.0.clone(),
                 face,
-                font,
+                font: _font,
                 size: 0,
                 dpi: 0,
                 ellipsis,
@@ -1648,7 +1636,7 @@ impl FontOpener {
         unsafe {
             let mut face = ptr::null_mut();
             let ret = FT_New_Memory_Face(
-                (self.0).0,
+                (self.0).as_ptr(),
                 buf.as_ptr() as *const FtByte,
                 buf.len() as libc::c_long,
                 0,
@@ -1729,7 +1717,7 @@ impl Font {
         // SAFETY: FFI calls to FreeType with valid face and library pointers. Pointer arithmetic on varia axis array is bounds-checked.
         unsafe {
             let mut varia = ptr::null_mut();
-            let ret = FT_Get_MM_Var(self.face, &mut varia);
+            let ret = self.get_mm_var(&mut varia);
 
             if ret != FT_ERR_OK {
                 return;
@@ -1771,7 +1759,7 @@ impl Font {
                 hb_ft_font_changed(self.font);
             }
 
-            FT_Done_MM_Var(self.lib.0, varia);
+            FT_Done_MM_Var(self.lib.as_ptr(), varia);
         }
     }
 
@@ -1781,7 +1769,7 @@ impl Font {
         // SAFETY: FFI calls to FreeType with valid face and library pointers. slice::from_raw_parts uses validated text pointer and length.
         unsafe {
             let mut varia = ptr::null_mut();
-            let ret = FT_Get_MM_Var(self.face, &mut varia);
+            let ret = self.get_mm_var(&mut varia);
 
             if ret != FT_ERR_OK {
                 return found;
@@ -1833,7 +1821,7 @@ impl Font {
                 }
             }
 
-            FT_Done_MM_Var(self.lib.0, varia);
+            FT_Done_MM_Var(self.lib.as_ptr(), varia);
         }
 
         found
@@ -1878,7 +1866,8 @@ impl Font {
             let font_data = font_data_from_script(script);
             let mut face = ptr::null_mut();
             FT_New_Memory_Face(
-                (self.lib).0,
+                (self.lib).as_ptr()
+,
                 font_data.as_ptr() as *const FtByte,
                 font_data.len() as libc::c_long,
                 0,
@@ -2182,7 +2171,8 @@ impl Font {
                         let font_data = font_data_from_script(*script);
                         let mut face = ptr::null_mut();
                         FT_New_Memory_Face(
-                            (self.lib).0,
+                            (self.lib).as_ptr()
+,
                             font_data.as_ptr() as *const FtByte,
                             font_data.len() as libc::c_long,
                             0,
@@ -2379,7 +2369,7 @@ impl Drop for FontLibrary {
     fn drop(&mut self) {
         // SAFETY: FFI call to FreeType. Library pointer was initialized in FontOpener::new and is valid.
         unsafe {
-            FT_Done_FreeType(self.0);
+            FT_Done_FreeType(self.0.as_ptr());
         }
     }
 }

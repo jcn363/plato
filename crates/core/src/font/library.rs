@@ -3,7 +3,7 @@ use std::path::Path;
 use crate::font::freetype::{Library, Face};
 use anyhow::Result;
 
-pub struct FontLibrary(Library);
+pub struct FontLibrary(pub(crate) Library);
 
 impl FontLibrary {
     pub fn new() -> Result<Self> {
@@ -20,6 +20,10 @@ impl FontLibrary {
 
     pub fn new_memory_face(&self, data: &[u8], index: i32) -> Result<Face> {
         Face::from_memory(self.library(), data, index)
+    }
+
+    pub fn as_ptr(&self) -> *mut crate::font::freetype_sys::FtLibrary {
+        self.0.as_ptr()
     }
 
     pub fn library(&self) -> &Library {
