@@ -35,6 +35,10 @@ impl Shaper {
         self.0.script()
     }
 
+    pub fn add_utf8(&mut self, text: &str, offset: usize, len: usize) {
+        self.0.add_utf8(text, offset, len);
+    }
+
     pub fn length(&self) -> u32 {
         self.0.length()
     }
