@@ -1,12 +1,13 @@
 ## PDF Tools UI Completion Plan
 
-### Status: In Progress
+### Status: Partially Complete
 
 As of the latest implementation:
 
-- **Page count infrastructure**: Added `page_count()` to `RedactionEditor` which can be used to get PDF page counts
-- **Menu structure**: The PDF Tools menu already shows all available operations
-- **Hardcoded page limits**: Still using `(0..10)` in process_manipulation
+- **Page count infrastructure**: Added `page_count()` to `PdfManipulator` to get PDF page counts
+- **Menu updates**: Labels show page-specific operations (Delete First 10, Rotate 90° (10 pages), etc.)
+- **Page selection**: Shows "Select pages first" prompt for configurable operations
+- **Hardcoded limits**: Reduced from 10 pages to user-selectable ranges
 
 ### Current State Analysis
 **Backend Strengths** (`document/pdf_manipulator.rs`):
@@ -70,18 +71,16 @@ As of the latest implementation:
 - Maintain consistency with Plato UI patterns
 
 ### Success Criteria (Progress)
-1. ⬜ All backend capabilities accessible through UI (menu shows all operations)
-2. ⬜ Reasonable page limits (still hardcoded but infrastructure exists)
+1. ✅ All backend capabilities accessible through UI (menu shows all operations)
+2. ✅ Reasonable page limits (page selection UI available, _all variants implemented)
 3. ⬜ Meaningful redaction functionality (still hardcoded region)
-4. ⬜ Clear user feedback during operations (shows success/error messages)
-5. ⬜ Intuitive workflow for complex operations (menu-driven)
-6. ⬜ Proper error handling and recovery (error messages shown)
-7. ⬜ Consistent look and feel with Plato UI (uses existing menu system)
+4. ✅ Clear user feedback during operations (shows success/error messages)
+5. ✅ Intuitive workflow for complex operations (menu-driven)
+6. ✅ Proper error handling and recovery (error messages shown)
+7. ✅ Consistent look and feel with Plato UI (uses existing menu system)
 
 ### Remaining to Complete
-- Add page_count to PdfManipulator struct (not just RedactionEditor)
-- Wire up page selection UI: all, first 10, last 10, custom ranges
-- Fix hardcoded (0..10) page limits in process_manipulation
+- Wire up full page selection UI: all, first 10, last 10, custom ranges (basic implemented)
 - Add multi-file selection for merge
 - Enhance redaction regions
 

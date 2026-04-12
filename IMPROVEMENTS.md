@@ -35,7 +35,7 @@ These items are now verifiable in the current source tree:
 
 **UI Enhancements:**
 - **Cover Editor UI:** Interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast adjustments have been implemented and wired up. The Crop functionality is now initiated with UI elements and mode transitions, allowing for visual selection of the crop region (though full interactive application is pending).
-- **PDF Tools UI:** Interactive page selection and degree input for Delete, Rotate, and Extract operations are now implemented. The UI transitions through distinct modes for selecting actions, inputting parameters, and confirming operations. Redaction workflow now includes selecting a page and transitioning to a mode for defining the redaction region. Page range selection supports: all, current page, first 10, last 10, custom ranges. Merge UI shows file list with add/execute options. Reorder UI shows page list with up/down navigation. Resource extraction offers options for all images, first 10, or from specific page.
+- **PDF Tools UI:** Page count infrastructure added to PdfManipulator for getting page counts from any PDF. Menu labels updated to show page-specific operations (e.g., "Delete First 10", "Rotate 90° (10 pages)"). Page range selection UI available via page specification (all, first 10, last 10). Redaction workflow includes page selection and region definition mode.
 
 ## Open Structural Issues
 
