@@ -216,8 +216,12 @@ This is a complex refactor that should be done incrementally:
 5. ⬜ All existing font functionality preserved and working
 6. ⬜ No regression in text rendering, shaping, or font loading performance
 
-## Status: Not Started
-This refactor requires significantcareful work. Estimated 17-26 hours.
+## Status: In Progress
+- Phase 1 (Modularization & Setup): Completed.
+- Phase 2 (Incrementally Replace FFI): In progress.
+- Phase 3-5: Not started.
+
+The monolithic `mod.rs` still contains the bulk of the FFI logic; the next major step is to begin moving logic into the newly created `library.rs`, `rasterizer.rs`, and `shaper.rs` modules.
 
 ## Estimated Effort
 - Analysis and mapping: 2-3 hours
