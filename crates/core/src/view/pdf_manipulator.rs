@@ -150,24 +150,24 @@ impl PdfManipulatorView {
 
         entries.extend(vec![
             EntryKind::Command(
-                "🗑️ Delete Pages".to_string(),
-                EntryId::PdfManipulate(file_path.clone(), "delete".to_string()),
+                "🗑️ Delete First 10".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "delete_all".to_string()),
             ),
             EntryKind::Command(
-                "🔄 Rotate 90°".to_string(),
-                EntryId::PdfManipulate(file_path.clone(), "rotate90".to_string()),
+                "🔄 Rotate 90° (10 pages)".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "rotate90_all".to_string()),
             ),
             EntryKind::Command(
-                "🔄 Rotate 180°".to_string(),
-                EntryId::PdfManipulate(file_path.clone(), "rotate180".to_string()),
+                "🔄 Rotate 180° (10 pages)".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "rotate180_all".to_string()),
             ),
             EntryKind::Command(
-                "🔄 Rotate 270°".to_string(),
-                EntryId::PdfManipulate(file_path.clone(), "rotate270".to_string()),
+                "🔄 Rotate 270° (10 pages)".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "rotate270_all".to_string()),
             ),
             EntryKind::Command(
-                "📄 Extract Pages".to_string(),
-                EntryId::PdfManipulate(file_path.clone(), "extract".to_string()),
+                "📄 Extract First Page".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "extract_all".to_string()),
             ),
             EntryKind::Command(
                 "📚 Merge PDFs".to_string(),
@@ -276,27 +276,35 @@ impl PdfManipulatorView {
         self.mode = ManipulationMode::Processing(file_path.clone(), action.to_string());
 
         let result = match action {
-            "delete" => {
+            "delete" | "rotate90" | "rotate180" | "rotate270" => {
+                bus.push_back(Event::Render("Select pages first".to_string()));
+                Ok(file_path.clone())
+            }
+            "delete_all" => {
                 let pages: Vec<_> = (0..10).collect();
                 let output = file_path.with_extension("modified.pdf");
                 self.manipulator.delete_pages(file_path, &output, &pages)
             }
-            "rotate90" => {
+            "rotate90_all" => {
                 let pages: Vec<_> = (0..10).map(|i| (i, 90)).collect();
                 let output = file_path.with_extension("rotated.pdf");
                 self.manipulator.rotate_pages(file_path, &output, &pages)
             }
-            "rotate180" => {
+            "rotate180_all" => {
                 let pages: Vec<_> = (0..10).map(|i| (i, 180)).collect();
                 let output = file_path.with_extension("rotated.pdf");
                 self.manipulator.rotate_pages(file_path, &output, &pages)
             }
-            "rotate270" => {
+            "rotate270_all" => {
                 let pages: Vec<_> = (0..10).map(|i| (i, 270)).collect();
                 let output = file_path.with_extension("rotated.pdf");
                 self.manipulator.rotate_pages(file_path, &output, &pages)
             }
             "extract" => {
+                bus.push_back(Event::Render("Select pages first".to_string()));
+                return Ok(());
+            }
+            "extract_all" => {
                 let pages: Vec<_> = vec![0];
                 let output = file_path.with_extension("extracted.pdf");
                 self.manipulator.extract_pages(file_path, &output, &pages)

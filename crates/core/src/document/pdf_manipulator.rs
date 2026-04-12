@@ -71,6 +71,14 @@ impl PdfManipulator {
         })
     }
 
+    pub fn page_count(&self, path: &Path) -> Result<usize, Error> {
+        let doc = self
+            .ctx
+            .open_document(path)
+            .ok_or_else(|| format_err!("Failed to open PDF"))?;
+        Ok(doc.page_count() as usize)
+    }
+
     fn get_available_memory_mb() -> u64 {
         #[cfg(target_os = "linux")]
         {
