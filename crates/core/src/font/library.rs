@@ -1,3 +1,4 @@
+use crate::font::face::Font as NewFont;
 use crate::font::freetype::{Face, Library};
 use anyhow::Result;
 use std::path::Path;
@@ -40,5 +41,15 @@ impl FontOpener {
 
     pub fn library(&self) -> &Library {
         self.0.library()
+    }
+
+    pub fn open<P: AsRef<Path>>(&self, path: P) -> Result<NewFont> {
+        let face = Face::from_path(self.0.library(), path.as_ref(), 0)?;
+        Ok(NewFont::new(self.0.clone(), face))
+    }
+
+    pub fn open_memory(&self, buf: &[u8]) -> Result<NewFont> {
+        let face = Face::from_memory(self.0.library(), buf, 0)?;
+        Ok(NewFont::new(self.0.clone(), face))
     }
 }
