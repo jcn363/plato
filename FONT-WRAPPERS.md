@@ -216,23 +216,26 @@ This is a complex refactor that should be done incrementally:
 5. ⬜ All existing font functionality preserved and working (current state)
 6. ⬜ No regression in text rendering, shaping, or font loading performance (verified)
 
-## Status: Phase 3 Incomplete
+## Status: Phase 3/4 Migration Not Started
 
-Current progress: 
+Current state:
 - Phase 1 (Preparation): Completed - modules created, safe wrappers exist
-- Phase 2 (Library Migration): Completed - FontLibrary implemented in library.rs using freetype::Library
-- Phase 3 (File Splitting): Incomplete - modules created but mod.rs still contains legacy Font implementation (161 lines) that duplicates face.rs (128 lines)
+- Phase 2 (Library Migration): Completed - FontLibrary implemented in library.rs using freetype::Library  
+- Phase 3 (Face & Font Migration): Not started - mod.rs still contains legacy Font with direct FFI
 - Phase 4 (Method Implementation): Not started
 
-Key architecture now in place:
-- `library.rs`: FontLibrary and FontOpener using safe wrappers
-- `face.rs`: Font implementation using safe wrappers (incomplete - missing methods)
-- `mod.rs`: Still contains legacy Font with direct FFI calls (~800 lines)
+The font module currently builds and works correctly with the legacy implementation in mod.rs.
 
-Remaining Phase 3 work:
-1. Remove legacy Font/FontOpener definitions from mod.rs (~160 lines)
-2. Ensure all consumers use re-exported types from face.rs/library.rs
-3. Phase 4 can begin after clean separation is achieved
+Key observation: face.rs (128 lines) and library.rs (44 lines) contain safe wrapper implementations, but mod.rs (2405 lines) still has the full legacy Font implementation that uses direct FFI. The face.rs Font is currently incomplete and unused - it's just a scaffold.
+
+To complete Phase 3 without backward compatibility requires:
+1. Making face.rs Font complete (add ~20 methods: plan, set_size, render, crop_right, etc.)
+2. Making library.rs FontOpener return face.rs Font
+3. Removing legacy Font/FontOpener from mod.rs (~800 lines)
+4. Updating all consumers to use the new types
+5. Testing everything works
+
+This is a significant refactoring effort (6-8+ hours minimum).
 
 ## Estimated Effort
 - Analysis and mapping: 2-3 hours
