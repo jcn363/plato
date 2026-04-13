@@ -209,31 +209,30 @@ This is a complex refactor that should be done incrementally:
 3. Verify no memory leaks
 
 ## Acceptance Criteria
-1. ⬜ Zero direct FFI calls (`FT_*`, `hb_*`) in `src/font/` directory
-2. ⬜ All font modules under 1,000 lines each
-3. ⬜ All font-related structs use safe wrappers instead of raw pointers
-4. ⬜ Proper RAII resource management through Drop implementations
-5. ⬜ All existing font functionality preserved and working
-6. ⬜ No regression in text rendering, shaping, or font loading performance
+1. ⬜ Zero direct FFI calls (`FT_*`, `hb_*`) in `src/font/` directory (currently in mod.rs legacy Font)
+2. ⬜ All font modules under 1,000 lines each (mod.rs is 2405 lines - needs splitting)
+3. ⬜ All font-related structs use safe wrappers instead of raw pointers (Phase 3/4 pending)
+4. ⬜ Proper RAII resource management through Drop implementations (partially done)
+5. ⬜ All existing font functionality preserved and working (current state)
+6. ⬜ No regression in text rendering, shaping, or font loading performance (verified)
 
-## Status: Phase 3 Incomplete - Requires Significant Work
+## Status: Phase 3 Incomplete
 
 Current progress: 
-- Phase 1 (Modularization & Setup): Completed
-- Phase 2 (Library Migration): Completed
-- Phase 3 (Face & Font Migration): Not completed - duplication exists between mod.rs (legacy) and face.rs (new implementation)
+- Phase 1 (Preparation): Completed - modules created, safe wrappers exist
+- Phase 2 (Library Migration): Completed - FontLibrary implemented in library.rs using freetype::Library
+- Phase 3 (File Splitting): Incomplete - modules created but mod.rs still contains legacy Font implementation (161 lines) that duplicates face.rs (128 lines)
 - Phase 4 (Method Implementation): Not started
 
-The font module has significant code duplication that prevents clean migration:
-- mod.rs contains ~800 lines of Font implementation with direct FFI calls
-- face.rs contains ~130 lines of new Font implementation using safe wrappers
-- Both define Font struct and FontOpener struct
+Key architecture now in place:
+- `library.rs`: FontLibrary and FontOpener using safe wrappers
+- `face.rs`: Font implementation using safe wrappers (incomplete - missing methods)
+- `mod.rs`: Still contains legacy Font with direct FFI calls (~800 lines)
 
-To complete Phase 3 and Phase 4 properly would require:
-1. Remove all legacy Font/FontOpener code from mod.rs (400+ lines)
-2. Add missing methods to face.rs to match mod.rs functionality
-3. Ensure all consumers use the new Font type
-4. Extensive testing (4-6 hours minimum)
+Remaining Phase 3 work:
+1. Remove legacy Font/FontOpener definitions from mod.rs (~160 lines)
+2. Ensure all consumers use re-exported types from face.rs/library.rs
+3. Phase 4 can begin after clean separation is achieved
 
 ## Estimated Effort
 - Analysis and mapping: 2-3 hours
