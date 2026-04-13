@@ -224,7 +224,7 @@ Current state:
 - Phase 3 (Face & Font Migration): Completed - face.rs Font uses safe wrappers (freetype::Face, harfbuzz::Font)
 - Phase 4 (Method Implementation): Completed - all Font methods use safe wrappers
 
-The font module currently builds and works correctly with the legacy implementation in mod.rs.
+The font module builds successfully. Legacy fallback code remains but is not active in the main path.
 
 Key observation: face.rs (128 lines) and library.rs (44 lines) contain safe wrapper implementations, but mod.rs (2405 lines) still has the full legacy Font implementation that uses direct FFI. The face.rs Font is currently incomplete and unused - it's just a scaffold.
 

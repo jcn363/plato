@@ -40,12 +40,8 @@ pub use self::types::{GlyphPlan, RenderPlan};
 
 use self::freetype_sys::*;
 use self::harfbuzz_sys::*;
-use self::library::FontLibrary;
 
-use crate::color::Color;
 use crate::device::CURRENT_DEVICE;
-use crate::framebuffer::Framebuffer;
-use crate::geom::{Point, Vec2};
 use crate::helpers::IsHidden;
 use crate::{log_error, log_warn};
 use anyhow::{format_err, Error};
@@ -55,11 +51,7 @@ use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
 use std::collections::BTreeSet;
 use std::ffi::{CStr, CString};
-use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
-use std::ptr;
-use std::rc::Rc;
-use std::slice;
 use std::str;
 use walkdir::WalkDir;
 
