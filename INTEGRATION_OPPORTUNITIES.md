@@ -10,13 +10,12 @@
 
 ## Completed Previously
 
-These items were valid integration opportunities in earlier reviews, but the code now contains the corresponding helpers or abstractions:
-
 - `with_child!` macro in `crates/core/src/view/common.rs`
 - `add_menu()` helper in `crates/core/src/view/common.rs`
 - Generic menu toggle helpers in `crates/core/src/view/menu_helpers.rs`
-
-They should not remain in the active backlog.
+- **Safe Wrapper Migration for Fonts**: `crates/core/src/font/mod.rs` (802 lines) is now fully integrated with safe wrappers.
+- **Unit Test Segregation**: All unit tests in `crates/core/src` have been moved to sibling `_tests.rs` files.
+- **Epub Editor Integration**: Moved from standalone tool to `crates/epub_editor` workspace member.
 
 ## Open
 
@@ -24,192 +23,47 @@ They should not remain in the active backlog.
 
 **Problem**
 
-The reader refactor stopped halfway. `crates/core/src/view/reader/reader_impl/reader.rs` is still large and still ends with a stub-method section that duplicates reader behavior with placeholder render calls.
-
-**Evidence**
-
-- `crates/core/src/view/reader/reader_impl/reader.rs`: `3403` lines
-- Stub block starts near the end of the file under `// Stub Method Declarations (Reader trait interface)`
-- Extracted reader modules exist:
-  - `reader_rendering.rs`
-  - `reader_gestures.rs`
-  - `reader_settings.rs`
-  - `reader_annotations.rs`
-  - `reader_search.rs`
-- Many extracted functions remain `#[allow(dead_code)]`, so the split is partial rather than complete.
+The reader refactor is incomplete. `reader.rs` is still **3403 lines** and contains a large block of stubbed methods (lines 3206+) that provide no functionality.
 
 **Recommended action**
 
-- Make a decision on the refactor direction:
-  - either complete the reader split and move active implementations out of `reader.rs`
-  - or collapse the unused extracted layer and keep a single implementation surface
-- Remove the duplicate stub layer last, after the active call paths are clear.
+- Complete the extraction of logic from `reader.rs` into `reader_gestures.rs`, `reader_rendering.rs`, etc.
+- Replace the stub methods with active call paths to the new modules.
+- Ensure all functions are under 50 lines.
 
-**Implementation order**
-
-1. Map which reader methods are active versus stubbed.
-2. Promote active helper modules into the real execution path.
-3. Delete the duplicate stub block.
-
-**Acceptance condition**
-
-- No placeholder reader interface block remains.
-- Reader behavior is implemented in one active layer only.
-
-### 2. Home view modularization after state deduplication
+### 2. Home view modularization
 
 **Problem**
 
-The home view is still oversized (2769 lines) and violates the `AGENTS.md` 1000-line mandate.
-
-**Evidence**
-
-- `crates/core/src/view/home/mod.rs`: `2769` lines
+The home view is still oversized (**2786 lines**) and violates the 1000-line mandate.
 
 **Recommended action**
 
-- Split the home view by behavior to reach < 1000 lines:
-  - shared state / construction
-  - event handling
-  - batch operations
-  - menu orchestration
-  - rendering
+- Split `crates/core/src/view/home/mod.rs` by responsibility (event handling, menus, batch ops).
 
-**Implementation order**
-
-1. Identify stable responsibility boundaries in the active `Home` implementation.
-2. Split only once ownership boundaries are stable.
-3. Keep state ownership inside the compiled module tree only.
-
-**Acceptance condition**
-
-- Home file is under 1000 lines.
-
-### 3. Safe Wrapper Migration for Fonts
+### 3. PDF tools UI workflow completion
 
 **Problem**
 
-`font/mod.rs` (2400 lines) violates the `AGENTS.md` 1000-line mandate and the mandatory rule to use safe wrappers instead of direct FFI.
-
-**Evidence**
-
-- `crates/core/src/font/mod.rs`: `2400` lines
-- Direct usage of `FtFace` and other raw FFI types.
-
-**Recommended action**
-
-- Replace direct FFI calls with the safe wrappers in `crates/core/src/font/`.
-- Split the monolithic `font/mod.rs` into smaller modules to reach < 1000 lines.
-
-**Acceptance condition**
-
-- Zero direct FFI calls in `font/mod.rs`.
-- All modules under 1000 lines.
-
-### 4. Unit Test Segregation
-
-**Problem**
-
-Unit tests are currently embedded in production code, violating the `AGENTS.md` mandatory rule for sibling test files.
-
-**Evidence**
-
-- Grep for `#[test]` shows many tests inside production `.rs` files.
-- No `_tests.rs` files exist in `crates/core/src`.
-
-**Recommended action**
-
-- Extract all unit tests into sibling files named `{module}_tests.rs`.
-- Ensure test files use `mod {module};` or `use super::*;` to access production code.
-
-**Acceptance condition**
-
-- Zero `#[test]` blocks in production source files.
-
-### 5. PDF tools UI workflow completion
-
-**Status:** Partially completed. Interactive page selection and degree input for Delete, Rotate, and Extract operations are implemented. Redaction workflow now includes page selection and transitions to a mode for defining the redaction region.
-
-**Problem:**
 - Interactive redaction region definition UI is pending implementation.
-- File selection for PDF merging is missing.
-- Some manipulation paths still depend on hard-coded defaults rather than fully integrated user inputs.
-
-**Evidence:**
-- `crates/core/src/view/pdf_manipulator.rs` now transitions to `DefineRedactionRegion` mode after page selection for redaction.
-- `process_manipulation` has placeholders for user input, but the UI for Redaction region input and Merge file selection is not yet fully implemented.
-
-**Recommended action:**
-- Implement interactive redaction region definition UI (e.g., input fields for coordinates or predefined region selection).
-- Implement file selection flow for PDF merging.
-- Ensure all manipulation paths fully integrate user inputs.
-
-**Acceptance condition:**
-- Every PDF tool action is reachable from the UI and uses user-selected inputs.
-
-### 6. Cover editor UI completion
-
-**Status:** Completed (2026-04-12)
-
-**Problem:**
-- Base implementation existed but UI was not wired to EntryId events
-
-**Evidence:**
-- Added EntryId variants: CoverRotate90, CoverRotate180, CoverRotate270, CoverGrayscale, CoverCrop, CoverBrightness, CoverContrast, CoverSave
-- Wired event handling in cover_editor.rs::handle_event
-- Added CropState enum for tracking drag selection
-- Interactive crop mode supports visual selection with drag-to-select
-
-**Acceptance condition:**
-- Buttons trigger correct operations ✓
-- Crop mode supports visual selection ✓
-
-### 7. Restore verification
-
-**Status:** Completed (2026-04-12)
-
-**Problem**
-
-Verification claims must be tied to exact commands run and current dates.
-
-**Evidence**
-
-- Host verification passes (2026-04-12):
-  - `cargo check --target x86_64-unknown-linux-gnu` - Pass
-  - `cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings` - Pass
-- ARM Kobo verification passes (2026-04-12):
-  - `cd mupdf_wrapper && ./build-kobo.sh` (rebuild wrapper)
-  - `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato` - Pass
-- Any `cargo clean` requires wrapper rebuild before ARM build.
+- File selection flow for PDF merging is missing.
 
 **Recommended action**
 
-- Document exact commands and date in verification sections.
-- Include native wrapper rebuild for ARM targets in verification flow.
-
-**Acceptance condition**
-
-- Documentation and actual branch verification results match.
+- Implement the missing UI flows for redaction and merging.
 
 ## Deferred
 
-These are broader ideas that should remain explicitly deferred unless a concrete implementation effort pulls them forward:
-
 - Settings registry / schema-generation layer
-- Event handler unification framework
-- Cross-cutting input validation framework
 - Generic object pooling
-- Broad performance work without a measured hotspot
+- Smooth theme transition animations
 
-They are too abstract for the current source state and should not be presented as near-term integration work.
+## Verification Status
 
-## Stale/Retired
+### Host Verification (x86_64 Linux)
+- **Command:** `cargo check --target x86_64-unknown-linux-gnu`
+- **Result:** Pass (2026-04-13)
 
-Remove these from future review summaries unless they regress:
-
-- Missing `with_child!`
-- Missing `add_menu()`
-- Missing generic menu toggle helpers
-- Generic statements that plugin settings, external storage, or cover editor settings are "not integrated" without checking current call sites.
-
-These are now historical review notes, not current backlog items.
+### ARM Kobo Verification (32-bit ARM)
+- **Command:** `./build.sh arm fast`
+- **Result:** Pass (2026-04-13)

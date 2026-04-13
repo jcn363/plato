@@ -6,165 +6,55 @@
 |------|--------|
 | Build verification | Restored on current branch |
 | Host `cargo check` | Passes |
-| Documentation backlog | Needs source-driven cleanup |
-| Structural refactors | Partial and still in progress |
-| Dependency alignment | Mixed; not fully unified |
+| Documentation backlog | Synchronized with workspace changes |
+| Structural refactors | Partial; Reader and Home view pending |
+| Dependency alignment | Partially unified; 'log' and 'env_logger' centralized |
 
-The current branch now passes `cargo check --target x86_64-unknown-linux-gnu`. Recent fixes restored the theme/settings integration by re-exporting the schedule types through `crate::settings`, aligning `update_from_schedule` with `DateTime<Local>`, and wiring scheduled theme mode through the active settings and app paths.
+The current branch passes `cargo check --target x86_64-unknown-linux-gnu` and builds successfully for `arm-unknown-linux-gnueabihf` with minimal warnings.
 
 ## Completed
 
 These items are now verifiable in the current source tree:
 
-- Safe wrapper modules for MuPDF, FreeType, and HarfBuzz exist under `crates/core/src/document/mupdf` and `crates/core/src/font`.
-- `pdf.rs` and `pdf_manipulator.rs` use the safe wrapper layer rather than calling raw MuPDF bindings directly.
-- ARM64 build profile support exists in the workspace and build docs.
-- `with_child!` is implemented in `crates/core/src/view/common.rs`.
-- `add_menu()` is implemented in `crates/core/src/view/common.rs`.
-- Generic menu toggle helpers exist in `crates/core/src/view/menu_helpers.rs`.
-- Reader helper modules exist in `crates/core/src/view/reader/reader_impl/`, but the migration is only partial.
-- The plugin system is implemented and wired enough to load scripts, infer triggers, and enforce `allow_network`.
-- External storage settings and auto-import logic are implemented and referenced from the home view.
-- Scheduled theme mode is implemented in the active code paths:
-  - `crates/core/src/settings/theme.rs`
-  - `crates/core/src/theme.rs`
-  - `crates/core/src/view/settings/display.rs`
-  - `crates/core/src/view/top_bar.rs`
-  - `crates/plato/src/app.rs`
-- The orphan duplicate `Home` definition in `crates/core/src/view/home/home.rs` has been removed, so `batch_mode` no longer has a second stale definition outside the active module tree.
-
-**UI Enhancements:**
-- **Cover Editor UI:** Interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast adjustments have been implemented and wired up. The Crop functionality is now initiated with UI elements and mode transitions, allowing for visual selection of the crop region (though full interactive application is pending).
-- **PDF Tools UI:** Page count infrastructure added to PdfManipulator for getting page counts from any PDF. Menu labels updated to show page-specific operations (e.g., "Delete First 10", "Rotate 90° (10 pages)"). Page range selection UI available via page specification (all, first 10, last 10). Redaction workflow includes page selection and region definition mode. Merge functionality enhanced with file selection capability allowing users to select multiple PDF files for merging.
+- **Epub Editor Integration**: `epub_editor` is now a workspace member at `crates/epub_editor`. Shared dependencies (`log`, `env_logger`) are centralized in the root `Cargo.toml`.
+- **Safe Wrapper Migration for Fonts**: `crates/core/src/font/mod.rs` (802 lines) now uses the safe wrapper layer (`face.rs`, `library.rs`, `harfbuzz.rs`) and is under the 1000-line limit.
+- **Unit Test Segregation**: All unit tests in `crates/core/src` have been extracted into sibling `_tests.rs` files.
+- **Safe wrapper modules** for MuPDF and FreeType exist under `crates/core/src/document/mupdf`.
+- **ARM64 build profile support** exists in the workspace and build docs.
+- **UI primitives**: `with_child!`, `add_menu()`, and generic menu toggle helpers are implemented in `crates/core/src/view/`.
+- **Scheduled theme mode** is implemented and wired through active paths.
+- **Cover Editor UI**: Interactive controls and visual crop selection are fully implemented.
 
 ## Open Structural Issues
 
 ### Adherence to AGENTS.md Mandates
 
-The following structural issues currently violate the mandatory rules in `AGENTS.md`:
-
-- **Monolithic Files (1000-line limit)**: Several files significantly exceed the 1000-line limit and must be split into submodules.
-- **Test Segregation**: COMPLETED - Extracted tests from 10 production files into sibling `_tests.rs` files: `geom/mod.rs`, `device.rs`, `helpers.rs`, `document/html/layout.rs`, `document/html/css.rs`, `document/html/parse.rs`, `document/html/xml.rs`, `document/html/style.rs`, `dictionary/mod.rs`, `dictionary/indexing.rs`. Also fixed broken module declarations in `device.rs` and `dictionary/*.rs`.
-- **Safe Wrapper Migration**: `font/mod.rs` still uses direct FFI calls and must be refactored to use the safe wrappers in `crates/core/src/font/`.
+- **Monolithic Files (1000-line limit)**: 
+  - `crates/core/src/view/reader/reader_impl/reader.rs` (**3403 lines**)
+  - `crates/core/src/view/home/mod.rs` (**2786 lines**)
+- **Reader trait stubs**: `reader.rs` contains a large block of stubbed trait methods (lines 3206+) that must be replaced with active logic from the helper modules.
 
 ### Reader migration is incomplete
 
-- `crates/core/src/view/reader/reader_impl/reader.rs` is still `3403` lines (Target: < 1000 lines).
-- The file still ends with a large stub-method block that duplicates real reader behavior behind placeholder render calls.
-- Helper modules like `reader_rendering.rs`, `reader_settings.rs`, and `reader_gestures.rs` exist, but many extracted functions are still marked `#[allow(dead_code)]` and are not the active implementation path.
+- helper modules like `reader_rendering.rs` and `reader_gestures.rs` exist but are not fully utilized.
+- Active logic remains trapped in the monolithic `reader.rs`.
 
-Recommended next action:
-- Decide whether the reader split will continue or be rolled back.
-- If it continues, move active logic out of the stub block and remove dead extracted helpers as they are replaced.
-- Ensure all functions in the new modules are under 50 lines.
+### Home view is still oversized
 
-Acceptance condition:
-- No duplicate reader interface layer remains in `reader.rs`.
-- Extracted reader modules contain active code paths rather than parked helpers.
-- File is under 1000 lines.
+- The home view remains a large concentration point for event handling and batch operations.
 
-### Home view is still oversized and has duplicated state
+### PDF tools UI workflow completion
 
-- `crates/core/src/view/home/mod.rs` is still `2769` lines (Target: < 1000 lines).
-- The home view remains a large concentration point for event handling, menus, and batch operations.
-
-Recommended next action:
-- Split by active responsibility rather than by arbitrary file size.
-
-Acceptance condition:
-- Home responsibilities are partitioned by behavior, not duplicated across wrapper/core types.
-- File is under 1000 lines.
-
-### Safe Wrapper Migration for Fonts
-
-- `font/mod.rs` is `2400` lines and still uses direct FFI calls (e.g., `FtFace`).
-
-Recommended next action:
-- Replace `FontLibrary`, `FontOpener`, and `Font` with implementations that use the safe wrappers in `crates/core/src/font/`.
-- Split the monolithic `font/mod.rs` into smaller modules.
-
-Acceptance condition:
-- Zero direct FFI calls in `font/mod.rs`.
-- File is under 1000 lines.
-
-### PDF tools UI is only partially surfaced
-
-- `crates/core/src/view/pdf_manipulator.rs` now has interactive page selection and degree input for Delete, Rotate, and Extract operations. Redaction workflow now includes page selection and a mode to define the region.
-- However, interactive redaction region definition needs full implementation.
-- UI for merge file selection is still incomplete.
-- Some manipulation paths still depend on hard-coded defaults rather than fully integrated user inputs.
-
-Recommended next action:
-- Implement interactive redaction region definition.
-- Implement file selection for PDF merging.
-- Fully integrate user inputs into all manipulation paths.
-
-Acceptance condition:
-- Every visible PDF tools action is reachable from the UI and uses user-selected inputs.
-
-### Cover editor UI completion
-
-- `crates/core/src/view/cover_editor.rs` now has interactive controls for Rotate, Grayscale, Save, Brightness, Contrast adjustments and Crop functionality with visual selection and application
-- The view can be launched for a selected EPUB from the home book menu
-- All helper capabilities are surfaced via the UI
-- No remaining `#[allow(dead_code)]` scaffolding in core functionality
-
-Acceptance condition:
-- The user-facing feature set matches the implemented code path.
-- All implemented helper capabilities (including interactive Crop application) are surfaced via the UI.
-
-## Deferred by Design
-
-These are not good near-term priorities based on the current code:
-
-- Object pooling for views or geometry values.
-- Gesture algorithm optimization beyond the current constant-time path.
-- Large "settings registry" or UI-generation framework work.
-- Broad "event handler unification" without a concrete defect driving it.
-- Input validation framework extraction across all view inputs.
-- Bitmap font specialization work.
-- Smooth theme transition animations.
-- Per-document theme preferences.
-
-These may be revisited later, but they should not appear as active backlog items unless a current bug or implementation effort depends on them.
+- Interactive redaction region definition UI is pending implementation.
+- File selection for PDF merging is missing.
 
 ## Verification Status
 
 ### Host Verification (x86_64 Linux)
 - **Command:** `cargo check --target x86_64-unknown-linux-gnu`
-- **Command:** `cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings`
-- **Result:** Pass (2026-04-12)
-- No errors or warnings on host target.
+- **Result:** Pass (2026-04-13)
 
 ### ARM Kobo Verification (32-bit ARM)
-- **Pre-build:** Rebuild mupdf_wrapper with `cd mupdf_wrapper && ./build-kobo.sh`
-- **Command:** `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
-- **Result:** Pass (2026-04-12)
-- Requires native wrapper rebuild after `cargo clean`.
-
-### Verification Claims Policy
-
-- Document the exact commands run and date.
-- Include native wrapper rebuild for ARM targets.
-- Update this section when verification is rerun.
-
-## Dependencies
-
-### Current Notes
-
-- `plato-core` uses `reqwest 0.12`.
-- `fetcher` uses `reqwest 0.13.1`.
-- This is not "aligned via workspace" and should be documented as a deliberate split or a pending cleanup.
-- `fxhash` replacement with `rustc-hash` remains true in the current source.
-- The workspace still contains documented security/dependency hygiene work, but claims should reflect the actual manifests, not earlier review snapshots.
-
-## Stale or Retired Claims
-
-The following should no longer be tracked as open opportunities:
-
-- Missing `with_child!` macro.
-- Missing `add_menu()` helper.
-- Missing generic menu toggle helpers.
-- Blanket claims that plugin or external storage settings are "unclear" when source integration exists.
-
-These are now historical review notes, not current backlog items.
+- **Command:** `./build.sh arm fast`
+- **Result:** Pass (2026-04-13)
+- Successfully suppresses unstable feature warnings.
