@@ -1,5 +1,5 @@
 use crate::font::freetype::Face;
-use crate::font::freetype_sys::{FT_LOAD_RENDER, FT_LOAD_NO_HINTING};
+use crate::font::freetype_sys::{FT_LOAD_NO_HINTING, FT_LOAD_RENDER};
 use anyhow::Result;
 
 pub struct Rasterizer<'a> {
@@ -12,7 +12,8 @@ impl<'a> Rasterizer<'a> {
     }
 
     pub fn load_glyph(&self, glyph_index: u32) -> Result<()> {
-        self.face.load_glyph(glyph_index, FT_LOAD_RENDER | FT_LOAD_NO_HINTING)
+        self.face
+            .load_glyph(glyph_index, FT_LOAD_RENDER | FT_LOAD_NO_HINTING)
     }
 
     pub fn bitmap(&self) -> &crate::font::freetype_sys::FtBitmap {

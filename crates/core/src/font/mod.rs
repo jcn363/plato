@@ -16,15 +16,15 @@
 //! - Text shaping (glyph positioning) via HarfBuzz
 //! - Missing glyph handling
 
+pub mod face;
+pub mod freetype;
 mod freetype_error;
 mod freetype_sys;
-mod harfbuzz_sys;
-pub mod freetype;
 pub mod harfbuzz;
+mod harfbuzz_sys;
 pub mod library;
 pub mod rasterizer;
 pub mod shaper;
-pub mod face;
 
 pub use self::freetype_error::FreetypeError;
 pub use self::freetype_sys::FtError;
@@ -1610,8 +1610,8 @@ impl FontOpener {
     pub fn open<P: AsRef<Path>>(&self, path: P) -> Result<Font, Error> {
         // SAFETY: FFI call to FreeType with a valid library pointer and null-terminated path string.
         unsafe {
-            let mut face = ptr::null_mut();
-            let c_path = CString::new(path.as_ref().as_os_str().as_bytes())
+            let face = ptr::null_mut();
+            let _c_path = CString::new(path.as_ref().as_os_str().as_bytes())
                 .expect("CString contains null byte");
             let _ret = self.0.new_face(path.as_ref(), 0)?;
             let _font = ptr::null_mut();
@@ -1716,35 +1716,46 @@ impl Font {
     pub fn set_variations(&mut self, specs: &[&str]) {
         // SAFETY: FFI calls to FreeType with valid face and library pointers. Pointer arithmetic on varia axis array is bounds-checked.
         unsafe {
-            let mut varia = ptr::null_mut();
-            let ret = self.get_mm_var(&mut varia);
+            let mut varia: *mut FtMmVar = ptr::null_mut();
+            let ret = FT_Get_MM_Var(self.face, &mut varia);
 
             if ret != FT_ERR_OK {
                 return;
             }
 
             let axes_count = (*varia).num_axis as usize;
-            let mut coords = Vec::with_capacity(axes_count);
+            let mut coords: Vec<FtFixed> = Vec::with_capacity(axes_count);
 
             for i in 0..(axes_count as isize) {
                 let axis = ((*varia).axis).offset(i);
                 coords.push((*axis).def);
             }
 
+            // Parse the variation specifications and update coords accordingly
             for s in specs {
-                let tn = s[..4].as_bytes();
-                let tag = tag(tn[0], tn[1], tn[2], tn[3]);
-                let value: f32 = s[5..].parse().unwrap_or_default();
+                if let Some(pos) = s.find('=') {
+                    let tag_str = &s[..pos];
+                    let value_str = &s[pos + 1..];
 
-                for i in 0..(axes_count as isize) {
-                    let axis = ((*varia).axis).offset(i);
+                    if tag_str.len() != 4 {
+                        continue;
+                    }
 
-                    if (*axis).tag == tag as libc::c_ulong {
-                        let scaled_value = ((value * 65536.0) as FtFixed)
-                            .min((*axis).maximum)
-                            .max((*axis).minimum);
-                        *coords.get_unchecked_mut(i as usize) = scaled_value;
-                        break;
+                    if let Ok(value) = value_str.parse::<f32>() {
+                        let tag = tag(
+                            tag_str.as_bytes()[0],
+                            tag_str.as_bytes()[1],
+                            tag_str.as_bytes()[2],
+                            tag_str.as_bytes()[3],
+                        ) as libc::c_ulong;
+
+                        for i in 0..(axes_count as isize) {
+                            let axis = ((*varia).axis).offset(i);
+                            if (*axis).tag == tag {
+                                coords[i as usize] = (value * 65536.0) as FtFixed;
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -1768,8 +1779,8 @@ impl Font {
 
         // SAFETY: FFI calls to FreeType with valid face and library pointers. slice::from_raw_parts uses validated text pointer and length.
         unsafe {
-            let mut varia = ptr::null_mut();
-            let ret = self.get_mm_var(&mut varia);
+            let mut varia: *mut FtMmVar = ptr::null_mut();
+            let ret = FT_Get_MM_Var(self.face, &mut varia);
 
             if ret != FT_ERR_OK {
                 return found;
@@ -1866,8 +1877,7 @@ impl Font {
             let font_data = font_data_from_script(script);
             let mut face = ptr::null_mut();
             FT_New_Memory_Face(
-                (self.lib).as_ptr()
-,
+                (self.lib).as_ptr(),
                 font_data.as_ptr() as *const FtByte,
                 font_data.len() as libc::c_long,
                 0,
@@ -2171,8 +2181,7 @@ impl Font {
                         let font_data = font_data_from_script(*script);
                         let mut face = ptr::null_mut();
                         FT_New_Memory_Face(
-                            (self.lib).as_ptr()
-,
+                            (self.lib).as_ptr(),
                             font_data.as_ptr() as *const FtByte,
                             font_data.len() as libc::c_long,
                             0,

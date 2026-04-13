@@ -1,7 +1,7 @@
-use std::rc::Rc;
-use std::path::Path;
-use crate::font::freetype::{Library, Face};
+use crate::font::freetype::{Face, Library};
 use anyhow::Result;
+use std::path::Path;
+use std::rc::Rc;
 
 pub struct FontLibrary(pub(crate) Library);
 
@@ -13,7 +13,7 @@ impl FontLibrary {
     pub fn new_library() -> Result<Self> {
         Self::new()
     }
-    
+
     pub fn new_face<P: AsRef<Path>>(&self, path: P, index: i32) -> Result<Face> {
         Face::from_path(self.library(), path.as_ref(), index)
     }
@@ -37,7 +37,7 @@ impl FontOpener {
     pub fn new() -> Result<Self> {
         FontLibrary::new().map(|lib| FontOpener(Rc::new(lib)))
     }
-    
+
     pub fn library(&self) -> &Library {
         self.0.library()
     }

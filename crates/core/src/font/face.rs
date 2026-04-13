@@ -1,20 +1,23 @@
-use std::rc::Rc;
-use crate::font::library::FontLibrary;
 use crate::font::freetype::Face;
 use crate::font::harfbuzz::Font as HbFont;
+use crate::font::library::FontLibrary;
 use crate::font::RenderPlan;
 use anyhow::Result;
 use std::convert::TryInto;
+use std::rc::Rc;
 
 pub struct Font {
-    #[allow(dead_code)] library: Rc<FontLibrary>,
+    #[allow(dead_code)]
+    library: Rc<FontLibrary>,
     face: Face,
-    #[allow(dead_code)] hb_font: HbFont,
+    #[allow(dead_code)]
+    hb_font: HbFont,
     pub size: u32,
     pub dpi: u16,
     pub ellipsis: RenderPlan,
     pub x_heights: (u32, u32),
-    #[allow(dead_code)] space_codepoint: u32,
+    #[allow(dead_code)]
+    space_codepoint: u32,
 }
 
 impl Font {
@@ -23,7 +26,7 @@ impl Font {
         let ellipsis = RenderPlan::default();
         let x_heights = (0, 0);
         let space_codepoint = face.get_char_index(' ' as u32);
-        
+
         Font {
             library,
             face,
@@ -58,13 +61,13 @@ impl Font {
 
     pub fn set_char_size(&self, width: u32, height: u32, hdpi: u32, vdpi: u32) -> Result<()> {
         self.face.set_char_size(
-            width.try_into().unwrap_or(0), 
-            height.try_into().unwrap_or(0), 
-            hdpi.try_into().unwrap_or(0), 
-            vdpi.try_into().unwrap_or(0)
+            width.try_into().unwrap_or(0),
+            height.try_into().unwrap_or(0),
+            hdpi.try_into().unwrap_or(0),
+            vdpi.try_into().unwrap_or(0),
         )
     }
-    
+
     pub fn destroy_hb_font(&self, font: HbFont) {
         // Explicitly consume and destroy the HarfBuzz font.
         drop(font);

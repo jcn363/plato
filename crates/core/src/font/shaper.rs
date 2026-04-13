@@ -1,4 +1,4 @@
-use crate::font::harfbuzz::{Font, Buffer};
+use crate::font::harfbuzz::{Buffer, Font};
 
 pub struct Shaper(Buffer);
 
@@ -46,7 +46,7 @@ impl Shaper {
     pub fn glyph_positions(&self) -> Vec<crate::font::harfbuzz_sys::HbGlyphPosition> {
         self.0.glyph_positions()
     }
-    
+
     pub fn buffer(&self) -> &Buffer {
         &self.0
     }
