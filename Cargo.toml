@@ -30,15 +30,15 @@ strip = true
 
 [profile.release-arm]
 inherits = "release"
-codegen-units = 4
-lto = "fat"
+codegen-units = 1
+lto = true
 strip = true
 opt-level = 3
 
 [profile.release-arm64]
 inherits = "release"
-codegen-units = 4
-lto = "fat"
+codegen-units = 1
+lto = true
 strip = true
 opt-level = 3
 

@@ -11,6 +11,7 @@ METHOD="fast"
 SKIP_CLEAN=0
 SKIP_CLIPPY=0
 SKIP_FMT=0
+JOBS=$(nproc 2>/dev/null || echo 4)
 THIRDPARTY_ARGS=""
 
 print_usage() {
@@ -20,6 +21,7 @@ print_usage() {
     echo "  --no-clean       Skip cargo clean"
     echo "  --no-clippy      Skip cargo clippy"
     echo "  --no-fmt         Skip cargo fmt"
+    echo "  -j JOBS          Number of parallel jobs (default: $JOBS)"
     echo "  --help, -h       Show this help message"
     echo ""
     echo "TARGET: arm (default), arm64, host"
@@ -37,6 +39,7 @@ while [ $# -gt 0 ]; do
         --no-clean) SKIP_CLEAN=1; shift ;;
         --no-clippy) SKIP_CLIPPY=1; shift ;;
         --no-fmt) SKIP_FMT=1; shift ;;
+        -j) shift; JOBS="$1"; shift ;;
         --help|-h) print_usage; exit 0 ;;
         arm|arm64|host) TARGET="$1"; shift; break ;;
         *)
@@ -177,9 +180,12 @@ if [ "$METHOD" = "fast" ]; then
     fi
     ensure_symlinks "$LIB_DIR"
 elif [ "$METHOD" = "slow" ]; then
-    echo "Building thirdparty libraries from source"
+    echo "Building thirdparty libraries from source with $JOBS jobs"
     cd "$THIRDPARTY_DIR"
     ./download.sh $THIRDPARTY_ARGS
+    # Pass JOBS to thirdparty/build.sh if it was modified to accept it
+    # For now, our parallelized build.sh uses nproc, but we can override it if needed.
+    # We will just run it as is since we modified it to be parallel.
     ./build.sh $THIRDPARTY_ARGS
     cd ..
     

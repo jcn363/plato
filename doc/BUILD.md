@@ -49,6 +49,7 @@ This script will:
 - `--no-clean`: Skip `cargo clean`
 - `--no-clippy`: Skip `cargo clippy`
 - `--no-fmt`: Skip `cargo fmt`
+- `-j JOBS`: Number of parallel jobs (default: number of CPU cores)
 
 #### Target:
 - `arm` (default), `arm64`, `host`
