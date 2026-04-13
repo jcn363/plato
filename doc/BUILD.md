@@ -29,7 +29,7 @@ rustup target add aarch64-unknown-linux-gnu
 rustup target add x86_64-unknown-linux-gnu
 ```
 
-The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `crates/importer`, `crates/fetcher`, and `crates/epub_edit`. The separate `epub_editor/` directory is not a workspace member and is built by the shell scripts.
+The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `crates/importer`, `crates/fetcher`, `crates/epub_edit`, and `crates/epub_editor`.
 
 ## Build Phase
 

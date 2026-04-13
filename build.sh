@@ -232,22 +232,19 @@ echo "Building Plato workspace crates..."
 CARGO_TARGET_FLAGS=$(get_cargo_target_flags "$TARGET")
 CARGO_PROFILE=$(get_cargo_profile "$TARGET")
 
-# Crate list - conditionally include emulator
 if [ "$TARGET" = "host" ]; then
-    CRATES="plato-core plato epub_editor emulator importer fetcher"
+    echo "Building all crates for host..."
+    cargo build $CARGO_PROFILE --workspace
 else
-    CRATES="plato-core plato epub_editor importer fetcher"
-fi
-
-for crate in $CRATES; do
-    if [ -d "crates/$crate" ]; then
-        echo "Building $crate..."
-        if [ -n "$CARGO_TARGET_FLAGS" ]; then
-            cargo build $CARGO_TARGET_FLAGS $CARGO_PROFILE -p $crate
-        else
-            cargo build $CARGO_PROFILE -p $crate
-        fi
+    echo "Building crates for $TARGET (excluding emulator)..."
+    # Filter out emulator for ARM targets
+    # We can't use --exclude easily with cargo build when we want to be explicit about what's built
+    # but since we're in a workspace, we can just build the workspace and exclude it.
+    if [ -n "$CARGO_TARGET_FLAGS" ]; then
+        cargo build $CARGO_TARGET_FLAGS $CARGO_PROFILE --workspace --exclude emulator
+    else
+        cargo build $CARGO_PROFILE --workspace --exclude emulator
     fi
-done
+fi
 
 echo "Build completed successfully for $TARGET target!"

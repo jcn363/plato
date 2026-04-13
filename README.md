@@ -14,8 +14,7 @@ The current source tree is a Cargo workspace with these crates:
 - `crates/importer` for the `plato-import` tool
 - `crates/fetcher` for the `article_fetcher` binary
 - `crates/epub_edit` for EPUB editing support used by the in-app editor
-
-The repository also contains a standalone `epub_editor/` CLI tool that is built by `build.sh`, but it is excluded from the Cargo workspace.
+- `crates/epub_editor` for the `epub_editor` CLI tool
 
 Documentation:
 

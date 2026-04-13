@@ -4,6 +4,7 @@ rustflags = [
     "-C", "link-args=-L/home/user/Desktop/plato/libs -Wl,-rpath-link,/home/user/Desktop/plato/libs",
     "-C", "target-cpu=cortex-a7",
     "-C", "target-feature=+neon,+vfp4",
+    "-A", "unstable_features",
 ]
 
 [target.aarch64-unknown-linux-gnu]

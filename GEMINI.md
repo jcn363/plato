@@ -14,8 +14,8 @@ This file provides foundational mandates and instructional context for Gemini CL
 - **`crates/importer`**: The `plato-import` tool for processing documents.
 - **`crates/fetcher`**: The `article_fetcher` binary for retrieving online content.
 - **`crates/epub_edit`**: A library for EPUB editing functionality used within the UI.
-- **`mupdf_wrapper/`**: A C-based FFI wrapper for MuPDF that provides critical PDF manipulation functions not found in standard pre-compiled libraries.
-- **`epub_editor/`**: A standalone CLI tool for EPUB manipulation (excluded from the Cargo workspace).
+- **`crates/epub_editor`**: A CLI tool for EPUB manipulation.
+- **`mupdf_wrapper/`**: A C-based FFI wrapper for MuPDF.
 
 ## Building and Running
 
