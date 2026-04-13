@@ -204,8 +204,8 @@ This is a complex refactor that should be done incrementally:
 3. Leverage automatic Drop
 
 ### Phase 5: Verify (2-3 hours)
-1. Test build on all targets
-2. Run font-related tests
+1. Test build on all targets - ARM builds, host needs native libs
+2. Run font-related tests - requires mupdf_wrapper native lib
 3. Verify no memory leaks
 
 ## Acceptance Criteria

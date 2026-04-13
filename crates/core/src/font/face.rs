@@ -1,6 +1,5 @@
 use crate::color::Color;
 use crate::font::freetype::Face;
-use crate::font::freetype_sys::FtFixed;
 use crate::font::harfbuzz::{Buffer, Font as HbFont};
 use crate::font::harfbuzz_sys::{hb_feature_from_string, HbFeature, HB_DIRECTION_LTR};
 use crate::font::library::FontLibrary;
@@ -155,10 +154,10 @@ impl Font {
     pub fn set_variations(&mut self, specs: &[&str]) {
         if let Ok(mm_var) = self.face.get_mm_var() {
             let axes_count = mm_var.num_axis() as usize;
-            let mut coords: Vec<FtFixed> = Vec::with_capacity(axes_count);
+            let mut coords: Vec<i32> = Vec::with_capacity(axes_count);
             let axis_data = mm_var.axis();
             for axis in axis_data.iter().take(axes_count) {
-                coords.push(axis.def);
+                coords.push(axis.def as i32);
             }
             for s in specs {
                 if let Some(pos) = s.find('=') {
@@ -177,7 +176,7 @@ impl Font {
                         let axis_data = mm_var.axis();
                         for (i, axis) in axis_data.iter().take(axes_count).enumerate() {
                             if axis.tag == tag {
-                                coords[i] = (value * 65536.0) as FtFixed;
+                                coords[i] = (value * 65536.0) as i32;
                                 break;
                             }
                         }
