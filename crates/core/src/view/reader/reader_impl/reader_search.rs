@@ -20,6 +20,7 @@ use crate::view::{EntryId, EntryKind, Id, RenderData, RenderQueue, ViewId};
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 
+use super::reader::Reader;
 use super::reader_core::{RenderChunk, Search};
 
 /// Create search direction menu
@@ -78,25 +79,41 @@ pub(crate) fn render_results(
 }
 
 /// Navigate to the next or previous search result
-#[allow(dead_code)]
 pub(crate) fn go_to_results_neighbor(
-    _dir: crate::geom::CycleDir,
-    view_id: Id,
-    rect: Rectangle,
+    dir: crate::geom::CycleDir,
+    reader: &mut Reader,
+    hub: &crate::view::Hub,
     rq: &mut RenderQueue,
+    context: &mut Context,
 ) {
-    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
+    if let Some(ref search) = reader.search {
+        let n = search.results.len();
+        if n == 0 { return; }
+        let index = match dir {
+            crate::geom::CycleDir::Next => (search.index + 1) % n,
+            crate::geom::CycleDir::Previous => (search.index + n - 1) % n,
+        };
+        go_to_results_page(index, reader, hub, rq, context);
+    }
 }
 
 /// Jump to a specific search result page
-#[allow(dead_code)]
 pub(crate) fn go_to_results_page(
-    _index: usize,
-    view_id: Id,
-    rect: Rectangle,
+    index: usize,
+    reader: &mut Reader,
+    hub: &crate::view::Hub,
     rq: &mut RenderQueue,
+    context: &mut Context,
 ) {
-    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
+    if let Some(ref mut search) = reader.search {
+        if index < search.results.len() {
+            search.index = index;
+            let location = search.results[index].clone();
+            if let crate::document::Location::Exact(page) = location {
+                reader.go_to_page(page, true, hub, rq, context);
+            }
+        }
+    }
 }
 
 /// Toggle search input bar visibility

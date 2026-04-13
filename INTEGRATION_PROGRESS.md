@@ -9,8 +9,8 @@
   - `add_menu()`
   - `menu_helpers::{toggle_menu_vec, toggle_menu_with, toggle_menu_ctx, toggle_menu_item, toggle_menu_self}`
 - **Theme System**: Full implementation of Light, Dark, Sepia, Auto (light sensor), and Scheduled (time-based) modes with persistence, gestures, and top-bar indicators.
-- **PDF Tools UI**: Full implementation of Delete, Rotate, Extract, Merge (multi-file), and Redact (interactive regions) operations surfaced via UI.
-- **Cover Editor UI**: Full implementation of Rotate, Grayscale, Brightness, Contrast, and Crop controls wired into document flows.
+- **PDF Tools UI**: Interactive controls for Delete, Rotate, Extract, Merge (multi-file), and Redact (page selection) operations surfaced via UI. **Note:** Interactive redaction region definition and PDF merging file selection are currently pending implementation.
+- **Cover Editor UI**: Full implementation of Rotate, Grayscale, Brightness, Contrast, and Crop controls wired into document flows. Crop functionality is initiated with UI elements and mode transitions, allowing visual selection.
 - **Gesture Extraction**: Extracted 80+ lines of gesture handling and `GestureProcessor` trait to `reader_gestures.rs`.
 - **Reader support modules**: Exist under `crates/core/src/view/reader/reader_impl/`, with rendering, settings, annotations, and gestures extracted (integration in progress).
 - **Test Segregation (Mandatory)**: Initial refactoring completed for 10+ core modules (geom, device, helpers, html, dictionary) with unit tests moved to sibling `_tests.rs` files.
@@ -38,8 +38,8 @@
 
 ### PDF tools UI completion
 
-- `pdf_manipulator.rs` is now reachable from selected-document contexts. Interactive page selection and degree input for Delete, Rotate, and Extract are implemented. Redaction workflow now includes page selection and a mode to define the redaction region.
-- **Pending:** Interactive redaction region definition UI, file selection for PDF merging, and full parameter integration for all manipulation paths.
+- Interactive redaction region definition UI is pending implementation.
+- File selection for PDF merging is missing.
 
 ### Cover editor product decision
 

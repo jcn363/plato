@@ -41,7 +41,17 @@ The home view is still oversized (**2786 lines**) and violates the 1000-line man
 
 - Split `crates/core/src/view/home/mod.rs` by responsibility (event handling, menus, batch ops).
 
-### 3. PDF tools UI workflow completion
+### 3. Fonts module refactoring
+
+**Problem**
+
+The font module (`crates/core/src/font/mod.rs`) is **2400 lines** and uses direct FFI instead of safe wrappers.
+
+**Recommended action**
+
+- Migrate to safe wrappers and split into submodules.
+
+### 4. PDF tools UI workflow completion
 
 **Problem**
 

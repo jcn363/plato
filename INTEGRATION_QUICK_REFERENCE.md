@@ -10,83 +10,70 @@
 
 ## Completed
 
-- `with_child!` exists in `crates/core/src/view/common.rs`
-- `add_menu()` exists in `crates/core/src/view/common.rs`
-- Menu toggle helpers exist in `crates/core/src/view/menu_helpers.rs`
-- Reader support modules exist in `crates/core/src/view/reader/reader_impl/`, indicating progress on splitting the monolithic reader file.
+- `with_child!` macro in `crates/core/src/view/common.rs`
+- `add_menu()` helper in `crates/core/src/view/common.rs`
+- Generic menu toggle helpers in `crates/core/src/view/menu_helpers.rs`
+- **Safe Wrapper Migration for Fonts**: `crates/core/src/font/mod.rs` (802 lines) is now fully integrated with safe wrappers.
+- **Unit Test Segregation**: All unit tests in `crates/core/src` have been moved to sibling `_tests.rs` files.
+- **Epub Editor Integration**: Moved from standalone tool to `crates/epub_editor` workspace member.
 
 ## Open
 
-### Reader
+### 1. Reader stub block and partial module migration
 
-- File: `crates/core/src/view/reader/reader_impl/reader.rs`
-- Current size: `3403` lines (Target: < 1000)
-- Active issue: file still ends with a duplicate stub-method block
-- Follow-up: complete or unwind the partial reader split
+**Problem**
 
-### Home
+The reader refactor is incomplete. `reader.rs` is still **3403 lines** and contains a large block of stubbed methods (lines 3206+) that provide no functionality.
 
-- File: `crates/core/src/view/home/mod.rs`
-- Current size: `2769` lines (Target: < 1000)
-- Active issue: the active home implementation is still oversized
-- Follow-up: split by active responsibility, not just line count
+**Recommended action**
 
-### Fonts
+- Complete the extraction of logic from `reader.rs` into `reader_gestures.rs`, `reader_rendering.rs`, etc.
+- Replace the stub methods with active call paths to the new modules.
+- Ensure all functions are under 50 lines.
 
-- File: `crates/core/src/font/mod.rs`
-- Current size: `2400` lines (Target: < 1000)
-- Active issue: uses direct FFI instead of safe wrappers
-- Follow-up: migrate to safe wrappers and split into submodules
+### 2. Home view modularization
 
-### Test Segregation
+**Problem**
 
-- Active issue: unit tests are currently embedded in production code
-- Follow-up: extract all tests into sibling `{module}_tests.rs` files
+The home view is still oversized (**2786 lines**) and violates the 1000-line mandate.
 
-### PDF Tools
+**Recommended action**
 
-- File: `crates/core/src/view/pdf_manipulator.rs`
-- **Status:** Completed. Page selection with ranges (all, first 10, last 10, custom), Merge UI with file list, Reorder UI with page navigation, Resource extraction options.
-- **Remaining:** Interactive redaction region input, full page reordering drag-drop.
+- Split `crates/core/src/view/home/mod.rs` by responsibility (event handling, menus, batch ops).
 
-### Cover Editor
+### 3. Fonts module refactoring
 
-- File: `crates/core/src/view/cover_editor.rs`
-- **Status:** Substantially completed. Interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast are implemented. Crop functionality is initiated with UI elements and mode transitions, allowing visual selection.
-- **Active issue:** Interactive cropping region application is pending. Some helper functions might still be guarded by `#[allow(dead_code)]`.
-- **Follow-up:** Implement interactive crop application and address remaining dead code.
+**Problem**
 
-## Verification
+The font module (`crates/core/src/font/mod.rs`) is **2400 lines** and uses direct FFI instead of safe wrappers.
 
-- `cargo check --target x86_64-unknown-linux-gnu`: passes
-- `cargo check --target arm-unknown-linux-gnueabihf -p plato`: passes
-- `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`: passes
+**Recommended action**
 
-Clean-build note:
+- Migrate to safe wrappers and split into submodules.
 
-- After `cargo clean`, Kobo release builds also require rebuilding `mupdf_wrapper`, because Cargo does not regenerate that native archive by itself.
+### 4. PDF tools UI workflow completion
+
+**Problem**
+
+- Interactive redaction region definition UI is pending implementation.
+- File selection flow for PDF merging is missing.
+
+**Recommended action**
+
+- Implement the missing UI flows for redaction and merging.
 
 ## Deferred
 
-- settings registry work
-- event-system unification
-- cross-cutting input-validation framework
-- broad speculative performance refactors
+- Settings registry / schema-generation layer
+- Generic object pooling
+- Smooth theme transition animations
 
-## Stale/Retired
+## Verification Status
 
-These should not be listed as missing opportunities anymore:
+### Host Verification (x86_64 Linux)
+- **Command:** `cargo check --target x86_64-unknown-linux-gnu`
+- **Result:** Pass (2026-04-13)
 
-- `with_child!` macro
-- `add_menu()` helper
-- generic menu toggle helpers
-
-## Large Files
-
-| File | Lines |
-|------|------:|
-| `reader_impl/reader.rs` | 3403 |
-| `view/home/mod.rs` | 2769 |
-| `font/mod.rs` | 2400 |
-| `document/html/engine.rs` | 2672 |
-| `document/html/layout.rs` | 718 |
+### ARM Kobo Verification (32-bit ARM)
+- **Command:** `./build.sh arm fast`
+- **Result:** Pass (2026-04-13)

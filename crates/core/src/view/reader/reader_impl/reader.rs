@@ -3237,27 +3237,6 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
     }
 
-    pub fn go_to_neighbor(
-        &mut self,
-        _dir: CycleDir,
-        _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
-    }
-
-    pub fn go_to_page(
-        &mut self,
-        _index: usize,
-        _save_state: bool,
-        _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
-    }
-
     pub fn go_to_chapter(
         &mut self,
         _dir: CycleDir,
@@ -3270,22 +3249,22 @@ impl Reader {
 
     pub fn go_to_results_neighbor(
         &mut self,
-        _dir: CycleDir,
-        _hub: &Hub,
+        dir: CycleDir,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        super::reader_search::go_to_results_neighbor(dir, self, hub, rq, context);
     }
 
     pub fn go_to_results_page(
         &mut self,
-        _index: usize,
-        _hub: &Hub,
+        index: usize,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        super::reader_search::go_to_results_page(index, self, hub, rq, context);
     }
 
     pub fn go_to_bookmark(

@@ -35,6 +35,7 @@ pub use reader::Reader;
 pub mod reader_annotations;
 pub mod reader_dialogs;
 pub mod reader_gestures;
+pub mod reader_navigation;
 pub mod reader_rendering;
 pub mod reader_search;
 pub mod reader_settings;

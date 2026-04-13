@@ -33,7 +33,7 @@ The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `c
 
 ## Build Phase
 
-```sh
+```bash
 ./build.sh [OPTIONS] [TARGET] [METHOD]
 ```
 
@@ -60,13 +60,13 @@ This script will:
 - `skip`: Use existing libraries
 
 Example:
-```sh
+```bash
 ./build.sh --no-clean arm skip
 ```
 
 The MuPDF wrapper (`libmupdf_wrapper.a`) is automatically linked during the Rust build process via `crates/core/build.rs`. If you modify `mupdf_wrapper/mupdf_wrapper.c`, rebuild it with:
 
-```sh
+```bash
 cd mupdf_wrapper
 TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh
 ```
@@ -97,7 +97,7 @@ cargo build --target x86_64-unknown-linux-gnu -p fetcher
 
 ## Distribution
 
-```sh
+```bash
 ./dist.sh
 ```
 
@@ -110,7 +110,7 @@ Install the required dependencies: *MuPDF 1.27.0*, *DjVuLibre*, *FreeType*, *Har
 Install one additional dependency: *SDL2*.
 
 You can then run the emulator with:
-```sh
+```bash
 ./run-emulator.sh
 ```
 
@@ -138,6 +138,6 @@ cargo test overlaping --target x86_64-unknown-linux-gnu
 ### Importer
 
 You can install the importer with:
-```sh
+```bash
 ./install-importer.sh
 ```
