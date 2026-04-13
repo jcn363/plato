@@ -40,6 +40,9 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 # Full build with native dependencies (downloads libs + MuPDF)
 ./build.sh
 
+# Full build with options (e.g., skip clean, use specific target/method)
+./build.sh --no-clean arm skip
+
 # Create distribution bundle
 ./dist.sh
 

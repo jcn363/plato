@@ -27,8 +27,11 @@ cargo build --target aarch64-unknown-linux-gnu --profile release-arm64
 # Build for host (development/testing)
 cargo build --target x86_64-unknown-linux-gnu
 
-# Full build with native dependencies (downloads libs + MuPDF)
+# Full build with native dependencies (downloads libs + MuPDF, rebuilds mupdf_wrapper, runs fmt/clippy)
 ./build.sh
+
+# Full build with options (e.g., skip clean, use specific target/method)
+./build.sh --no-clean arm skip
 
 # Create distribution bundle
 ./dist.sh

@@ -34,14 +34,34 @@ The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `c
 ## Build Phase
 
 ```sh
-./build.sh
+./build.sh [OPTIONS] [TARGET] [METHOD]
 ```
 
 This script will:
-1. Download pre-compiled ARM libraries to `libs/`
-2. Build the MuPDF wrapper (`mupdf_wrapper/`) which provides additional FFI functions not in the pre-compiled `libmupdf.so`
-3. Build the standalone `epub_editor/` CLI tool
-4. Build the main `plato` binary
+1. Check for required tools (cargo, rustc, cross-compiler)
+2. Handle thirdparty libraries (download or build)
+3. Ensure necessary symlinks are in the library directory
+4. Build the MuPDF wrapper
+5. Run `cargo fmt` and `cargo clippy --workspace` (with target-specific exclusions)
+6. Build the workspace crates (optionally skipping the emulator for ARM)
+
+#### Common Options:
+- `--no-clean`: Skip `cargo clean`
+- `--no-clippy`: Skip `cargo clippy`
+- `--no-fmt`: Skip `cargo fmt`
+
+#### Target:
+- `arm` (default), `arm64`, `host`
+
+#### Method:
+- `fast` (default): Download pre-compiled libraries
+- `slow`: Build libraries from source
+- `skip`: Use existing libraries
+
+Example:
+```sh
+./build.sh --no-clean arm skip
+```
 
 The MuPDF wrapper (`libmupdf_wrapper.a`) is automatically linked during the Rust build process via `crates/core/build.rs`. If you modify `mupdf_wrapper/mupdf_wrapper.c`, rebuild it with:
 

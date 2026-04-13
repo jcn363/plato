@@ -8,4 +8,4 @@ if ! [ -e "$archive" ] ; then
 	release_url=$(wget -q -O - "$info_url" | jq -r ".assets[] | select(.name == \"$archive\").browser_download_url")
 	wget -q --show-progress "$release_url"
 fi
-unzip "$archive" "$@"
+unzip -o "$archive" "$@"

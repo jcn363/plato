@@ -23,7 +23,7 @@ The primary target is **ARMv7** (`arm-unknown-linux-gnueabihf`) for Kobo devices
 
 ### Key Commands
 
-- **Full Build**: `./build.sh` (Downloads libraries, builds the MuPDF wrapper, and compiles all crates).
+- **Full Build**: `./build.sh` (Downloads libraries, builds the MuPDF wrapper, and compiles all crates. Supports options like `--no-clean`, `arm64`, and `skip`).
 - **Kobo Binary (32-bit ARM)**: `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
 - **Kobo Binary (64-bit ARM64)**: `cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato`
 - **Host Binary (Development)**: `cargo build --target x86_64-unknown-linux-gnu -p plato`
