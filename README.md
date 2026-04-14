@@ -83,7 +83,7 @@ Any 4.*X*.*Y* firmware, with *X* ≥ 6, will do.
 - **AArch64 (ARM64)** - Added support for newer Kobo devices (Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
 - **Error Handling** - Improved robustness with proper error handling instead of `unwrap()`; further reduced unwrap/expect in sync, HTML parsing, and fetcher crates
 - **Memory** - Optimized string building with pre-allocated buffers, fixed memory availability detection, reduced thumbnail memory by 75% (grayscale instead of RGBA), reduced MuPDF context cache from 32MB to 16MB, fixed Pixmap OOM panics, optimized pixmap creation to avoid double allocation
-- **PDF** - Added auto-crop margins feature for scanned documents, PDF/A detection, annotation reading and export. **Note:** Interactive PDF redaction and merge features are currently under development and may not be fully functional or stable.
+- PDF - Added auto-crop margins feature for scanned documents, PDF/A detection, annotation reading and export, interactive redaction region definition UI, and PDF merging functionality. **Note:** These features are implemented and stable.
 - **Rendering** - Added minimum font size support for better readability
 - **ePUB** - Enhanced HTML engine with improved font handling
 - **CSS** - Full CSS support including border, background, text-transform, text-decoration, tab-size

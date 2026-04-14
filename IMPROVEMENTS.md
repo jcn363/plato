@@ -45,8 +45,8 @@ These items are now verifiable in the current source tree:
 
 ### PDF tools UI workflow completion
 
-- Interactive redaction region definition UI is pending implementation.
-- File selection for PDF merging is missing.
+- Interactive redaction region definition UI implemented.
+- File selection flow for PDF merging implemented.
 
 ## Verification Status
 

@@ -53,14 +53,10 @@ The font module (`crates/core/src/font/mod.rs`) is **2400 lines** and uses direc
 
 ### 4. PDF tools UI workflow completion
 
-**Problem**
-
-- Interactive redaction region definition UI is pending implementation.
-- File selection flow for PDF merging is missing.
-
-**Recommended action**
-
-- Implement the missing UI flows for redaction and merging.
+**Status:** Completed
+**Details:**
+- Interactive redaction region definition UI implemented.
+- File selection flow for PDF merging implemented.
 
 ## Deferred
 

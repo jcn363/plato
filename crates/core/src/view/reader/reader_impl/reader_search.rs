@@ -88,7 +88,9 @@ pub(crate) fn go_to_results_neighbor(
 ) {
     if let Some(ref search) = reader.search {
         let n = search.results.len();
-        if n == 0 { return; }
+        if n == 0 {
+            return;
+        }
         let index = match dir {
             crate::geom::CycleDir::Next => (search.index + 1) % n,
             crate::geom::CycleDir::Previous => (search.index + n - 1) % n,

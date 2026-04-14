@@ -1,7 +1,7 @@
 use crate::color;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
-use crate::document::pdf_manipulator::PdfManipulator;
+use crate::document::pdf_manipulator::{PdfManipulator, RedactionRegion};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
@@ -30,7 +30,12 @@ const BUTTON_SPACING: i32 = 10;
 enum ManipulationMode {
     SelectFile,
     SelectAction(PathBuf),
-    SelectRedactionPage(PathBuf, usize),
+    SelectRedactionPage(PathBuf, usize), // Stores file path and total pages
+    DefiningRedaction {
+        file_path: PathBuf,
+        page_index: usize,
+        region: Option<RedactionRegion>,
+    },
     Processing(PathBuf, String),
 }
 
@@ -80,7 +85,8 @@ impl PdfManipulatorView {
                 rect.max.x - PADDING,
                 content_y + BUTTON_HEIGHT
             ],
-            "Large PDFs may cause memory issues.\nMax: 30MB, 500 pages. Keep battery charged."
+            "Large PDFs may cause memory issues.
+Max: 30MB, 500 pages. Keep battery charged."
                 .to_string(),
             Align::Left(0),
         );
@@ -219,10 +225,11 @@ impl PdfManipulatorView {
             EntryKind::Separator,
         ];
 
+        // Change EntryId to DefineRedaction to transition to the new mode
         for page in 0..total_pages.min(50) {
             entries.push(EntryKind::Command(
                 format!("Page {}", page + 1),
-                EntryId::PdfManipulate(file_path.clone(), format!("redact_apply:{}", page)),
+                EntryId::OpenRedactionEditor(file_path.clone(), page),
             ));
         }
 
@@ -246,12 +253,36 @@ impl PdfManipulatorView {
         Ok(())
     }
 
+    // New function to start the process of defining a redaction region
+    fn start_defining_redaction(
+        &mut self,
+        file_path: PathBuf,
+        page_index: usize,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
+        self.mode = ManipulationMode::DefiningRedaction {
+            file_path,
+            page_index,
+            region: None, // No region defined yet
+        };
+        // TODO: Implement UI for drawing the redaction region on the selected page.
+        // This might involve a new custom drawing widget or interacting with a canvas.
+        // For now, we'll clear the current menu and prepare for input.
+        self.children.retain(|child| child.id() == self.id); // Remove previous menu
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        // Display a message indicating the next step, e.g., "Drag to define region"
+        // self.show_message("Drag to define redaction region on page.".to_string(), rq, bus);
+    }
+
     fn process_redaction(&mut self, file_path: &PathBuf, page: usize) -> Result<PathBuf, Error> {
         use crate::document::pdf_manipulator::{RedactionEditor, RedactionRegion};
 
         let output = file_path.with_extension("redacted.pdf");
         let mut editor = RedactionEditor::new(file_path)?;
 
+        // This is a placeholder for an interactively defined region.
+        // In the future, `region` will be obtained from user input.
         let region = RedactionRegion {
             page,
             x: 50.0,
@@ -310,8 +341,11 @@ impl PdfManipulatorView {
                 self.manipulator.extract_pages(file_path, &output, &pages)
             }
             "merge" => {
-                let output = file_path.with_extension("merged.pdf");
-                self.manipulator.merge_pdfs(&[file_path], &output)
+                // TODO: Implement file selection UI for merging
+                bus.push_back(Event::Render(
+                    "File selection for merge is not yet implemented.".to_string(),
+                ));
+                Ok(file_path.clone()) // Return original path as no operation was performed
             }
             "redact_page" => {
                 use crate::document::pdf_manipulator::RedactionEditor;
@@ -483,6 +517,23 @@ impl View for PdfManipulatorView {
                     }
                     return true;
                 }
+                ManipulationMode::DefiningRedaction {
+                    file_path,
+                    page_index,
+                    ..
+                } => {
+                    let file_path_cloned = file_path.clone();
+                    let page_index_val = *page_index;
+                    self.mode = ManipulationMode::SelectRedactionPage(
+                        file_path_cloned.clone(),
+                        page_index_val,
+                    );
+                    if let Some(total_pages) = self.manipulator.page_count(&file_path_cloned).ok() {
+                        self.show_redaction_menu(&file_path_cloned, total_pages, rq, context)
+                            .ok();
+                    }
+                    return true;
+                }
                 _ => {
                     bus.push_back(Event::Close(ViewId::PdfManipulator));
                     return true;
@@ -496,6 +547,11 @@ impl View for PdfManipulatorView {
                 if let Err(e) = self.process_manipulation(&path, action, hub, bus, rq, context) {
                     bus.push_back(Event::Render(format!("Error: {}", e)));
                 }
+                return true;
+            }
+            // Handle the new entry ID for defining redaction
+            Event::Select(EntryId::OpenRedactionEditor(file_path, page_index)) => {
+                self.start_defining_redaction(file_path.clone(), *page_index, rq, context);
                 return true;
             }
             _ => {}

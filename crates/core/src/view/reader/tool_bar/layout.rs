@@ -216,6 +216,10 @@ pub(super) fn build_fixed_children(
     children.push(Box::new(separator) as Box<dyn View>);
 
     // Start of second row.
+    let remaining_width = rect.width() as i32 - 2 * side;
+    let margin_label_width = remaining_width / 2;
+    let big_padding = (remaining_width - margin_label_width) / 2;
+
     let crop_icon = Icon::new(
         "crop",
         rect![rect.min.x, rect.max.y - side, rect.min.x + side, rect.max.y],
@@ -223,16 +227,35 @@ pub(super) fn build_fixed_children(
     );
     children.push(Box::new(crop_icon) as Box<dyn View>);
 
-    let remaining_width = rect.width() as i32 - 3 * side;
-    let margin_label_width = (2 * side).min(remaining_width);
-    let big_padding = (remaining_width - margin_label_width) / 2;
-    let small_padding = remaining_width - margin_label_width - big_padding;
-
-    let filler = Filler::new(
+    let redact_icon = Icon::new(
+        "delete-forward", // Icon for redaction
         rect![
             rect.min.x + side,
             rect.max.y - side,
-            rect.min.x + side + small_padding,
+            rect.min.x + 2 * side,
+            rect.max.y
+        ],
+        Event::Show(ViewId::RedactPdf), // New view ID for redaction
+    );
+    children.push(Box::new(redact_icon) as Box<dyn View>);
+
+    let merge_icon = Icon::new(
+        "combine", // Icon for merging PDFs
+        rect![
+            rect.min.x + 2 * side,
+            rect.max.y - side,
+            rect.min.x + 3 * side,
+            rect.max.y
+        ],
+        Event::Show(ViewId::MergePdf), // New view ID for merging
+    );
+    children.push(Box::new(merge_icon) as Box<dyn View>);
+
+    let filler = Filler::new(
+        rect![
+            rect.min.x + 3 * side,
+            rect.max.y - side,
+            rect.max.x - 2 * side - big_padding,
             rect.max.y
         ],
         crate::color::background(theme::is_dark_mode()),
@@ -243,9 +266,9 @@ pub(super) fn build_fixed_children(
     let margin_icon = LabeledIcon::new(
         "margin",
         rect![
-            rect.min.x + side + small_padding,
-            rect.max.y - side,
             rect.max.x - 2 * side - big_padding,
+            rect.max.y - side,
+            rect.max.x - side,
             rect.max.y
         ],
         Event::Show(ViewId::MarginWidthMenu),
@@ -254,12 +277,7 @@ pub(super) fn build_fixed_children(
     children.push(Box::new(margin_icon) as Box<dyn View>);
 
     let filler = Filler::new(
-        rect![
-            rect.max.x - 2 * side - big_padding,
-            rect.max.y - side,
-            rect.max.x - 2 * side,
-            rect.max.y
-        ],
+        rect![rect.max.x - side, rect.max.y - side, rect.max.x, rect.max.y],
         crate::color::background(theme::is_dark_mode()),
     );
     children.push(Box::new(filler) as Box<dyn View>);

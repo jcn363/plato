@@ -79,6 +79,8 @@ pub enum ViewId {
     PdfManipulator,
     PdfManipulatorMenu,
     PdfProgress,
+    RedactPdf,
+    MergePdf,
     MessageNotif(Id),
     SubMenu(u8),
 }

@@ -2,11 +2,11 @@
 //!
 //! Handles document navigation (page turning, chapter switching, history).
 
+use super::reader::Reader;
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::CycleDir;
 use crate::view::{RenderData, RenderQueue};
-use super::reader::Reader;
 
 impl Reader {
     pub fn go_to_page(
