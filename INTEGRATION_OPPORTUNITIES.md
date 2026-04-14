@@ -23,7 +23,7 @@
 
 **Problem**
 
-The reader refactor is incomplete. `reader.rs` is still **3403 lines** and contains a large block of stubbed methods (lines 3206+) that provide no functionality.
+The reader refactor is incomplete. `reader.rs` is still **3382 lines** and contains a large block of stubbed methods that provide no functionality.
 
 **Recommended action**
 
@@ -41,17 +41,7 @@ The home view is still oversized (**2786 lines**) and violates the 1000-line man
 
 - Split `crates/core/src/view/home/mod.rs` by responsibility (event handling, menus, batch ops).
 
-### 3. Fonts module refactoring
-
-**Problem**
-
-The font module (`crates/core/src/font/mod.rs`) is **2400 lines** and uses direct FFI instead of safe wrappers.
-
-**Recommended action**
-
-- Migrate to safe wrappers and split into submodules.
-
-### 4. PDF tools UI workflow completion
+### 3. PDF tools UI workflow completion
 
 **Status:** Completed
 **Details:**
@@ -68,8 +58,8 @@ The font module (`crates/core/src/font/mod.rs`) is **2400 lines** and uses direc
 
 ### Host Verification (x86_64 Linux)
 - **Command:** `cargo check --target x86_64-unknown-linux-gnu`
-- **Result:** Pass (2026-04-13)
+- **Result:** Pass (2026-04-14)
 
 ### ARM Kobo Verification (32-bit ARM)
-- **Command:** `./build.sh arm fast`
-- **Result:** Pass (2026-04-13)
+- **Command:** `./build.sh arm skip`
+- **Result:** Pass (2026-04-14)

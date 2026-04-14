@@ -30,9 +30,9 @@ These items are now verifiable in the current source tree:
 ### Adherence to AGENTS.md Mandates
 
 - **Monolithic Files (1000-line limit)**: 
-  - `crates/core/src/view/reader/reader_impl/reader.rs` (**3403 lines**)
+  - `crates/core/src/view/reader/reader_impl/reader.rs` (**3382 lines**)
   - `crates/core/src/view/home/mod.rs` (**2786 lines**)
-- **Reader trait stubs**: `reader.rs` contains a large block of stubbed trait methods (lines 3206+) that must be replaced with active logic from the helper modules.
+- **Reader trait stubs**: `reader.rs` contains a large block of stubbed trait methods that must be replaced with active logic from the helper modules.
 
 ### Reader migration is incomplete
 
@@ -52,9 +52,10 @@ These items are now verifiable in the current source tree:
 
 ### Host Verification (x86_64 Linux)
 - **Command:** `cargo check --target x86_64-unknown-linux-gnu`
-- **Result:** Pass (2026-04-13)
+- **Result:** Pass (2026-04-14)
 
 ### ARM Kobo Verification (32-bit ARM)
-- **Command:** `./build.sh arm fast`
-- **Result:** Pass (2026-04-13)
-- Successfully suppresses unstable feature warnings.
+- **Command:** `./build.sh arm skip`
+- **Result:** Pass (2026-04-14)
+- Builds mupdf_wrapper only when needed.
+- Thirdparty libraries checked before rebuild.
