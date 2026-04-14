@@ -1,16 +1,21 @@
 [workspace]
-resolver = "2"
+resolver = '2'
 members = [
-  "crates/core",
-  "crates/plato",
-  "crates/emulator",
-  "crates/importer",
-  "crates/fetcher",
-  "crates/epub_edit",
-  "crates/epub_editor",
+  'crates/core',
+  'crates/plato',
+  'crates/emulator',
+  'crates/importer',
+  'crates/fetcher',
+  'crates/epub_edit',
+  'crates/epub_editor',
 ]
 exclude = [
 ]
+
+[workspace.package]
+edition = '2021'
+version = '0.9.45'
+license = 'MIT'
 
 [workspace.dependencies]
 anyhow = "1.0"
