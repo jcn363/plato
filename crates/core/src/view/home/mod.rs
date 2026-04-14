@@ -5,16 +5,16 @@
 //!
 //! ## Module Structure
 //!
-//! - `home/mod.rs` (2,690 lines) - Main Home struct and implementation
-//! - `home_utils.rs` (39 lines) - Utility functions for child view management
-//! - `shelf.rs` - Document display shelf with thumbnail grid
-//! - `book.rs` - Individual book/document entry
-//! - `directory.rs` - Directory view for file browsing
-//! - `address_bar.rs` - Path/address bar
-//! - `navigation_bar.rs` - Library navigation controls
-//! - `bottom_bar.rs` - Status and metadata bar
-//! - `library_label.rs` - Library selection label
-//! - `directories_bar.rs` - Directory list separator
+//! - `home/mod.rs` (596 lines) - Main Home struct and View trait impl
+//! - `home/input.rs` (528 lines) - Event handling and routing
+//! - `home/ui_toggles.rs` (1018 lines) - UI toggle methods
+//! - `home/ops.rs` (217 lines) - Document operations
+//! - `home/updates.rs` (191 lines) - UI state updates
+//! - `home/fetcher.rs` (226 lines) - Background fetcher management
+//! - `home/navigation.rs` (160 lines) - Directory/page navigation
+//! - `home/library.rs` (117 lines) - Library operations
+//! - `home_utils.rs` (41 lines) - Utility functions
+//! - `shelf.rs`, `book.rs`, `directory.rs`, `address_bar.rs`, etc.
 //!
 //! ## Key Features
 //!
