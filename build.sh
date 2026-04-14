@@ -214,17 +214,37 @@ elif [ "$METHOD" = "skip" ]; then
     ensure_symlinks "$LIB_DIR"
 fi
 
-# Build mupdf_wrapper
-echo "Building mupdf_wrapper for $TARGET target..."
+# Build mupdf_wrapper if needed
+MUPDF_WRAPPER_DIR="target/mupdf_wrapper/Kobo"
+MUPDF_WRAPPER_LIB="$MUPDF_WRAPPER_DIR/libmupdf_wrapper.a"
+
+echo "Checking mupdf_wrapper..."
 cd mupdf_wrapper
-case "$TARGET" in
-    arm|arm64)
-        ./build-kobo.sh
-        ;;
-    host)
-        ./build.sh
-        ;;
-esac
+NEED_BUILD=0
+if [ ! -f "$MUPDF_WRAPPER_LIB" ]; then
+    NEED_BUILD=1
+    echo "mupdf_wrapper not found, building..."
+elif [ mupdf_wrapper.c -nt "$MUPDF_WRAPPER_LIB" ]; then
+    NEED_BUILD=1
+    echo "mupdf_wrapper.c modified, rebuilding..."
+fi
+
+if [ "$NEED_BUILD" = "1" ]; then
+    echo "Building mupdf_wrapper for $TARGET target..."
+    case "$TARGET" in
+        arm)
+            TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh
+            ;;
+        arm64)
+            TARGET_OS=Kobo CC=aarch64-linux-gnu-gcc AR=aarch64-linux-gnu-ar ./build.sh
+            ;;
+        host)
+            ./build.sh
+            ;;
+    esac
+else
+    echo "mupdf_wrapper up to date, skipping build."
+fi
 cd ..
 
 # Build all crates in the workspace
