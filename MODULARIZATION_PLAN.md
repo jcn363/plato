@@ -9,7 +9,7 @@
 This plan identifies opportunities to modularize the Plato codebase by extracting duplicated patterns, splitting monolithic files, and creating reusable components. Following analysis of 195 source files, the highest impact opportunities are:
 
 1. **Reader Module** (3,410 lines) - Extract nested structs, split into focused modules
-2. **Home Module** (2,767 lines) - Split into library management components  
+1. **Home Module** (596 lines) - Complete - 8 modules extracted  
 3. **Font Module** (2,783 lines) - Separate font operations from UI
 4. **HTML Engine** (2,672 lines) - Isolate parsing/rendering concerns
 5. **Common Patterns** - Extract duplicated code (~1,350 lines savable)
@@ -77,31 +77,34 @@ reader/reader_impl/
 
 **Total Reader Module:** 6,505 lines across 20 files
 
-### 2.2 Home Module Refactor ✅ COMPLETE (INTENTIONAL DESIGN)
+### 2.2 Home Module Refactor ✅ COMPLETE
 
-**Current:** `crates/core/src/view/home/mod.rs` (2,767 lines)
-**Status:** Already split - 11 submodules exist
+**Current:** `crates/core/src/view/home/mod.rs` (596 lines)
+**Status:** All modules extracted - 8 new files created
 
-**Rationale for no further splitting:**
-> The Home view at 2,767 lines handles many concerns: view hierarchy management, event routing, library/document model management, file system operations, search and filter logic. Splitting would require extensive API changes.
-
-**Existing Modules:**
+**Completed modules:**
 ```
 home/
-├── mod.rs                 # Main implementation (2,767 lines)
+├── mod.rs                 # Main implementation (596 lines) ✅
+├── input.rs               # Event handling (528 lines) ✅ NEW
+├── ui_toggles.rs         # UI toggle methods (1018 lines) ✅ NEW
+├── ops.rs                 # Document operations (217 lines) ✅ NEW
+├── updates.rs             # UI state updates (191 lines) ✅ NEW
+├── fetcher.rs             # Background fetchers (226 lines) ✅ NEW
+├── navigation.rs          # Navigation methods (160 lines) ✅ NEW
+├── library.rs             # Library operations (117 lines) ✅ NEW
 ├── home_utils.rs         # Utility functions (41 lines)
-├── home.rs               # Home view wrapper (81 lines)
-├── shelf.rs               # Document display shelf (216 lines)
-├── book.rs                # Book/document entry (363 lines)
-├── directory.rs            # Directory view (127 lines)
-├── address_bar.rs          # Path/address bar (188 lines)
-├── navigation_bar.rs       # Navigation controls (400 lines)
-├── bottom_bar.rs           # Status bar (214 lines)
-├── library_label.rs        # Library selection (123 lines)
-└── directories_bar.rs       # Directory list (620 lines)
+├── shelf.rs               # Document display shelf (217 lines)
+├── book.rs                # Book/document entry (366 lines)
+├── directory.rs            # Directory view (128 lines)
+├── address_bar.rs          # Path/address bar (189 lines)
+├── navigation_bar.rs       # Navigation controls (405 lines)
+├── bottom_bar.rs           # Status bar (216 lines)
+├── library_label.rs        # Library selection (128 lines)
+└── directories_bar.rs       # Directory list (621 lines)
 ```
 
-**Total Home Module:** 5,140 lines across 11 files
+**Total Home Module:** 4,368 lines across 16 files (all under 1000 lines)
 
 ### 2.3 Font Module Refactor ✅ COMPLETE
 

@@ -32,7 +32,8 @@ The user is working on improving the Plato codebase by addressing structural iss
 ## Relevant files / directories
 
 **Home View Refactoring:**
-- `crates/core/src/view/home/mod.rs` (main file to split, 2,769 lines)
+- `crates/core/src/view/home/mod.rs` (completed, now 596 lines)
+- Extracted modules: `ops.rs`, `ui_toggles.rs`, `library.rs`, `fetcher.rs`, `navigation.rs`, `updates.rs`, `input.rs`
 - Related view components: `book.rs`, `shelf.rs`, `address_bar.rs`, `navigation_bar.rs`, `bottom_bar.rs`, `home_utils.rs`
 
 **ReaderImpl Refactoring:**

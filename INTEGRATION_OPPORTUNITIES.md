@@ -33,13 +33,18 @@ The reader refactor is incomplete. `reader.rs` is still **3382 lines** and conta
 
 ### 2. Home view modularization
 
+**Status:** Completed
+
+The home view modularization is complete. `home/mod.rs` has been reduced from 2786 to 596 lines. All modules extracted:
+- ops.rs, ui_toggles.rs, library.rs, fetcher.rs, navigation.rs, updates.rs, input.rs
+
 **Problem**
 
-The home view is still oversized (**2786 lines**) and violates the 1000-line mandate.
+(The problem description is now obsolete - task completed)
 
 **Recommended action**
 
-- Split `crates/core/src/view/home/mod.rs` by responsibility (event handling, menus, batch ops).
+(N/A - task completed)
 
 ### 3. PDF tools UI workflow completion
 

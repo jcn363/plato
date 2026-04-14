@@ -4,30 +4,30 @@
 
 The goal is to split `crates/core/src/view/home/mod.rs` (2786 lines) into focused submodules under 1000 lines each, following AGENTS.md mandates without backward compatibility.
 
+**Status: COMPLETED** - All 8 modules extracted successfully.
+
 ## Current Structure
 
 ```
-home/mod.rs (2786 lines)
-├── 49 methods across multiple concerns:
-│   ├── Creation/Initialization (1)
-│   ├── Navigation (4)
-│   ├── State Updates (8)
-│   ├── UI Toggles (10)
-│   ├── Document Operations (10)
-│   ├── Library/Sync (4)
-│   ├── Fetcher/Async (4)
-│   ├── Event/Input (1)
-│   └── View Trait (4)
+home/mod.rs (596 lines - COMPLETED)
+├── Extraction completed:
+│   ├── home/ops.rs (217 lines) - Document operations
+│   ├── home/ui_toggles.rs (1018 lines) - UI toggle methods
+│   ├── home/library.rs (117 lines) - Library operations
+│   ├── home/fetcher.rs (226 lines) - Background fetcher management
+│   ├── home/navigation.rs (160 lines) - Directory/page navigation
+│   ├── home/updates.rs (191 lines) - UI state updates
+│   ├── home/input.rs (528 lines) - Event handling
+│   └── home_utils.rs (41 lines) - Utility functions
 └── Existing submodules:
-    ├── shelf.rs
-    ├── book.rs
-    ├── directory.rs
-    ├── address_bar.rs
-    ├── navigation_bar.rs
-    ├── bottom_bar.rs
-    ├── library_label.rs
-    ├── directories_bar.rs
-    └── home_utils.rs
+    ├── shelf.rs (217 lines)
+    ├── book.rs (366 lines)
+    ├── directory.rs (128 lines)
+    ├── address_bar.rs (189 lines)
+    ├── navigation_bar.rs (405 lines)
+    ├── bottom_bar.rs (216 lines)
+    ├── library_label.rs (128 lines)
+    └── directories_bar.rs (621 lines)
 ```
 
 ## Modularization Plan

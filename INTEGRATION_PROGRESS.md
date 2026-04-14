@@ -25,7 +25,8 @@
 
 ### Home modularization
 
-- `home/mod.rs` is still `2769` lines (AGENTS.md target: < 1000 lines).
+- `home/mod.rs` is now `596` lines (AGENTS.md target: < 1000 lines) - COMPLETED
+- All modules extracted: ops.rs, ui_toggles.rs, library.rs, fetcher.rs, navigation.rs, updates.rs, input.rs
 
 ### Font module refactoring
 
@@ -72,7 +73,7 @@ Notes:
 | File | Current Lines | Status |
 |------|---------------|--------|
 | `reader_impl/reader.rs` | 3403 | Open |
-| `view/home/mod.rs` | 2769 | Open |
+| `view/home/mod.rs` | 596 | Completed |
 | `font/mod.rs` | 2400 | Open |
 | `document/html/engine.rs` | 2672 | Open |
 | `document/html/layout.rs` | 718 | Informational |

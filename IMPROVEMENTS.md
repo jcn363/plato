@@ -31,17 +31,18 @@ These items are now verifiable in the current source tree:
 
 - **Monolithic Files (1000-line limit)**: 
   - `crates/core/src/view/reader/reader_impl/reader.rs` (**3382 lines**)
-  - `crates/core/src/view/home/mod.rs` (**2786 lines**)
-- **Reader trait stubs**: `reader.rs` contains a large block of stubbed trait methods that must be replaced with active logic from the helper modules.
+  - `crates/core/src/view/home/mod.rs` (**596 lines** - COMPLETED)
 
 ### Reader migration is incomplete
 
 - helper modules like `reader_rendering.rs` and `reader_gestures.rs` exist but are not fully utilized.
 - Active logic remains trapped in the monolithic `reader.rs`.
 
-### Home view is still oversized
+### Home view modularization COMPLETED
 
-- The home view remains a large concentration point for event handling and batch operations.
+- All 8 modules extracted: ops.rs, ui_toggles.rs, library.rs, fetcher.rs, navigation.rs, updates.rs, input.rs
+- home/mod.rs reduced from 2786 to 596 lines
+- All files under 1000 lines
 
 ### PDF tools UI workflow completion
 
