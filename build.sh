@@ -173,58 +173,89 @@ fi
 # Handle thirdparty libraries
 THIRDPARTY_DIR="thirdparty"
 
-if [ "$METHOD" = "fast" ]; then
-    if [ ! -d "$LIB_DIR" ]; then
-        echo "Using fast method - downloading prebuilt libraries"
-        ./download.sh "$LIB_DIR/*"
+check_lib_exists() {
+    local lib="$1"
+    if [ ! -f "$LIB_DIR/$lib" ]; then
+        return 1
     fi
-    ensure_symlinks "$LIB_DIR"
-elif [ "$METHOD" = "slow" ]; then
-    echo "Building thirdparty libraries from source with $JOBS jobs"
-    cd "$THIRDPARTY_DIR"
-    ./download.sh $THIRDPARTY_ARGS
-    # Pass JOBS to thirdparty/build.sh if it was modified to accept it
-    # For now, our parallelized build.sh uses nproc, but we can override it if needed.
-    # We will just run it as is since we modified it to be parallel.
-    ./build.sh $THIRDPARTY_ARGS
-    cd ..
-    
+    return 0
+}
+
+THIRDPARTY_NEED_REBUILD=0
+
+if [ "$METHOD" = "fast" ] || [ "$METHOD" = "slow" ] || [ "$METHOD" = "skip" ]; then
     mkdir -p "$LIB_DIR"
-    case "$TARGET" in
-        arm|arm64)
-            cp thirdparty/zlib/libz.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/bzip2/libbz2.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/libpng/.libs/libpng16.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/libjpeg/.libs/libjpeg.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/openjpeg/build/bin/libopenjp2.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/jbig2dec/.libs/libjbig2dec.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/freetype2/objs/.libs/libfreetype.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/harfbuzz/build/src/libharfbuzz.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/gumbo/.libs/libgumbo.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/djvulibre/libdjvu/.libs/libdjvulibre.so "$LIB_DIR/" 2>/dev/null || true
-            cp thirdparty/mupdf/build/release/libmupdf.so "$LIB_DIR/" 2>/dev/null || true
-            ;;
-        host)
-            find thirdparty -name "*.so*" -type f -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
-            ;;
-    esac
-    ensure_symlinks "$LIB_DIR"
-elif [ "$METHOD" = "skip" ]; then
-    echo "Skipping thirdparty library build/download"
-    ensure_symlinks "$LIB_DIR"
+    
+    NEED_REBUILD=0
+    for lib in libmupdf.so libfreetype.so libharfbuzz.so libpng16.so libjpeg.so libopenjp2.so libz.so libbz2.so libjbig2dec.so libdjvulibre.so libgumbo.so; do
+        if ! check_lib_exists "$lib"; then
+            NEED_REBUILD=1
+            echo "Library $lib not found in $LIB_DIR"
+            break
+        fi
+    done
+    
+    if [ "$METHOD" = "fast" ]; then
+        if [ ! -d "$LIB_DIR" ] || [ "$NEED_REBUILD" = "1" ]; then
+            echo "Using fast method - downloading prebuilt libraries"
+            ./download.sh "$LIB_DIR/*"
+        fi
+        ensure_symlinks "$LIB_DIR"
+    elif [ "$METHOD" = "slow" ]; then
+        if [ "$NEED_REBUILD" = "1" ]; then
+            echo "Building thirdparty libraries from source with $JOBS jobs"
+            cd "$THIRDPARTY_DIR"
+            ./download.sh $THIRDPARTY_ARGS
+            ./build.sh $THIRDPARTY_ARGS
+            cd ..
+            
+            mkdir -p "$LIB_DIR"
+            case "$TARGET" in
+                arm|arm64)
+                    cp thirdparty/zlib/libz.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/bzip2/libbz2.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/libpng/.libs/libpng16.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/libjpeg/.libs/libjpeg.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/openjpeg/build/bin/libopenjp2.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/jbig2dec/.libs/libjbig2dec.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/freetype2/objs/.libs/libfreetype.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/harfbuzz/build/src/libharfbuzz.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/gumbo/.libs/libgumbo.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/djvulibre/libdjvu/.libs/libdjvulibre.so "$LIB_DIR/" 2>/dev/null || true
+                    cp thirdparty/mupdf/build/release/libmupdf.so "$LIB_DIR/" 2>/dev/null || true
+                    ;;
+                host)
+                    find thirdparty -name "*.so*" -type f -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
+                    ;;
+            esac
+            ensure_symlinks "$LIB_DIR"
+        else
+            echo "Thirdparty libraries up to date, skipping rebuild."
+        fi
+    elif [ "$METHOD" = "skip" ]; then
+        if [ "$NEED_REBUILD" = "1" ]; then
+            echo "Warning: Required library missing, using fast method to download..."
+            ./download.sh "$LIB_DIR/*"
+        else
+            echo "Skipping thirdparty library build/download"
+        fi
+        ensure_symlinks "$LIB_DIR"
+    fi
 fi
 
 # Build mupdf_wrapper if needed
-MUPDF_WRAPPER_DIR="target/mupdf_wrapper/Kobo"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+MUPDF_WRAPPER_DIR="$SCRIPT_DIR/target/mupdf_wrapper/Kobo"
 MUPDF_WRAPPER_LIB="$MUPDF_WRAPPER_DIR/libmupdf_wrapper.a"
+MUPDF_WRAPPER_C="$SCRIPT_DIR/mupdf_wrapper/mupdf_wrapper.c"
 
 echo "Checking mupdf_wrapper..."
-cd mupdf_wrapper
+cd "$SCRIPT_DIR/mupdf_wrapper"
 NEED_BUILD=0
 if [ ! -f "$MUPDF_WRAPPER_LIB" ]; then
     NEED_BUILD=1
     echo "mupdf_wrapper not found, building..."
-elif [ mupdf_wrapper.c -nt "$MUPDF_WRAPPER_LIB" ]; then
+elif [ "$MUPDF_WRAPPER_C" -nt "$MUPDF_WRAPPER_LIB" ]; then
     NEED_BUILD=1
     echo "mupdf_wrapper.c modified, rebuilding..."
 fi
@@ -245,7 +276,7 @@ if [ "$NEED_BUILD" = "1" ]; then
 else
     echo "mupdf_wrapper up to date, skipping build."
 fi
-cd ..
+cd "$SCRIPT_DIR"
 
 # Build all crates in the workspace
 echo "Building Plato workspace crates..."
