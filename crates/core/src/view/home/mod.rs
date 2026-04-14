@@ -103,6 +103,7 @@ mod directories_bar;
 mod directory;
 mod fetcher;
 mod home_utils;
+mod input;
 mod library;
 mod library_label;
 mod navigation;
@@ -112,44 +113,43 @@ mod shelf;
 mod ui_toggles;
 mod updates;
 
-use self::address_bar::AddressBar;
-use self::bottom_bar::BottomBar;
-use self::navigation_bar::NavigationBar;
-use self::shelf::Shelf;
+pub use self::address_bar::AddressBar;
+pub use self::book::Book;
+pub use self::bottom_bar::BottomBar;
+pub use self::directories_bar::DirectoriesBar;
+pub use self::directory::Directory;
+pub use self::library_label::LibraryLabel;
+pub use self::navigation_bar::NavigationBar;
+pub use self::shelf::Shelf;
+
+use self::input::HomeInputExt;
 use super::top_bar::TopBar;
 
-use crate::context::{Context, DeviceFlags};
+use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
-use crate::geom::{halves, CycleDir, DiagDir, Dir, Rectangle};
-use crate::gesture::GestureEvent;
-use crate::input::{ButtonCode, ButtonStatus, DeviceEvent};
+use crate::geom::{halves, Rectangle};
 use crate::library::Library;
-use crate::log_error;
 use crate::metadata::{sort, BookQuery, Metadata, SimpleStatus, SortMethod};
 use crate::settings::{FirstColumn, Hook, LibraryMode, SecondColumn};
 use crate::theme;
 use crate::unit::scale_by_dpi;
-use crate::view::common::{locate, rlocate};
-use crate::view::common::{toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
+use crate::view::common::{locate, rlocate, toggle_main_menu};
 use crate::view::filler::Filler;
 use crate::view::keyboard::Keyboard;
-use crate::view::menu::{Menu, MenuKind};
-use crate::view::menu_helpers::{toggle_menu_ctx, toggle_menu_item};
+use crate::view::menu::Menu;
+use crate::view::menu_helpers::toggle_menu_ctx;
 use crate::view::named_input::NamedInput;
 use crate::view::notification::Notification;
 use crate::view::search_bar::SearchBar;
-use crate::view::{AppCmd, Bus, Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
+use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
+use crate::view::{EntryId, Id, ViewId, ID_FEEDER};
 use crate::view::{BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
 use rand_core::Rng;
 use rustc_hash::{FxHashMap, FxHashSet};
-use serde_json::{json, Value};
-use std::io::Write;
-use std::mem;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Child;
 
 pub const TRASH_DIRNAME: &str = ".trash";
@@ -384,480 +384,11 @@ impl View for Home {
         &mut self,
         evt: &Event,
         hub: &Hub,
-        _bus: &mut Bus,
+        bus: &mut Bus,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
-        match *evt {
-            Event::Gesture(GestureEvent::Swipe {
-                dir, start, end, ..
-            }) => {
-                match dir {
-                    Dir::South
-                        if self.children[0].rect().includes(start)
-                            && self.children[self.shelf_index].rect().includes(end) =>
-                    {
-                        if !context.settings.home.navigation_bar {
-                            self.toggle_navigation_bar(Some(true), true, hub, rq, context);
-                        } else if !context.settings.home.address_bar {
-                            self.toggle_address_bar(Some(true), true, hub, rq, context);
-                        }
-                    }
-                    Dir::North
-                        if self.children[self.shelf_index].rect().includes(start)
-                            && self.children[0].rect().includes(end) =>
-                    {
-                        if context.settings.home.address_bar {
-                            self.toggle_address_bar(Some(false), true, hub, rq, context);
-                        } else if context.settings.home.navigation_bar {
-                            self.toggle_navigation_bar(Some(false), true, hub, rq, context);
-                        }
-                    }
-                    _ => (),
-                }
-                true
-            }
-            Event::Gesture(GestureEvent::Rotate { quarter_turns, .. }) if quarter_turns != 0 => {
-                let (_, dir) = CURRENT_DEVICE.mirroring_scheme();
-                let n = (4 + (context.display.rotation - dir * quarter_turns)) % 4;
-                hub.send(Event::Select(EntryId::Rotate(n))).ok();
-                true
-            }
-            Event::Gesture(GestureEvent::Arrow { dir, .. }) => {
-                match dir {
-                    Dir::West => self.go_to_page(0, hub, rq, context),
-                    Dir::East => {
-                        let pages_count = self.pages_count;
-                        self.go_to_page(pages_count.saturating_sub(1), hub, rq, context);
-                    }
-                    Dir::North => {
-                        let path = context.library.home.clone();
-                        self.select_directory(&path, hub, rq, context);
-                    }
-                    Dir::South => self.toggle_search_bar(None, true, hub, rq, context),
-                };
-                true
-            }
-            Event::Gesture(GestureEvent::Corner { dir, .. }) => {
-                match dir {
-                    DiagDir::NorthWest | DiagDir::SouthWest => {
-                        self.go_to_status_change(CycleDir::Previous, hub, rq, context)
-                    }
-                    DiagDir::NorthEast | DiagDir::SouthEast => {
-                        self.go_to_status_change(CycleDir::Next, hub, rq, context)
-                    }
-                };
-                true
-            }
-            Event::Focus(v) => {
-                if self.focus != v {
-                    self.focus = v;
-                    if v.is_some() {
-                        self.toggle_keyboard(true, true, v, hub, rq, context);
-                    }
-                }
-                true
-            }
-            Event::Show(ViewId::Keyboard) => {
-                self.toggle_keyboard(true, true, None, hub, rq, context);
-                true
-            }
-            Event::Toggle(ViewId::GoToPage) => {
-                self.toggle_go_to_page(None, hub, rq, context);
-                true
-            }
-            Event::Toggle(ViewId::SearchBar) => {
-                self.toggle_search_bar(None, true, hub, rq, context);
-                true
-            }
-            Event::ToggleNear(ViewId::TitleMenu, rect) => {
-                self.toggle_sort_menu(rect, None, rq, context);
-                true
-            }
-            Event::ToggleBookMenu(rect, index) => {
-                self.toggle_book_menu(index, rect, None, rq, context);
-                true
-            }
-            Event::ToggleNear(ViewId::MainMenu, rect) => {
-                toggle_main_menu(self, rect, None, rq, context);
-                true
-            }
-            Event::ToggleNear(ViewId::BatteryMenu, rect) => {
-                toggle_battery_menu(self, rect, None, rq, context);
-                true
-            }
-            Event::ToggleNear(ViewId::ClockMenu, rect) => {
-                toggle_clock_menu(self, rect, None, rq, context);
-                true
-            }
-            Event::ToggleNear(ViewId::LibraryMenu, rect) => {
-                self.toggle_library_menu(rect, None, rq, context);
-                true
-            }
-            Event::Close(ViewId::AddressBar) => {
-                self.toggle_address_bar(Some(false), true, hub, rq, context);
-                true
-            }
-            Event::Close(ViewId::SearchBar) => {
-                self.toggle_search_bar(Some(false), true, hub, rq, context);
-                true
-            }
-            Event::Close(ViewId::SortMenu) => {
-                self.toggle_sort_menu(Rectangle::default(), Some(false), rq, context);
-                true
-            }
-            Event::Close(ViewId::LibraryMenu) => {
-                self.toggle_library_menu(Rectangle::default(), Some(false), rq, context);
-                true
-            }
-            Event::Close(ViewId::MainMenu) => {
-                toggle_main_menu(self, Rectangle::default(), Some(false), rq, context);
-                true
-            }
-            Event::Close(ViewId::GoToPage) => {
-                self.toggle_go_to_page(Some(false), hub, rq, context);
-                true
-            }
-            Event::Close(ViewId::RenameDocument) => {
-                self.toggle_rename_document(Some(false), hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::Sort(sort_method)) => {
-                let selected_library = context.settings.selected_library;
-                context.settings.libraries[selected_library].sort_method = sort_method;
-                self.set_sort_method(sort_method, hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::ReverseOrder) => {
-                let next_value = !self.reverse_order;
-                self.set_reverse_order(next_value, hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::LoadLibrary(index)) => {
-                self.load_library(index, hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::Import) => {
-                self.import(hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::CleanUp) => {
-                self.clean_up(hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::Flush) => {
-                self.flush(context);
-                true
-            }
-            Event::ToggleBatchMode => {
-                self.batch_mode = !self.batch_mode;
-                if !self.batch_mode {
-                    self.batch_selected.clear();
-                }
-                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-                true
-            }
-            Event::BatchSelect(index) => {
-                if self.batch_selected.contains(&index) {
-                    self.batch_selected.remove(&index);
-                } else {
-                    self.batch_selected.insert(index);
-                }
-                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-                true
-            }
-            Event::BatchDelete => {
-                if !self.batch_selected.is_empty() {
-                    let indices: Vec<usize> = self.batch_selected.iter().cloned().collect();
-                    for &idx in &indices {
-                        if idx < self.visible_books.len() {
-                            let path = context
-                                .library
-                                .home
-                                .join(&self.visible_books[idx].file.path);
-                            if let Err(e) = std::fs::remove_file(&path) {
-                                log_error!("Failed to delete {}: {}", path.display(), e);
-                            }
-                        }
-                    }
-                    self.batch_selected.clear();
-                    self.batch_mode = false;
-                    self.import(hub, rq, context);
-                }
-                true
-            }
-            Event::BatchMove(ref dest) => {
-                if !self.batch_selected.is_empty() {
-                    let indices: Vec<usize> = self.batch_selected.iter().cloned().collect();
-                    for &idx in &indices {
-                        if idx < self.visible_books.len() {
-                            let src = context
-                                .library
-                                .home
-                                .join(&self.visible_books[idx].file.path);
-                            let dst = dest.join(&self.visible_books[idx].file.path);
-                            if let Err(e) = std::fs::rename(&src, &dst) {
-                                log_error!("Failed to move {}: {}", src.display(), e);
-                            }
-                        }
-                    }
-                    self.batch_selected.clear();
-                    self.batch_mode = false;
-                    self.import(hub, rq, context);
-                }
-                true
-            }
-            Event::FetcherAddDocument(_, ref info) => {
-                self.add_document(*info.clone(), hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::SetStatus(ref path, status)) => {
-                self.set_status(path, status, hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::FirstColumn(first_column)) => {
-                let selected_library = context.settings.selected_library;
-                context.settings.libraries[selected_library].first_column = first_column;
-                self.update_first_column(hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::SecondColumn(second_column)) => {
-                let selected_library = context.settings.selected_library;
-                context.settings.libraries[selected_library].second_column = second_column;
-                self.update_second_column(hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::ThumbnailPreviews) => {
-                let selected_library = context.settings.selected_library;
-                context.settings.libraries[selected_library].thumbnail_previews =
-                    !context.settings.libraries[selected_library].thumbnail_previews;
-                self.update_thumbnail_previews(hub, rq, context);
-                true
-            }
-            Event::Submit(ViewId::AddressBarInput, ref addr) => {
-                self.toggle_keyboard(false, true, None, hub, rq, context);
-                self.select_directory(Path::new(addr), hub, rq, context);
-                true
-            }
-            Event::Submit(ViewId::HomeSearchInput, ref text) => {
-                self.query = BookQuery::new(text);
-                if self.query.is_some() {
-                    self.toggle_keyboard(false, false, None, hub, rq, context);
-                    // Render the search bar and its separator.
-                    for i in self.shelf_index + 1..=self.shelf_index + 2 {
-                        rq.add(RenderData::new(
-                            self.child(i).id(),
-                            *self.child(i).rect(),
-                            UpdateMode::Gui,
-                        ));
-                    }
-                    self.refresh_visibles(true, true, hub, rq, context);
-                } else {
-                    let notif =
-                        Notification::new("Invalid search query.".to_string(), hub, rq, context);
-                    self.children.push(Box::new(notif) as Box<dyn View>);
-                }
-                true
-            }
-            Event::Submit(ViewId::GoToPageInput, ref text) => {
-                if text == "(" {
-                    self.go_to_page(0, hub, rq, context);
-                } else if text == ")" {
-                    self.go_to_page(self.pages_count.saturating_sub(1), hub, rq, context);
-                } else if text == "_" {
-                    let index = (context.rng.next_u64() % self.pages_count as u64) as usize;
-                    self.go_to_page(index, hub, rq, context);
-                } else if let Ok(index) = text.parse::<usize>() {
-                    self.go_to_page(index.saturating_sub(1), hub, rq, context);
-                }
-                true
-            }
-            Event::Submit(ViewId::RenameDocumentInput, ref file_name) => {
-                if let Some(ref path) = self.target_document.take() {
-                    self.rename(path, file_name, hub, rq, context)
-                        .map_err(|e| log_error!("Can't rename document: {:#}.", e))
-                        .ok();
-                }
-                true
-            }
-            Event::NavigationBarResized(_) => {
-                home_utils::adjust_shelf_top_edge(&mut self.children, self.shelf_index - 2);
-                home_utils::update_shelf_and_bottom_bar(true, self, hub, rq, context);
-                for i in self.shelf_index - 2..=self.shelf_index - 1 {
-                    rq.add(RenderData::new(
-                        self.child(i).id(),
-                        *self.child(i).rect(),
-                        UpdateMode::Gui,
-                    ));
-                }
-                true
-            }
-            Event::Select(EntryId::EmptyTrash) => {
-                self.empty_trash(hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::Rename(ref path)) => {
-                self.target_document = Some(path.clone());
-                self.toggle_rename_document(Some(true), hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::Remove(ref path))
-            | Event::FetcherRemoveDocument(_, ref path) => {
-                self.remove(path, hub, rq, context)
-                    .map_err(|e| log_error!("Can't remove document: {:#}.", e))
-                    .ok();
-                true
-            }
-            Event::Select(EntryId::CopyTo(ref path, index)) => {
-                self.copy_to(path, index, context)
-                    .map_err(|e| log_error!("Can't copy document: {:#}.", e))
-                    .ok();
-                true
-            }
-            Event::Select(EntryId::MoveTo(ref path, index)) => {
-                self.move_to(path, index, hub, rq, context)
-                    .map_err(|e| log_error!("Can't move document: {:#}.", e))
-                    .ok();
-                true
-            }
-            Event::Select(EntryId::ToggleShowHidden) => {
-                context.library.show_hidden = !context.library.show_hidden;
-                self.refresh_visibles(true, false, hub, rq, context);
-                true
-            }
-            Event::SelectDirectory(ref path)
-            | Event::Select(EntryId::SelectDirectory(ref path)) => {
-                self.select_directory(path, hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::ToggleSelectDirectory(ref path)) => {
-                self.toggle_select_directory(path, hub, rq, context);
-                true
-            }
-            Event::Select(EntryId::SearchAuthor(ref author)) => {
-                let text = format!("'a {}", author);
-                let query = BookQuery::new(&text);
-                if query.is_some() {
-                    self.query = query;
-                    self.toggle_search_bar(Some(true), false, hub, rq, context);
-                    self.toggle_keyboard(false, false, None, hub, rq, context);
-                    if let Some(search_bar) =
-                        self.children[self.shelf_index + 2].downcast_mut::<SearchBar>()
-                    {
-                        search_bar.set_text(&text, rq, context);
-                    }
-                    // Render the search bar and its separator.
-                    for i in self.shelf_index + 1..=self.shelf_index + 2 {
-                        rq.add(RenderData::new(
-                            self.child(i).id(),
-                            *self.child(i).rect(),
-                            UpdateMode::Gui,
-                        ));
-                    }
-                    self.refresh_visibles(true, true, hub, rq, context);
-                }
-                true
-            }
-            Event::GoTo(location) => {
-                self.go_to_page(location as usize, hub, rq, context);
-                true
-            }
-            Event::Chapter(dir) => {
-                let pages_count = self.pages_count;
-                match dir {
-                    CycleDir::Previous => self.go_to_page(0, hub, rq, context),
-                    CycleDir::Next => {
-                        self.go_to_page(pages_count.saturating_sub(1), hub, rq, context)
-                    }
-                }
-                true
-            }
-            Event::Page(dir) => {
-                self.go_to_neighbor(dir, hub, rq, context);
-                true
-            }
-            Event::Device(DeviceEvent::Button {
-                code: ButtonCode::Backward,
-                status: ButtonStatus::Pressed,
-                ..
-            }) => {
-                self.go_to_neighbor(CycleDir::Previous, hub, rq, context);
-                true
-            }
-            Event::Device(DeviceEvent::Button {
-                code: ButtonCode::Forward,
-                status: ButtonStatus::Pressed,
-                ..
-            }) => {
-                self.go_to_neighbor(CycleDir::Next, hub, rq, context);
-                true
-            }
-            Event::Device(DeviceEvent::NetUp) => {
-                for fetcher in self.background_fetchers.values_mut() {
-                    if let Some(stdin) = fetcher.process.stdin.as_mut() {
-                        writeln!(stdin, "{}", json!({"type": "network", "status": "up"})).ok();
-                    }
-                }
-                true
-            }
-            Event::FetcherSearch {
-                id,
-                ref path,
-                ref query,
-                ref sort_by,
-            } => {
-                let path = path.as_ref().unwrap_or(&context.library.home);
-                let query = query.as_ref().and_then(|text| BookQuery::new(text));
-                let (mut files, _) = context.library.list(path, query.as_ref(), false);
-                if let Some((sort_method, reverse_order)) = *sort_by {
-                    sort(&mut files, sort_method, reverse_order);
-                }
-                for entry in &mut files {
-                    // Let the *reader* field pass through.
-                    mem::swap(&mut entry.reader, &mut entry.reader_info);
-                }
-                if let Some(fetcher) = self.background_fetchers.get_mut(&id) {
-                    if let Some(stdin) = fetcher.process.stdin.as_mut() {
-                        writeln!(
-                            stdin,
-                            "{}",
-                            json!({"type": "search",
-                                                     "results": files})
-                        )
-                        .ok();
-                    }
-                }
-                true
-            }
-            Event::CheckFetcher(id) => {
-                if let Some(fetcher) = self.background_fetchers.get_mut(&id) {
-                    if let Ok(exit_status) = fetcher.process.wait() {
-                        if !exit_status.success() {
-                            let msg = format!(
-                                "{}: abnormal process termination.",
-                                fetcher.path.display()
-                            );
-                            let notif = Notification::new(msg, hub, rq, context);
-                            self.children.push(Box::new(notif) as Box<dyn View>);
-                        }
-                    }
-                }
-                true
-            }
-            Event::ToggleFrontlight => {
-                if let Some(index) = locate::<TopBar>(self) {
-                    if let Some(top_bar) = self.child_mut(index).downcast_mut::<TopBar>() {
-                        top_bar.update_frontlight_icon(rq, context);
-                    }
-                }
-                true
-            }
-            Event::Reseed => {
-                self.reseed(hub, rq, context);
-                true
-            }
-            _ => false,
-        }
+        self.handle_event_impl(evt, hub, bus, rq, context)
     }
 
     fn render(&self, _fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {}
