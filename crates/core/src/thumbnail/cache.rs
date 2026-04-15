@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::framebuffer::{Framebuffer, Pixmap};
+use crate::thumbnail::ThumbnailResult;
 
 /// Thread-safe LRU cache for thumbnail pixmaps
 pub struct ThumbnailCache {

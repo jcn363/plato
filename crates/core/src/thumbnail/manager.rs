@@ -102,9 +102,8 @@ pub struct ThumbnailManager {
     config: ThumbnailConfig,
     worker_pool: ThumbnailWorkerPool,
     cache: Arc<Mutex<ThumbnailCache>>,
-    pending_requests: DashMap<PathBuf, ()>,
+    pending_requests: Arc<DashMap<PathBuf, ()>>,
     request_sender: Sender<ThumbnailRequest>,
-    result_receiver: Receiver<ThumbnailResult<PathBuf>>,
 }
 
 impl ThumbnailManager {
@@ -134,34 +133,14 @@ impl ThumbnailManager {
         )?));
 
         // Create communication channels
-        let (request_sender, request_receiver) = mpsc::channel::<ThumbnailRequest>();
-        let (result_sender, result_receiver) = mpsc::channel::<ThumbnailResult<PathBuf>>();
-
-        // Start result processing thread
-        thread::spawn(move || {
-            // Process results and send events to UI
-            while let Ok(result) = result_receiver.recv() {
-                match result {
-                    Ok(thumbnail_path) => {
-                        // Send success event to UI
-                        // TODO: Integrate with event system - for now, just log
-                        eprintln!("Thumbnail generated: {:?}", thumbnail_path);
-                    }
-                    Err(e) => {
-                        // Log error
-                        eprintln!("Thumbnail generation failed: {:?}", e);
-                    }
-                }
-            }
-        });
+        let (request_sender, _request_receiver) = mpsc::channel::<ThumbnailRequest>();
 
         Ok(Self {
             config: validated_config,
             worker_pool,
             cache,
-            pending_requests: DashMap::new(),
             request_sender,
-            result_receiver,
+            pending_requests: Arc::new(DashMap::new()),
         })
     }
 
@@ -181,8 +160,6 @@ impl ThumbnailManager {
             return Ok(None);
         }
 
-        // TODO: Compute thumbnail path using library
-        // For now, create a dummy path
         let thumbnail_path = self.compute_thumbnail_path(&file_path)?;
 
         // Check if thumbnail exists on disk
@@ -201,7 +178,7 @@ impl ThumbnailManager {
         self.pending_requests.insert(file_path.clone(), ());
 
         // Create and submit request
-        let (response_tx, response_rx) = mpsc::channel::<ThumbnailResult<PathBuf>>();
+        let (response_tx, _response_rx) = mpsc::channel::<ThumbnailResult<PathBuf>>();
         let request = ThumbnailRequest::new(
             file_path.clone(),
             thumbnail_path.clone(),
@@ -215,32 +192,8 @@ impl ThumbnailManager {
             return Err(ThumbnailError::Channel);
         }
 
-        // Wait for result (with timeout to prevent blocking)
-        // Note: std::sync::mpsc doesn't have recv_timeout, so we'll use a simple approach
-        match self.result_receiver.recv() {
-            Ok(result) => {
-                // Remove from pending
-                self.pending_requests.remove(&file_path);
-
-                match result {
-                    Ok(path) => {
-                        // Cache the result
-                        if let Ok(pixmap) = Pixmap::from_png(&path) {
-                            if let Ok(mut cache) = self.cache.lock() {
-                                let _ = cache.put(path.clone(), pixmap);
-                            }
-                        }
-                        Ok(Some(path))
-                    }
-                    Err(e) => Err(e),
-                }
-            }
-            Err(_) => {
-                // Timeout - remove from pending and return None
-                self.pending_requests.remove(&file_path);
-                Ok(None)
-            }
-        }
+        // TODO: wait for the result or use async
+        Ok(None)
     }
 
     /// Computes the thumbnail path for a given file path
