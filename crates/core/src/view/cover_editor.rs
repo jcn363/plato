@@ -1,10 +1,10 @@
 use crate::color::WHITE;
-use crate::context::Context;
+use crate::context::Context as PlatoContext;
 use crate::cover_editor::{self, CoverEditor as CoverEditorLib};
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
-use crate::geom::Rectangle;
+use crate::geom::{Rectangle, BorderSpec};
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::unit::scale_by_dpi;
 use crate::view::entries::EntryId;
@@ -14,6 +14,13 @@ use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER}
 use anyhow::Error;
 use image::{DynamicImage, GenericImageView};
 use std::path::PathBuf;
+
+// Crop selection visual configuration
+const MIN_CROP_SIZE: u32 = 10;
+const CROP_BORDER_THICKNESS: u16 = 2;
+const CROP_SELECTION_COLOR: crate::color::Color = WHITE;
+const CROP_SHOW_OVERLAY: bool = false;
+const CROP_OVERLAY_ALPHA: f32 = 0.25;
 
 #[derive(Clone, PartialEq)]
 enum EditorMode {
@@ -40,7 +47,7 @@ pub struct CoverEditorView {
 }
 
 impl CoverEditorView {
-    pub fn new(rect: Rectangle, rq: &mut RenderQueue, context: &mut Context) -> CoverEditorView {
+    pub fn new(rect: Rectangle, rq: &mut RenderQueue, context: &mut PlatoContext) -> CoverEditorView {
         let id = ID_FEEDER.next();
         let dpi = CURRENT_DEVICE.dpi;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
@@ -80,7 +87,7 @@ impl CoverEditorView {
         rect: Rectangle,
         path: PathBuf,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        context: &mut PlatoContext,
     ) -> Result<CoverEditorView, Error> {
         let mut view = CoverEditorView::new(rect, rq, context);
         view.select_book(path)?;
@@ -177,7 +184,7 @@ impl View for CoverEditorView {
         hub: &Hub,
         bus: &mut Bus,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        context: &mut PlatoContext,
     ) -> bool {
         match evt {
             Event::Back => {
@@ -289,6 +296,33 @@ impl View for CoverEditorView {
 
         for child in self.children().iter() {
             child.render(fb, rect, fonts);
+        }
+
+        // Render crop selection visual feedback
+        if let EditorMode::CropMode = self.mode {
+            if let CropState::Selecting { start, end } = &self.crop_state {
+                // Normalize coordinates to ensure proper rectangle geometry
+                let x0 = start.0.min(end.0);
+                let y0 = start.1.min(end.1);
+                let x1 = start.0.max(end.0);
+                let y1 = start.1.max(end.1);
+                
+                // Validate selection has meaningful dimensions
+                if (x1 - x0) > MIN_CROP_SIZE as i32 && (y1 - y0) > MIN_CROP_SIZE as i32 {
+                    let crop_rect = Rectangle::new(pt!(x0, y0), pt!(x1, y1));
+                    
+                    // Configure visual styling
+                    let border = BorderSpec {
+                        thickness: CROP_BORDER_THICKNESS,
+                        color: CROP_SELECTION_COLOR,
+                    };
+                    
+                    // Draw rectangle outline
+                    if let Some(intersection) = crop_rect.intersection(&rect) {
+                        fb.draw_rectangle_outline(&intersection, &border);
+                    }
+                }
+            }
         }
 
         if let EditorMode::EditCover | EditorMode::CropMode = self.mode {
