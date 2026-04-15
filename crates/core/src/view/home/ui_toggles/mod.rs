@@ -14,6 +14,7 @@ pub mod book_view_toggle;
 pub mod directory_view_toggle;
 pub mod settings_toggle;
 pub mod library_toggle;
+pub mod utils;
 
 pub use keyboard_toggle::*;
 pub use address_bar_toggle::*;
@@ -26,3 +27,4 @@ pub use book_view_toggle::*;
 pub use directory_view_toggle::*;
 pub use settings_toggle::*;
 pub use library_toggle::*;
+pub use utils::*;
