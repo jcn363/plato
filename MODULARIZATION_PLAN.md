@@ -102,33 +102,35 @@ Created modules:
 - **Warnings**: ~110 warnings (unused imports, unused variables)
 
 ### 🔄 ARM Kobo Target (arm-unknown-linux-gnueabihf)
-- **Status**: 131 compilation errors remaining (reduced from 336)
+- **Status**: 129 compilation errors remaining (reduced from 336)
 - **Command**: `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
-- **Progress**: Fixed 205 errors so far
-- **Error Categories** (131 remaining):
-  - 23 E0599: No method/variant found (DeviceEvent, FingerStatus, Point, ZoomMode, etc.)
+- **Progress**: Fixed 207 errors so far
+- **Error Categories** (129 remaining):
+  - 5 E0599: No method/variant found (cloned, ok_or_else, Location iterator)
   - 29 E0609: No field found (Context::history, Info::simple_toc)
-  - 9 E0061: Wrong number of arguments (toggle methods)
-  - 15 E0308: Type mismatches
+  - 13 E0061: Wrong number of arguments (toggle methods)
+  - 16 E0308: Type mismatches
 
 ### Remaining Work to Complete Modularization
 
 #### Immediate Priority (High)
-1. **Fix ARM Kobo Build Errors** (131 remaining)
-   - ✅ Add missing ViewId variants (SettingsMenu, DirectoryView, Dialog, HighlightMenu)
+1. **Fix ARM Kobo Build Errors** (129 remaining)
+   - ✅ Add missing ViewId variants (SettingsMenu, DirectoryView, Dialog, HighlightMenu, NavigationBar, LibraryMenu, Shelf, BookView)
    - ✅ Add missing EntryId variant (HighlightColor)
    - ✅ Add missing SortMethod::Date variant
    - ✅ Add missing color constants (YELLOW, GREEN, BLUE, RED, ORANGE, PURPLE)
    - ✅ Add missing Library methods (len, iter, is_empty)
-   - Add DeviceEvent::Keyboard variant
-   - Add FingerStatus::Move variant
-   - Add Point::distance_to method
-   - Add Event variants (Tap, Swipe, DoubleTap, Hold)
-   - Add ZoomMode::Fit and ScrollMode::Vertical variants
-   - Implement Default for reader_core::State
+   - ✅ Add DeviceEvent::Keyboard variant
+   - ✅ Add FingerStatus::Move variant
+   - ✅ Add Point::distance_to method
+   - ✅ Add Event variants (Tap, Swipe, DoubleTap, Hold)
+   - ✅ Add Event::SearchBarSubmit and Event::AddressBarSubmit
+   - ✅ Add ZoomMode::Fit and ScrollMode::Vertical variants
+   - ✅ Implement Default for reader_core::State
+   - ✅ Add set_text method to View trait
    - Add missing fields to Context and Info structs
-   - Fix remaining toggle method signatures
-   - Resolve remaining type mismatches
+   - Fix remaining toggle method signatures (13 E0061)
+   - Resolve remaining type mismatches (16 E0308)
 
 2. **Reduce reader.rs Below 1000 Lines**
    - Extract remaining large methods to submodule files
