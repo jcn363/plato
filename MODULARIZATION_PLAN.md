@@ -1,18 +1,24 @@
 # Plato Codebase Modularization Plan
 
 > Following DRY (Don't Repeat Yourself) Principle
-> Last Updated: April 9, 2026
-> **Overall Completion: 100%** (Phase 1-4: Complete, Phase 5: Planned with 13 tasks)
+> Last Updated: April 15, 2026
+> **Overall Completion: 85%** (Phase 1-4: Complete, Phase 5: Addressing Critical Violations)
 
 ## Executive Summary
 
-This plan identifies opportunities to modularize the Plato codebase by extracting duplicated patterns, splitting monolithic files, and creating reusable components. Following analysis of 195 source files, the highest impact opportunities are:
+This plan identifies opportunities to modularize the Plato codebase by extracting duplicated patterns, splitting monolithic files, and creating reusable components. Following final verification pass (April 15, 2026), the current file sizes are:
 
-1. **Reader Module** (3,410 lines) - Extract nested structs, split into focused modules
-1. **Home Module** (596 lines) - Complete - 8 modules extracted  
-3. **Font Module** (2,783 lines) - Separate font operations from UI
-4. **HTML Engine** (2,672 lines) - Isolate parsing/rendering concerns
-5. **Common Patterns** - Extract duplicated code (~1,350 lines savable)
+**CRITICAL VIOLATIONS** - Files exceeding 1,000 line limit:
+1. **HTML Engine** (2,679 lines) - Requires immediate modularization
+2. **Reader Module** (2,653 lines) - Still exceeds target despite refactoring
+3. **HTML Engine Text** (1,076 lines) - Slightly over limit
+4. **Home UI Toggles** (1,014 lines) - Slightly over limit
+
+**COMPLIANT FILES** (Successfully modularized):
+- **Home Module** (596 lines) - Complete - 8 modules extracted  
+- **Font Module** (802 lines) - Complete - uses safe wrappers
+- **Reader Settings** (911 lines) - Compliant
+- **PDF Manipulator** (872 lines) - Compliant
 
 ## Phase 1: Immediate Wins (2-4 hours each) ✅ COMPLETE (100%)
 
@@ -55,7 +61,7 @@ This plan identifies opportunities to modularize the Plato codebase by extractin
 
 ### 2.1 Reader Module Refactor ✅ COMPLETE (INTENTIONAL DESIGN)
 
-**Current:** `crates/core/src/view/reader/reader_impl/reader.rs` (3,410 lines)
+**Current:** `crates/core/src/view/reader/reader_impl/reader.rs` (2,653 lines)
 **Status:** Already split - 9 submodules exist
 
 **Rationale for no further splitting:**
@@ -66,16 +72,16 @@ This plan identifies opportunities to modularize the Plato codebase by extractin
 reader/reader_impl/
 ├── mod.rs                 # Public re-exports
 ├── reader_core.rs         # Shared types ✅
-├── reader.rs              # Main implementation (3,410 lines)
+├── reader.rs              # Main implementation (2,653 lines)
 ├── reader_rendering.rs    # Rendering (231 lines)
 ├── reader_gestures.rs     # Touch/gesture handling (58 lines)
 ├── reader_annotations.rs # Annotations, notes (90 lines)
 ├── reader_dialogs.rs      # Input dialogs (141 lines)
-├── reader_settings.rs    # Settings menus (913 lines)
+├── reader_settings.rs    # Settings menus (911 lines)
 └── reader_search.rs       # Search functionality (151 lines)
 ```
 
-**Total Reader Module:** 6,505 lines across 20 files
+**Total Reader Module:** 4,321 lines across 9 files
 
 ### 2.2 Home Module Refactor ✅ COMPLETE
 
@@ -87,7 +93,7 @@ reader/reader_impl/
 home/
 ├── mod.rs                 # Main implementation (596 lines) ✅
 ├── input.rs               # Event handling (528 lines) ✅ NEW
-├── ui_toggles.rs         # UI toggle methods (1018 lines) ✅ NEW
+├── ui_toggles.rs         # UI toggle methods (1014 lines) ✅ NEW
 ├── ops.rs                 # Document operations (217 lines) ✅ NEW
 ├── updates.rs             # UI state updates (191 lines) ✅ NEW
 ├── fetcher.rs             # Background fetchers (226 lines) ✅ NEW
@@ -108,7 +114,7 @@ home/
 
 ### 2.3 Font Module Refactor ✅ COMPLETE
 
-**Current:** `crates/core/src/font/mod.rs` (~2,400 lines)
+**Current:** `crates/core/src/font/mod.rs` (802 lines)
 
 **Status:** 100% complete - modularized with extracted components
 
@@ -129,7 +135,7 @@ The Font struct has deep dependencies:
 **Final Structure:**
 ```
 font/
-├── mod.rs                 # Main implementation (~2,400 lines) - Font, RenderPlan, embedded fonts
+├── mod.rs                 # Main implementation (802 lines) - Font, RenderPlan, embedded fonts
 ├── freetype_error.rs      # ✅ Extracted - Error types
 ├── constants.rs          # ✅ Extracted - Font size constants
 ├── types.rs              # ✅ Extracted - Family, Variant, Style
@@ -146,7 +152,7 @@ font/
 - Enable font caching strategies
 - Separate UI from layout logic
 
-## Phase 3: Pattern Extraction (2-3 days)
+## Phase 3: Pattern Extraction (2-3 days) ✅ COMPLETE
 
 ### 3.1 Settings System Improvements
 
@@ -188,7 +194,7 @@ font/
   - Framebuffer: KoboFramebuffer1, KoboFramebuffer2
   - UI: CoverEditorView
 
-## Phase 4: Performance Optimizations (Ongoing)
+## Phase 4: Performance Optimizations (Ongoing) ✅ ANALYSIS COMPLETE
 
 ### 4.1 Caching Layers
 
@@ -261,7 +267,7 @@ font/
 
 | Metric | Original | Current | Target | Improvement | Completion |
 |--------|----------|---------|--------|-------------|------------|
-| Largest File Size | 4,168 lines | 3,410 lines | <1,000 lines | 18% reduction | 25% |
+| Largest File Size | 4,168 lines | 2,679 lines | <1,000 lines | 36% reduction | 63% |
 | Duplicate Lines | ~1,350 lines | ~1,150 lines | 0 lines | 15% eliminated | 15% |
 | Module Count | ~15 modules | ~18 modules | ~25-30 modules | 20% increase | 20% |
 | Boilerplate Reduction | 0 | ~900 lines | ~1,350 lines | 67% | 67% |
@@ -315,10 +321,10 @@ font/
 
 | File | Original | Current | Reduction |
 |------|----------|---------|-----------|
-| reader.rs | 4,168 | 3,410 | -758 |
+| reader.rs | 4,168 | 2,653 | -1,515 |
 | reader_settings.rs | 1,035 | 913 | -122 |
-| home/mod.rs | 2,788 | 2,767 | -21 |
-| **Total** | | | **-901 lines** |
+| home/mod.rs | 2,788 | 596 | -2,192 |
+| **Total** | | | **-3,829 lines** |
 
 ### Code Analysis Findings
 
@@ -330,6 +336,7 @@ After thorough analysis, most toggle methods now use helper functions. Remaining
 4. **Home toggle methods** - 6 methods (toggle_keyboard, toggle_address_bar, etc.) - different pattern (not menus)
 
 ### Available for Future Work
+
 - `common.rs`: 5 toggle methods (already use `toggle_view` - similar pattern)
 - `with_child!` macro: Not widely adopted yet, available for future refactoring
 - Phase 2: Module Splitting (reader.rs, home/mod.rs)
@@ -352,6 +359,8 @@ After thorough analysis, most toggle methods now use helper functions. Remaining
 - ✅ Dead code removal - Unused constants removed
 - ✅ Macro creation - with_child! for locate_by_id patterns
 - ✅ AGENTS.md - Added dead code investigation section
+
+---
 
 ## Stub and Placeholder Investigation ✅ COMPLETE (April 9, 2026)
 
@@ -396,25 +405,22 @@ After thorough analysis, most toggle methods now use helper functions. Remaining
 
 ## Next Immediate Actions
 
-1. ~~Commit MODULARIZATION_PLAN.md~~ ✅ Done
-2. ~~Implement quick wins (macro, menu helpers, queue_render)~~ ✅ Done
-3. ~~Adopt new helpers in existing code~~ ✅ Done
-4. ~~Phase 2: Module Splitting (Reader/Home/Font)~~ ✅ Done
-5. ~~Investigate stubs and placeholders~~ ✅ Done
-6. ~~Phase 3: Pattern Extraction~~ ✅ Done
-7. ~~Phase 4: Performance Optimizations Analysis~~ ✅ Done
+1. **Address Critical Violations** - Modularize files exceeding 1,000 lines:
+   - `document/html/engine.rs` (2,679 lines)
+   - `view/reader/reader_impl/reader.rs` (2,653 lines)
+   - `document/html/engine_text.rs` (1,076 lines)
+   - `view/home/ui_toggles.rs` (1,014 lines)
 
-### Phase 4 Completion Summary (April 9, 2026)
+2. **Review and Address Remaining `#[allow(dead_code)]` Scaffolding**
+   - Particularly in cover editor and other modules
 
-All Phase 4 optimizations **deferred by design** based on analysis:
+3. **Complete Reader Stub Block**
+   - Extract logic from `reader.rs` into submodules
+   - Replace stub methods with active call paths
 
-| Category | Status | Rationale |
-|----------|--------|-----------|
-| Caching Layers | Deferred | Already cached in Library struct; requires profiling |
-| Rendering Helpers | Available | Implemented but not adopted (per AGENTS.md) |
-| Pre-allocation | Deferred | Low impact, adds complexity without clear benefit |
+4. **Implement Interactive Application of Crop Selection** (Cover Editor)
 
-**Conclusion:** The codebase is well-optimized for Kobo device constraints. Performance work should only proceed after device profiling identifies actual bottlenecks.
+---
 
 ## Phase 5: Future Work (Long-term)
 
@@ -462,27 +468,21 @@ All Phase 4 optimizations **deferred by design** based on analysis:
 
 ### 5.2 Home Module Splitting
 
-**Estimated:** 20-30 hours
+**Status:** COMPLETED
 
-**Current:** Home module at 2,690 lines handles multiple concerns
+**Current:** Home module at 596 lines (well under 1000 line limit)
 
-**Proposed Split:**
+**Completed Modules:**
+- home/ops.rs (217 lines) - Document operations
+- home/ui_toggles.rs (1014 lines) - UI toggle methods
+- home/library.rs (117 lines) - Library operations
+- home/fetcher.rs (226 lines) - Background fetcher management
+- home/navigation.rs (160 lines) - Directory/page navigation
+- home/updates.rs (191 lines) - UI state updates
+- home/input.rs (528 lines) - Event handling
+- home_utils.rs (41 lines) - Utility functions
 
-#### Task 5.2.1: Extract Home Core (5-6 hours)
-- **Goal:** Move data model to home_core.rs
-- **Steps:**
-  1. Identify state fields (library, paths, selection)
-  2. Create `HomeState` struct
-  3. Move data fields to new struct
-  4. Update references
-
-#### Task 5.2.2: Extract Library Operations (6-8 hours)
-- **Goal:** Move library logic to home_library.rs
-- **Steps:**
-  1. Identify library-related methods
-  2. Create `HomeLibrary` helper struct
-  3. Move library methods
-  4. Update references
+**Total:** 8 modules extracted from original home/mod.rs (now 596 lines)
 
 #### Task 5.2.3: Extract UI Layout (5-6 hours)
 - **Goal:** Move UI construction to home_ui.rs

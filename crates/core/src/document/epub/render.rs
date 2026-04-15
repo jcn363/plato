@@ -4,7 +4,6 @@ use crate::document::html::layout::{DrawCommand, DrawState, RootData};
 use crate::document::html::layout::{LoopContext, StyleData};
 use crate::document::html::style::StyleSheet;
 use crate::document::html::xml::XmlParser;
-use crate::helpers::Normalize;
 use crate::unit::pt_to_px;
 use std::fs;
 use std::io::Read;
@@ -91,7 +90,12 @@ impl EpubDocument {
                         && child.attribute("rel") == Some("stylesheet")
                     {
                         if let Some(href) = child.attribute("href") {
-                            if let Some(name) = spine_dir.join(href).normalize().to_str() {
+                            if let Some(name) = spine_dir
+                                .join(href)
+                                .canonicalize()
+                                .unwrap_or_else(|_| spine_dir.join(href))
+                                .to_str()
+                            {
                                 if let Ok(mut zf) = self.archive.by_name(name) {
                                     let size = zf.size() as usize;
                                     let mut text = String::with_capacity(size);

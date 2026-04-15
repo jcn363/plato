@@ -5,6 +5,7 @@ use crate::document::pdf_manipulator::{PdfManipulator, RedactionRegion};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
+use crate::input::{DeviceEvent, FingerStatus};
 use crate::theme;
 
 use crate::unit::scale_by_dpi;
@@ -23,10 +24,12 @@ const PADDING: i32 = 10;
 const BUTTON_HEIGHT: i32 = 60;
 const BUTTON_SPACING: i32 = 10;
 
-// Note: ManipulationMode variants for file selection, redaction, and processing
-// are reserved for future implementation of file browser integration and advanced features.
-// Fields within these variants are currently unused but preserved for future expansion.
-#[allow(dead_code)]
+#[derive(Clone, PartialEq)]
+enum RedactionState {
+    None,
+    Selecting { start: (i32, i32), end: (i32, i32) },
+}
+
 enum ManipulationMode {
     SelectFile,
     SelectAction(PathBuf),
@@ -46,6 +49,7 @@ pub struct PdfManipulatorView {
     manipulator: PdfManipulator,
     mode: ManipulationMode,
     selected_file: Option<PathBuf>,
+    redaction_state: RedactionState,
 }
 
 impl PdfManipulatorView {
@@ -115,6 +119,7 @@ Max: 30MB, 500 pages. Keep battery charged."
             manipulator,
             mode: ManipulationMode::SelectFile,
             selected_file: None,
+            redaction_state: RedactionState::None,
         })
     }
 
@@ -264,15 +269,11 @@ Max: 30MB, 500 pages. Keep battery charged."
         self.mode = ManipulationMode::DefiningRedaction {
             file_path,
             page_index,
-            region: None, // No region defined yet
+            region: None,
         };
-        // TODO: Implement UI for drawing the redaction region on the selected page.
-        // This might involve a new custom drawing widget or interacting with a canvas.
-        // For now, we'll clear the current menu and prepare for input.
-        self.children.retain(|child| child.id() == self.id); // Remove previous menu
+        self.redaction_state = RedactionState::None;
+        self.children.retain(|child| child.id() == self.id);
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-        // Display a message indicating the next step, e.g., "Drag to define region"
-        // self.show_message("Drag to define redaction region on page.".to_string(), rq, bus);
     }
 
     fn process_redaction(&mut self, file_path: &PathBuf, page: usize) -> Result<PathBuf, Error> {
@@ -281,14 +282,19 @@ Max: 30MB, 500 pages. Keep battery charged."
         let output = file_path.with_extension("redacted.pdf");
         let mut editor = RedactionEditor::new(file_path)?;
 
-        // This is a placeholder for an interactively defined region.
-        // In the future, `region` will be obtained from user input.
-        let region = RedactionRegion {
-            page,
-            x: 50.0,
-            y: 50.0,
-            width: 200.0,
-            height: 30.0,
+        let region = if let ManipulationMode::DefiningRedaction {
+            region: Some(r), ..
+        } = &self.mode
+        {
+            r.clone()
+        } else {
+            RedactionRegion {
+                page,
+                x: 50.0,
+                y: 50.0,
+                width: 200.0,
+                height: 30.0,
+            }
         };
         editor.add_redaction(region);
 
@@ -341,11 +347,8 @@ Max: 30MB, 500 pages. Keep battery charged."
                 self.manipulator.extract_pages(file_path, &output, &pages)
             }
             "merge" => {
-                // TODO: Implement file selection UI for merging
-                bus.push_back(Event::Render(
-                    "File selection for merge is not yet implemented.".to_string(),
-                ));
-                Ok(file_path.clone()) // Return original path as no operation was performed
+                self.show_file_picker_for_merge(file_path.clone(), rq, context);
+                return Ok(());
             }
             "redact_page" => {
                 use crate::document::pdf_manipulator::RedactionEditor;
@@ -473,6 +476,59 @@ Max: 30MB, 500 pages. Keep battery charged."
         Ok(())
     }
 
+    fn show_file_picker_for_merge(
+        &mut self,
+        _primary_file: PathBuf,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        self.mode = ManipulationMode::SelectFile;
+
+        let home_dir = std::env::var("PLATO_HOME")
+            .ok()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("/mnt/onboard"));
+
+        let mut entries = vec![
+            EntryKind::Message(
+                "Select PDF files to merge with the current document.".to_string(),
+                Some(EntryId::Back),
+            ),
+            EntryKind::Separator,
+        ];
+
+        if let Ok(dir_iter) = std::fs::read_dir(&home_dir) {
+            for entry in dir_iter.flatten() {
+                let path = entry.path();
+                if path.is_file() && path.extension().map_or(false, |ext| ext == "pdf") {
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        entries.push(EntryKind::Command(
+                            format!("📄 {}", name),
+                            EntryId::SelectFile(path.clone()),
+                        ));
+                    }
+                }
+            }
+        }
+
+        if entries.len() <= 2 {
+            entries.push(EntryKind::Message(
+                "No PDF files found in the home directory.".to_string(),
+                Some(EntryId::Back),
+            ));
+        }
+
+        let menu = crate::view::menu::Menu::new(
+            self.rect,
+            ViewId::PdfManipulatorMenu,
+            crate::view::menu::MenuKind::Contextual,
+            entries,
+            context,
+        );
+        rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
+        self.children.push(Box::new(menu) as Box<dyn View>);
+    }
+
     fn cleanup_backups(
         &mut self,
         _hub: &Hub,
@@ -505,6 +561,22 @@ impl View for PdfManipulatorView {
     ) -> bool {
         match evt {
             Event::Back => match &self.mode {
+                ManipulationMode::SelectFile => {
+                    bus.push_back(Event::Close(ViewId::PdfManipulator));
+                    return true;
+                }
+                ManipulationMode::SelectAction(_) => {
+                    self.mode = ManipulationMode::SelectFile;
+                    self.selected_file = None;
+                    if let Some(index) = locate_by_id(self, ViewId::PdfManipulatorMenu) {
+                        rq.add(RenderData::expose(
+                            *self.child(index).rect(),
+                            UpdateMode::Gui,
+                        ));
+                        self.children.remove(index);
+                    }
+                    return true;
+                }
                 ManipulationMode::SelectRedactionPage(_, _) => {
                     self.mode = ManipulationMode::SelectFile;
                     self.selected_file = None;
@@ -534,8 +606,10 @@ impl View for PdfManipulatorView {
                     }
                     return true;
                 }
-                _ => {
-                    bus.push_back(Event::Close(ViewId::PdfManipulator));
+                ManipulationMode::Processing(_, _) => {
+                    // Allow back to cancel processing
+                    self.mode = ManipulationMode::SelectFile;
+                    bus.push_back(Event::Render("Operation cancelled.".to_string()));
                     return true;
                 }
             },
@@ -554,6 +628,96 @@ impl View for PdfManipulatorView {
                 self.start_defining_redaction(file_path.clone(), *page_index, rq, context);
                 return true;
             }
+            Event::Select(EntryId::SelectFile(merge_file)) => {
+                if let Some(primary_file) = &self.selected_file {
+                    if merge_file.exists() {
+                        match self.manipulator.merge_pdfs(
+                            &[primary_file, merge_file],
+                            &primary_file.with_extension("merged.pdf"),
+                        ) {
+                            Ok(_output_path) => {
+                                let msg = format!(
+                                    "✅ Merged with: {}",
+                                    merge_file.file_name().unwrap_or_default().to_string_lossy()
+                                );
+                                bus.push_back(Event::Render(msg));
+                            }
+                            Err(e) => {
+                                bus.push_back(Event::Render(format!("❌ Merge failed: {}", e)));
+                            }
+                        }
+                    } else {
+                        bus.push_back(Event::Render("❌ File does not exist.".to_string()));
+                    }
+                }
+                return true;
+            }
+            Event::Device(DeviceEvent::Finger {
+                status, position, ..
+            }) => {
+                if let ManipulationMode::DefiningRedaction {
+                    file_path,
+                    page_index,
+                    ..
+                } = &self.mode
+                {
+                    match status {
+                        FingerStatus::Down => {
+                            self.redaction_state = RedactionState::Selecting {
+                                start: (position.x, position.y),
+                                end: (position.x, position.y),
+                            };
+                            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                            return true;
+                        }
+                        FingerStatus::Motion => {
+                            if let RedactionState::Selecting { start, .. } = &self.redaction_state {
+                                self.redaction_state = RedactionState::Selecting {
+                                    start: *start,
+                                    end: (position.x, position.y),
+                                };
+                                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                                return true;
+                            }
+                        }
+                        FingerStatus::Up => {
+                            if let RedactionState::Selecting { start, end } = &self.redaction_state
+                            {
+                                let x0 = start.0.min(end.0).max(self.rect.min.x);
+                                let y0 = start.1.min(end.1).max(self.rect.min.y);
+                                let x1 = start.0.max(end.0).min(self.rect.max.x);
+                                let y1 = start.1.max(end.1).min(self.rect.max.y);
+
+                                if x1 - x0 > 10 && y1 - y0 > 10 {
+                                    // Use standard PDF page dimensions (A4: 595x842 points)
+                                    const PDF_PAGE_WIDTH: f32 = 595.0;
+                                    const PDF_PAGE_HEIGHT: f32 = 842.0;
+                                    let scale_x = PDF_PAGE_WIDTH / self.rect.width() as f32;
+                                    let scale_y = PDF_PAGE_HEIGHT / self.rect.height() as f32;
+
+                                    let region = RedactionRegion {
+                                        page: *page_index,
+                                        x: (x0 - self.rect.min.x) as f32 * scale_x,
+                                        y: (y0 - self.rect.min.y) as f32 * scale_y,
+                                        width: (x1 - x0) as f32 * scale_x,
+                                        height: (y1 - y0) as f32 * scale_y,
+                                    };
+
+                                    self.mode = ManipulationMode::DefiningRedaction {
+                                        file_path: file_path.clone(),
+                                        page_index: *page_index,
+                                        region: Some(region),
+                                    };
+                                }
+                                self.redaction_state = RedactionState::None;
+                                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
             _ => {}
         }
         for child in self.children_mut().iter_mut() {
@@ -568,6 +732,22 @@ impl View for PdfManipulatorView {
         if let Some(r) = self.rect().intersection(&rect) {
             fb.draw_rectangle(&r, color::background(theme::is_dark_mode()));
         }
+
+        // Draw redaction selection rectangle
+        if let ManipulationMode::DefiningRedaction { .. } = &self.mode {
+            if let RedactionState::Selecting { start, end } = &self.redaction_state {
+                let x0 = start.0.min(end.0).max(self.rect.min.x);
+                let y0 = start.1.min(end.1).max(self.rect.min.y);
+                let x1 = start.0.max(end.0).min(self.rect.max.x);
+                let y1 = start.1.max(end.1).min(self.rect.max.y);
+
+                if let Some(selection_rect) = rect![pt!(x0, y0), pt!(x1, y1)].intersection(&rect) {
+                    fb.draw_rectangle(&selection_rect, color::BLACK);
+                    fb.draw_rectangle(&selection_rect, color::BLACK);
+                }
+            }
+        }
+
         for child in self.children().iter() {
             child.render(fb, rect, fonts);
         }

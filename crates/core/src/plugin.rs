@@ -1,22 +1,22 @@
 use crate::settings::{Plugin, PluginSettings, PluginTrigger};
 use crate::{log_error, log_warn};
 use anyhow::{format_err, Error};
+use rustc_hash::{FxBuildHasher, FxHashMap};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-use std::time::Duration;
 
 pub struct PluginSystem {
     settings: PluginSettings,
-    plugins: HashMap<String, Plugin>,
+    plugins: FxHashMap<String, Plugin>,
 }
 
 impl PluginSystem {
     pub fn new(settings: &PluginSettings) -> PluginSystem {
         let mut system = PluginSystem {
             settings: settings.clone(),
-            plugins: HashMap::new(),
+            plugins: HashMap::with_hasher(FxBuildHasher::default()),
         };
 
         if settings.enabled {
@@ -73,8 +73,8 @@ impl PluginSystem {
         let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
         let triggers = match extension {
-            "sh" | "bash" => self.parse_shell_triggers(path),
-            "py" => self.parse_python_triggers(path),
+            "sh" | "bash" => self.parse_triggers(path, "#"),
+            "py" => self.parse_triggers(path, "#"),
             "js" => vec![PluginTrigger::OnStartup],
             _ => vec![],
         };
@@ -82,57 +82,27 @@ impl PluginSystem {
         Ok(triggers)
     }
 
-    fn parse_shell_triggers(&self, path: &Path) -> Vec<PluginTrigger> {
+    fn parse_triggers(&self, path: &Path, comment_prefix: &str) -> Vec<PluginTrigger> {
         let mut triggers = Vec::new();
 
         if let Ok(content) = fs::read_to_string(path) {
-            if content.contains("# plato:on_book_import") {
+            let prefix = format!("{} plato:on_", comment_prefix);
+            if content.contains(&format!("{}book_import", prefix)) {
                 triggers.push(PluginTrigger::OnBookImport);
             }
-            if content.contains("# plato:on_book_open") {
+            if content.contains(&format!("{}book_open", prefix)) {
                 triggers.push(PluginTrigger::OnBookOpen);
             }
-            if content.contains("# plato:on_book_close") {
+            if content.contains(&format!("{}book_close", prefix)) {
                 triggers.push(PluginTrigger::OnBookClose);
             }
-            if content.contains("# plato:on_sync_complete") {
+            if content.contains(&format!("{}sync_complete", prefix)) {
                 triggers.push(PluginTrigger::OnSyncComplete);
             }
-            if content.contains("# plato:on_startup") {
+            if content.contains(&format!("{}startup", prefix)) {
                 triggers.push(PluginTrigger::OnStartup);
             }
-            if content.contains("# plato:on_shutdown") {
-                triggers.push(PluginTrigger::OnShutdown);
-            }
-        }
-
-        if triggers.is_empty() {
-            triggers.push(PluginTrigger::OnStartup);
-        }
-
-        triggers
-    }
-
-    fn parse_python_triggers(&self, path: &Path) -> Vec<PluginTrigger> {
-        let mut triggers = Vec::new();
-
-        if let Ok(content) = fs::read_to_string(path) {
-            if content.contains("plato:on_book_import") {
-                triggers.push(PluginTrigger::OnBookImport);
-            }
-            if content.contains("plato:on_book_open") {
-                triggers.push(PluginTrigger::OnBookOpen);
-            }
-            if content.contains("plato:on_book_close") {
-                triggers.push(PluginTrigger::OnBookClose);
-            }
-            if content.contains("plato:on_sync_complete") {
-                triggers.push(PluginTrigger::OnSyncComplete);
-            }
-            if content.contains("plato:on_startup") {
-                triggers.push(PluginTrigger::OnStartup);
-            }
-            if content.contains("plato:on_shutdown") {
+            if content.contains(&format!("{}shutdown", prefix)) {
                 triggers.push(PluginTrigger::OnShutdown);
             }
         }
@@ -164,11 +134,20 @@ impl PluginSystem {
         Ok(())
     }
 
+    fn run_plugin_command(interpreter: &str, path: &Path, args: &[&str]) -> Result<(), Error> {
+        let mut cmd = Command::new(interpreter);
+        cmd.arg(path);
+        for arg in args {
+            cmd.arg(arg);
+        }
+        cmd.output()
+            .map_err(|e| format_err!("Failed to execute plugin with {}: {}", interpreter, e))?;
+        Ok(())
+    }
+
     fn execute_plugin(&self, plugin: &Plugin, args: &[&str]) -> Result<(), Error> {
         let path = &plugin.path;
         let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-
-        let _timeout = Duration::from_secs(self.settings.timeout_seconds as u64);
 
         let uses_network = self.plugin_uses_network(path)?;
 
@@ -180,33 +159,12 @@ impl PluginSystem {
         }
 
         match extension {
-            "sh" | "bash" => {
-                let mut cmd = Command::new("bash");
-                cmd.arg(path);
-                for arg in args {
-                    cmd.arg(arg);
-                }
-                cmd.output()
-                    .map_err(|e| format_err!("Failed to execute {}: {}", plugin.name, e))?;
-            }
-            "py" => {
-                let mut cmd = Command::new("python3");
-                cmd.arg(path);
-                for arg in args {
-                    cmd.arg(arg);
-                }
-                cmd.output()
-                    .map_err(|e| format_err!("Failed to execute {}: {}", plugin.name, e))?;
-            }
-            "js" => {
-                let mut cmd = Command::new("node");
-                cmd.arg(path);
-                for arg in args {
-                    cmd.arg(arg);
-                }
-                cmd.output()
-                    .map_err(|e| format_err!("Failed to execute {}: {}", plugin.name, e))?;
-            }
+            "sh" | "bash" => Self::run_plugin_command("bash", path, args)
+                .map_err(|e| format_err!("Failed to execute {}: {}", plugin.name, e))?,
+            "py" => Self::run_plugin_command("python3", path, args)
+                .map_err(|e| format_err!("Failed to execute {}: {}", plugin.name, e))?,
+            "js" => Self::run_plugin_command("node", path, args)
+                .map_err(|e| format_err!("Failed to execute {}: {}", plugin.name, e))?,
             _ => {
                 log_warn!("Unknown plugin type: {}", plugin.name);
             }

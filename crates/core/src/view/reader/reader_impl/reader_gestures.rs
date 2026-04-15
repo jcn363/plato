@@ -4,18 +4,12 @@
 //!
 //! This module contains extracted event handlers from `Reader::handle_event()` for improved
 //! maintainability and testability.
-//!
-//! ## GestureProcessor Trait
-//!
-//! The [`GestureProcessor`] trait provides an abstraction layer for gesture handling,
-//! allowing different device types to customize gesture behavior without modifying
-//! the core Reader implementation.
 
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::frontlight::LightLevels;
-use crate::geom::{Axis, CycleDir, DiagDir, Dir, LinearDir, Point};
+use crate::geom::{Axis, CycleDir, DiagDir, Dir, LinearDir, Point, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::metadata::{ScrollMode, ZoomMode};
@@ -28,283 +22,79 @@ use crate::view::{Event, Hub, RenderData, RenderQueue};
 
 const RECT_DIST_JITTER: f32 = 15.0;
 
-/// Trait for customizable gesture processing.
+/// Update selection rectangles with shared while loop logic
 ///
-/// Implement this trait to provide custom gesture handling for different device types
-/// or to add new gesture behaviors without modifying the core Reader implementation.
-#[allow(dead_code)]
-pub trait GestureProcessor {
-    /// Process a rotate gesture (typically device rotation).
-    fn process_rotate(&self, quarter_turns: i32, hub: &Hub, context: &Context) -> bool;
-
-    /// Process a swipe gesture.
-    fn process_swipe(
-        &self,
-        dir: Dir,
-        start: Point,
-        end: Point,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool;
-
-    /// Process a tap gesture on a specific point.
-    fn process_tap(
-        &self,
-        center: Point,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool;
-
-    /// Process a corner tap gesture.
-    fn process_corner(
-        &self,
-        dir: DiagDir,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool;
-
-    /// Process a multi-corner gesture (two-finger corner).
-    fn process_multi_corner(
-        &self,
-        dir: DiagDir,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool;
-
-    /// Process an arrow gesture (directional input).
-    fn process_arrow(
-        &self,
-        dir: Dir,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool;
-
-    /// Process a pinch or spread gesture.
-    fn process_pinch_spread(
-        &self,
-        axis: Axis,
-        center: Point,
-        factor: f32,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool;
-}
-
-/// Default gesture processor implementing standard Kobo device gesture behavior.
-#[allow(dead_code)]
-pub struct DefaultGestureProcessor;
-
-impl DefaultGestureProcessor {
-    #[allow(dead_code)]
-    pub fn new() -> Self {
-        DefaultGestureProcessor
-    }
-}
-
-impl Default for DefaultGestureProcessor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl GestureProcessor for DefaultGestureProcessor {
-    fn process_rotate(&self, quarter_turns: i32, hub: &Hub, context: &Context) -> bool {
-        let (_, dir) = CURRENT_DEVICE.mirroring_scheme();
-        let n = (4 + (context.display.rotation - dir * quarter_turns as i8)) % 4;
-        hub.send(Event::Select(crate::view::EntryId::Rotate(n)))
-            .ok();
-        true
-    }
-
-    fn process_swipe(
-        &self,
-        dir: Dir,
-        start: Point,
-        end: Point,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool {
-        match reader.view_port.zoom_mode {
-            ZoomMode::FitToPage | ZoomMode::FitToWidth => match dir {
-                Dir::West => reader.go_to_neighbor(CycleDir::Next, hub, rq, context),
-                Dir::East => reader.go_to_neighbor(CycleDir::Previous, hub, rq, context),
-                Dir::South | Dir::North => {
-                    reader.vertical_scroll(start.y - end.y, hub, rq, context);
-                }
-            },
-            ZoomMode::Custom(_) => match dir {
-                Dir::West | Dir::East => {
-                    reader.directional_scroll(pt!(start.x - end.x, 0), hub, rq, context);
-                }
-                Dir::South | Dir::North => {
-                    reader.directional_scroll(pt!(0, start.y - end.y), hub, rq, context);
-                }
-            },
-        }
-        true
-    }
-
-    fn process_tap(
-        &self,
-        _center: Point,
-        _reader: &mut Reader,
-        _hub: &Hub,
-        _rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) -> bool {
-        false
-    }
-
-    fn process_corner(
-        &self,
-        dir: DiagDir,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool {
-        match dir {
-            DiagDir::NorthWest => reader.go_to_bookmark(CycleDir::Previous, hub, rq, context),
-            DiagDir::NorthEast => reader.go_to_bookmark(CycleDir::Next, hub, rq, context),
-            DiagDir::SouthEast => match context.settings.reader.bottom_right_gesture {
-                BottomRightGestureAction::ToggleDithered => {
-                    hub.send(Event::Select(crate::view::EntryId::ToggleDithered))
-                        .ok();
-                }
-                BottomRightGestureAction::ToggleInverted => {
-                    hub.send(Event::Select(crate::view::EntryId::ToggleInverted))
-                        .ok();
-                }
-            },
-            DiagDir::SouthWest => {
-                if context.settings.frontlight_presets.len() > 1 {
-                    if context.settings.frontlight {
-                        let lightsensor_level = if CURRENT_DEVICE.has_lightsensor() {
-                            context.lightsensor.level().ok()
+/// This helper function extracts the common rectangle update pattern used in both
+/// handle_selection_motion and handle_selection_up functions.
+fn update_selection_rects(
+    rects: &[(Rectangle, Point)],
+    boundary_low: Point,
+    boundary_high: Point,
+    rq: &mut RenderQueue,
+    view_id: crate::view::Id,
+    is_forward: bool,
+) {
+    if boundary_low != boundary_high {
+        if is_forward {
+            // Forward direction (used in handle_selection_motion)
+            if let Some(mut i) = rects.iter().position(|(_, loc)| *loc == boundary_low) {
+                let mut rect = rects[i].0;
+                while rects[i].1 < boundary_high {
+                    let next_rect = rects[i + 1].0;
+                    if rect.max.y.min(next_rect.max.y) - rect.min.y.max(next_rect.min.y)
+                        > rect.height().min(next_rect.height()) as i32 / 2
+                    {
+                        if rects[i + 1].1 == boundary_high {
+                            if rect.min.x < next_rect.min.x {
+                                rect.max.x = next_rect.min.x;
+                            } else {
+                                rect.min.x = next_rect.max.x;
+                            }
+                            rect.min.y = rect.min.y.min(next_rect.min.y);
+                            rect.max.y = rect.max.y.max(next_rect.max.y);
                         } else {
-                            None
-                        };
-                        if let Some(frontlight_levels) = guess_frontlight(
-                            lightsensor_level,
-                            &context.settings.frontlight_presets,
-                        ) {
-                            let LightLevels { intensity, warmth } = frontlight_levels;
-                            context.frontlight.set_intensity(intensity);
-                            context.frontlight.set_warmth(warmth);
+                            rect.absorb(&next_rect);
                         }
+                    } else {
+                        rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
+                        rect = next_rect;
                     }
-                } else {
-                    hub.send(Event::ToggleFrontlight).ok();
+                    i += 1;
                 }
+                rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
             }
-        };
-        true
-    }
-
-    fn process_multi_corner(
-        &self,
-        dir: DiagDir,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool {
-        match dir {
-            DiagDir::NorthWest => {
-                reader.go_to_annotation(CycleDir::Previous, hub, rq, context);
-            }
-            DiagDir::NorthEast => reader.go_to_annotation(CycleDir::Next, hub, rq, context),
-            _ => (),
-        }
-        true
-    }
-
-    fn process_arrow(
-        &self,
-        dir: Dir,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool {
-        match dir {
-            Dir::West => {
-                if reader.search.is_none() {
-                    reader.go_to_chapter(CycleDir::Previous, hub, rq, context);
-                } else {
-                    reader.go_to_results_page(0, hub, rq, context);
+        } else {
+            // Backward direction (used in handle_selection_up)
+            if let Some(mut i) = rects.iter().rposition(|(_, loc)| *loc == boundary_high) {
+                let mut rect = rects[i].0;
+                while rects[i].1 > boundary_low {
+                    let prev_rect = rects[i - 1].0;
+                    if rect.max.y.min(prev_rect.max.y) - rect.min.y.max(prev_rect.min.y)
+                        > rect.height().min(prev_rect.height()) as i32 / 2
+                    {
+                        if rects[i - 1].1 == boundary_low {
+                            if rect.min.x < prev_rect.min.x {
+                                rect.max.x = prev_rect.min.x;
+                            } else {
+                                rect.min.x = prev_rect.max.x;
+                            }
+                            rect.min.y = rect.min.y.min(prev_rect.min.y);
+                            rect.max.y = rect.max.y.max(prev_rect.max.y);
+                        } else {
+                            rect.absorb(&prev_rect);
+                        }
+                    } else {
+                        rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
+                        rect = prev_rect;
+                    }
+                    i -= 1;
                 }
-            }
-            Dir::East => {
-                if reader.search.is_none() {
-                    reader.go_to_chapter(CycleDir::Next, hub, rq, context);
-                } else if let Some(ref search) = reader.search {
-                    let last_page = search.highlights.len() - 1;
-                    reader.go_to_results_page(last_page, hub, rq, context);
-                }
-            }
-            Dir::North => {
-                reader.search_direction = LinearDir::Backward;
-                reader.toggle_search_bar(true, hub, rq, context);
-            }
-            Dir::South => {
-                reader.search_direction = LinearDir::Forward;
-                reader.toggle_search_bar(true, hub, rq, context);
+                rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
             }
         }
-        true
-    }
-
-    fn process_pinch_spread(
-        &self,
-        axis: Axis,
-        center: Point,
-        factor: f32,
-        reader: &mut Reader,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) -> bool {
-        match axis {
-            Axis::Horizontal => {
-                if !reader.reflowable {
-                    reader.set_zoom_mode(ZoomMode::FitToWidth, true, hub, rq, context);
-                } else {
-                    reader.set_zoom_mode(ZoomMode::FitToPage, true, hub, rq, context);
-                }
-            }
-            Axis::Vertical => {
-                if !reader.reflowable {
-                    reader.set_scroll_mode(ScrollMode::Screen, hub, rq, context);
-                } else {
-                    reader.set_scroll_mode(ScrollMode::Page, hub, rq, context);
-                }
-            }
-            Axis::Diagonal => {
-                if factor.is_finite() && reader.rect.includes(center) {
-                    reader.scale_page(center, factor, hub, rq, context);
-                }
-            }
-        }
-        true
     }
 }
 
-#[allow(dead_code)]
 impl Reader {
     pub(crate) fn handle_gesture_event(
         &mut self,
@@ -581,6 +371,22 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &Context,
     ) -> bool {
+        let (nearest_word, rects) = self.find_nearest_word_and_rects(position);
+
+        if let Some(word) = nearest_word {
+            self.update_selection_from_word(word, rects, rq);
+        }
+        true
+    }
+
+    /// Find the nearest word to the given position and return rects
+    fn find_nearest_word_and_rects(
+        &self,
+        position: Point,
+    ) -> (
+        Option<crate::document::BoundedText>,
+        Vec<(Rectangle, Point)>,
+    ) {
         use crate::unit::scale_by_dpi;
 
         let mut nearest_word = None;
@@ -600,84 +406,59 @@ impl Reader {
             }
         }
 
+        (nearest_word, rects)
+    }
+
+    /// Update selection bounds based on a new word and render changes
+    fn update_selection_from_word(
+        &mut self,
+        word: crate::document::BoundedText,
+        rects: Vec<(Rectangle, Point)>,
+        rq: &mut RenderQueue,
+    ) {
+        let Some((old_start, old_end)) = self.get_selection_bounds() else {
+            return;
+        };
         let Some(selection) = self.selection.as_mut() else {
-            return true;
+            return;
         };
 
-        if let Some(word) = nearest_word {
-            let old_start = selection.start;
-            let old_end = selection.end;
-            let (start, end) = word.location.min_max(selection.anchor);
+        let anchor = selection.anchor;
+        let (start, end) = word.location.min_max(anchor);
 
-            if start == old_start && end == old_end {
-                return true;
-            }
-
-            let (start_low, start_high) = old_start.min_max(start);
-            let (end_low, end_high) = old_end.min_max(end);
-
-            if start_low != start_high {
-                if let Some(mut i) = rects.iter().position(|(_, loc)| *loc == start_low) {
-                    let mut rect = rects[i].0;
-                    while rects[i].1 < start_high {
-                        let next_rect = rects[i + 1].0;
-                        if rect.max.y.min(next_rect.max.y) - rect.min.y.max(next_rect.min.y)
-                            > rect.height().min(next_rect.height()) as i32 / 2
-                        {
-                            if rects[i + 1].1 == start_high {
-                                if rect.min.x < next_rect.min.x {
-                                    rect.max.x = next_rect.min.x;
-                                } else {
-                                    rect.min.x = next_rect.max.x;
-                                }
-                                rect.min.y = rect.min.y.min(next_rect.min.y);
-                                rect.max.y = rect.max.y.max(next_rect.max.y);
-                            } else {
-                                rect.absorb(&next_rect);
-                            }
-                        } else {
-                            rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                            rect = next_rect;
-                        }
-                        i += 1;
-                    }
-                    rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                }
-            }
-
-            if end_low != end_high {
-                if let Some(mut i) = rects.iter().rposition(|(_, loc)| *loc == end_high) {
-                    let mut rect = rects[i].0;
-                    while rects[i].1 > end_low {
-                        let prev_rect = rects[i - 1].0;
-                        if rect.max.y.min(prev_rect.max.y) - rect.min.y.max(prev_rect.min.y)
-                            > rect.height().min(prev_rect.height()) as i32 / 2
-                        {
-                            if rects[i - 1].1 == end_low {
-                                if rect.min.x < prev_rect.min.x {
-                                    rect.max.x = prev_rect.min.x;
-                                } else {
-                                    rect.min.x = prev_rect.max.x;
-                                }
-                                rect.min.y = rect.min.y.min(prev_rect.min.y);
-                                rect.max.y = rect.max.y.max(prev_rect.max.y);
-                            } else {
-                                rect.absorb(&prev_rect);
-                            }
-                        } else {
-                            rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                            rect = prev_rect;
-                        }
-                        i -= 1;
-                    }
-                    rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                }
-            }
-
-            selection.start = start;
-            selection.end = end;
+        if start == old_start && end == old_end {
+            return;
         }
-        true
+
+        selection.start = start;
+        selection.end = end;
+
+        // Render changes after updating selection to avoid borrowing conflicts
+        self.render_selection_changes(&rects, old_start, old_end, start, end, rq);
+    }
+
+    /// Get current selection bounds or return early if none exists
+    fn get_selection_bounds(&self) -> Option<(Point, Point)> {
+        self.selection
+            .as_ref()
+            .map(|selection| (selection.start, selection.end))
+    }
+
+    /// Render selection changes using the shared rect update logic
+    fn render_selection_changes(
+        &self,
+        rects: &[(Rectangle, Point)],
+        old_start: Point,
+        old_end: Point,
+        start: Point,
+        end: Point,
+        rq: &mut RenderQueue,
+    ) {
+        let (start_low, start_high) = old_start.min_max(start);
+        let (end_low, end_high) = old_end.min_max(end);
+
+        update_selection_rects(&rects, start_low, start_high, rq, self.id, true);
+        update_selection_rects(&rects, end_low, end_high, rq, self.id, false);
     }
 
     fn handle_selection_up(
@@ -687,6 +468,22 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &Context,
     ) -> bool {
+        let (found_word, rects) = self.find_word_at_center(center);
+
+        if let Some((word, index)) = found_word {
+            self.finalize_selection(word, index, rects, rq);
+        }
+        true
+    }
+
+    /// Find the word at the given center position and return with rects
+    fn find_word_at_center(
+        &self,
+        center: Point,
+    ) -> (
+        Option<(crate::document::BoundedText, usize)>,
+        Vec<(Rectangle, Point)>,
+    ) {
         use crate::unit::scale_by_dpi;
 
         let dmax = (scale_by_dpi(RECT_DIST_JITTER, CURRENT_DEVICE.dpi) as i32).pow(2) as u32;
@@ -706,104 +503,68 @@ impl Reader {
             }
         }
 
-        let Some(selection) = self.selection.as_mut() else {
-            return true;
+        (found, rects)
+    }
+
+    /// Finalize selection bounds based on the tapped word
+    fn finalize_selection(
+        &mut self,
+        word: crate::document::BoundedText,
+        index: usize,
+        rects: Vec<(Rectangle, Point)>,
+        rq: &mut RenderQueue,
+    ) {
+        let Some((old_start, old_end)) = self.get_selection_bounds() else {
+            return;
         };
+        let (start, end) = self.calculate_selection_bounds(word, index, &rects, old_start, old_end);
 
-        if let Some((word, index)) = found {
-            let old_start = selection.start;
-            let old_end = selection.end;
+        if start == old_start && end == old_end {
+            return;
+        }
 
-            let (start, end) = if word.location <= old_start {
-                (word.location, old_end)
-            } else if word.location >= old_end {
-                (old_start, word.location)
-            } else {
-                let (start_index, end_index) = (
-                    rects.iter().position(|(_, loc)| *loc == old_start),
-                    rects.iter().position(|(_, loc)| *loc == old_end),
-                );
-                match (start_index, end_index) {
-                    (Some(s), Some(e)) => {
-                        if index - s > e - index {
-                            (old_start, word.location)
-                        } else {
-                            (word.location, old_end)
-                        }
-                    }
-                    (Some(..), None) => (word.location, old_end),
-                    (None, Some(..)) => (old_start, word.location),
-                    (None, None) => (old_start, old_end),
-                }
-            };
+        self.render_selection_changes(&rects, old_start, old_end, start, end, rq);
+        self.update_selection_bounds(start, end);
+    }
 
-            if start == old_start && end == old_end {
-                return true;
-            }
-
-            let (start_low, start_high) = old_start.min_max(start);
-            if start_low != start_high {
-                if let Some(mut i) = rects.iter().position(|(_, loc)| *loc == start_low) {
-                    let mut rect = rects[i].0;
-                    while rects[i].1 < start_high {
-                        let next_rect = rects[i + 1].0;
-                        if rect.max.y.min(next_rect.max.y) - rect.min.y.max(next_rect.min.y)
-                            > rect.height().min(next_rect.height()) as i32 / 2
-                        {
-                            if rects[i + 1].1 == start_high {
-                                if rect.min.x < next_rect.min.x {
-                                    rect.max.x = next_rect.min.x;
-                                } else {
-                                    rect.min.x = next_rect.max.x;
-                                }
-                                rect.min.y = rect.min.y.min(next_rect.min.y);
-                                rect.max.y = rect.max.y.max(next_rect.max.y);
-                            } else {
-                                rect.absorb(&next_rect);
-                            }
-                        } else {
-                            rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                            rect = next_rect;
-                        }
-                        i += 1;
-                    }
-                    rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                }
-            }
-
-            let (end_low, end_high) = old_end.min_max(end);
-            if end_low != end_high {
-                if let Some(mut i) = rects.iter().rposition(|(_, loc)| *loc == end_high) {
-                    let mut rect = rects[i].0;
-                    while rects[i].1 > end_low {
-                        let prev_rect = rects[i - 1].0;
-                        if rect.max.y.min(prev_rect.max.y) - rect.min.y.max(prev_rect.min.y)
-                            > rect.height().min(prev_rect.height()) as i32 / 2
-                        {
-                            if rects[i - 1].1 == end_low {
-                                if rect.min.x < prev_rect.min.x {
-                                    rect.max.x = prev_rect.min.x;
-                                } else {
-                                    rect.min.x = prev_rect.max.x;
-                                }
-                                rect.min.y = rect.min.y.min(prev_rect.min.y);
-                                rect.max.y = rect.max.y.max(prev_rect.max.y);
-                            } else {
-                                rect.absorb(&prev_rect);
-                            }
-                        } else {
-                            rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                            rect = prev_rect;
-                        }
-                        i -= 1;
-                    }
-                    rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
-                }
-            }
-
+    /// Update the selection bounds in the selection struct
+    fn update_selection_bounds(&mut self, start: Point, end: Point) {
+        if let Some(selection) = self.selection.as_mut() {
             selection.start = start;
             selection.end = end;
         }
-        true
+    }
+
+    /// Calculate the final selection bounds based on word position
+    fn calculate_selection_bounds(
+        &self,
+        word: crate::document::BoundedText,
+        index: usize,
+        rects: &[(Rectangle, Point)],
+        old_start: Point,
+        old_end: Point,
+    ) -> (Point, Point) {
+        if word.location <= old_start {
+            (word.location, old_end)
+        } else if word.location >= old_end {
+            (old_start, word.location)
+        } else {
+            let (start_index, end_index) = (
+                rects.iter().position(|(_, loc)| *loc == old_start),
+                rects.iter().position(|(_, loc)| *loc == old_end),
+            );
+            match (start_index, end_index) {
+                (Some(s), Some(e)) => {
+                    if index - s > e - index {
+                        (old_start, word.location)
+                    } else {
+                        (word.location, old_end)
+                    }
+                }
+                (Some(..), None) => (word.location, old_end),
+                (None, Some(..)) => (old_start, word.location),
+                (None, None) => (old_start, old_end),
+            }
+        }
     }
 }

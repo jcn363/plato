@@ -9,8 +9,11 @@ use crate::helpers::{load_json, IsHidden};
 use crate::library::Library;
 use crate::lightsensor::LightSensor;
 use crate::log_error;
+use crate::plugin::PluginSystem;
 use crate::rtc::Rtc;
 use crate::settings::Settings;
+use crate::sync::BackgroundSync;
+use crate::thumbnail::{ThumbnailManager, ThumbnailConfig};
 use crate::view::keyboard::Layout;
 use crate::view::ViewId;
 use bitflags::bitflags;
@@ -51,10 +54,13 @@ pub struct Context {
     pub frontlight: Box<dyn Frontlight>,
     pub battery: Box<dyn Battery>,
     pub lightsensor: Box<dyn LightSensor>,
+    pub plugin_system: PluginSystem,
+    pub background_sync: BackgroundSync,
     pub notification_index: u8,
     pub kb_rect: Rectangle,
     pub rng: Xoroshiro128Plus,
     pub flags: DeviceFlags,
+    pub thumbnail_manager: Option<ThumbnailManager>,
 }
 
 impl Context {
@@ -69,6 +75,8 @@ impl Context {
     /// * `battery` - Battery status provider
     /// * `frontlight` - Frontlight controller
     /// * `lightsensor` - Ambient light sensor
+    /// * `plugin_system` - Plugin system for extensibility
+    /// * `background_sync` - Background synchronization system
     pub fn new(
         fb: Box<dyn Framebuffer>,
         rtc: Option<Rtc>,
@@ -78,10 +86,27 @@ impl Context {
         battery: Box<dyn Battery>,
         frontlight: Box<dyn Frontlight>,
         lightsensor: Box<dyn LightSensor>,
+        plugin_system: PluginSystem,
+        background_sync: BackgroundSync,
     ) -> Context {
         let dims = fb.dims();
         let rotation = CURRENT_DEVICE.transformed_rotation(fb.rotation());
         let rng = Xoroshiro128Plus::seed_from_u64(Local::now().timestamp_subsec_nanos() as u64);
+        
+        // Initialize thumbnail manager if enabled
+        let thumbnail_manager = if settings.thumbnail.enabled {
+            let config = ThumbnailConfig::new(
+                settings.thumbnail.worker_count,
+                settings.thumbnail.cache_size,
+                settings.thumbnail.thumbnail_width,
+                settings.thumbnail.thumbnail_height,
+                true,
+            ).ok();
+            config.map(|c| ThumbnailManager::new(c).ok()).flatten()
+        } else {
+            None
+        };
+
         Context {
             fb,
             rtc,
@@ -95,11 +120,19 @@ impl Context {
             battery,
             frontlight,
             lightsensor,
+            plugin_system,
+            background_sync,
             notification_index: 0,
             kb_rect: Rectangle::default(),
             rng,
             flags: DeviceFlags::empty(),
+            thumbnail_manager,
         }
+    }
+
+    /// Gets a reference to the thumbnail manager if available
+    pub fn thumbnail_manager(&self) -> Option<&ThumbnailManager> {
+        self.thumbnail_manager.as_ref()
     }
 
     /// Imports books from configured import directories to all libraries.

@@ -118,37 +118,7 @@ pub(crate) fn go_to_results_page(
     }
 }
 
-/// Toggle search input bar visibility
-#[allow(dead_code)]
-pub(crate) fn toggle_search_bar(_enable: bool, view_id: Id, rect: Rectangle, rq: &mut RenderQueue) {
-    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
-}
-
-/// Toggle search results display bar visibility
-#[allow(dead_code)]
-pub(crate) fn toggle_results_bar(
-    _enable: bool,
-    view_id: Id,
-    rect: Rectangle,
-    rq: &mut RenderQueue,
-) {
-    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
-}
-
-/// Execute a text search
-#[allow(dead_code)]
-pub(crate) fn execute_search(_query: &str, view_id: Id, rect: Rectangle, rq: &mut RenderQueue) {
-    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
-}
-
-/// Update the search results bar display
-#[allow(dead_code)]
-pub(crate) fn update_results_bar(view_id: Id, rect: Rectangle, rq: &mut RenderQueue) {
-    rq.add(RenderData::new(view_id, rect, UpdateMode::Partial));
-}
-
 /// Toggle search menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_search_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     search_direction: LinearDir,

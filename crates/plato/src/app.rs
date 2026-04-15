@@ -20,10 +20,12 @@ use plato_core::input::{
 };
 use plato_core::library::Library;
 use plato_core::lightsensor::{KoboLightSensor, LightSensor};
+use plato_core::plugin::PluginSystem;
 use plato_core::rtc::Rtc;
 use plato_core::settings::{
     ButtonScheme, IntermKind, RotationLock, Settings, ThemeMode, SETTINGS_PATH,
 };
+use plato_core::sync::BackgroundSync;
 use plato_core::theme;
 use plato_core::view::calculator::Calculator;
 use plato_core::view::common::{close_view, locate, locate_by_id, transfer_notifications};
@@ -169,6 +171,9 @@ fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
             }),
     };
 
+    let plugin_system = PluginSystem::new(&settings.plugin_settings);
+    let background_sync = BackgroundSync::new(&settings.background_sync);
+
     Ok(Context::new(
         fb,
         rtc,
@@ -178,6 +183,8 @@ fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
         battery,
         frontlight,
         lightsensor,
+        plugin_system,
+        background_sync,
     ))
 }
 
@@ -288,6 +295,13 @@ fn goto_view(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
+    // Trigger book close plugins if current view is a Reader
+    if view.is::<Reader>() {
+        if let Err(e) = context.plugin_system.on_book_close(&Path::new("")) {
+            log_error!("Failed to trigger book close plugins: {}", e);
+        }
+    }
+
     let mut next_view = next_view;
     view.children_mut().retain(|child| !child.is::<Menu>());
     transfer_notifications(view.as_mut(), next_view.as_mut(), rq, context);
@@ -332,6 +346,13 @@ pub fn run() -> Result<(), Error> {
 
     if context.settings.import.startup_trigger {
         context.batch_import();
+        // Trigger book import plugins
+        if let Err(e) = context
+            .plugin_system
+            .on_book_import(&Path::new("/mnt/onboard"))
+        {
+            log_error!("Failed to trigger book import plugins: {}", e);
+        }
     }
     context.load_dictionaries();
     context.load_keyboard_layouts();
@@ -446,6 +467,11 @@ pub fn run() -> Result<(), Error> {
         &mut tasks,
     );
     tx.send(Event::WakeUp).ok();
+
+    // Trigger startup plugins
+    if let Err(e) = context.plugin_system.on_startup() {
+        log_error!("Failed to trigger startup plugins: {}", e);
+    }
 
     while let Ok(evt) = rx.recv() {
         match evt {
@@ -727,6 +753,13 @@ pub fn run() -> Result<(), Error> {
                         context.library.reload();
                         if context.settings.import.unshare_trigger {
                             context.batch_import();
+                            // Trigger book import plugins
+                            if let Err(e) = context
+                                .plugin_system
+                                .on_book_import(&Path::new("/mnt/onboard"))
+                            {
+                                log_error!("Failed to trigger book import plugins: {}", e);
+                            }
                         }
                         view.handle_event(&Event::Reseed, &tx, &mut bus, &mut rq, &mut context);
                     } else {
@@ -788,6 +821,43 @@ pub fn run() -> Result<(), Error> {
                     handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
                 }
             },
+            Event::BatteryTick => {
+                // Check if background sync is needed
+                if context.background_sync.sync_needed() {
+                    if context.background_sync.should_auto_enable_wifi()
+                        && !context.flags.contains(DeviceFlags::ONLINE)
+                    {
+                        set_wifi(true, &mut context);
+                    }
+
+                    if !context.background_sync.wifi_only()
+                        || context.flags.contains(DeviceFlags::ONLINE)
+                    {
+                        context.background_sync.trigger_sync();
+
+                        // Perform actual sync in a background thread
+                        let tx_sync = tx.clone();
+                        let settings = context.settings.clone();
+                        thread::spawn(move || {
+                            if let Err(e) = plato_core::sync::check_network_and_sync(
+                                &settings.cloud_sync,
+                                &settings.background_sync,
+                            ) {
+                                log_error!("Background sync failed: {}", e);
+                            } else {
+                                tx_sync
+                                    .send(Event::Notify("Background sync completed".to_string()))
+                                    .ok();
+                            }
+                        });
+
+                        // Trigger sync complete plugins
+                        if let Err(e) = context.plugin_system.on_sync_complete() {
+                            log_error!("Failed to trigger sync complete plugins: {}", e);
+                        }
+                    }
+                }
+            }
             Event::CheckBattery => {
                 schedule_task(
                     TaskId::CheckBattery,
@@ -1085,6 +1155,11 @@ pub fn run() -> Result<(), Error> {
                     );
                 }
                 let path = info.file.path.clone();
+                // Trigger book open plugins
+                if let Err(e) = context.plugin_system.on_book_open(&path) {
+                    log_error!("Failed to trigger book open plugins: {}", e);
+                }
+
                 if let Some(r) = Reader::new(context.fb.rect(), *info, &tx, &mut context) {
                     goto_view(
                         Box::new(r),
@@ -1450,6 +1525,10 @@ pub fn run() -> Result<(), Error> {
                 break;
             }
             Event::Select(EntryId::Quit) => {
+                // Trigger shutdown plugins
+                if let Err(e) = context.plugin_system.on_shutdown() {
+                    log_error!("Failed to trigger shutdown plugins: {}", e);
+                }
                 break;
             }
             Event::MightSuspend if context.settings.auto_suspend > 0.0 => {

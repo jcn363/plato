@@ -11,7 +11,6 @@ use std::path::Path;
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::CycleDir;
-use crate::view::common::locate_by_id;
 use crate::view::home::home_utils;
 use crate::view::home::AddressBar;
 use crate::view::home::NavigationBar;

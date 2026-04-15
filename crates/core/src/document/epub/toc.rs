@@ -2,7 +2,7 @@ use crate::document::html::dom::NodeRef;
 use crate::document::html::xml::XmlParser;
 use crate::document::Location;
 use crate::document::TocEntry;
-use crate::helpers::{decode_entities, Normalize};
+use crate::helpers::decode_entities;
 use percent_encoding::percent_decode_str;
 use rustc_hash::FxHashMap;
 use std::io::Read;
@@ -59,7 +59,8 @@ impl EpubDocument {
 
             let loc = toc_dir
                 .join(&rel_uri)
-                .normalize()
+                .canonicalize()
+                .unwrap_or_else(|_| toc_dir.join(&rel_uri))
                 .to_str()
                 .map(|uri| Location::Uri(uri.to_string()));
 
@@ -117,7 +118,8 @@ impl EpubDocument {
 
                 let loc = toc_dir
                     .join(&rel_uri)
-                    .normalize()
+                    .canonicalize()
+                    .unwrap_or_else(|_| toc_dir.join(&rel_uri))
                     .to_str()
                     .map(|uri| Location::Uri(uri.to_string()));
 

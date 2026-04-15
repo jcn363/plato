@@ -26,7 +26,34 @@ Documentation:
 
 ## Supported firmwares
 
-Any 4.*X*.*Y* firmware, with *X* ≥ 6, will do.
+Any 4.*X*.*Y* firmware, with *X* >= 6, will do.
+
+## Build Status
+
+**Current Status**: Build compiles successfully with only warnings
+
+- **Target**: `x86_64-unknown-linux-gnu` (development)
+- **Target**: `arm-unknown-linux-gnueabihf` (32-bit ARM Kobo devices)
+- **Target**: `aarch64-unknown-linux-gnu` (64-bit ARM Kobo devices)
+
+### Recent Verification Results
+
+**Completed** (Final Verification Pass - April 2026):
+- Fixed all critical compilation errors
+- Resolved import issues and trait implementations
+- Added missing View trait methods for Reader
+- Fixed type mismatches and borrowing issues
+- Audited dead code instances (all justified)
+- Updated documentation with current status
+
+**Critical Issues Identified**:
+- 4 files exceed AGENTS.md 1,000 line limit (requires modularization)
+  - `document/html/engine.rs`: 2,667 lines
+  - `view/reader/reader_impl/reader.rs`: 2,370 lines
+  - `document/html/engine_text.rs`: 1,073 lines
+  - `view/home/ui_toggles.rs`: 1,014 lines
+
+For detailed integration progress, see [INTEGRATION_PROGRESS.md](INTEGRATION_PROGRESS.md).
 
 ## Supported devices
 
@@ -114,7 +141,7 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 ./build.sh --no-clean arm skip
 
 # Create distribution bundle
-./dist.sh
+./dist.sh [arm|arm64]
 
 # Run the desktop emulator (requires SDL2)
 ./run-emulator.sh
@@ -125,6 +152,16 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 # Run tests (requires host target)
 cargo test --target x86_64-unknown-linux-gnu
 ```
+
+## Library Directories
+
+Plato uses three separate library directories to support different build targets:
+
+- **`libs/`** → ARM 32-bit (`arm-unknown-linux-gnueabihf`) for original Kobo devices
+- **`libs64/`** → ARM 64-bit (`aarch64-unknown-linux-gnu`) for newer Kobo devices (Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
+- **`libs_host/`** → Host/x86_64 (`x86_64-unknown-linux-gnu`) for development and emulator
+
+Each directory is populated by `build.sh` or `download.sh` with the appropriate native shared libraries for the target architecture. The `get_lib_dir()` function in `build.sh` is the canonical source of truth for this target-to-directory mapping.
 
 ## Performance Optimizations
 

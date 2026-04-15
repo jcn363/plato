@@ -3,18 +3,25 @@ use std::env;
 fn main() {
     let target = env::var("TARGET").unwrap();
 
+    // Determine library directory based on target
+    let lib_dir = match target.as_str() {
+        "arm-unknown-linux-gnueabihf" => "libs",
+        "aarch64-unknown-linux-gnu" => "libs64",
+        _ => "libs_host",
+    };
+
     // Cross-compiling for Kobo ARM devices.
     if target == "arm-unknown-linux-gnueabihf" {
         println!("cargo:rustc-env=PKG_CONFIG_ALLOW_CROSS=1");
         println!("cargo:rustc-link-search=target/mupdf_wrapper/Kobo");
-        println!("cargo:rustc-link-search=libs");
+        println!("cargo:rustc-link-search={}", lib_dir);
         println!("cargo:rustc-link-lib=dylib=stdc++");
         println!("cargo:rustc-link-lib=mupdf_wrapper");
     // Handle AArch64 (ARM64) Kobo devices (newer devices like Libra 2, Sage, etc.)
     } else if target == "aarch64-unknown-linux-gnu" {
         println!("cargo:rustc-env=PKG_CONFIG_ALLOW_CROSS=1");
         println!("cargo:rustc-link-search=target/mupdf_wrapper/Kobo");
-        println!("cargo:rustc-link-search=libs");
+        println!("cargo:rustc-link-search={}", lib_dir);
         println!("cargo:rustc-link-lib=dylib=stdc++");
         println!("cargo:rustc-link-lib=mupdf_wrapper");
         // Handle the Linux and macOS platforms.
@@ -23,9 +30,10 @@ fn main() {
         match target_os.as_ref() {
             "linux" => {
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/Linux");
-                println!("cargo:rustc-link-search=libs");
+                println!("cargo:rustc-link-search={}", lib_dir);
                 println!("cargo:rustc-link-lib=dylib=stdc++");
                 println!("cargo:rustc-link-lib=mupdf");
+                println!("cargo:rustc-link-lib=mujs");
                 println!("cargo:rustc-link-lib=z");
                 println!("cargo:rustc-link-lib=bz2");
                 println!("cargo:rustc-link-lib=jpeg");
@@ -36,7 +44,7 @@ fn main() {
             }
             "macos" => {
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/Darwin");
-                println!("cargo:rustc-link-search=libs");
+                println!("cargo:rustc-link-search={}", lib_dir);
                 println!("cargo:rustc-link-lib=dylib=c++");
                 println!("cargo:rustc-link-lib=mupdf");
                 println!("cargo:rustc-link-lib=z");
@@ -49,9 +57,9 @@ fn main() {
             }
             _ => panic!("Unsupported platform: {}", target_os),
         }
-
-        println!("cargo:rustc-link-lib=mupdf-third");
     }
+
+    println!("cargo:rustc-link-lib=mupdf-third");
 
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=bz2");

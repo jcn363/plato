@@ -25,84 +25,13 @@
 //!
 //! The Reader struct remains in reader.rs due to high interdependency with its methods.
 
-use std::collections::VecDeque;
 use std::sync::atomic;
 
 use crate::document::Location;
 use crate::framebuffer::Pixmap;
 use crate::geom::{LinearDir, Point, Rectangle};
-use crate::input::ButtonCode;
 use crate::metadata::{ScrollMode, ZoomMode};
-#[allow(unused_imports)]
-use crate::view::ViewId;
-use rustc_hash::{FxHashMap, FxHashSet};
-
-// ===========================================================================
-// Nested Structs for Reader Field Consolidation (Phase 4)
-// ===========================================================================
-
-/// Page navigation state
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct PageState {
-    pub current_page: usize,
-    pub pages_count: usize,
-    pub synthetic: bool,
-}
-
-impl Default for PageState {
-    fn default() -> Self {
-        PageState {
-            current_page: 0,
-            pages_count: 0,
-            synthetic: false,
-        }
-    }
-}
-
-/// Reader display settings
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct DisplaySettings {
-    pub contrast: Contrast,
-    pub reflowable: bool,
-    pub ephemeral: bool,
-    pub finished: bool,
-}
-
-impl Default for DisplaySettings {
-    fn default() -> Self {
-        DisplaySettings {
-            contrast: Contrast::default(),
-            reflowable: true,
-            ephemeral: false,
-            finished: false,
-        }
-    }
-}
-
-/// Interaction state
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-pub struct InteractionState {
-    pub focus: Option<crate::view::ViewId>,
-    pub selection: Option<Selection>,
-    pub held_buttons: FxHashSet<ButtonCode>,
-    pub history: VecDeque<usize>,
-    pub state: State,
-}
-
-impl Default for InteractionState {
-    fn default() -> Self {
-        InteractionState {
-            focus: None,
-            selection: None,
-            held_buttons: FxHashSet::default(),
-            history: VecDeque::new(),
-            state: State::Idle,
-        }
-    }
-}
+use rustc_hash::FxHashMap;
 
 // ===========================================================================
 // Shared Types - Used Across Modules
@@ -141,7 +70,6 @@ impl Default for Contrast {
 }
 
 /// Page animation type
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PageAnimKind {
     Slide,
@@ -158,7 +86,6 @@ pub struct AnimState {
 }
 
 /// Page animation states
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PageAnimation {
     None,
@@ -168,7 +95,6 @@ pub enum PageAnimation {
 
 /// A rendered chunk of a page
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct RenderChunk {
     pub page: usize,
     pub location: usize,
@@ -180,7 +106,6 @@ pub struct RenderChunk {
 
 /// Search state
 #[derive(Debug)]
-#[allow(dead_code)]
 pub struct Search {
     pub query: String,
     pub results: Vec<Location>,
@@ -200,7 +125,6 @@ pub struct Resource {
 
 /// Viewport configuration
 #[derive(Debug)]
-#[allow(dead_code)]
 pub struct ViewPort {
     pub zoom_mode: ZoomMode,
     pub scroll_mode: ScrollMode,

@@ -37,7 +37,6 @@ use rustc_hash::FxHashMap;
 /// Scale factor to apply to page rendering (1.0 = native size)
 ///
 /// Extracted from `Reader::scaling_factor()` (line 1788)
-#[allow(dead_code)]
 pub(crate) fn scaling_factor(
     rect: &Rectangle,
     _margin: &Margin,
@@ -106,20 +105,6 @@ pub(crate) fn text_excerpt(
     Some(text_str)
 }
 
-/// Get the text from a selected region
-///
-/// Extracts text using the given selection, handling language-specific
-/// spacing and word joining.
-#[allow(dead_code)]
-pub(crate) fn selected_text(
-    text: &FxHashMap<usize, Vec<BoundedText>>,
-    start: Point,
-    end: Point,
-    language: &str,
-) -> Option<String> {
-    text_excerpt(text, [start, end], language)
-}
-
 /// Calculate the bounding rectangle for text in a selection
 ///
 /// Finds the overall rectangle that encompasses all text between two points
@@ -173,7 +158,6 @@ pub(crate) fn text_rect(
 ///
 /// # Returns
 /// Rectangular region covering the selection, or None if no selection
-#[allow(dead_code)]
 pub(crate) fn selection_rect(
     selection: Option<&super::reader_core::Selection>,
     text_data: &FxHashMap<usize, Vec<BoundedText>>,
@@ -200,7 +184,6 @@ pub(crate) fn selection_rect(
 ///
 /// # Returns
 /// Adjusted page offset, or None if margins are out of bounds
-#[allow(dead_code)]
 pub(crate) fn calculate_margin_offset(
     offset: Point,
     pixmap_width: u32,

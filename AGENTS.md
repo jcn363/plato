@@ -412,6 +412,16 @@ Each crate should have a single responsibility, explicit documentation in its `C
 - Use `MuPdfContext` from `mupdf.rs` for safe context management with RAII cleanup
 - Use `log_error!`, `log_warn!`, `log_info!` macros from `crate::helpers` instead of raw `eprintln!`
 
+### Library Directory Convention
+
+Plato uses a target-to-library directory convention to separate native shared libraries by architecture:
+
+- **`libs/`** → ARM 32-bit (`arm-unknown-linux-gnueabihf`) for original Kobo devices
+- **`libs64/`** → ARM 64-bit (`aarch64-unknown-linux-gnu`) for newer Kobo devices (Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
+- **`libs_host/`** → Host/x86_64 (`x86_64-unknown-linux-gnu`) for development and emulator
+
+The `get_lib_dir()` function in `build.sh` is the canonical source of truth for this mapping and is used by build and packaging scripts to resolve the correct library directory for each target.
+
 ## Stub and Hardware Limitation Documentation
 
 **Mandatory rule:** Document all stub implementations and unsupported features.

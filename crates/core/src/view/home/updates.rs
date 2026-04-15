@@ -11,21 +11,12 @@
 
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
-use crate::framebuffer::UpdateMode;
-use crate::geom::Rectangle;
-use crate::settings::FirstColumn;
-use crate::settings::SecondColumn;
 use crate::unit::scale_by_dpi;
-use crate::view::common::locate_by_id;
 use crate::view::home::home_utils;
-use crate::view::home::AddressBar;
 use crate::view::home::BottomBar;
-use crate::view::home::NavigationBar;
 use crate::view::home::Shelf;
-use crate::view::menu_entry::MenuEntry;
-use crate::view::search_bar::SearchBar;
 use crate::view::top_bar::TopBar;
-use crate::view::{Hub, RenderData, RenderQueue, View, ViewId};
+use crate::view::{Hub, RenderQueue, View};
 
 use super::Home;
 

@@ -9,15 +9,15 @@ The goal is to split `crates/core/src/view/home/mod.rs` (2786 lines) into focuse
 ## Current Structure
 
 ```
-home/mod.rs (596 lines - COMPLETED)
+home/mod.rs (591 lines - COMPLETED)
 ├── Extraction completed:
 │   ├── home/ops.rs (217 lines) - Document operations
-│   ├── home/ui_toggles.rs (1018 lines) - UI toggle methods
+│   ├── home/ui_toggles.rs (1014 lines) - UI toggle methods
 │   ├── home/library.rs (117 lines) - Library operations
 │   ├── home/fetcher.rs (226 lines) - Background fetcher management
-│   ├── home/navigation.rs (160 lines) - Directory/page navigation
-│   ├── home/updates.rs (191 lines) - UI state updates
-│   ├── home/input.rs (528 lines) - Event handling
+│   ├── home/navigation.rs (159 lines) - Directory/page navigation
+│   ├── home/updates.rs (182 lines) - UI state updates
+│   ├── home/input.rs (525 lines) - Event handling
 │   └── home_utils.rs (41 lines) - Utility functions
 └── Existing submodules:
     ├── shelf.rs (217 lines)

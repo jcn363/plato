@@ -25,7 +25,7 @@ shift
 
 	case "$CMD" in
 	run_emulator)
-		RUSTFLAGS="-L $PWD/libs -L $PWD/thirdparty/mupdf/build/release" cargo run -p emulator "$@"
+		RUSTFLAGS="-L $PWD/libs_host -L $PWD/thirdparty/mupdf/build/release" cargo run -p emulator "$@"
 		;;
 	install_importer)
 		cargo install --path crates/importer "$@"

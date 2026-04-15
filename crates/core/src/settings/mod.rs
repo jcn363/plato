@@ -7,6 +7,7 @@ mod preset;
 mod reading;
 mod theme;
 mod tools;
+mod thumbnail;
 
 use crate::frontlight::LightLevels;
 use crate::metadata::{SortMethod, TextAlign};
@@ -24,6 +25,7 @@ pub use interface::*;
 pub use library::*;
 pub use reading::*;
 pub use tools::*;
+pub use thumbnail::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
@@ -73,6 +75,7 @@ pub struct Settings {
     pub plugin_settings: PluginSettings,
     pub background_sync: BackgroundSyncSettings,
     pub cloud_sync: CloudSyncSettings,
+    pub thumbnail: ThumbnailSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -290,6 +293,7 @@ impl Default for Settings {
             plugin_settings: PluginSettings::default(),
             background_sync: BackgroundSyncSettings::default(),
             cloud_sync: CloudSyncSettings::default(),
+            thumbnail: ThumbnailSettings::default(),
         }
     }
 }

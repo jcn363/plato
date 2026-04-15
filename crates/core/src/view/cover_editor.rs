@@ -6,7 +6,6 @@ use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::Rectangle;
 use crate::input::{DeviceEvent, FingerStatus};
-use crate::settings::CoverEditorSettings;
 use crate::unit::scale_by_dpi;
 use crate::view::entries::EntryId;
 use crate::view::top_bar::TopBar;
@@ -34,8 +33,6 @@ pub struct CoverEditorView {
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
     cover_editor: CoverEditorLib,
-    #[allow(dead_code)]
-    _settings: CoverEditorSettings,
     mode: EditorMode,
     crop_state: CropState,
     current_image: Option<DynamicImage>,
@@ -72,7 +69,6 @@ impl CoverEditorView {
             rect,
             children,
             cover_editor: CoverEditorLib::new(&context.settings.cover_editor),
-            _settings: context.settings.cover_editor.clone(),
             mode: EditorMode::SelectBook,
             crop_state: CropState::None,
             current_image: None,
@@ -141,7 +137,6 @@ impl CoverEditorView {
         }
     }
 
-    #[allow(dead_code)]
     fn apply_brightness(&mut self, rq: &mut RenderQueue, value: i32) {
         if let Some(ref mut img) = self.current_image {
             *img = self.cover_editor.adjust_brightness(img, value);
@@ -149,7 +144,6 @@ impl CoverEditorView {
         }
     }
 
-    #[allow(dead_code)]
     fn apply_contrast(&mut self, rq: &mut RenderQueue, value: f32) {
         if let Some(ref mut img) = self.current_image {
             *img = self.cover_editor.adjust_contrast(img, value);
@@ -216,6 +210,14 @@ impl View for CoverEditorView {
             }
             Event::Select(EntryId::CoverGrayscale) => {
                 self.apply_grayscale(rq);
+                return true;
+            }
+            Event::Select(EntryId::CoverBrightness(value)) => {
+                self.apply_brightness(rq, *value);
+                return true;
+            }
+            Event::Select(EntryId::CoverContrast(value)) => {
+                self.apply_contrast(rq, (*value as f32) / 100.0);
                 return true;
             }
             Event::Select(EntryId::CoverCrop) => {

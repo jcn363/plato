@@ -1,24 +1,23 @@
 use super::dom::{ElementData, NodeData, NodeRef, TextData, WRAPPER_TAG_NAME};
-use super::layout::{collapse_margins, hyph_lang, DEFAULT_HYPH_LANG, HYPHENATION_PATTERNS};
-use super::layout::{ChildArtifact, GlueMaterial, LoopContext, PenaltyMaterial, SiblingStyle};
-use super::layout::{Display, Float, ImageElement, ParagraphElement, TextAlign, TextElement};
-use super::layout::{DrawCommand, DrawState, FontKind, Fonts, ImageCommand, RootData, TextCommand};
-use super::layout::{ImageMaterial, InlineMaterial, StyleData, TextMaterial};
-use super::layout::{LineStats, ListStyleType, WordSpacing};
-use super::layout::{EM_SPACE_RATIOS, FONT_SPACES, WORD_SPACE_RATIOS};
-use super::parse::parse_text_overflow;
-use super::parse::parse_vertical_align;
-use super::parse::{
-    parse_color, parse_direction, parse_line_height, parse_list_style_type, parse_tab_size,
-    parse_text_decoration, parse_text_transform,
+use super::layout::{
+    collapse_margins, ChildArtifact, DrawCommand, DrawState, Fonts, ImageCommand, LoopContext,
+    RootData, StyleData, TextCommand,
 };
-use super::parse::{parse_display, parse_edge, parse_float, parse_text_align, parse_text_indent};
-use super::parse::{parse_font_features, parse_font_size, parse_font_variant, parse_font_weight};
-use super::parse::{
-    parse_font_kind, parse_font_style, parse_height, parse_inline_material, parse_width,
+use super::layout::{
+    hyph_lang, Display, Float, FontKind, GlueMaterial, ImageElement, ImageMaterial, InlineMaterial,
+    LineStats, ListStyleType, ParagraphElement, PenaltyMaterial, SiblingStyle, TextAlign,
+    TextElement, TextMaterial, WordSpacing, DEFAULT_HYPH_LANG, EM_SPACE_RATIOS, FONT_SPACES,
+    HYPHENATION_PATTERNS, WORD_SPACE_RATIOS,
 };
-use super::parse::{parse_letter_spacing, parse_white_space, parse_word_spacing};
-use super::parse::{parse_max_height, parse_max_width, parse_min_height, parse_min_width};
+use super::parse::{
+    parse_color, parse_direction, parse_display, parse_edge, parse_float, parse_font_features,
+    parse_font_kind, parse_font_size, parse_font_style, parse_font_variant, parse_font_weight,
+    parse_height, parse_inline_material, parse_letter_spacing, parse_line_height,
+    parse_list_style_type, parse_max_height, parse_max_width, parse_min_height, parse_min_width,
+    parse_tab_size, parse_text_align, parse_text_decoration, parse_text_indent,
+    parse_text_overflow, parse_text_transform, parse_vertical_align, parse_white_space,
+    parse_width, parse_word_spacing,
+};
 use super::style::{specified_values, StyleSheet};
 use super::xml::XmlExt;
 use crate::color::BLACK;
@@ -27,19 +26,19 @@ use crate::document::{Document, Location};
 use crate::font::{FontFamily, FontOpener};
 use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::{Edge, Point, Rectangle, Vec2};
-use crate::helpers::{decode_entities, Normalize};
+use crate::helpers::decode_entities;
 use crate::settings::{
     DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT, DEFAULT_MARGIN_WIDTH, DEFAULT_TEXT_ALIGN,
 };
 use crate::settings::{HYPHEN_PENALTY, STRETCH_TOLERANCE};
 use crate::unit::{mm_to_px, pt_to_px};
 use anyhow::Error;
-use kl_hyphenate::{Hyphenator, Iter, Standard};
-use paragraph_breaker::{standard_fit, total_fit};
-use paragraph_breaker::{Breakpoint, Item as ParagraphItem, INFINITE_PENALTY};
+use kl_hyphenate::{Hyphenator, Standard};
+use paragraph_breaker::{
+    standard_fit, total_fit, Breakpoint, Item as ParagraphItem, INFINITE_PENALTY,
+};
 use percent_encoding::percent_decode_str;
 use septem::Roman;
-use std::convert::TryFrom;
 use std::path::PathBuf;
 use xi_unicode::LineBreakIterator;
 
@@ -1100,11 +1099,16 @@ impl Engine {
                         let path = attributes
                             .get(attr)
                             .and_then(|src| {
-                                spine_dir.join(src).normalize().to_str().map(|uri| {
-                                    percent_decode_str(&decode_entities(uri))
-                                        .decode_utf8_lossy()
-                                        .into_owned()
-                                })
+                                spine_dir
+                                    .join(src)
+                                    .canonicalize()
+                                    .unwrap_or_else(|_| spine_dir.join(src))
+                                    .to_str()
+                                    .map(|uri| {
+                                        percent_decode_str(&decode_entities(uri))
+                                            .decode_utf8_lossy()
+                                            .into_owned()
+                                    })
                             })
                             .unwrap_or_default();
 
@@ -2310,9 +2314,12 @@ impl Engine {
                         let chunk = &text[index_before..index_after];
                         let len_before = hyph_items.len();
 
-                        for segment in dictionary.hyphenate(chunk).iter().segments() {
-                            let subelem =
-                                self.box_from_chunk(segment, index_before + index, element);
+                        for segment in dictionary.hyphenate(chunk) {
+                            let subelem = self.box_from_chunk(
+                                segment.as_str(),
+                                index_before + index,
+                                element,
+                            );
                             hyph_items.push(subelem);
                             index += segment.len();
                             if index < chunk.len() {

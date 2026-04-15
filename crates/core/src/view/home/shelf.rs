@@ -2,7 +2,6 @@ use super::book::Book;
 use crate::color::{background as bg, separator as sep};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
-use crate::document::open;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::divide;
@@ -16,10 +15,6 @@ use crate::view::filler::Filler;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use crate::view::{BIG_BAR_HEIGHT, THICKNESS_MEDIUM};
 use std::path::PathBuf;
-use std::sync::{LazyLock, Mutex};
-use std::thread;
-
-static EXCLUSIVE_ACCESS: LazyLock<Mutex<u8>> = LazyLock::new(|| Mutex::new(0));
 
 pub struct Shelf {
     id: Id,
@@ -68,7 +63,7 @@ impl Shelf {
     pub fn update(
         &mut self,
         metadata: &[Info],
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &Context,
     ) {
@@ -81,7 +76,7 @@ impl Shelf {
         let book_heights = divide(self.rect.height() as i32, max_lines as i32);
         let mut y_pos = self.rect.min.y;
         let th = big_height;
-        let tw = 3 * th / 4;
+        let _tw = 3 * th / 4;
 
         for (index, info) in metadata.iter().enumerate() {
             let y_min = y_pos + if index > 0 { big_thickness } else { 0 };
@@ -93,39 +88,28 @@ impl Shelf {
                 };
 
             let preview_path: Option<PathBuf> = if self.thumbnail_previews {
-                let thumb_path = context.library.thumbnail_preview(&info.file.path);
-                if !thumb_path.exists() {
-                    let hub2 = hub.clone();
-                    let thumb_path2 = thumb_path.to_string_lossy().into_owned();
-                    let path = info.file.path.clone();
-                    let full_path = context.library.home.join(&info.file.path);
-                    thread::spawn(move || {
-                        // This is a hack to circumvent a segfault (EXC_BAD_ACCESS)
-                        // triggered by loading multiple jp2 pixmaps in parallel.
-                        let _guard = EXCLUSIVE_ACCESS
-                            .lock()
-                            .expect("EXCLUSIVE_ACCESS lock poisoned");
-                        open(full_path)
-                            .and_then(|mut doc| {
-                                doc.preview_pixmap(
-                                    tw as f32,
-                                    th as f32,
-                                    CURRENT_DEVICE.color_samples(),
-                                )
-                            })
-                            .map(|pixmap| {
-                                if pixmap.save(&thumb_path2).is_ok() {
-                                    hub2.send(Event::RefreshBookPreview(
-                                        path,
-                                        Some(PathBuf::from(thumb_path2)),
-                                    ))
-                                    .ok();
-                                }
-                            })
-                    });
-                    Some(PathBuf::default())
+                if let Some(thumbnail_manager) = context.thumbnail_manager() {
+                    match thumbnail_manager.request_thumbnail(&info.file.path) {
+                        Ok(Some(path)) => Some(path),
+                        Ok(None) => {
+                            // Thumbnail generation in progress, show placeholder
+                            Some(PathBuf::default())
+                        }
+                        Err(e) => {
+                            // Log error and show placeholder
+                            eprintln!("Thumbnail request failed for {}: {:?}", 
+                                     info.file.path.display(), e);
+                            Some(PathBuf::default())
+                        }
+                    }
                 } else {
-                    Some(thumb_path)
+                    // Fallback to old behavior if thumbnail manager not available
+                    let thumb_path = context.library.thumbnail_preview(&info.file.path);
+                    if thumb_path.exists() {
+                        Some(thumb_path)
+                    } else {
+                        Some(PathBuf::default())
+                    }
                 }
             } else {
                 None

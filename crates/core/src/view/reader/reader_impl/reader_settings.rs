@@ -36,7 +36,6 @@ use crate::view::{AppCmd, EntryId, EntryKind, RenderQueue, View, ViewId};
 use septem::Roman;
 
 /// Find page index by named page reference
-#[allow(dead_code)]
 pub(crate) fn find_page_by_name(info: &Info, name: &str) -> Option<usize> {
     info.reader.as_ref().and_then(|r| {
         if let Ok(a) = name.parse::<u32>() {
@@ -75,7 +74,6 @@ pub(crate) fn find_page_by_name(info: &Info, name: &str) -> Option<usize> {
 }
 
 /// Build table of contents from document structure
-#[allow(dead_code)]
 pub(crate) fn build_toc<F>(info: &Info, find_page_fn: F) -> Option<Vec<TocEntry>>
 where
     F: Fn(&str) -> Option<usize> + Copy,
@@ -87,7 +85,6 @@ where
 }
 
 /// Recursively build table of contents entries
-#[allow(dead_code)]
 pub(crate) fn build_toc_aux<F>(
     simple_toc: &[SimpleTocEntry],
     index: &mut usize,
@@ -128,7 +125,6 @@ where
 }
 
 /// Toggle font family menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_font_family_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_family: String,
@@ -174,7 +170,6 @@ pub(crate) fn toggle_font_family_menu(
 }
 
 /// Toggle font size menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_font_size_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_size: f32,
@@ -223,7 +218,6 @@ pub(crate) fn toggle_font_size_menu(
 }
 
 /// Toggle text alignment menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_text_align_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_align: TextAlign,
@@ -272,7 +266,6 @@ pub(crate) fn toggle_text_align_menu(
 }
 
 /// Toggle line height menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_line_height_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_height: f32,
@@ -315,7 +308,6 @@ pub(crate) fn toggle_line_height_menu(
 }
 
 /// Toggle contrast exponent menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_contrast_exponent_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_exponent: f32,
@@ -358,7 +350,6 @@ pub(crate) fn toggle_contrast_exponent_menu(
 }
 
 /// Toggle contrast gray level menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_contrast_gray_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_gray: f32,
@@ -401,7 +392,6 @@ pub(crate) fn toggle_contrast_gray_menu(
 }
 
 /// Toggle margin width menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_margin_width_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_margin_width: i32,
@@ -445,7 +435,6 @@ pub(crate) fn toggle_margin_width_menu(
 }
 
 /// Toggle page menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_page_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_page: usize,
@@ -492,7 +481,6 @@ pub(crate) fn toggle_page_menu(
 }
 
 /// Toggle margin cropper menu visibility
-#[allow(dead_code)]
 pub(crate) fn toggle_margin_cropper_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     current_page: usize,

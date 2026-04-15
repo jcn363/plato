@@ -16,6 +16,7 @@
 pub mod css;
 pub mod dom;
 pub mod engine;
+pub mod engine_helpers;
 pub mod layout;
 pub mod parse;
 pub mod style;
@@ -205,7 +206,12 @@ impl HtmlDocument {
                         && child.attribute("rel") == Some("stylesheet")
                     {
                         if let Some(href) = child.attribute("href") {
-                            if let Some(name) = spine_dir.join(href).normalize().to_str() {
+                            if let Some(name) = spine_dir
+                                .join(href)
+                                .canonicalize()
+                                .unwrap_or_else(|_| spine_dir.join(href))
+                                .to_str()
+                            {
                                 if let Ok(buf) = self.parent.fetch(name) {
                                     if let Ok(text) = String::from_utf8(buf) {
                                         let mut css = CssParser::new(&text).parse();

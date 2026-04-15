@@ -26,6 +26,7 @@ pub mod rtc;
 pub mod settings;
 pub mod sync;
 pub mod theme;
+pub mod thumbnail;
 mod unit;
 pub mod update;
 pub mod view;

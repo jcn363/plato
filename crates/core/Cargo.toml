@@ -20,8 +20,8 @@ serde.workspace = true
 serde_json.workspace = true
 titlecase = "3.6.0"
 unicode-normalization = "0.1.25"
-toml = "0.9.11"
-zip = "8.0"
+toml = "1.1.2+spec-1.1.0"
+zip = "8.5.1"
 kl-hyphenate = "0.7.3"
 entities = "1.0.1"
 paragraph-breaker = "0.4.4"
@@ -37,10 +37,13 @@ thiserror = "2.0.17"
 walkdir = "2.5.0"
 globset = "0.4.18"
 rustc-hash = "2.1"
-rand_core = "0.10"
+rand_core = "0.10.1"
 rand_xoshiro = "0.8"
 percent-encoding = "2.3.2"
 chrono = { version = "0.4.44", features = ["serde", "clock"], default-features = false }
 reqwest = { version = "0.13.2", default-features = false, features = ["blocking", "json", "rustls"] }
 quick-xml = "0.39.2"
 epub_edit = { path = "../epub_edit" }
+crossbeam-channel = "0.5.15"
+lru = "0.17.0"
+dashmap = "6.1.0"

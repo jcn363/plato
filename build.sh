@@ -116,6 +116,10 @@ get_cargo_profile() {
 }
 
 # Function to get library directory name for target
+# This is the canonical target-to-directory mapping and the single source of truth for it in shell scripts:
+# - arm (arm-unknown-linux-gnueabihf) → libs/ (ARM 32-bit for original Kobo devices)
+# - arm64 (aarch64-unknown-linux-gnu) → libs64/ (ARM 64-bit for newer Kobo devices)
+# - host (x86_64-unknown-linux-gnu) → libs_host/ (host/x86_64 for development/emulator)
 get_lib_dir() {
     case "$1" in
         arm) echo "libs" ;;

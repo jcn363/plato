@@ -1,6 +1,8 @@
 use crate::log_info;
 use crate::settings::BackgroundSyncSettings;
-use anyhow::{format_err, Error};
+use anyhow::{format_err, Context, Error};
+use rustc_hash::{FxBuildHasher, FxHashSet};
+use std::collections::HashSet;
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -75,6 +77,10 @@ impl BackgroundSync {
 
     pub fn should_auto_enable_wifi(&self) -> bool {
         self.settings.enabled && self.settings.auto_wifi
+    }
+
+    pub fn wifi_only(&self) -> bool {
+        self.settings.wifi_only
     }
 
     pub fn should_keep_wifi_on(&self) -> bool {
@@ -165,6 +171,28 @@ pub fn check_network_and_sync(
     Ok(())
 }
 
+fn build_curl_command(
+    url: &str,
+    username: Option<&str>,
+    password: Option<&str>,
+    extra_args: &[&str],
+) -> String {
+    let mut curl_cmd = String::from("curl");
+
+    for arg in extra_args {
+        curl_cmd.push(' ');
+        curl_cmd.push_str(arg);
+    }
+
+    if let (Some(user), Some(pass)) = (username, password) {
+        curl_cmd.push_str(&format!(" -u {}:{}", user, pass));
+    }
+
+    curl_cmd.push(' ');
+    curl_cmd.push_str(url);
+    curl_cmd
+}
+
 fn sync_with_webdav(
     url: &str,
     username: Option<&str>,
@@ -176,14 +204,12 @@ fn sync_with_webdav(
         let base_url = url.trim_end_matches('/');
         let full_url = format!("{}{}", base_url, remote_path);
 
-        let mut curl_cmd = String::from("curl -s -X PROPFIND -H \"Depth: 1\"");
-
-        if let (Some(user), Some(pass)) = (username, password) {
-            curl_cmd.push_str(&format!(" -u {}:{}", user, pass));
-        }
-
-        curl_cmd.push_str(&format!(" {}", full_url));
-        curl_cmd.push_str(" 2>/dev/null");
+        let curl_cmd = build_curl_command(
+            &full_url,
+            username,
+            password,
+            &["-s", "-X", "PROPFIND", "-H", "Depth: 1", "2>/dev/null"],
+        );
 
         let output = Command::new("sh")
             .arg("-c")
@@ -212,13 +238,12 @@ pub fn list_webdav_files(
         let base_url = url.trim_end_matches('/');
         let full_url = format!("{}{}", base_url, remote_path);
 
-        let mut curl_cmd = String::from("curl -s -X PROPFIND -H \"Depth: 1\"");
-
-        if let (Some(user), Some(pass)) = (username, password) {
-            curl_cmd.push_str(&format!(" -u {}:{}", user, pass));
-        }
-
-        curl_cmd.push_str(&format!(" {}", full_url));
+        let curl_cmd = build_curl_command(
+            &full_url,
+            username,
+            password,
+            &["-s", "-X", "PROPFIND", "-H", "Depth: 1"],
+        );
 
         let output = Command::new("sh")
             .arg("-c")
@@ -263,14 +288,9 @@ pub fn download_from_webdav(
     #[cfg(target_os = "linux")]
     {
         let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
-        let mut curl_cmd = String::from("curl");
+        let output_arg = format!("-o {}", local_path.display());
 
-        if let (Some(user), Some(pass)) = (username, password) {
-            curl_cmd.push_str(&format!(" -u {}:{}", user, pass));
-        }
-
-        curl_cmd.push_str(&format!(" -o {}", local_path.display()));
-        curl_cmd.push_str(&format!(" {}", full_url));
+        let curl_cmd = build_curl_command(&full_url, username, password, &[&output_arg]);
 
         Command::new("sh")
             .arg("-c")
@@ -292,13 +312,9 @@ pub fn upload_to_webdav(
     #[cfg(target_os = "linux")]
     {
         let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
-        let mut curl_cmd = String::from("curl -T");
+        let upload_arg = format!("-T {}", local_path.display());
 
-        if let (Some(user), Some(pass)) = (username, password) {
-            curl_cmd.push_str(&format!(" -u {}:{}", user, pass));
-        }
-
-        curl_cmd.push_str(&format!(" {} {}", local_path.display(), full_url));
+        let curl_cmd = build_curl_command(&full_url, username, password, &[&upload_arg]);
 
         Command::new("sh")
             .arg("-c")
@@ -321,7 +337,12 @@ pub fn sync_annotations_with_webdav(
     #[cfg(target_os = "linux")]
     {
         let annotations_dir = local_library_path.join(".annotations");
-        std::fs::create_dir_all(&annotations_dir).ok();
+        std::fs::create_dir_all(&annotations_dir).with_context(|| {
+            format!(
+                "Failed to create annotations directory: {}",
+                annotations_dir.display()
+            )
+        })?;
 
         let remote_annotations_url = format!("{}/.annotations", remote_base.trim_end_matches('/'));
 
@@ -364,13 +385,8 @@ fn fetch_remote_file(
     #[cfg(target_os = "linux")]
     {
         let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
-        let mut curl_cmd = String::from("curl -s");
 
-        if let (Some(user), Some(pass)) = (username, password) {
-            curl_cmd.push_str(&format!(" -u {}:{}", user, pass));
-        }
-
-        curl_cmd.push_str(&format!(" {}", full_url));
+        let curl_cmd = build_curl_command(&full_url, username, password, &["-s"]);
 
         let output = Command::new("sh")
             .arg("-c")
@@ -392,7 +408,7 @@ fn merge_json(local: &str, remote: &str) -> String {
         serde_json::from_str(remote).unwrap_or(serde_json::Value::Array(Vec::new()));
 
     let mut merged = Vec::new();
-    let mut seen = std::collections::HashSet::new();
+    let mut seen = HashSet::with_hasher(FxBuildHasher::default());
 
     let empty = Vec::new();
     let local_items = local_val.as_array().unwrap_or(&empty);
@@ -447,15 +463,10 @@ pub fn sync_reading_progress_with_webdav(
     Ok(())
 }
 
-pub fn sync_with_kobocloud(
-    device_id: &str,
-    _local_library_path: &std::path::Path,
-    reading_states_dir: &std::path::Path,
-) -> Result<(), Error> {
+fn fetch_kobocloud_sync_status(device_id: &str) -> Result<serde_json::Value, Error> {
     #[cfg(target_os = "linux")]
     {
         let api_url = "https://api.kobobooks.com/v1";
-
         let client = reqwest::blocking::Client::new();
 
         let device_info = serde_json::json!({
@@ -478,59 +489,84 @@ pub fn sync_with_kobocloud(
             .json()
             .map_err(|e| format_err!("Failed to parse sync response: {}", e))?;
 
-        if let Some(books) = sync_data.get("Books").and_then(|b| b.as_array()) {
-            for book in books {
-                if let Some(book_id) = book.get("BookId").and_then(|b| b.as_str()) {
-                    if let Some(progress) = book.get("Progress").and_then(|p| p.as_f64()) {
-                        if let Some(reading_state_file) = reading_states_dir
-                            .join(format!("{}.json", book_id))
-                            .to_str()
-                        {
-                            let state = serde_json::json!({
-                                "progress": progress,
-                                "timestamp": chrono::Utc::now().to_rfc3339(),
-                            });
-                            std::fs::write(
-                                reading_state_file,
-                                serde_json::to_string_pretty(&state)?,
-                            )
-                            .ok();
-                        }
+        Ok(sync_data)
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    Err(format_err!("KoboCloud sync only available on Linux"))
+}
+
+fn process_kobocloud_books(
+    sync_data: &serde_json::Value,
+    reading_states_dir: &std::path::Path,
+) -> Result<(), Error> {
+    if let Some(books) = sync_data.get("Books").and_then(|b| b.as_array()) {
+        for book in books {
+            if let Some(book_id) = book.get("BookId").and_then(|b| b.as_str()) {
+                if let Some(progress) = book.get("Progress").and_then(|p| p.as_f64()) {
+                    if let Some(reading_state_file) = reading_states_dir
+                        .join(format!("{}.json", book_id))
+                        .to_str()
+                    {
+                        let state = serde_json::json!({
+                            "progress": progress,
+                            "timestamp": chrono::Utc::now().to_rfc3339(),
+                        });
+                        std::fs::write(reading_state_file, serde_json::to_string_pretty(&state)?)
+                            .with_context(|| {
+                            format!("Failed to write reading state file: {}", reading_state_file)
+                        })?;
                     }
                 }
             }
         }
+    }
+    Ok(())
+}
 
-        let mut upload_data = serde_json::json!({
-            "DeviceId": device_id,
-            "Books": [],
-        });
+fn prepare_upload_data(
+    device_id: &str,
+    reading_states_dir: &std::path::Path,
+) -> Result<serde_json::Value, Error> {
+    let mut upload_data = serde_json::json!({
+        "DeviceId": device_id,
+        "Books": [],
+    });
 
-        if reading_states_dir.exists() {
-            let mut books_to_upload = Vec::new();
-            for entry in std::fs::read_dir(reading_states_dir)? {
-                let entry = entry?;
-                let path = entry.path();
-                if path.extension().map(|e| e == "json").unwrap_or(false) {
-                    if let Ok(content) = std::fs::read_to_string(&path) {
-                        if let Ok(state) = serde_json::from_str::<serde_json::Value>(&content) {
-                            let book_id = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+    if reading_states_dir.exists() {
+        let mut books_to_upload = Vec::new();
+        for entry in std::fs::read_dir(reading_states_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.extension().map(|e| e == "json").unwrap_or(false) {
+                if let Ok(content) = std::fs::read_to_string(&path) {
+                    if let Ok(state) = serde_json::from_str::<serde_json::Value>(&content) {
+                        let book_id = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
 
-                            books_to_upload.push(serde_json::json!({
-                                "BookId": book_id,
-                                "Progress": state.get("progress").and_then(|p| p.as_f64()).unwrap_or(0.0),
-                                "LastModified": state.get("timestamp").and_then(|t| t.as_str()).unwrap_or(""),
-                            }));
-                        }
+                        books_to_upload.push(serde_json::json!({
+                            "BookId": book_id,
+                            "Progress": state.get("progress").and_then(|p| p.as_f64()).unwrap_or(0.0),
+                            "LastModified": state.get("timestamp").and_then(|t| t.as_str()).unwrap_or(""),
+                        }));
                     }
                 }
             }
-            upload_data["Books"] = serde_json::json!(books_to_upload);
         }
+        upload_data["Books"] = serde_json::json!(books_to_upload);
+    }
+
+    Ok(upload_data)
+}
+
+fn upload_to_kobocloud(_device_id: &str, upload_data: &serde_json::Value) -> Result<(), Error> {
+    #[cfg(target_os = "linux")]
+    {
+        let api_url = "https://api.kobobooks.com/v1";
+        let client = reqwest::blocking::Client::new();
 
         client
             .post(&format!("{}/sync", api_url))
-            .json(&upload_data)
+            .json(upload_data)
             .send()
             .map_err(|e| format_err!("KoboCloud upload failed: {}", e))?;
     }
@@ -539,6 +575,20 @@ pub fn sync_with_kobocloud(
     {
         return Err(format_err!("KoboCloud sync only available on Linux"));
     }
+
+    Ok(())
+}
+
+pub fn sync_with_kobocloud(
+    device_id: &str,
+    _local_library_path: &std::path::Path,
+    reading_states_dir: &std::path::Path,
+) -> Result<(), Error> {
+    let sync_data = fetch_kobocloud_sync_status(device_id)?;
+    process_kobocloud_books(&sync_data, reading_states_dir)?;
+
+    let upload_data = prepare_upload_data(device_id, reading_states_dir)?;
+    upload_to_kobocloud(device_id, &upload_data)?;
 
     Ok(())
 }

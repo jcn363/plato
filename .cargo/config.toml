@@ -1,16 +1,18 @@
+# ARM 32-bit target: uses libs/ directory for 32-bit shared libraries
 [target.arm-unknown-linux-gnueabihf]
 linker = 'arm-linux-gnueabihf-gcc'
 rustflags = [
-    '-C', 'link-args=-L/home/user/Desktop/plato/libs -Wl,-rpath-link,/home/user/Desktop/plato/libs',
+    '-C', 'link-args=-L../../libs -Wl,-rpath-link,../../libs',
     '-C', 'target-cpu=cortex-a7',
     '-C', 'target-feature=+neon,+vfp4',
     '--cap-lints', 'warn',
 ]
 
+# ARM 64-bit target: uses libs64/ directory for 64-bit shared libraries
 [target.aarch64-unknown-linux-gnu]
 linker = "aarch64-linux-gnu-gcc"
 rustflags = [
-    "-C", "link-args=-L/home/user/Desktop/plato/libs -Wl,-rpath-link,/home/user/Desktop/plato/libs",
+    "-C", "link-args=-L../../libs64 -Wl,-rpath-link,../../libs64",
     "-C", "target-cpu=generic",
     "-C", "target-feature=+neon",
 ]

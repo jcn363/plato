@@ -9,9 +9,11 @@ use crate::geom::{BorderSpec, CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
 use crate::unit::scale_by_dpi;
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
+use std::thread;
 use std::time::Duration;
 
-#[allow(dead_code)]
 const NOTIFICATION_CLOSE_DELAY: Duration = Duration::from_secs(6);
 
 #[derive(Debug)]
@@ -23,6 +25,7 @@ pub struct Notification {
     max_width: i32,
     index: u8,
     view_id: ViewId,
+    timer_cancelled: Arc<AtomicBool>,
 }
 
 impl Clone for Notification {
@@ -35,6 +38,7 @@ impl Clone for Notification {
             max_width: self.max_width,
             index: self.index,
             view_id: self.view_id,
+            timer_cancelled: Arc::new(AtomicBool::new(true)), // Cancelled for clones since they won't have timers
         }
     }
 }
@@ -42,7 +46,7 @@ impl Clone for Notification {
 impl Notification {
     pub fn new(
         text: String,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> Notification {
@@ -77,6 +81,23 @@ impl Notification {
         rq.add(RenderData::new(id, rect, UpdateMode::Full));
         context.notification_index = index.wrapping_add(1);
 
+        // Create timer cancellation flag
+        let timer_cancelled = Arc::new(AtomicBool::new(false));
+
+        // Schedule automatic close after NOTIFICATION_CLOSE_DELAY
+        let hub_clone = hub.clone();
+        let timer_cancelled_clone = timer_cancelled.clone();
+        let notification_id = id;
+
+        thread::spawn(move || {
+            thread::sleep(NOTIFICATION_CLOSE_DELAY);
+
+            // Check if timer was cancelled before sending close event
+            if !timer_cancelled_clone.load(std::sync::atomic::Ordering::Relaxed) {
+                let _ = hub_clone.send(Event::Close(ViewId::MessageNotif(notification_id)));
+            }
+        });
+
         Notification {
             id,
             rect,
@@ -85,6 +106,7 @@ impl Notification {
             max_width: max_message_width,
             index,
             view_id,
+            timer_cancelled,
         }
     }
 }
@@ -94,12 +116,18 @@ impl View for Notification {
         &mut self,
         evt: &Event,
         _hub: &Hub,
-        _bus: &mut Bus,
+        bus: &mut Bus,
         _rq: &mut RenderQueue,
         _context: &mut Context,
     ) -> bool {
         match *evt {
-            Event::Gesture(GestureEvent::Tap(center)) if self.rect.includes(center) => true,
+            Event::Gesture(GestureEvent::Tap(center)) if self.rect.includes(center) => {
+                // Cancel the auto-close timer when manually dismissed
+                self.timer_cancelled
+                    .store(true, std::sync::atomic::Ordering::Relaxed);
+                bus.push_back(Event::Close(self.view_id));
+                true
+            }
             Event::Gesture(GestureEvent::Swipe { start, .. }) if self.rect.includes(start) => true,
             Event::Device(DeviceEvent::Finger { position, .. }) if self.rect.includes(position) => {
                 true

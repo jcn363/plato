@@ -1,6 +1,6 @@
 use super::{Framebuffer, UpdateMode};
 use crate::color::{background, Color};
-use crate::geom::{lerp, Rectangle};
+use crate::geom::{lerp, Point, Rectangle};
 use crate::theme;
 use anyhow::{format_err, Error};
 use std::fs::File;
@@ -200,6 +200,25 @@ impl Framebuffer for Pixmap {
                         *c = (255u8).wrapping_sub(*c);
                     }
                 }
+            }
+        }
+    }
+
+    fn draw_rectangle(&mut self, rect: &Rectangle, color: Color) {
+        for y in rect.min.y..rect.max.y {
+            for x in rect.min.x..rect.max.x {
+                self.set_pixel(x as u32, y as u32, color);
+            }
+        }
+    }
+
+    fn draw_pixmap(&mut self, pixmap: &Pixmap, pt: Point) {
+        for y in 0..pixmap.height {
+            for x in 0..pixmap.width {
+                let px = x + pt.x as u32;
+                let py = y + pt.y as u32;
+                let color = pixmap.get_pixel(x, y);
+                self.set_pixel(px, py, color);
             }
         }
     }

@@ -16,6 +16,7 @@
 - **Safe Wrapper Migration for Fonts**: `crates/core/src/font/mod.rs` (802 lines) is now fully integrated with safe wrappers.
 - **Unit Test Segregation**: All unit tests in `crates/core/src` have been moved to sibling `_tests.rs` files.
 - **Epub Editor Integration**: Moved from standalone tool to `crates/epub_editor` workspace member.
+- **PDF Tools UI Workflow Completion**: Interactive redaction region definition UI and file selection flow for PDF merging are implemented.
 
 ## Open
 
@@ -50,17 +51,6 @@ The font module (`crates/core/src/font/mod.rs`) is **2400 lines** and uses direc
 **Recommended action**
 
 - Migrate to safe wrappers and split into submodules.
-
-### 4. PDF tools UI workflow completion
-
-**Problem**
-
-- Interactive redaction region definition UI is pending implementation.
-- File selection flow for PDF merging is missing.
-
-**Recommended action**
-
-- Implement the missing UI flows for redaction and merging.
 
 ## Deferred
 

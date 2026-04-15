@@ -6,7 +6,7 @@ use crate::document::pdf::PdfOpener;
 use crate::document::{chapter_from_uri, BoundedText, Document, Location, TocEntry};
 use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir};
-use crate::helpers::{decode_entities, Normalize};
+use crate::helpers::decode_entities;
 use crate::metadata::TextAlign;
 use rustc_hash::FxHashMap;
 use std::io::Read;
@@ -77,7 +77,8 @@ impl Document for EpubDocument {
             .map(|href| {
                 self.parent
                     .join(href)
-                    .normalize()
+                    .canonicalize()
+                    .unwrap_or_else(|_| self.parent.join(href))
                     .to_string_lossy()
                     .into_owned()
             })?;
@@ -254,7 +255,12 @@ impl Document for EpubDocument {
                         format!("{}{}", path, uri)
                     } else {
                         let parent = Path::new(path).parent().unwrap_or_else(|| Path::new(""));
-                        parent.join(uri).normalize().to_string_lossy().into_owned()
+                        parent
+                            .join(uri)
+                            .canonicalize()
+                            .unwrap_or_else(|_| parent.join(uri))
+                            .to_string_lossy()
+                            .into_owned()
                     }
                 };
                 self.resolve_link(&normalized_uri, &mut cache)

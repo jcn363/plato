@@ -1,12 +1,13 @@
 use crate::context::Context;
 use crate::geom::Rectangle;
+use crate::log_error;
 use crate::settings::ThemeMode;
 use crate::theme;
 use crate::view::button::Button;
 use crate::view::label::Label;
 use crate::view::{Align, Bus, EntryId, Event, RenderQueue, View};
 
-pub const CHILD_COUNT: usize = 18;
+pub const CHILD_COUNT: usize = 20;
 
 pub fn build_rows(
     rect: &Rectangle,
@@ -248,6 +249,72 @@ pub fn build_rows(
 
     y += small_height;
 
+    // Plugin System Toggle
+    let label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "Plugin System".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(label) as Box<dyn View>);
+
+    let ctrl_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let toggle = Button::new(
+        ctrl_rect,
+        Event::Select(EntryId::TogglePluginSystem),
+        if settings.plugin_settings.enabled {
+            "On"
+        } else {
+            "Off"
+        }
+        .to_string(),
+    );
+    children.push(Box::new(toggle) as Box<dyn View>);
+
+    y += small_height;
+
+    // Background Sync Toggle
+    let label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "Background Sync".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(label) as Box<dyn View>);
+
+    let ctrl_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let toggle = Button::new(
+        ctrl_rect,
+        Event::Select(EntryId::ToggleBackgroundSync),
+        if settings.background_sync.enabled {
+            "On"
+        } else {
+            "Off"
+        }
+        .to_string(),
+    );
+    children.push(Box::new(toggle) as Box<dyn View>);
+
+    y += small_height;
+
     (children, y)
 }
 
@@ -414,6 +481,44 @@ pub fn handle_event(
                     context.settings.dark_mode = theme::is_dark_mode();
                 }
             }
+            true
+        }
+        Event::Select(EntryId::TogglePluginSystem) => {
+            context.settings.plugin_settings.enabled = !context.settings.plugin_settings.enabled;
+            if let Some(btn) = children[offset + 17].downcast_mut::<Button>() {
+                btn.update(
+                    if context.settings.plugin_settings.enabled {
+                        "On"
+                    } else {
+                        "Off"
+                    }
+                    .to_string(),
+                    rq,
+                );
+            }
+            // Reload plugin system
+            if let Err(e) = context.plugin_system.reload() {
+                log_error!("Failed to reload plugin system: {}", e);
+            }
+            true
+        }
+        Event::Select(EntryId::ToggleBackgroundSync) => {
+            context.settings.background_sync.enabled = !context.settings.background_sync.enabled;
+            if let Some(btn) = children[offset + 19].downcast_mut::<Button>() {
+                btn.update(
+                    if context.settings.background_sync.enabled {
+                        "On"
+                    } else {
+                        "Off"
+                    }
+                    .to_string(),
+                    rq,
+                );
+            }
+            // Update background sync settings
+            context
+                .background_sync
+                .update_settings(context.settings.background_sync.clone());
             true
         }
         _ => false,

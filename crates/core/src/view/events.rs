@@ -6,10 +6,11 @@ use crate::document::Location;
 use crate::gesture::GestureEvent;
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::metadata::{Margin, SortMethod};
+use crate::view::{Id, ViewId};
 
 use super::calculator::LineOrigin;
 use super::entries::{EntryId, EntryKind, TextKind};
-use super::identifiers::{PluginTriggerKind, SliderId, ViewId};
+use super::identifiers::{PluginTriggerKind, SliderId};
 use super::key::KeyKind;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{CycleDir, Rectangle};
@@ -84,6 +85,7 @@ pub enum Event {
     Finished,
     ClockTick,
     BatteryTick,
+    NotificationTimeout(Id),
     ToggleFrontlight,
     Load(PathBuf),
     LoadPreset(usize),
