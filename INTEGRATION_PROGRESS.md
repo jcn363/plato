@@ -60,6 +60,7 @@
 - `crates/core/src/view/cover_editor.rs` now has interactive controls for Rotate, Grayscale, Save, Reset, Brightness, and Contrast.
 - Crop functionality is initiated with UI elements and mode transitions, allowing visual selection.
 - **Pending:** Interactive application of the crop selection, and addressing remaining `#[allow(dead_code)]` scaffolding.
+  - Reference: CROP_PLAN.md for detailed implementation plan
 
 ## Verification
 

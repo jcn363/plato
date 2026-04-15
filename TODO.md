@@ -23,7 +23,7 @@
 
 4. **Interactive Application of Crop Selection** (Cover Editor)
    - Implement the interactive application of the crop selection in the cover editor
-   - Reference: INTEGRATION_PROGRESS.md (Cover editor product decision)
+   - Reference: INTEGRATION_PROGRESS.md (Cover editor product decision), CROP_PLAN.md
 
 ## Low Priority / Deferred
 
