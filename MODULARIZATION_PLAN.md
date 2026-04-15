@@ -253,7 +253,7 @@ After each change:
 
 ### Build & Compilation
 - [x] Host target (x86_64) compiles without errors
-- [ ] ARM Kobo target (arm-unknown-linux-gnueabihf) compiles without errors **(336 errors remaining)**
+- [ ] ARM Kobo target (arm-unknown-linux-gnueabihf) compiles without errors **(129 errors remaining)**
 - [ ] ARM64 Kobo target (aarch64) compiles without errors
 - [ ] Zero clippy warnings with `-D warnings`
 - [ ] All tests pass
@@ -363,5 +363,5 @@ cargo test --target x86_64-unknown-linux-gnu
 ---
 
 **Last Updated**: April 2026  
-**Status**: 3 of 4 critical files modularized, ARM build errors being resolved  
-**Next Milestone**: Fix remaining 336 ARM build errors, reduce reader.rs below 1000 lines
+**Status**: 3 of 4 critical files modularized, ARM build errors being resolved (207 of 336 fixed)  
+**Next Milestone**: Fix remaining 129 ARM build errors, reduce reader.rs below 1000 lines
