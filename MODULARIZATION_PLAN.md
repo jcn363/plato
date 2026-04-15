@@ -6,11 +6,18 @@ This plan outlines the steps to modularize the Plato codebase following the AGEN
 ## Current State Analysis
 Based on code analysis, the following files exceed the 1000-line limit mandated by AGENTS.md:
 
-### Critical Violations (>1000 lines)
-1. `crates/core/src/document/html/engine.rs` - 2,679 lines
-2. `crates/core/src/view/reader/reader_impl/reader.rs` - 2,653 lines  
-3. `crates/core/src/document/html/engine_text.rs` - 1,076 lines
-4. `crates/core/src/view/home/ui_toggles.rs` - 1,014 lines
+### Critical Violations (>1000 lines) - Status
+
+#### ✅ COMPLETED
+1. ~~`crates/core/src/document/html/engine.rs` - 2,679 lines~~ → **175 lines** - Modular structure created
+2. ~~`crates/core/src/document/html/engine_text.rs` - 1,076 lines~~ → **Split into 6 focused submodules**
+3. ~~`crates/core/src/view/home/ui_toggles.rs` - 1,014 lines~~ → **Split into 11 focused submodules**
+
+#### 🔄 IN PROGRESS
+4. `crates/core/src/view/reader/reader_impl/reader.rs` - 2,653 lines → **Modular structure created, method extraction ongoing**
+   - Created 13+ submodule files
+   - Still need to reduce main file below 1000 lines
+   - ARM Kobo build has compilation errors being fixed
 
 ### Already Compliant (<1000 lines)
 - `crates/core/src/view/home/mod.rs` - 596 lines (8 modules extracted)
@@ -23,50 +30,123 @@ Based on code analysis, the following files exceed the 1000-line limit mandated 
 ### Phase 1: Split Large Files (>1000 lines)
 For each violating file, split into focused submodules by concern:
 
-#### 1.1 HTML Engine (`document/html/engine.rs`)
-Split by responsibility:
-- `document/html/engine/mod.rs` - Public interface and coordination
-- `document/html/engine/dom_parser.rs` - DOM parsing logic
-- `document/html/engine/css_parser.rs` - CSS parsing and application
-- `document/html/engine/layout_engine.rs` - Layout and text positioning
-- `document/html/engine/image_handler.rs` - Image processing and rendering
-- `document/html/engine/text_renderer.rs` - Text rendering and shaping
-- `document/html/engine/table_handler.rs` - Table-specific logic
-- `document/html/engine/event_dispatcher.rs` - Event handling and interaction
+#### 1.1 HTML Engine (`document/html/engine.rs`) ✅ COMPLETED
+**Status**: Reduced from 2,679 lines to 175 lines
 
-#### 1.2 Reader Module (`view/reader/reader_impl/reader.rs`)
-Split by responsibility:
-- `view/reader/reader_impl/mod.rs` - Public interface
-- `view/reader/reader_impl/state.rs` - Reader state management
-- `view/reader/reader_impl/rendering.rs` - All rendering logic
-- `view/reader/reader_impl/input_handler.rs` - Input and gesture processing
-- `view/reader/reader_impl/navigation.rs` - Page navigation and positioning
-- `view/reader/reader_impl/annotations.rs` - Annotation handling
-- `view/reader/reader_impl/settings_ui.rs` - Settings menu implementations
-- `view/reader/reader_impl/search_handler.rs` - Search functionality
-- `view/reader/reader_impl/dialog_manager.rs` - Dialog creation and management
+Created modules:
+- `document/html/engine.rs` - Core engine (reduced to 175 lines)
+- `document/html/engine_helpers.rs` - Helper functions
+- `document/html/engine_display.rs` - Display list handling
+- `document/html/engine_methods.rs` - Engine methods
 
-#### 1.3 HTML Engine Text (`document/html/engine_text.rs`)
-Split by responsibility:
+#### 1.2 HTML Engine Text (`document/html/engine_text.rs`) ✅ COMPLETED
+**Status**: Split into 6 focused submodules
+
+Created modules:
 - `document/html/engine_text/mod.rs` - Public interface
 - `document/html/engine_text/text_layout.rs` - Text layout algorithms
-- `document/html/engine_text/hyphenation.rs` - Hyphenation logic
+- `document/html/engine_text/hyphenation.rs` - Hyphenation logic with Hyphenate trait
 - `document/html/engine_text/text_shaping.rs` - Text shaping with HarfBuzz
 - `document/html/engine_text/font_cache.rs` - Font glyph caching
-- `document/html/engine_text/line_breaker.rs` - Line breaking logic
-- `document/html/engine_text/text_renderer.rs` - Actual text rendering to pixmap
+- `document/html/engine_text/line_breaker.rs` - Line breaking logic (Knuth-Plass)
+- `document/html/engine_text/text_renderer.rs` - Text rendering to pixmap
 
-#### 1.4 Home UI Toggles (`view/home/ui_toggles.rs`)
-Split by responsibility:
-- `view/home/ui_toggles/mod.rs` - Public interface
-- `view/home/ui_toggles/keyboard_toggle.rs` - Keyboard visibility
-- `view/home/ui_toggles/address_bar_toggle.rs` - Address bar visibility
-- `view/home/ui_toggles/navigation_bar_toggle.rs` - Navigation bar visibility
-- `view/home/ui_toggles/shelf_view_toggle.rs` - Shelf view toggle
-- `view/home/ui_toggles/book_view_toggle.rs` - Book view toggle
-- `view/home/ui_toggles/directory_view_toggle.rs` - Directory view toggle
-- `view/home/ui_toggles/settings_toggle.rs` - Settings menu toggle
-- `view/home/ui_toggles/library_toggle.rs` - Library view toggle
+#### 1.3 Home UI Toggles (`view/home/ui_toggles.rs`) ✅ COMPLETED
+**Status**: Split into 11 focused submodules
+
+Created modules:
+- `view/home/ui_toggles/mod.rs` - Public interface and re-exports
+- `view/home/ui_toggles/keyboard_toggle.rs` - Keyboard visibility and input
+- `view/home/ui_toggles/address_bar_toggle.rs` - Address bar management
+- `view/home/ui_toggles/navigation_bar_toggle.rs` - Navigation bar control
+- `view/home/ui_toggles/search_bar_toggle.rs` - Search bar functionality
+- `view/home/ui_toggles/go_to_page_toggle.rs` - Go-to-page dialog
+- `view/home/ui_toggles/menu_toggle.rs` - Sort and book menus
+- `view/home/ui_toggles/shelf_view_toggle.rs` - Shelf view grid/list
+- `view/home/ui_toggles/book_view_toggle.rs` - Book view management
+- `view/home/ui_toggles/directory_view_toggle.rs` - Directory browsing
+- `view/home/ui_toggles/settings_toggle.rs` - Settings menu
+- `view/home/ui_toggles/library_toggle.rs` - Library operations
+
+#### 1.4 Reader Module (`view/reader/reader_impl/reader.rs`) 🔄 IN PROGRESS
+**Status**: Modular structure created, method extraction ongoing
+
+Created modules:
+- `view/reader/reader_impl/reader_core.rs` - Core types and structs
+- `view/reader/reader_impl/reader.rs` - Main implementation (still 2,681 lines - needs reduction)
+- `view/reader/reader_impl/reader_input.rs` - Input and gesture processing
+- `view/reader/reader_impl/reader_state.rs` - State management
+- `view/reader/reader_impl/reader_navigation.rs` - Page navigation
+- `view/reader/reader_impl/reader_annotations.rs` - Annotation handling
+- `view/reader/reader_impl/reader_annotations_ext.rs` - Extended annotation features
+- `view/reader/reader_impl/reader_dialogs.rs` - Dialog management
+- `view/reader/reader_impl/reader_dialog_manager.rs` - Dialog operations
+- `view/reader/reader_impl/reader_gestures.rs` - Gesture processing
+- `view/reader/reader_impl/reader_rendering.rs` - Rendering logic
+- `view/reader/reader_impl/reader_rendering_ext.rs` - Extended rendering
+- `view/reader/reader_impl/reader_search.rs` - Search functionality
+- `view/reader/reader_impl/reader_search_handler.rs` - Search operations
+- `view/reader/reader_impl/reader_settings.rs` - Settings management
+- `view/reader/reader_impl/reader_settings_ui.rs` - Settings UI
+- `view/reader/reader_impl/reader_toc.rs` - Table of contents
+
+**Next Steps**: Extract remaining large methods from reader.rs to reduce below 1000 lines
+
+---
+
+## Current Build Status
+
+### ✅ Host Target (x86_64-unknown-linux-gnu)
+- **Status**: Compiles successfully with warnings only
+- **Command**: `cargo check --target x86_64-unknown-linux-gnu -p plato-core --lib`
+- **Warnings**: ~110 warnings (unused imports, unused variables)
+
+### 🔄 ARM Kobo Target (arm-unknown-linux-gnueabihf)
+- **Status**: 336 compilation errors remaining
+- **Command**: `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
+- **Error Categories**:
+  - Method signature mismatches (toggle_* methods)
+  - Missing imports in new modules
+  - Type mismatches (u64 vs other integer types)
+  - Duplicate method definitions across modules
+
+### Remaining Work to Complete Modularization
+
+#### Immediate Priority (High)
+1. **Fix ARM Kobo Build Errors** (336 errors)
+   - Fix toggle method signatures in input.rs
+   - Resolve duplicate method definitions
+   - Fix type mismatches in new modules
+   - Verify all imports are correct
+
+2. **Reduce reader.rs Below 1000 Lines**
+   - Extract remaining large methods to submodule files
+   - Move TOC methods to reader_toc.rs
+   - Move rendering methods to reader_rendering_ext.rs
+   - Move dialog methods to reader_dialog_manager.rs
+
+3. **Verify All Modules Follow AGENTS.md Rules**
+   - No file exceeds 1000 lines
+   - No function exceeds 50 lines
+   - Each module has single responsibility
+   - Proper use of `pub` vs `pub(crate)` vs private
+
+#### Secondary Priority (Medium)
+4. **Update Documentation**
+   - Add module-level documentation to all new files
+   - Document public APIs with examples
+   - Update architecture documentation
+
+5. **Clean Up Warnings**
+   - Fix all unused imports
+   - Fix all unused variables
+   - Remove dead code
+   - Run `cargo clippy -- -D warnings`
+
+6. **Testing**
+   - Run all tests on host target
+   - Verify functionality preserved
+   - Add tests for new modules where appropriate
 
 ### Phase 2: Extract Shared Patterns
 Create common modules for duplicated patterns:
@@ -156,18 +236,119 @@ After each change:
 4. Enforce function and module size limits across codebase
 5. Verify all changes with testing and linting
 
-## Success Criteria
-- All Rust files under 1000 lines
-- All functions under 50 lines
-- Each module has a single, clear responsibility documented in its mod.rs
-- Zero `#[allow(dead_code)]` without justification
-- All builds pass (host and ARM targets)
-- All tests pass
-- No clippy warnings with `-D warnings`
+## Success Criteria - Progress Tracker
+
+### Build & Compilation
+- [x] Host target (x86_64) compiles without errors
+- [ ] ARM Kobo target (arm-unknown-linux-gnueabihf) compiles without errors **(336 errors remaining)**
+- [ ] ARM64 Kobo target (aarch64) compiles without errors
+- [ ] Zero clippy warnings with `-D warnings`
+- [ ] All tests pass
+
+### File Size Compliance (AGENTS.md: <1000 lines per file)
+- [x] `document/html/engine.rs` - Reduced from 2,679 to 175 lines
+- [x] `document/html/engine_text.rs` - Split into 6 submodules (all <1000 lines)
+- [x] `view/home/ui_toggles.rs` - Split into 11 submodules (all <1000 lines)
+- [ ] `view/reader/reader_impl/reader.rs` - Still 2,681 lines, needs reduction
+
+### Code Quality
+- [ ] All functions under 50 lines
+- [ ] Each module has single responsibility documented
+- [ ] Zero `#[allow(dead_code)]` without justification
+- [ ] All public APIs have documentation with examples
+- [ ] No duplicate code (DRY principle)
+
+## Files Created During Modularization
+
+### HTML Engine (7 files)
+```
+crates/core/src/document/html/
+├── engine_helpers.rs           (extracted from engine.rs)
+├── engine_display.rs           (extracted from engine.rs)
+├── engine_methods.rs           (extracted from engine.rs)
+└── engine_text/
+    ├── mod.rs                  (new - public interface)
+    ├── text_layout.rs          (extracted from engine_text.rs)
+    ├── hyphenation.rs          (extracted from engine_text.rs)
+    ├── text_shaping.rs         (extracted from engine_text.rs)
+    ├── font_cache.rs           (extracted from engine_text.rs)
+    ├── line_breaker.rs         (extracted from engine_text.rs)
+    └── text_renderer.rs        (extracted from engine_text.rs)
+```
+
+### Home UI Toggles (12 files)
+```
+crates/core/src/view/home/ui_toggles/
+├── mod.rs                      (new - public interface)
+├── keyboard_toggle.rs          (extracted from ui_toggles.rs)
+├── address_bar_toggle.rs       (extracted from ui_toggles.rs)
+├── navigation_bar_toggle.rs    (extracted from ui_toggles.rs)
+├── search_bar_toggle.rs        (new - search functionality)
+├── go_to_page_toggle.rs        (new - navigation dialog)
+├── menu_toggle.rs              (new - sort/book menus)
+├── shelf_view_toggle.rs        (extracted from ui_toggles.rs)
+├── book_view_toggle.rs         (extracted from ui_toggles.rs)
+├── directory_view_toggle.rs    (extracted from ui_toggles.rs)
+├── settings_toggle.rs          (extracted from ui_toggles.rs)
+└── library_toggle.rs           (extracted from ui_toggles.rs)
+```
+
+### Reader Module (18 files)
+```
+crates/core/src/view/reader/reader_impl/
+├── mod.rs                      (updated - module declarations)
+├── reader_core.rs              (new - core types)
+├── reader.rs                   (reduced but still needs work)
+├── reader_input.rs             (new - input handling)
+├── reader_state.rs             (new - state management)
+├── reader_navigation.rs        (new - page navigation)
+├── reader_annotations.rs       (new - annotation handling)
+├── reader_annotations_ext.rs   (new - extended annotations)
+├── reader_dialogs.rs           (new - dialog types)
+├── reader_dialog_manager.rs    (new - dialog operations)
+├── reader_gestures.rs          (new - gesture processing)
+├── reader_rendering.rs         (new - rendering logic)
+├── reader_rendering_ext.rs     (new - extended rendering)
+├── reader_search.rs            (new - search functionality)
+├── reader_search_handler.rs    (new - search operations)
+├── reader_settings.rs          (new - settings management)
+├── reader_settings_ui.rs       (new - settings UI)
+└── reader_toc.rs               (new - table of contents)
+```
+
+## Quick Reference Commands
+
+### Build Commands
+```bash
+# Host development build
+cargo check --target x86_64-unknown-linux-gnu -p plato-core --lib
+
+# ARM Kobo build (current target with errors)
+cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
+
+# Full build script
+./build.sh
+```
+
+### Verification Commands
+```bash
+# Check formatting
+cargo fmt -- --check
+
+# Run clippy
+cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings
+
+# Run tests
+cargo test --target x86_64-unknown-linux-gnu
+```
 
 ## References
 - AGENTS.md: Modular Design, Modular Architecture, Module Hierarchy sections
 - Existing modularized modules as examples (home/, font/)
 - Rust API design guidelines
 
-This plan provides a clear, actionable path to fully modularize the Plato codebase while strictly adhering to the AGENTS.md guidelines and eliminating backward compatibility concerns.
+---
+
+**Last Updated**: April 2026  
+**Status**: 3 of 4 critical files modularized, ARM build errors being resolved  
+**Next Milestone**: Fix remaining 336 ARM build errors, reduce reader.rs below 1000 lines

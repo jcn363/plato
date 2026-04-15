@@ -55,9 +55,9 @@ impl HomeInputExt for Home {
                             && self.children[self.shelf_index].rect().includes(end) =>
                     {
                         if !context.settings.home.navigation_bar {
-                            self.toggle_navigation_bar(Some(true), true, hub, rq, context);
+                            self.toggle_navigation_bar(Some(true), hub, rq, context);
                         } else if !context.settings.home.address_bar {
-                            self.toggle_address_bar(Some(true), true, hub, rq, context);
+                            self.toggle_address_bar(Some(true), hub, rq, context);
                         }
                     }
                     Dir::North
@@ -65,9 +65,9 @@ impl HomeInputExt for Home {
                             && self.children[0].rect().includes(end) =>
                     {
                         if context.settings.home.address_bar {
-                            self.toggle_address_bar(Some(false), true, hub, rq, context);
+                            self.toggle_address_bar(Some(false), hub, rq, context);
                         } else if context.settings.home.navigation_bar {
-                            self.toggle_navigation_bar(Some(false), true, hub, rq, context);
+                            self.toggle_navigation_bar(Some(false), hub, rq, context);
                         }
                     }
                     _ => (),
@@ -91,7 +91,7 @@ impl HomeInputExt for Home {
                         let path = context.library.home.clone();
                         self.select_directory(&path, hub, rq, context);
                     }
-                    Dir::South => self.toggle_search_bar(None, true, hub, rq, context),
+                    Dir::South => self.toggle_search_bar(None, hub, rq, context),
                 };
                 true
             }
@@ -110,13 +110,13 @@ impl HomeInputExt for Home {
                 if self.focus != v {
                     self.focus = v;
                     if v.is_some() {
-                        self.toggle_keyboard(true, true, v, hub, rq, context);
+                        self.toggle_keyboard(Some(true), hub, rq, context);
                     }
                 }
                 true
             }
             Event::Show(ViewId::Keyboard) => {
-                self.toggle_keyboard(true, true, None, hub, rq, context);
+                self.toggle_keyboard(Some(true), hub, rq, context);
                 true
             }
             Event::Toggle(ViewId::GoToPage) => {
@@ -124,7 +124,7 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Toggle(ViewId::SearchBar) => {
-                self.toggle_search_bar(None, true, hub, rq, context);
+                self.toggle_search_bar(None, hub, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::TitleMenu, rect) => {
@@ -152,11 +152,11 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Close(ViewId::AddressBar) => {
-                self.toggle_address_bar(Some(false), true, hub, rq, context);
+                self.toggle_address_bar(Some(false), hub, rq, context);
                 true
             }
             Event::Close(ViewId::SearchBar) => {
-                self.toggle_search_bar(Some(false), true, hub, rq, context);
+                self.toggle_search_bar(Some(false), hub, rq, context);
                 true
             }
             Event::Close(ViewId::SortMenu) => {

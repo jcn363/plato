@@ -167,6 +167,20 @@ pub struct Home {
     background_fetchers: FxHashMap<u32, Fetcher>,
     batch_mode: bool,
     batch_selected: FxHashSet<usize>,
+    // UI toggle fields for modularized components
+    keyboard: Option<Box<dyn View>>,
+    address_bar: Option<Box<dyn View>>,
+    navigation_bar: Option<Box<dyn View>>,
+    search_bar: Option<Box<dyn View>>,
+    go_to_page: Option<Box<dyn View>>,
+    sort_menu: Option<Box<dyn View>>,
+    book_menu: Option<Box<dyn View>>,
+    library_menu: Option<Box<dyn View>>,
+    settings_menu: Option<Box<dyn View>>,
+    shelf: Option<Box<dyn View>>,
+    book_view: Option<Box<dyn View>>,
+    directory_view: Option<Box<dyn View>>,
+    bottom_bar: Option<Box<dyn View>>,
 }
 
 #[derive(Debug)]
@@ -370,6 +384,20 @@ impl Home {
             background_fetchers: FxHashMap::default(),
             batch_mode: false,
             batch_selected: FxHashSet::default(),
+            // UI toggle fields initialized to None
+            keyboard: None,
+            address_bar: None,
+            navigation_bar: None,
+            search_bar: None,
+            go_to_page: None,
+            sort_menu: None,
+            book_menu: None,
+            library_menu: None,
+            settings_menu: None,
+            shelf: None,
+            book_view: None,
+            directory_view: None,
+            bottom_bar: None,
         })
     }
 }
