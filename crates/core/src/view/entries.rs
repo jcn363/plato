@@ -121,6 +121,7 @@ pub enum EntryId {
     Redo,
     SetPenSize(i32),
     SetPenColor(Color),
+    HighlightColor(Color),
     TogglePenDynamism,
     ReloadDictionaries,
     New,

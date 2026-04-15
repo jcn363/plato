@@ -8,6 +8,7 @@ use super::info::{Info, SimpleStatus, Status};
 pub enum SortMethod {
     Opened,
     Added,
+    Date,
     Status,
     Progress,
     Title,
@@ -45,6 +46,7 @@ impl SortMethod {
         match *self {
             SortMethod::Opened => "Date Opened",
             SortMethod::Added => "Date Added",
+            SortMethod::Date => "Date",
             SortMethod::Status => "Status",
             SortMethod::Progress => "Progress",
             SortMethod::Author => "Author",
@@ -79,6 +81,7 @@ pub fn sorter(sort_method: SortMethod) -> fn(&Info, &Info) -> Ordering {
     match sort_method {
         SortMethod::Opened => sort_opened,
         SortMethod::Added => sort_added,
+        SortMethod::Date => sort_added,
         SortMethod::Status => sort_status,
         SortMethod::Progress => sort_progress,
         SortMethod::Author => sort_author,

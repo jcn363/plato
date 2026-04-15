@@ -159,6 +159,14 @@ pub const DARK_BATTERY_FILL: Color = GRAY02;
 pub const SEPIA_BACKGROUND: Color = GRAYF4;
 pub const SEPIA_FOREGROUND: Color = GRAY5C;
 
+// Highlight colors
+pub const YELLOW: Color = Color::Rgb(255, 255, 0);
+pub const GREEN: Color = Color::Rgb(0, 255, 0);
+pub const BLUE: Color = Color::Rgb(0, 0, 255);
+pub const RED: Color = Color::Rgb(255, 0, 0);
+pub const ORANGE: Color = Color::Rgb(255, 165, 0);
+pub const PURPLE: Color = Color::Rgb(128, 0, 128);
+
 #[inline]
 pub fn background(dark: bool) -> Color {
     if dark {

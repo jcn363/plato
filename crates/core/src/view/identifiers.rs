@@ -83,6 +83,10 @@ pub enum ViewId {
     MergePdf,
     MessageNotif(Id),
     SubMenu(u8),
+    SettingsMenu,
+    DirectoryView,
+    Dialog,
+    HighlightMenu,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
