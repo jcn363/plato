@@ -128,8 +128,8 @@ Created modules:
    - ✅ Add ZoomMode::Fit and ScrollMode::Vertical variants
    - ✅ Implement Default for reader_core::State
    - ✅ Add set_text method to View trait
-   - Add missing fields to Context and Info structs
-   - Fix remaining toggle method signatures (13 E0061)
+   - ✅ Add missing fields to Context and Info structs
+   - ✅ Fix toggle method signatures (removed ui_toggles_original.rs)
    - Resolve remaining type mismatches (16 E0308)
 
 2. **Reduce reader.rs Below 1000 Lines**
