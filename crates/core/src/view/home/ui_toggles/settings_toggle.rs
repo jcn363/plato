@@ -7,8 +7,7 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::{Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{EntryId, ViewId};
-use crate::view::entries::EntryKind;
+use crate::view::{EntryId, EntryKind, ViewId};
 
 use super::super::Home;
 

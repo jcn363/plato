@@ -10,7 +10,7 @@ use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::{Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{EntryId, ViewId};
+use crate::view::{EntryId, EntryKind, ViewId};
 
 use super::super::Home;
 
