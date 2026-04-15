@@ -1,18 +1,10 @@
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, LazyLock, Mutex};
-use std::thread;
-use std::time::Duration;
-
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{self, Sender};
 use dashmap::DashMap;
-use rustc_hash::FxHashMap;
-use std::sync::mpsc::{self, Receiver, Sender};
-
-use crate::framebuffer::Pixmap;
 use crate::thumbnail::cache::ThumbnailCache;
 use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
 use crate::thumbnail::request::ThumbnailRequest;
-use crate::thumbnail::worker::ThumbnailWorkerPool;
 
 /// Configuration for thumbnail generation
 #[derive(Debug, Clone)]
@@ -100,7 +92,6 @@ impl ThumbnailConfig {
 /// Manages lazy thumbnail generation with worker pool and caching
 pub struct ThumbnailManager {
     config: ThumbnailConfig,
-    worker_pool: ThumbnailWorkerPool,
     cache: Arc<Mutex<ThumbnailCache>>,
     pending_requests: Arc<DashMap<PathBuf, ()>>,
     request_sender: Sender<ThumbnailRequest>,
@@ -124,9 +115,6 @@ impl ThumbnailManager {
             config.enabled,
         )?;
 
-        // Create worker pool
-        let worker_pool = ThumbnailWorkerPool::new(validated_config.worker_count)?;
-
         // Create cache
         let cache = Arc::new(Mutex::new(ThumbnailCache::new(
             validated_config.cache_size,
@@ -137,7 +125,6 @@ impl ThumbnailManager {
 
         Ok(Self {
             config: validated_config,
-            worker_pool,
             cache,
             request_sender,
             pending_requests: Arc::new(DashMap::new()),

@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-use std::sync::mpsc::Sender;
 
 pub mod cache;
 pub mod error;

@@ -1,11 +1,10 @@
-use std::mem;
 use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, Sender};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{LazyLock, Mutex};
 use std::thread;
 
 use crate::document::open;
-use crate::framebuffer::{Framebuffer, Pixmap};
+use crate::framebuffer::Framebuffer;
 use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
 use crate::thumbnail::request::ThumbnailRequest;
 
