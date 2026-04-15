@@ -8,6 +8,7 @@ use crate::geom::Rectangle;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::{Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, ViewId};
+use crate::view::entries::EntryKind;
 
 use super::super::Home;
 
@@ -107,56 +108,19 @@ impl Home {
 
     /// Create library menu
     fn create_library_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+        let entries = vec![
+            EntryKind::Command("Import Books".to_string(), EntryId::Import),
+            EntryKind::Command("Library Statistics".to_string(), EntryId::SystemInfo),
+            EntryKind::Separator,
+            EntryKind::Command("Sort by Title".to_string(), EntryId::Sort(crate::metadata::SortMethod::Title)),
+            EntryKind::Command("Sort by Author".to_string(), EntryId::Sort(crate::metadata::SortMethod::Author)),
+            EntryKind::Command("Sort by Date".to_string(), EntryId::Sort(crate::metadata::SortMethod::Date)),
+            EntryKind::Separator,
+            EntryKind::Command("Filter by Format".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Filter by Category".to_string(), EntryId::SystemInfo),
+        ];
         
-        // Add library options
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Import Books".to_string(),
-            self.id,
-            Some("import_books".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Library Statistics".to_string(),
-            self.id,
-            Some("library_statistics".to_string()),
-        ));
-        
-        menu.add_separator();
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Sort by Title".to_string(),
-            self.id,
-            Some("sort_by_title".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Sort by Author".to_string(),
-            self.id,
-            Some("sort_by_author".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Sort by Date".to_string(),
-            self.id,
-            Some("sort_by_date".to_string()),
-        ));
-        
-        menu.add_separator();
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Filter by Format".to_string(),
-            self.id,
-            Some("filter_by_format".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Filter by Category".to_string(),
-            self.id,
-            Some("filter_by_category".to_string()),
-        ));
-        
-        menu
+        Menu::new(rect, ViewId::LibraryMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Get library state

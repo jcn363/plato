@@ -6,9 +6,9 @@
 use crate::color::Color;
 use crate::geom::Rectangle;
 use crate::metadata::{TextAlign, ZoomMode, ScrollMode};
-use crate::view::{Hub, Id, RenderQueue};
-use crate::view::menu::Menu;
-use crate::view::menu_entry::MenuEntry;
+use crate::view::{Hub, Id, RenderQueue, ViewId};
+use crate::view::menu::{Menu, MenuKind};
+use crate::view::entries::{EntryKind, EntryId};
 use crate::context::Context;
 use crate::settings::DEFAULT_FONT_FAMILY;
 
@@ -53,101 +53,73 @@ impl ReaderSettingsManager {
 
     /// Create the main settings menu
     pub fn create_main_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+        let entries = vec![
+            EntryKind::Command("Font Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Display Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Navigation Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Annotation Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Search Settings".to_string(), EntryId::SystemInfo),
+        ];
         
-        menu.add_entry(MenuEntry::new("Font Settings", self.id, Some("font_settings")));
-        menu.add_entry(MenuEntry::new("Display Settings", self.id, Some("display_settings")));
-        menu.add_entry(MenuEntry::new("Navigation Settings", self.id, Some("navigation_settings")));
-        menu.add_entry(MenuEntry::new("Annotation Settings", self.id, Some("annotation_settings")));
-        menu.add_entry(MenuEntry::new("Search Settings", self.id, Some("search_settings")));
-        
-        menu
+        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Create the font settings menu
     pub fn create_font_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+        let entries = vec![
+            EntryKind::Command(format!("Font Size: {:.1}", self.font_size), EntryId::SystemInfo),
+            EntryKind::Command(format!("Font Family: {}", self.font_family), EntryId::SystemInfo),
+            EntryKind::Command(format!("Line Height: {:.1}", self.line_height), EntryId::SystemInfo),
+        ];
         
-        menu.add_entry(MenuEntry::new(
-            format!("Font Size: {:.1}", self.font_size),
-            self.id,
-            Some("font_size"),
-        ));
-        menu.add_entry(MenuEntry::new(
-            format!("Font Family: {}", self.font_family),
-            self.id,
-            Some("font_family"),
-        ));
-        menu.add_entry(MenuEntry::new(
-            format!("Line Height: {:.1}", self.line_height),
-            self.id,
-            Some("line_height"),
-        ));
-        
-        menu
+        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Create the display settings menu
     pub fn create_display_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+        let entries = vec![
+            EntryKind::Command(format!("Text Align: {:?}", self.text_align), EntryId::SystemInfo),
+            EntryKind::Command(format!("Zoom Mode: {:?}", self.zoom_mode), EntryId::SystemInfo),
+            EntryKind::Command(format!("Scroll Mode: {:?}", self.scroll_mode), EntryId::SystemInfo),
+            EntryKind::Command(format!("Margin Width: {}", self.margin_width), EntryId::SystemInfo),
+        ];
         
-        menu.add_entry(MenuEntry::new(
-            format!("Text Align: {:?}", self.text_align),
-            self.id,
-            Some("text_align"),
-        ));
-        menu.add_entry(MenuEntry::new(
-            format!("Zoom Mode: {:?}", self.zoom_mode),
-            self.id,
-            Some("zoom_mode"),
-        ));
-        menu.add_entry(MenuEntry::new(
-            format!("Scroll Mode: {:?}", self.scroll_mode),
-            self.id,
-            Some("scroll_mode"),
-        ));
-        menu.add_entry(MenuEntry::new(
-            format!("Margin Width: {}", self.margin_width),
-            self.id,
-            Some("margin_width"),
-        ));
-        
-        menu
+        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Create the navigation settings menu
     pub fn create_navigation_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+        let entries = vec![
+            EntryKind::Command("Page Turning Options".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Gesture Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Button Mapping".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("History Settings".to_string(), EntryId::SystemInfo),
+        ];
         
-        menu.add_entry(MenuEntry::new("Page Turning Options", self.id, Some("page_turning")));
-        menu.add_entry(MenuEntry::new("Gesture Settings", self.id, Some("gestures")));
-        menu.add_entry(MenuEntry::new("Button Mapping", self.id, Some("buttons")));
-        menu.add_entry(MenuEntry::new("History Settings", self.id, Some("history")));
-        
-        menu
+        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Create the annotation settings menu
     pub fn create_annotation_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+        let entries = vec![
+            EntryKind::Command("Highlight Color".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Note Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Bookmark Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Export Options".to_string(), EntryId::SystemInfo),
+        ];
         
-        menu.add_entry(MenuEntry::new("Highlight Color", self.id, Some("highlight_color")));
-        menu.add_entry(MenuEntry::new("Note Settings", self.id, Some("note_settings")));
-        menu.add_entry(MenuEntry::new("Bookmark Settings", self.id, Some("bookmark_settings")));
-        menu.add_entry(MenuEntry::new("Export Options", self.id, Some("export_options")));
-        
-        menu
+        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Create the search settings menu
     pub fn create_search_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+        let entries = vec![
+            EntryKind::Command("Search Options".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Search History".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Search Filters".to_string(), EntryId::SystemInfo),
+        ];
         
-        menu.add_entry(MenuEntry::new("Search Options", self.id, Some("search_options")));
-        menu.add_entry(MenuEntry::new("Search History", self.id, Some("search_history")));
-        menu.add_entry(MenuEntry::new("Search Filters", self.id, Some("search_filters")));
-        
-        menu
+        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Handle a settings menu selection

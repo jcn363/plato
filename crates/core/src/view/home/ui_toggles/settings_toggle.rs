@@ -8,6 +8,7 @@ use crate::geom::Rectangle;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::{Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, ViewId};
+use crate::view::entries::EntryKind;
 
 use super::super::Home;
 
@@ -107,50 +108,22 @@ impl Home {
 
     /// Create settings menu
     fn create_settings_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
-        
-        // Add basic settings
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Font Settings".to_string(),
-            self.id,
-            Some("font_settings".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Display Settings".to_string(),
-            self.id,
-            Some("display_settings".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Reading Settings".to_string(),
-            self.id,
-            Some("reading_settings".to_string()),
-        ));
+        let mut entries = vec![
+            EntryKind::Command("Font Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Display Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Reading Settings".to_string(), EntryId::SystemInfo),
+        ];
         
         // Add advanced settings if enabled
         if self.get_settings_state().config.show_advanced {
-            menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-                "Advanced Settings".to_string(),
-                self.id,
-                Some("advanced_settings".to_string()),
-            ));
+            entries.push(EntryKind::Command("Advanced Settings".to_string(), EntryId::SystemInfo));
         }
         
-        menu.add_separator();
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "About".to_string(),
-            self.id,
-            Some("about".to_string()),
-        ));
+        entries.push(EntryKind::Separator);
+        entries.push(EntryKind::Command("About".to_string(), EntryId::SystemInfo));
+        entries.push(EntryKind::Command("Help".to_string(), EntryId::SystemInfo));
         
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Help".to_string(),
-            self.id,
-            Some("help".to_string()),
-        ));
-        
-        menu
+        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Get settings state

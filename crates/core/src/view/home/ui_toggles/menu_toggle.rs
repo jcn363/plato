@@ -96,33 +96,14 @@ impl Home {
 
     /// Create sort menu
     fn create_sort_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+        let entries = vec![
+            EntryKind::Command("Sort by Title".to_string(), EntryId::Sort(crate::metadata::SortMethod::Title)),
+            EntryKind::Command("Sort by Author".to_string(), EntryId::Sort(crate::metadata::SortMethod::Author)),
+            EntryKind::Command("Sort by Date".to_string(), EntryId::Sort(crate::metadata::SortMethod::Date)),
+            EntryKind::Command("Sort by Size".to_string(), EntryId::Sort(crate::metadata::SortMethod::Size)),
+        ];
         
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Sort by Title".to_string(),
-            self.id,
-            Some("sort_title".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Sort by Author".to_string(),
-            self.id,
-            Some("sort_author".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Sort by Date".to_string(),
-            self.id,
-            Some("sort_date".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Sort by Size".to_string(),
-            self.id,
-            Some("sort_size".to_string()),
-        ));
-        
-        menu
+        Menu::new(rect, ViewId::SortMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Toggle book menu visibility
@@ -170,42 +151,17 @@ impl Home {
     }
 
     /// Create book menu
-    fn create_book_menu(&self, index: usize, rect: Rectangle, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(rect, context);
+    fn create_book_menu(&self, _index: usize, rect: Rectangle, context: &mut Context) -> Menu {
+        let entries = vec![
+            EntryKind::Command("Open".to_string(), EntryId::Load(std::path::PathBuf::new())),
+            EntryKind::Command("Rename".to_string(), EntryId::Rename(std::path::PathBuf::new())),
+            EntryKind::Command("Delete".to_string(), EntryId::Remove(std::path::PathBuf::new())),
+            EntryKind::Separator,
+            EntryKind::Command("Add Bookmark".to_string(), EntryId::Load(std::path::PathBuf::new())),
+            EntryKind::Command("View Info".to_string(), EntryId::Load(std::path::PathBuf::new())),
+        ];
         
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Open".to_string(),
-            self.id,
-            Some("book_open".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Rename".to_string(),
-            self.id,
-            Some("book_rename".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Delete".to_string(),
-            self.id,
-            Some("book_delete".to_string()),
-        ));
-        
-        menu.add_separator();
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "Add Bookmark".to_string(),
-            self.id,
-            Some("book_bookmark".to_string()),
-        ));
-        
-        menu.add_entry(crate::view::menu_entry::MenuEntry::new(
-            "View Info".to_string(),
-            self.id,
-            Some("book_info".to_string()),
-        ));
-        
-        menu
+        Menu::new(rect, ViewId::BookMenu, MenuKind::Contextual, entries, context)
     }
 
     /// Get menu state

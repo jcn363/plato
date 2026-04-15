@@ -5,11 +5,11 @@
 
 use crate::color::Color;
 use crate::geom::Rectangle;
-use crate::view::{Hub, Id, RenderQueue};
+use crate::view::{Hub, Id, RenderQueue, ViewId};
 use crate::view::dialog::Dialog;
 use crate::view::keyboard::Keyboard;
-use crate::view::menu::Menu;
-use crate::view::menu_entry::MenuEntry;
+use crate::view::menu::{Menu, MenuKind};
+use crate::view::entries::{EntryKind, EntryId};
 use crate::context::Context;
 
 /// Dialog types for the Reader
@@ -112,18 +112,18 @@ impl ReaderDialogManager {
         )
     }
 
-    /// Create a highlight color dialog
+    /// Create a highlight color selection dialog
     pub fn create_highlight_dialog(&self, context: &mut Context) -> Menu {
-        let mut menu = Menu::new(Rectangle::default(), context);
+        let entries = vec![
+            EntryKind::Command("Yellow".to_string(), EntryId::HighlightColor(YELLOW)),
+            EntryKind::Command("Green".to_string(), EntryId::HighlightColor(GREEN)),
+            EntryKind::Command("Blue".to_string(), EntryId::HighlightColor(BLUE)),
+            EntryKind::Command("Red".to_string(), EntryId::HighlightColor(RED)),
+            EntryKind::Command("Orange".to_string(), EntryId::HighlightColor(ORANGE)),
+            EntryKind::Command("Purple".to_string(), EntryId::HighlightColor(PURPLE)),
+        ];
         
-        menu.add_entry(MenuEntry::new("Yellow", self.id, Some("highlight_yellow")));
-        menu.add_entry(MenuEntry::new("Green", self.id, Some("highlight_green")));
-        menu.add_entry(MenuEntry::new("Blue", self.id, Some("highlight_blue")));
-        menu.add_entry(MenuEntry::new("Red", self.id, Some("highlight_red")));
-        menu.add_entry(MenuEntry::new("Orange", self.id, Some("highlight_orange")));
-        menu.add_entry(MenuEntry::new("Purple", self.id, Some("highlight_purple")));
-        
-        menu
+        Menu::new(Rectangle::default(), ViewId::HighlightMenu, MenuKind::DropDown, entries, context)
     }
 
     /// Create a confirmation dialog
