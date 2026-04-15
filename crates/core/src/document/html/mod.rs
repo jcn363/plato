@@ -32,7 +32,7 @@ use self::xml::XmlParser;
 use crate::document::{BoundedText, Document, Location, TocEntry};
 use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir, Edge};
-use crate::helpers::{decode_entities, Normalize};
+use crate::helpers::decode_entities;
 use crate::unit::pt_to_px;
 use anyhow::Error;
 use rustc_hash::FxHashMap;

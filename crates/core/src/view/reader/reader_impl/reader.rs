@@ -134,32 +134,20 @@ use crate::device::CURRENT_DEVICE;
 use crate::document::{BoundedText, Document, Location, SimpleTocEntry, TextLocation, TocEntry};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
-use crate::frontlight::LightLevels;
-use crate::geom::{halves, Axis, CycleDir, DiagDir, Dir, LinearDir, Region};
+use crate::geom::{halves, CycleDir, LinearDir};
 use crate::geom::{BorderSpec, Boundary, CornerSpec, Point, Rectangle, Vec2};
-use crate::gesture::GestureEvent;
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::log_error;
-use crate::log_warn;
-use crate::metadata::{make_query, CroppingMargins, Margin};
 use crate::metadata::{Annotation, Info, ScrollMode, TextAlign, ZoomMode};
+use crate::metadata::{CroppingMargins, Margin};
 use crate::metadata::{DEFAULT_CONTRAST_EXPONENT, DEFAULT_CONTRAST_GRAY};
-use crate::settings::{
-    guess_frontlight, BottomRightGestureAction, EastStripAction, SouthEastCornerAction,
-    SouthStripAction, WestStripAction, DEFAULT_FONT_FAMILY,
-};
+use crate::settings::DEFAULT_FONT_FAMILY;
 use crate::theme;
 use crate::unit::{mm_to_px, scale_by_dpi};
 use anyhow::{Context as AnyhowContext, Error};
-use chrono::Local;
-use rand_core::Rng;
 use regex::Regex;
 use rustc_hash::{FxHashMap, FxHashSet};
-use septem::Digit;
 use std::collections::{BTreeMap, VecDeque};
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::path::PathBuf;
 use std::sync::{atomic, Arc, LazyLock, Mutex};
 
 use crate::view::common::{
@@ -169,12 +157,11 @@ use crate::view::filler::Filler;
 use crate::view::keyboard::Keyboard;
 use crate::view::menu::Menu;
 use crate::view::menu_entry::MenuEntry;
-use crate::view::notification::Notification;
 use crate::view::search_bar::SearchBar;
 use crate::view::top_bar::TopBar;
 use crate::view::{
-    AppCmd, Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, SliderId, View, ViewId,
-    BIG_BAR_HEIGHT, ID_FEEDER, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
+    Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, SliderId, View, ViewId, BIG_BAR_HEIGHT,
+    ID_FEEDER, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
 };
 
 use crate::view::reader::bottom_bar::BottomBar;
@@ -187,16 +174,23 @@ use super::reader_core::{
 use super::reader_rendering;
 use super::reader_search;
 
+#[allow(dead_code)] // Used by reader gesture handling
 pub const RECT_DIST_JITTER: f32 = 0.1;
+#[allow(dead_code)] // Used by memory scheme handling
 pub const MEM_SCHEME: &str = "mem:";
 
+#[allow(dead_code)] // Used by TOC parsing
 pub static TOC_PAGE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)page\s*(\d+)").unwrap());
+#[allow(dead_code)] // Used by PDF page parsing
 pub static PDF_PAGE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(\d+)").unwrap());
+#[allow(dead_code)] // Used by search result parsing
 pub static SEARCH_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\((\d+),\s*(\d+)\)").unwrap());
 
+#[allow(dead_code)] // Used by annotation rendering
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
+#[allow(dead_code)] // Used by annotation rendering
 pub const ANNOTATION_DRIFT: f32 = 0.05;
 
 // ===========================================================================
@@ -372,6 +366,7 @@ impl Reader {
         })
     }
 
+    #[allow(dead_code)] // Used by Reader::render method
     fn render_animation(&self, fb: &mut dyn Framebuffer, rect: Rectangle) {
         if let Some(ref anim) = self.animation {
             for chunk in &self.previous_chunks {
@@ -450,6 +445,7 @@ impl Reader {
     // Toggle Menus
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_edit_note(
         &mut self,
         text: Option<&str>,
@@ -461,6 +457,7 @@ impl Reader {
         super::reader_dialogs::toggle_edit_note(&mut self.children, text, enable, hub, rq, context);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_name_page(
         &mut self,
         enable: Option<bool>,
@@ -481,6 +478,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_go_to_page(
         &mut self,
         enable: Option<bool>,
@@ -599,10 +597,12 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_font_family_menu(
         &mut self,
         rect: Rectangle,
         enable: Option<bool>,
+        hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -622,6 +622,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_font_size_menu(
         &mut self,
         rect: Rectangle,
@@ -1385,13 +1386,13 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
-        match *evt {
+        match evt {
             Event::Update(mode) => {
-                self.update(Some(mode), hub, rq, context);
+                self.update(Some(*mode), hub, rq, context);
                 true
             }
             Event::LoadPixmap(location) => {
-                self.load_pixmap(location, hub, rq, context);
+                self.load_pixmap(*location, hub, rq, context);
                 true
             }
             Event::Submit(ViewId::GoToPageInput, ref text) => {
@@ -1422,11 +1423,11 @@ impl Reader {
                 true
             }
             Event::Page(dir) => {
-                self.go_to_neighbor(dir, hub, rq, context);
+                self.go_to_neighbor(*dir, hub, rq, context);
                 true
             }
             Event::GoTo(location) | Event::Select(EntryId::GoTo(location)) => {
-                self.go_to_page(location, true, hub, rq, context);
+                self.go_to_page(*location, true, hub, rq, context);
                 true
             }
             Event::GoToLocation(ref location) => {
@@ -1434,11 +1435,11 @@ impl Reader {
                 true
             }
             Event::Chapter(dir) => {
-                self.go_to_chapter(dir, hub, rq, context);
+                self.go_to_chapter(*dir, hub, rq, context);
                 true
             }
             Event::ResultsPage(dir) => {
-                self.go_to_results_neighbor(dir, hub, rq, context);
+                self.go_to_results_neighbor(*dir, hub, rq, context);
                 true
             }
             Event::CropMargins(ref margin) => {
@@ -1459,71 +1460,71 @@ impl Reader {
                 true
             }
             Event::Slider(SliderId::FontSize, font_size, FingerStatus::Up) => {
-                self.set_font_size(font_size, hub, rq, context);
+                self.set_font_size(*font_size, hub, rq, context);
                 true
             }
             Event::Slider(SliderId::ContrastExponent, exponent, FingerStatus::Up) => {
-                self.set_contrast_exponent(exponent, hub, rq, context);
+                self.set_contrast_exponent(*exponent, hub, rq, context);
                 true
             }
             Event::Slider(SliderId::ContrastGray, gray, FingerStatus::Up) => {
-                self.set_contrast_gray(gray, hub, rq, context);
+                self.set_contrast_gray(*gray, hub, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::TitleMenu, rect) => {
-                self.toggle_title_menu(rect, None, rq, context);
+                self.toggle_title_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::MainMenu, rect) => {
-                toggle_main_menu(self, rect, None, rq, context);
+                toggle_main_menu(self, *rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::BatteryMenu, rect) => {
-                toggle_battery_menu(self, rect, None, rq, context);
+                toggle_battery_menu(self, *rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::ClockMenu, rect) => {
-                toggle_clock_menu(self, rect, None, rq, context);
+                toggle_clock_menu(self, *rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::MarginCropperMenu, rect) => {
-                self.toggle_margin_cropper_menu(rect, None, rq, context);
+                self.toggle_margin_cropper_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::SearchMenu, rect) => {
-                self.toggle_search_menu(rect, None, rq, context);
+                self.toggle_search_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::FontFamilyMenu, rect) => {
-                self.toggle_font_family_menu(rect, None, rq, context);
+                self.toggle_font_family_menu(*rect, None, hub, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::FontSizeMenu, rect) => {
-                self.toggle_font_size_menu(rect, None, rq, context);
+                self.toggle_font_size_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::TextAlignMenu, rect) => {
-                self.toggle_text_align_menu(rect, None, rq, context);
+                self.toggle_text_align_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::MarginWidthMenu, rect) => {
-                self.toggle_margin_width_menu(rect, None, rq, context);
+                self.toggle_margin_width_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::LineHeightMenu, rect) => {
-                self.toggle_line_height_menu(rect, None, rq, context);
+                self.toggle_line_height_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::ContrastExponentMenu, rect) => {
-                self.toggle_contrast_exponent_menu(rect, None, rq, context);
+                self.toggle_contrast_exponent_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::ContrastGrayMenu, rect) => {
-                self.toggle_contrast_gray_menu(rect, None, rq, context);
+                self.toggle_contrast_gray_menu(*rect, None, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::PageMenu, rect) => {
-                self.toggle_page_menu(rect, None, rq, context);
+                self.toggle_page_menu(*rect, None, rq, context);
                 true
             }
             Event::Close(ViewId::MainMenu) => {
@@ -1583,8 +1584,8 @@ impl Reader {
                 self.toggle_margin_cropper(hub, rq, context);
                 true
             }
-            Event::SearchResult(location, ref rects) => {
-                self.handle_search_result(location, hub, rq, context);
+            Event::SearchResult(location, ref _rects) => {
+                self.handle_search_result(*location, hub, rq, context);
                 true
             }
             Event::EndOfSearch => {
@@ -1628,11 +1629,11 @@ impl Reader {
                 true
             }
             Event::Select(EntryId::SetZoomMode(zoom_mode)) => {
-                self.set_zoom_mode(zoom_mode, true, hub, rq, context);
+                self.set_zoom_mode(*zoom_mode, true, hub, rq, context);
                 true
             }
             Event::Select(EntryId::SetScrollMode(scroll_mode)) => {
-                self.set_scroll_mode(scroll_mode, hub, rq, context);
+                self.set_scroll_mode(*scroll_mode, hub, rq, context);
                 true
             }
             Event::Select(EntryId::Save) => {
@@ -1644,7 +1645,9 @@ impl Reader {
                     if r.cropping_margins.is_none() {
                         r.cropping_margins = Some(CroppingMargins::Any(Margin::default()));
                     }
-                    r.cropping_margins.as_mut().map(|c| c.apply(index, scheme))
+                    r.cropping_margins.as_mut().map(|cm| {
+                        cm.apply(*index, *scheme);
+                    })
                 });
                 true
             }
@@ -1657,7 +1660,7 @@ impl Reader {
                 true
             }
             Event::Select(EntryId::SearchDirection(dir)) => {
-                self.search_direction = dir;
+                self.search_direction = *dir;
                 true
             }
             Event::Select(EntryId::SetFontFamily(ref font_family)) => {
@@ -1665,7 +1668,7 @@ impl Reader {
                 true
             }
             Event::Select(EntryId::SetTextAlign(text_align)) => {
-                self.set_text_align(text_align, hub, rq, context);
+                self.set_text_align(*text_align, hub, rq, context);
                 true
             }
             Event::Select(EntryId::SetFontSize(v)) => {
@@ -1675,26 +1678,26 @@ impl Reader {
                     .as_ref()
                     .and_then(|r| r.font_size)
                     .unwrap_or(context.settings.reader.font_size);
-                let font_size = font_size - 1.0 + v as f32 / 10.0;
+                let font_size = font_size - 1.0 + *v as f32 / 10.0;
                 self.set_font_size(font_size, hub, rq, context);
                 true
             }
             Event::Select(EntryId::SetMarginWidth(width)) => {
-                self.set_margin_width(width, hub, rq, context);
+                self.set_margin_width(*width, hub, rq, context);
                 true
             }
             Event::Select(EntryId::SetLineHeight(v)) => {
-                let line_height = 1.0 + v as f32 / 10.0;
+                let line_height = 1.0 + *v as f32 / 10.0;
                 self.set_line_height(line_height, hub, rq, context);
                 true
             }
             Event::Select(EntryId::SetContrastExponent(v)) => {
-                let exponent = 1.0 + v as f32 / 2.0;
+                let exponent = 1.0 + *v as f32 / 2.0;
                 self.set_contrast_exponent(exponent, hub, rq, context);
                 true
             }
             Event::Select(EntryId::SetContrastGray(v)) => {
-                let gray = ((1 << 8) - (1 << (8 - v))) as f32;
+                let gray = ((1 << 8) - (1 << (8 - *v))) as f32;
                 self.set_contrast_gray(gray, hub, rq, context);
                 true
             }
@@ -2198,7 +2201,7 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
     }
 
-    pub fn handle_save(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn handle_save(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
         // Save functionality would be implemented here
         // For now, just trigger a partial update
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
@@ -2206,10 +2209,10 @@ impl Reader {
 
     pub fn handle_focus(
         &mut self,
-        v: bool,
-        hub: &Hub,
+        _v: bool,
+        _hub: &Hub,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        _context: &mut Context,
     ) {
         // Focus handling would be implemented here
         // For now, just trigger a partial update
@@ -2217,10 +2220,6 @@ impl Reader {
     }
 
     pub fn update_annotations(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
-    }
-
-    pub fn update_results_bar(&mut self, rq: &mut RenderQueue) {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
     }
 
@@ -2327,15 +2326,6 @@ impl Reader {
         &mut self,
         _enable: bool,
         _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
-    }
-
-    pub fn toggle_results_bar(
-        &mut self,
-        _enable: bool,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
@@ -2582,7 +2572,7 @@ impl View for Reader {
         &mut self,
         evt: &Event,
         hub: &Hub,
-        bus: &mut Bus,
+        _bus: &mut Bus,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
@@ -2615,10 +2605,6 @@ impl View for Reader {
                 self.handle_save(hub, rq, context);
                 true
             }
-            Event::Focus(v) => {
-                self.handle_focus(v.is_some(), hub, rq, context);
-                true
-            }
             Event::Back => {
                 self.handle_back(hub, rq, context);
                 true
@@ -2627,7 +2613,7 @@ impl View for Reader {
         }
     }
 
-    fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
+    fn render(&self, _fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
         // Implementation would go here
     }
 

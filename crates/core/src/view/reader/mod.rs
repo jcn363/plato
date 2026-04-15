@@ -1,7 +1,6 @@
 mod chapter_label;
 mod margin_cropper;
 mod reader_impl;
-mod results_bar;
 mod results_label;
 pub mod tool_bar; // Made public
 

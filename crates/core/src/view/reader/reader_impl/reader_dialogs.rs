@@ -14,6 +14,7 @@ use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 /// Find child view index by ViewId in children vector
 #[inline]
+#[allow(dead_code)] // Used by dialog functions
 fn locate_by_id_in_vec(children: &[Box<dyn View>], id: ViewId) -> Option<usize> {
     children
         .iter()
@@ -21,6 +22,7 @@ fn locate_by_id_in_vec(children: &[Box<dyn View>], id: ViewId) -> Option<usize> 
 }
 
 /// Toggle note editing dialog
+#[allow(dead_code)] // Used by Reader::toggle_edit_note method
 pub(crate) fn toggle_edit_note(
     children: &mut Vec<Box<dyn View>>,
     text: Option<&str>,
@@ -64,6 +66,7 @@ pub(crate) fn toggle_edit_note(
 }
 
 /// Toggle page naming dialog
+#[allow(dead_code)] // Used by Reader::toggle_name_page method
 pub(crate) fn toggle_name_page(
     children: &mut Vec<Box<dyn View>>,
     enable: Option<bool>,
@@ -102,6 +105,7 @@ pub(crate) fn toggle_name_page(
 }
 
 /// Toggle go to page dialog
+#[allow(dead_code)] // Used by Reader::toggle_go_to_page method
 pub(crate) fn toggle_go_to_page(
     children: &mut Vec<Box<dyn View>>,
     enable: Option<bool>,

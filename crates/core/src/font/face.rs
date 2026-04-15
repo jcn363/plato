@@ -2,19 +2,15 @@ use crate::color::Color;
 use crate::font::freetype::Face;
 use crate::font::harfbuzz::{Buffer, Font as HbFont};
 use crate::font::harfbuzz_sys::{hb_feature_from_string, HbFeature, HB_DIRECTION_LTR};
-use crate::font::library::FontLibrary;
 use crate::font::types::{GlyphPlan, RenderPlan};
 use crate::framebuffer::Framebuffer;
 use crate::geom::Point;
 use crate::log_error;
 use anyhow::Result;
 use std::convert::TryInto;
-use std::rc::Rc;
 use std::str;
 
 pub struct Font {
-    #[allow(dead_code)]
-    library: Rc<FontLibrary>,
     face: Face,
     #[allow(dead_code)]
     hb_font: HbFont,
@@ -27,14 +23,13 @@ pub struct Font {
 }
 
 impl Font {
-    pub fn new(library: Rc<FontLibrary>, face: Face) -> Self {
+    pub fn new(face: Face) -> Self {
         let hb_font = unsafe { HbFont::from_ft_face(&*face.face_ptr()) };
         let ellipsis = RenderPlan::default();
         let x_heights = (0, 0);
         let space_codepoint = face.get_char_index(' ' as u32);
 
         Font {
-            library,
             face,
             hb_font,
             size: 0,

@@ -3,14 +3,10 @@
 //! Handles search functionality and result management.
 //!
 //! ## Methods to Move Here
-//! - `toggle_search_menu()` - Search direction menu ✓
-//! - `render_results()` - Highlight search results on page ✓
-//! - `go_to_results_neighbor()` - Navigate between search results ✓ (stub)
-//! - `go_to_results_page()` - Jump to specific result ✓ (stub)
-//! - `toggle_search_bar()` - Search input UI ✓ (stub)
-//! - `toggle_results_bar()` - Results display bar ✓ (stub)
-//! - `search()` - Execute search query (stub) ✓ (stub)
-//! - `update_results_bar()` - Update results display ✓ (stub)
+//! - `toggle_search_menu()` - Search direction menu
+//! - `render_results()` - Highlight search results on page
+//! - `go_to_results_neighbor()` - Navigate between search results (stub)
+//! - `go_to_results_page()` - Jump to specific result (stub)
 
 use crate::geom::{LinearDir, Rectangle};
 use crate::view::menu::{Menu, MenuKind};
@@ -27,6 +23,7 @@ use super::reader_core::{RenderChunk, Search};
 ///
 /// Creates a menu for selecting search direction (Forward/Backward).
 /// This menu is toggled by Reader::toggle_search_menu().
+#[allow(dead_code)] // Used by search menu functionality
 pub(crate) fn create_search_menu(
     search_direction: LinearDir,
     rect: Rectangle,
@@ -60,6 +57,7 @@ pub(crate) fn create_search_menu(
 ///
 /// Adds render requests for all search result rectangles that fall within
 /// the currently visible page chunks.
+#[allow(dead_code)] // Used by Reader::render_results method
 pub(crate) fn render_results(
     search: Option<&Search>,
     chunks: &[RenderChunk],
@@ -79,6 +77,7 @@ pub(crate) fn render_results(
 }
 
 /// Navigate to the next or previous search result
+#[allow(dead_code)] // Used by Reader::go_to_results_neighbor method
 pub(crate) fn go_to_results_neighbor(
     dir: crate::geom::CycleDir,
     reader: &mut Reader,
@@ -119,6 +118,7 @@ pub(crate) fn go_to_results_page(
 }
 
 /// Toggle search menu visibility
+#[allow(dead_code)] // Used by Reader::toggle_search_menu method
 pub(crate) fn toggle_search_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     search_direction: LinearDir,

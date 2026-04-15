@@ -1035,6 +1035,7 @@ impl Engine {
     }
 }
 
+#[allow(dead_code)] // Used by HTML engine for list formatting
 fn format_list_prefix(kind: ListStyleType, index: usize) -> Option<String> {
     match kind {
         ListStyleType::None => None,

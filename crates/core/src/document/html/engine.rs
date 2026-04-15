@@ -2609,6 +2609,7 @@ impl Engine {
     }
 }
 
+#[allow(dead_code)] // Used by HTML engine for list formatting
 fn format_list_prefix(kind: ListStyleType, index: usize) -> Option<String> {
     match kind {
         ListStyleType::None => None,
@@ -2649,6 +2650,7 @@ fn format_list_prefix(kind: ListStyleType, index: usize) -> Option<String> {
     }
 }
 
+#[allow(dead_code)] // Used by HTML engine for font loading
 fn default_fonts() -> Result<Fonts, Error> {
     let opener = FontOpener::new()?;
     let mut fonts = Fonts {

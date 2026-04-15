@@ -1,6 +1,7 @@
 use super::layout::ListStyleType;
 use septem::Roman;
 
+#[allow(dead_code)] // Used by HTML engine for list formatting
 pub(super) fn format_list_prefix(kind: ListStyleType, index: usize) -> Option<String> {
     match kind {
         ListStyleType::None => None,
@@ -41,6 +42,7 @@ pub(super) fn format_list_prefix(kind: ListStyleType, index: usize) -> Option<St
     }
 }
 
+#[allow(dead_code)] // Used by HTML engine for font loading
 pub(super) fn default_fonts() -> Result<super::layout::Fonts, anyhow::Error> {
     let opener = crate::font::FontOpener::new()?;
     let mut fonts = super::layout::Fonts {

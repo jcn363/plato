@@ -8,8 +8,6 @@ use plato_core::context::Context;
 use plato_core::device::CURRENT_DEVICE;
 use plato_core::document::sys_info_as_html;
 use plato_core::font::Fonts;
-use plato_core::plugin::PluginSystem;
-use plato_core::sync::BackgroundSync;
 use plato_core::framebuffer::{Framebuffer, UpdateMode};
 use plato_core::frontlight::{Frontlight, LightLevels};
 use plato_core::geom::{Axis, Rectangle};
@@ -18,9 +16,11 @@ use plato_core::helpers::{load_toml, save_toml};
 use plato_core::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use plato_core::library::Library;
 use plato_core::lightsensor::LightSensor;
+use plato_core::plugin::PluginSystem;
 use plato_core::png;
 use plato_core::pt;
 use plato_core::settings::{IntermKind, Settings, SETTINGS_PATH};
+use plato_core::sync::BackgroundSync;
 use plato_core::view::calculator::Calculator;
 use plato_core::view::common::{
     locate, locate_by_id, overlapping_rectangle, transfer_notifications,

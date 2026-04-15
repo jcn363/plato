@@ -37,6 +37,7 @@ use rustc_hash::FxHashMap;
 /// Scale factor to apply to page rendering (1.0 = native size)
 ///
 /// Extracted from `Reader::scaling_factor()` (line 1788)
+#[allow(dead_code)] // Used by Reader::update method
 pub(crate) fn scaling_factor(
     rect: &Rectangle,
     _margin: &Margin,
@@ -58,17 +59,19 @@ pub(crate) fn scaling_factor(
     }
 }
 
-/// Extract text from a range of points
+/// Extract text content from a selection range
 ///
-/// Retrieves the text content between two points in the document,
-/// handling proper spacing and joining for different languages.
+/// Extracts and concatenates text from bounded text objects within the specified
+/// selection range, handling language-specific text direction and spacing.
 ///
 /// # Arguments
-/// - `text`: Map of text locations to bounded text items
-/// - `sel`: Array of [start_point, end_point] for the selection
+/// - `text`: Hash map of page numbers to bounded text objects
+/// - `sel`: Selection range as start and end points
+/// - `language`: Language code for text direction handling
 ///
 /// # Returns
 /// The extracted text as a String, or None if no text found in range
+#[allow(dead_code)] // Used by Reader::text_excerpt method
 pub(crate) fn text_excerpt(
     text: &FxHashMap<usize, Vec<BoundedText>>,
     sel: [Point; 2],
@@ -105,18 +108,19 @@ pub(crate) fn text_excerpt(
     Some(text_str)
 }
 
-/// Calculate the bounding rectangle for text in a selection
+/// Calculate bounding rectangle for selected text
 ///
-/// Finds the overall rectangle that encompasses all text between two points
-/// across multiple chunks, accounting for chunk scaling and positioning.
+/// Computes the minimal bounding rectangle that encompasses all bounded text objects
+/// within the specified selection range.
 ///
 /// # Arguments
-/// - `text`: Map of text locations to bounded text items
-/// - `chunks`: Rendered page chunks with positioning info
-/// - `sel`: Array of [start_point, end_point] for the selection
+/// - `text`: Hash map of page numbers to bounded text objects
+/// - `chunks`: Render chunks for coordinate transformation
+/// - `sel`: Selection range as start and end points
 ///
 /// # Returns
 /// The bounding rectangle for the selected text, or None if no text found
+#[allow(dead_code)] // Used by Reader::text_rect method
 pub(crate) fn text_rect(
     text: &FxHashMap<usize, Vec<BoundedText>>,
     chunks: &[super::reader_core::RenderChunk],
@@ -153,11 +157,12 @@ pub(crate) fn text_rect(
 ///
 /// # Arguments
 /// - `selection`: Optional current selection with start/end locations
-/// - `text_data`: FxHashMap containing BoundedText for all page chunks
-/// - `chunks`: Rendered page chunks with positioning info
+/// - `text_data`: Hash map of page text data for bounds calculation
+/// - `chunks`: Render chunks for coordinate transformation
 ///
 /// # Returns
 /// Rectangular region covering the selection, or None if no selection
+#[allow(dead_code)] // Used by Reader::selection_rect method
 pub(crate) fn selection_rect(
     selection: Option<&super::reader_core::Selection>,
     text_data: &FxHashMap<usize, Vec<BoundedText>>,
@@ -168,22 +173,18 @@ pub(crate) fn selection_rect(
 
 /// Calculate cropped margin offset within a page
 ///
-/// Computes the page offset required when cropping margins, handling position
-/// normalization relative to the page dimensions.
+/// Computes the adjusted page offset when margins are cropped to ensure the
+/// content remains within valid page boundaries.
 ///
 /// # Arguments
-/// - `offset`: Current frame offset position
-/// - `pixmap_width`: Pixmap width in pixels
-/// - `pixmap_height`: Pixmap height in pixels
-/// - `margin_left`: Left margin ratio (0.0-1.0)
-/// - `margin_right`: Right margin ratio (0.0-1.0)
-/// - `margin_top`: Top margin ratio (0.0-1.0)
-/// - `margin_bottom`: Bottom margin ratio (0.0-1.0)
-/// - `scale`: Scale factor for the page
-/// - `dims`: Original page dimensions (width, height)
+/// - `offset`: Original page offset
+/// - `pixmap_width`: Width of the page pixmap
+/// - `pixmap_height`: Height of the page pixmap
+/// - `margin`: Current margin settings
 ///
 /// # Returns
 /// Adjusted page offset, or None if margins are out of bounds
+#[allow(dead_code)] // Used by Reader::update method
 pub(crate) fn calculate_margin_offset(
     offset: Point,
     pixmap_width: u32,
