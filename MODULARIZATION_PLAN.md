@@ -102,22 +102,24 @@ Created modules:
 - **Warnings**: ~110 warnings (unused imports, unused variables)
 
 ### 🔄 ARM Kobo Target (arm-unknown-linux-gnueabihf)
-- **Status**: 336 compilation errors remaining
+- **Status**: 160 compilation errors remaining (reduced from 336)
 - **Command**: `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
-- **Error Categories**:
-  - Method signature mismatches (toggle_* methods)
-  - Missing imports in new modules
-  - Type mismatches (u64 vs other integer types)
-  - Duplicate method definitions across modules
+- **Progress**: Fixed 176 errors so far
+- **Error Categories** (160 remaining):
+  - 54 E0599: No method found (ViewId variants, Library methods)
+  - 29 E0609: No field found (Context::history, Info::simple_toc)
+  - 9 E0061: Wrong number of arguments (toggle methods)
+  - 15 E0308: Type mismatches
 
 ### Remaining Work to Complete Modularization
 
 #### Immediate Priority (High)
-1. **Fix ARM Kobo Build Errors** (336 errors)
-   - Fix toggle method signatures in input.rs
-   - Resolve duplicate method definitions
-   - Fix type mismatches in new modules
-   - Verify all imports are correct
+1. **Fix ARM Kobo Build Errors** (160 remaining)
+   - Add missing ViewId variants (SettingsMenu, LibraryMenu, DirectoryView)
+   - Add missing fields to Context and Info structs
+   - Add missing methods to Library struct (len, iter)
+   - Fix remaining toggle method signatures
+   - Resolve remaining type mismatches
 
 2. **Reduce reader.rs Below 1000 Lines**
    - Extract remaining large methods to submodule files
