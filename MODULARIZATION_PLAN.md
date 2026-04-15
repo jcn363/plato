@@ -102,11 +102,11 @@ Created modules:
 - **Warnings**: ~110 warnings (unused imports, unused variables)
 
 ### 🔄 ARM Kobo Target (arm-unknown-linux-gnueabihf)
-- **Status**: 160 compilation errors remaining (reduced from 336)
+- **Status**: 131 compilation errors remaining (reduced from 336)
 - **Command**: `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
-- **Progress**: Fixed 176 errors so far
-- **Error Categories** (160 remaining):
-  - 54 E0599: No method found (ViewId variants, Library methods)
+- **Progress**: Fixed 205 errors so far
+- **Error Categories** (131 remaining):
+  - 23 E0599: No method/variant found (DeviceEvent, FingerStatus, Point, ZoomMode, etc.)
   - 29 E0609: No field found (Context::history, Info::simple_toc)
   - 9 E0061: Wrong number of arguments (toggle methods)
   - 15 E0308: Type mismatches
@@ -114,10 +114,19 @@ Created modules:
 ### Remaining Work to Complete Modularization
 
 #### Immediate Priority (High)
-1. **Fix ARM Kobo Build Errors** (160 remaining)
-   - Add missing ViewId variants (SettingsMenu, LibraryMenu, DirectoryView)
+1. **Fix ARM Kobo Build Errors** (131 remaining)
+   - ✅ Add missing ViewId variants (SettingsMenu, DirectoryView, Dialog, HighlightMenu)
+   - ✅ Add missing EntryId variant (HighlightColor)
+   - ✅ Add missing SortMethod::Date variant
+   - ✅ Add missing color constants (YELLOW, GREEN, BLUE, RED, ORANGE, PURPLE)
+   - ✅ Add missing Library methods (len, iter, is_empty)
+   - Add DeviceEvent::Keyboard variant
+   - Add FingerStatus::Move variant
+   - Add Point::distance_to method
+   - Add Event variants (Tap, Swipe, DoubleTap, Hold)
+   - Add ZoomMode::Fit and ScrollMode::Vertical variants
+   - Implement Default for reader_core::State
    - Add missing fields to Context and Info structs
-   - Add missing methods to Library struct (len, iter)
    - Fix remaining toggle method signatures
    - Resolve remaining type mismatches
 
