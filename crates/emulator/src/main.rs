@@ -8,6 +8,8 @@ use plato_core::context::Context;
 use plato_core::device::CURRENT_DEVICE;
 use plato_core::document::sys_info_as_html;
 use plato_core::font::Fonts;
+use plato_core::plugin::PluginSystem;
+use plato_core::sync::BackgroundSync;
 use plato_core::framebuffer::{Framebuffer, UpdateMode};
 use plato_core::frontlight::{Frontlight, LightLevels};
 use plato_core::geom::{Axis, Rectangle};

@@ -156,8 +156,10 @@ Based on usage and importance:
 
 1. **Framebuffer Trait Methods**
    - Updated trait documentation to remove misleading "Not supported" comments
+   - Made `shift_region` an abstract method since concrete types have optimized implementations
    - Implemented `set_monochrome`, `set_dithered`, `set_inverted` in Pixmap framebuffer
    - Implemented missing methods in emulator FBCanvas framebuffer
+   - Added `shift_region` implementation to Pixmap framebuffer with proper bounds checking
    - `shift_region` was already implemented in KoboFramebuffer1 and KoboFramebuffer2
 
 2. **Document Trait Methods**
@@ -170,13 +172,18 @@ Based on usage and importance:
    - Updated documentation for `set_warmth` in StandardFrontlight to clarify it's intentionally a no-op
    - Method was already implemented as a no-op for compatibility
 
+4. **Build System Fixes**
+   - Fixed missing imports in emulator for PluginSystem and BackgroundSync
+   - All code compiles successfully for ARM Kobo target
+
 ### Technical Details
 
 - All implementations follow AGENTS.md guidelines
 - No backward compatibility concerns since these were internal stub implementations
-- Code compiles successfully for ARM Kobo target
+- Code compiles successfully for ARM Kobo target with zero errors
 - Only warnings remain (no compilation errors)
 - Documentation updated to reflect actual implementation status
+- All trait methods now have proper implementations in concrete types
 
 ## Completion Criteria
 

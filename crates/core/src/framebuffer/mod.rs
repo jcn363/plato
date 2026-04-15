@@ -39,7 +39,7 @@ pub trait Framebuffer {
 
     /// Shifts pixel values in a region by a drift value.
     /// Used for annotation highlighting effect.
-    fn shift_region(&mut self, _rect: &Rectangle, _drift: u8) {}
+    fn shift_region(&mut self, rect: &Rectangle, drift: u8);
 
     fn update(&mut self, rect: &Rectangle, mode: UpdateMode) -> Result<u32, Error>;
     fn wait(&self, token: u32) -> Result<i32, Error>;

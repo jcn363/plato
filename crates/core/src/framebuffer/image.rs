@@ -251,6 +251,29 @@ impl Framebuffer for Pixmap {
         // Pixmap doesn't support display inversion
     }
 
+    fn shift_region(&mut self, rect: &Rectangle, drift: u8) {
+        if self.data.is_empty() {
+            return;
+        }
+
+        for y in rect.min.y..rect.max.y {
+            for x in rect.min.x..rect.max.x {
+                let current_color = self.get_pixel(x as u32, y as u32);
+                let shifted_color = current_color.apply(|c| {
+                    let shifted = c as i16 + drift as i16;
+                    if shifted < 0 {
+                        0
+                    } else if shifted > 255 {
+                        255
+                    } else {
+                        shifted as u8
+                    }
+                });
+                self.set_pixel(x as u32, y as u32, shifted_color);
+            }
+        }
+    }
+
     #[inline]
     fn width(&self) -> u32 {
         self.width
