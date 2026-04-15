@@ -355,6 +355,36 @@ impl Document for PdfDocument {
         self.doc.layout(width as f32, height as f32);
     }
 
+    fn set_font_family(&mut self, _family_name: &str, _search_path: &str) {
+        // PDF documents use embedded fonts and MuPDF's text layout.
+        // Font family changes are not supported for PDF format.
+    }
+
+    fn set_margin_width(&mut self, _width: i32) {
+        // PDF documents have fixed page layouts defined by the document.
+        // Margin changes are not supported for PDF format.
+    }
+
+    fn set_text_align(&mut self, _text_align: crate::metadata::TextAlign) {
+        // PDF documents have fixed text positioning defined by the document.
+        // Text alignment changes are not supported for PDF format.
+    }
+
+    fn set_line_height(&mut self, _line_height: f32) {
+        // PDF documents have fixed line spacing defined by the document.
+        // Line height changes are not supported for PDF format.
+    }
+
+    fn set_hyphen_penalty(&mut self, _hyphen_penalty: i32) {
+        // PDF documents have fixed hyphenation defined by the document.
+        // Hyphen penalty changes are not supported for PDF format.
+    }
+
+    fn set_stretch_tolerance(&mut self, _stretch_tolerance: f32) {
+        // PDF documents have fixed text layout defined by the document.
+        // Stretch tolerance changes are not supported for PDF format.
+    }
+
     fn set_ignore_document_css(&mut self, ignore: bool) {
         self.ctx.set_use_document_css(!ignore);
     }

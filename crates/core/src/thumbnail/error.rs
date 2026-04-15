@@ -1,4 +1,3 @@
-
 pub type ThumbnailResult<T> = Result<T, ThumbnailError>;
 
 #[derive(Debug, thiserror::Error)]

@@ -225,7 +225,9 @@ impl crate::document::Document for PluginDocumentAdapter {
         self.inner.layout(width, height, font_size, dpi)
     }
 
-    fn set_ignore_document_css(&mut self, _ignore: bool) {}
+    fn set_ignore_document_css(&mut self, ignore: bool) {
+        self.inner.set_ignore_document_css(ignore);
+    }
 
     fn title(&self) -> Option<String> {
         self.inner.title()

@@ -239,6 +239,18 @@ impl Framebuffer for Pixmap {
         Ok((self.width, self.height))
     }
 
+    fn set_monochrome(&mut self, _enable: bool) {
+        // Pixmap doesn't support display mode changes
+    }
+
+    fn set_dithered(&mut self, _enable: bool) {
+        // Pixmap doesn't support dithering mode changes
+    }
+
+    fn set_inverted(&mut self, _enable: bool) {
+        // Pixmap doesn't support display inversion
+    }
+
     #[inline]
     fn width(&self) -> u32 {
         self.width

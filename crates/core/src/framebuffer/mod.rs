@@ -47,16 +47,13 @@ pub trait Framebuffer {
     fn set_rotation(&mut self, n: i8) -> Result<(u32, u32), Error>;
 
     /// Enables monochrome (grayscale) display mode.
-    /// Not supported on Kobo e-readers.
-    fn set_monochrome(&mut self, _enable: bool) {}
+    fn set_monochrome(&mut self, enable: bool);
 
     /// Enables dithering for smoother gradients.
-    /// Not supported on Kobo e-readers.
-    fn set_dithered(&mut self, _enable: bool) {}
+    fn set_dithered(&mut self, enable: bool);
 
     /// Inverts display colors.
-    /// Not supported on Kobo e-readers.
-    fn set_inverted(&mut self, _enable: bool) {}
+    fn set_inverted(&mut self, enable: bool);
 
     fn monochrome(&self) -> bool {
         false

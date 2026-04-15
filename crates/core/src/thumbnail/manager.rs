@@ -1,10 +1,10 @@
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{self, Sender};
-use dashmap::DashMap;
 use crate::thumbnail::cache::ThumbnailCache;
 use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
 use crate::thumbnail::request::ThumbnailRequest;
+use dashmap::DashMap;
+use std::path::{Path, PathBuf};
+use std::sync::mpsc::{self, Sender};
+use std::sync::{Arc, Mutex};
 
 /// Configuration for thumbnail generation
 #[derive(Debug, Clone)]

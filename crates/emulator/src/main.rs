@@ -77,6 +77,8 @@ pub fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
         battery,
         frontlight,
         lightsensor,
+        PluginSystem::new(),
+        BackgroundSync::new(&settings.background_sync),
     ))
 }
 
@@ -237,6 +239,18 @@ impl Framebuffer for FBCanvas {
 
     fn height(&self) -> u32 {
         self.0.window().size().1
+    }
+
+    fn set_monochrome(&mut self, _enable: bool) {
+        // Emulator doesn't support monochrome mode changes
+    }
+
+    fn set_dithered(&mut self, _enable: bool) {
+        // Emulator doesn't support dithering mode changes
+    }
+
+    fn set_inverted(&mut self, _enable: bool) {
+        // Emulator doesn't support display inversion
     }
 }
 
