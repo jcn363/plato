@@ -56,7 +56,7 @@
 //! ### 4. Document Manipulation Pattern
 //! All document modifications follow a consistent pattern:
 //! ```ignore
-//! let mut doc = self.doc.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+//! let mut doc = self._doc.lock().unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
 //! doc.set_property(...);
 //! drop(doc);  // explicit unlock
 //! self.update(None, hub, rq, context);
@@ -131,6 +131,7 @@
 use crate::color::{background, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
+use std::sync::MutexGuard;
 use crate::document::{BoundedText, Document, Location, SimpleTocEntry, TextLocation, TocEntry};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
@@ -201,18 +202,18 @@ pub struct Reader {
     pub(crate) id: Id,
     pub(crate) rect: Rectangle,
     children: Vec<Box<dyn View>>,
-    pub(crate) doc: Arc<Mutex<Box<dyn Document>>>,
+    pub(crate) _doc: Arc<Mutex<Box<dyn Document>>>,
     pub(crate) cache: BTreeMap<usize, Resource>,
     pub(crate) chunks: Vec<RenderChunk>,
     pub(crate) text: FxHashMap<usize, Vec<BoundedText>>,
-    pub(crate) annotations: FxHashMap<usize, Vec<Annotation>>,
-    pub(crate) noninverted_regions: FxHashMap<usize, Vec<Boundary>>,
+    pub(crate) _annotations: FxHashMap<usize, Vec<Annotation>>,
+    pub(crate) _noninverted_regions: FxHashMap<usize, Vec<Boundary>>,
     pub(crate) focus: Option<ViewId>,
     pub(crate) search: Option<Search>,
     pub(crate) search_direction: LinearDir,
     pub(crate) held_buttons: FxHashSet<ButtonCode>,
     pub(crate) selection: Option<Selection>,
-    pub(crate) target_annotation: Option<[TextLocation; 2]>,
+    pub(crate) _target_annotation: Option<[TextLocation; 2]>,
     pub(crate) history: VecDeque<usize>,
     pub(crate) state: State,
     pub(crate) info: Info,
@@ -220,8 +221,8 @@ pub struct Reader {
     pub(crate) pages_count: usize,
     pub(crate) view_port: ViewPort,
     pub(crate) contrast: Contrast,
-    pub(crate) synthetic: bool,
-    pub(crate) page_turns: usize,
+    pub(crate) _synthetic: bool,
+    pub(crate) _page_turns: usize,
     pub(crate) reflowable: bool,
     pub(crate) ephemeral: bool,
     pub(crate) finished: bool,
@@ -269,18 +270,18 @@ impl Reader {
             id,
             rect,
             children,
-            doc,
+            _doc: doc,
             cache: BTreeMap::new(),
             chunks: Vec::new(),
             text: FxHashMap::default(),
-            annotations: FxHashMap::default(),
-            noninverted_regions: FxHashMap::default(),
+            _annotations: FxHashMap::default(),
+            _noninverted_regions: FxHashMap::default(),
             focus: None,
             search: None,
             search_direction: LinearDir::Forward,
             held_buttons: FxHashSet::default(),
             selection: None,
-            target_annotation: None,
+            _target_annotation: None,
             history: VecDeque::new(),
             state: State::Idle,
             info,
@@ -288,8 +289,8 @@ impl Reader {
             pages_count,
             view_port: ViewPort::default(),
             contrast: Contrast::default(),
-            synthetic: false,
-            page_turns: 0,
+            _synthetic: false,
+            _page_turns: 0,
             reflowable,
             ephemeral: false,
             finished: false,
@@ -337,18 +338,18 @@ impl Reader {
             id,
             rect,
             children,
-            doc,
+            _doc: doc,
             cache: BTreeMap::new(),
             chunks: Vec::new(),
             text: FxHashMap::default(),
-            annotations: FxHashMap::default(),
-            noninverted_regions: FxHashMap::default(),
+            _annotations: FxHashMap::default(),
+            _noninverted_regions: FxHashMap::default(),
             focus: None,
             search: None,
             search_direction: LinearDir::Forward,
             held_buttons: FxHashSet::default(),
             selection: None,
-            target_annotation: None,
+            _target_annotation: None,
             history: VecDeque::new(),
             state: State::Idle,
             info,
@@ -356,8 +357,8 @@ impl Reader {
             pages_count,
             view_port: ViewPort::default(),
             contrast: Contrast::default(),
-            synthetic: false,
-            page_turns: 0,
+            _synthetic: false,
+            _page_turns: 0,
             reflowable,
             ephemeral: true,
             finished: false,
@@ -602,7 +603,7 @@ impl Reader {
         &mut self,
         rect: Rectangle,
         enable: Option<bool>,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -646,6 +647,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_text_align_menu(
         &mut self,
         rect: Rectangle,
@@ -669,6 +671,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_line_height_menu(
         &mut self,
         rect: Rectangle,
@@ -692,6 +695,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_contrast_exponent_menu(
         &mut self,
         rect: Rectangle,
@@ -709,6 +713,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_contrast_gray_menu(
         &mut self,
         rect: Rectangle,
@@ -726,6 +731,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_margin_width_menu(
         &mut self,
         rect: Rectangle,
@@ -761,6 +767,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_page_menu(
         &mut self,
         rect: Rectangle,
@@ -779,6 +786,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_margin_cropper_menu(
         &mut self,
         rect: Rectangle,
@@ -797,6 +805,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_search_menu(
         &mut self,
         rect: Rectangle,
@@ -818,6 +827,7 @@ impl Reader {
     // Settings Setters
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn set_font_size(
         &mut self,
         font_size: f32,
@@ -825,7 +835,7 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if Arc::strong_count(&self.doc) > 1 {
+        if Arc::strong_count(&self._doc) > 1 {
             return;
         }
 
@@ -836,13 +846,13 @@ impl Reader {
         let (width, height) = context.display.dims;
         {
             let mut doc = self
-                .doc
+                ._doc
                 .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
+                .unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
 
             doc.layout(width, height, font_size, CURRENT_DEVICE.dpi);
 
-            if self.synthetic {
+            if self._synthetic {
                 let current_page = self.current_page.min(doc.pages_count() - 1);
                 if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {
                     self.current_page = location;
@@ -861,6 +871,7 @@ impl Reader {
         self.update_bottom_bar(rq);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn set_text_align(
         &mut self,
         text_align: TextAlign,
@@ -868,7 +879,7 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if Arc::strong_count(&self.doc) > 1 {
+        if Arc::strong_count(&self._doc) > 1 {
             return;
         }
 
@@ -878,12 +889,12 @@ impl Reader {
 
         {
             let mut doc = self
-                .doc
+                ._doc
                 .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
+                .unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
             doc.set_text_align(text_align);
 
-            if self.synthetic {
+            if self._synthetic {
                 let current_page = self.current_page.min(doc.pages_count() - 1);
                 if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {
                     self.current_page = location;
@@ -901,6 +912,7 @@ impl Reader {
         self.update_bottom_bar(rq);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn set_font_family(
         &mut self,
         font_family: &str,
@@ -908,7 +920,7 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if Arc::strong_count(&self.doc) > 1 {
+        if Arc::strong_count(&self._doc) > 1 {
             return;
         }
 
@@ -918,9 +930,9 @@ impl Reader {
 
         {
             let mut doc = self
-                .doc
+                ._doc
                 .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
+                .unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
             let font_path = if font_family == DEFAULT_FONT_FAMILY {
                 "fonts"
             } else {
@@ -929,7 +941,7 @@ impl Reader {
 
             doc.set_font_family(font_family, font_path);
 
-            if self.synthetic {
+            if self._synthetic {
                 let current_page = self.current_page.min(doc.pages_count() - 1);
                 if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {
                     self.current_page = location;
@@ -947,6 +959,7 @@ impl Reader {
         self.update_bottom_bar(rq);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn set_line_height(
         &mut self,
         line_height: f32,
@@ -954,7 +967,7 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if Arc::strong_count(&self.doc) > 1 {
+        if Arc::strong_count(&self._doc) > 1 {
             return;
         }
 
@@ -964,12 +977,12 @@ impl Reader {
 
         {
             let mut doc = self
-                .doc
+                ._doc
                 .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
+                .unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
             doc.set_line_height(line_height);
 
-            if self.synthetic {
+            if self._synthetic {
                 let current_page = self.current_page.min(doc.pages_count() - 1);
                 if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {
                     self.current_page = location;
@@ -987,6 +1000,7 @@ impl Reader {
         self.update_bottom_bar(rq);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn set_margin_width(
         &mut self,
         width: i32,
@@ -994,7 +1008,7 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        if Arc::strong_count(&self.doc) > 1 {
+        if Arc::strong_count(&self._doc) > 1 {
             return;
         }
 
@@ -1012,12 +1026,12 @@ impl Reader {
 
         if self.reflowable {
             let mut doc = self
-                .doc
+                ._doc
                 .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
+                .unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
             doc.set_margin_width(width);
 
-            if self.synthetic {
+            if self._synthetic {
                 let current_page = self.current_page.min(doc.pages_count() - 1);
                 if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {
                     self.current_page = location;
@@ -1045,6 +1059,7 @@ impl Reader {
         self.update_bottom_bar(rq);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toggle_bookmark(&mut self, rq: &mut RenderQueue) {
         super::reader_annotations::toggle_bookmark(
             self.current_page,
@@ -1055,6 +1070,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn set_contrast_exponent(
         &mut self,
         exponent: f32,
@@ -1071,6 +1087,7 @@ impl Reader {
         self.update_tool_bar(rq, context);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn set_contrast_gray(
         &mut self,
         gray: f32,
@@ -1132,6 +1149,7 @@ impl Reader {
         self.update(None, hub, rq, context);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn scaling_factor(
         rect: &Rectangle,
         _margin: &Margin,
@@ -1153,6 +1171,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn crop_margins(
         &mut self,
         index: usize,
@@ -1168,9 +1187,9 @@ impl Reader {
             let offset = frame.min + self.view_port.page_offset;
             let dims = {
                 let doc = self
-                    .doc
+                    ._doc
                     .lock()
-                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                    .unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
                 doc.dims(index).unwrap_or((0.0, 0.0))
             };
             let scale = reader_rendering::scaling_factor(
@@ -1210,18 +1229,21 @@ impl Reader {
     // Table of Contents and Page Lookup
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toc(&self) -> Option<Vec<TocEntry>> {
         super::reader_settings::build_toc(&self.info, |name| {
             super::reader_settings::find_page_by_name(&self.info, name)
         })
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toc_aux(&self, simple_toc: &[SimpleTocEntry], index: &mut usize) -> Vec<TocEntry> {
         super::reader_settings::build_toc_aux(simple_toc, index, |name| {
             super::reader_settings::find_page_by_name(&self.info, name)
         })
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn find_page_by_name(&self, name: &str) -> Option<usize> {
         super::reader_settings::find_page_by_name(&self.info, name)
     }
@@ -1230,24 +1252,29 @@ impl Reader {
     // Text Excerpt and Selection Geometry
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn text_excerpt(&self, sel: [Point; 2]) -> Option<String> {
         reader_rendering::text_excerpt(&self.text, sel, &self.info.language)
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn selected_text(&self) -> Option<String> {
         self.selection
             .as_ref()
             .and_then(|sel| self.text_excerpt([sel.start, sel.end]))
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn text_rect(&self, sel: [Point; 2]) -> Option<Rectangle> {
         reader_rendering::text_rect(&self.text, &self.chunks, sel)
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn render_results(&self, rq: &mut RenderQueue) {
         reader_search::render_results(self.search.as_ref(), &self.chunks, self.id, rq);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn selection_rect(&self) -> Option<Rectangle> {
         super::reader_rendering::selection_rect(self.selection.as_ref(), &self.text, &self.chunks)
     }
@@ -1256,14 +1283,17 @@ impl Reader {
     // Annotation Lookup and UI Reseed
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn find_annotation_ref(&mut self, sel: [TextLocation; 2]) -> Option<&Annotation> {
         super::reader_annotations::find_annotation_ref(&self.info, sel)
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn find_annotation_mut(&mut self, sel: [TextLocation; 2]) -> Option<&mut Annotation> {
         super::reader_annotations::find_annotation_mut(&mut self.info, sel)
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn reseed(&mut self, rq: &mut RenderQueue, context: &mut Context) {
         if let Some(index) = locate::<TopBar>(self) {
             if let Some(top_bar) = self.child_mut(index).downcast_mut::<TopBar>() {
@@ -1379,6 +1409,7 @@ impl Reader {
     // Event Handling
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     pub(crate) fn handle_menu_event(
         &mut self,
         evt: &Event,
@@ -1544,7 +1575,7 @@ impl Reader {
                 true
             }
             Event::Close(ViewId::SelectionMenu) => {
-                if self.state == State::Idle && self.target_annotation.is_none() {
+                if self.state == State::Idle && self._target_annotation.is_none() {
                     if let Some(rect) = self.selection_rect() {
                         self.selection = None;
                         rq.add(RenderData::new(self.id, rect, UpdateMode::Gui));
@@ -1742,6 +1773,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     pub(crate) fn handle_event(
         &mut self,
         evt: &Event,
@@ -1782,6 +1814,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, _fonts: &mut Fonts) {
         fb.draw_rectangle(&rect, background(theme::is_dark_mode()));
 
@@ -1802,7 +1835,7 @@ impl Reader {
                     self.contrast.gray,
                 );
 
-                if let Some(rects) = self.noninverted_regions.get(&chunk.location) {
+                if let Some(rects) = self._noninverted_regions.get(&chunk.location) {
                     for r in rects {
                         let rect = (*r * scale).to_rect() - chunk.frame.min + chunk.position;
                         if let Some(ref image_rect) = rect.intersection(&region_rect) {
@@ -1851,7 +1884,7 @@ impl Reader {
                     }
                 }
 
-                if let Some(annotations) = self.annotations.get(&chunk.location) {
+                if let Some(annotations) = self._annotations.get(&chunk.location) {
                     for annot in annotations {
                         let drift = if annot.note.is_empty() {
                             HIGHLIGHT_DRIFT
@@ -1969,10 +2002,12 @@ impl Reader {
     // Rendering
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn render_rect(&self, rect: &Rectangle) -> Rectangle {
         rect.intersection(&self.rect).unwrap_or(self.rect)
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn resize(&mut self, rect: Rectangle, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         if !self.children.is_empty() {
             let dpi = CURRENT_DEVICE.dpi;
@@ -2134,9 +2169,9 @@ impl Reader {
                 .and_then(|r| r.font_size)
                 .unwrap_or(context.settings.reader.font_size);
             let mut doc = self
-                .doc
+                ._doc
                 .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner());
+                .unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
             doc.layout(rect.width(), rect.height(), font_size, CURRENT_DEVICE.dpi);
             let current_page = self.current_page.min(doc.pages_count() - 1);
             if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {
@@ -2149,30 +2184,37 @@ impl Reader {
         self.update(Some(UpdateMode::Full), hub, rq, context);
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn might_rotate(&self) -> bool {
         self.search.is_none()
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn is_background(&self) -> bool {
         true
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn rect(&self) -> &Rectangle {
         &self.rect
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn rect_mut(&mut self) -> &mut Rectangle {
         &mut self.rect
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn children(&self) -> &Vec<Box<dyn View>> {
         &self.children
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn children_mut(&mut self) -> &mut Vec<Box<dyn View>> {
         &mut self.children
     }
 
+    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn id(&self) -> Id {
         self.id
     }

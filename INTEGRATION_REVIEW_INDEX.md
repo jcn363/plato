@@ -174,10 +174,11 @@ Start here based on your role:
 - **Value:** New user-facing capabilities
 
 ### Phase 4: Performance Optimization (Weeks 6+)
-- **Goal:** Achieve 30-50% performance improvement
+- **Goal:** Achieve 30-50% performance improvement following [OPTI_PLAN.md](OPTI_PLAN.md)
 - **Effort:** 10-15 days
-- **Risk:** LOW (backward compatible)
-- **Value:** Significant UX improvement on Kobo devices
+- **Risk:** LOW (no backward compatibility constraints)
+- **Value:** Significant UX improvement on Kobo devices with AGENTS.md compliance
+- **Approach**: Hot-path optimizations, memory management, battery efficiency, zero tolerance for warnings/errors
 
 **Total: 6-8 weeks for complete implementation**
 
@@ -251,13 +252,17 @@ Use `Ctrl+F` to search for filename in:
 - [ ] Expose frontlight settings
 - [ ] Regression testing
 
-### Week 6+: Performance
-- [ ] Add metadata cache
-- [ ] Add font glyph cache
-- [ ] Implement I/O batching
-- [ ] Optimize rendering
-- [ ] Add search caching
-- [ ] Device performance testing
+### Week 6+: Performance (per OPTI_PLAN.md)
+- [ ] Implement hot-path optimizations with `#[inline]` functions
+- [ ] Replace HashMap/HashSet with FxHashMap/FxHashSet
+- [ ] Add buffer reuse pools with proper RAII cleanup
+- [ ] Implement event-driven I/O to replace polling loops
+- [ ] Add state caching for battery/frontlight settings
+- [ ] Optimize e-ink update modes with dirty region tracking
+- [ ] Enable LTO and strip debug symbols
+- [ ] Add comprehensive input validation to all public APIs
+- [ ] Standardize error handling with anyhow/thiserror
+- [ ] Run full AGENTS.md build verification (zero tolerance policy)
 
 ---
 

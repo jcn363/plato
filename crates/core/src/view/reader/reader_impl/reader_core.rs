@@ -107,11 +107,11 @@ pub struct RenderChunk {
 /// Search state
 #[derive(Debug)]
 pub struct Search {
-    pub query: String,
+    pub _query: String,
     pub results: Vec<Location>,
     pub index: usize,
     pub running: atomic::AtomicBool,
-    pub results_count: usize,
+    pub _results_count: usize,
     pub highlights: FxHashMap<usize, Vec<Rectangle>>,
 }
 

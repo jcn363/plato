@@ -32,14 +32,14 @@ enum RedactionState {
 
 enum ManipulationMode {
     SelectFile,
-    SelectAction(PathBuf),
-    SelectRedactionPage(PathBuf, usize), // Stores file path and total pages
+    SelectAction(()), // Unused field
+    SelectRedactionPage((), ()), // Unused fields
     DefiningRedaction {
         file_path: PathBuf,
         page_index: usize,
         region: Option<RedactionRegion>,
     },
-    Processing(PathBuf, String),
+    Processing((), ()), // Unused fields
 }
 
 pub struct PdfManipulatorView {
@@ -141,7 +141,7 @@ Max: 30MB, 500 pages. Keep battery charged."
     }
 
     fn show_actions(&mut self, file_path: PathBuf, rq: &mut RenderQueue, context: &mut Context) {
-        self.mode = ManipulationMode::SelectAction(file_path.clone());
+        self.mode = ManipulationMode::SelectAction(());
 
         let file_size = std::fs::metadata(&file_path)
             .map(|m| m.len() / (1024 * 1024))
@@ -220,7 +220,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> Result<(), Error> {
-        self.mode = ManipulationMode::SelectRedactionPage(file_path.clone(), total_pages);
+        self.mode = ManipulationMode::SelectRedactionPage((), ());
 
         let mut entries = vec![
             EntryKind::Message(
@@ -310,7 +310,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> Result<(), Error> {
-        self.mode = ManipulationMode::Processing(file_path.clone(), action.to_string());
+        self.mode = ManipulationMode::Processing((), ());
 
         let result = match action {
             "delete" | "rotate90" | "rotate180" | "rotate270" => {
@@ -595,11 +595,8 @@ impl View for PdfManipulatorView {
                     ..
                 } => {
                     let file_path_cloned = file_path.clone();
-                    let page_index_val = *page_index;
-                    self.mode = ManipulationMode::SelectRedactionPage(
-                        file_path_cloned.clone(),
-                        page_index_val,
-                    );
+                    let _page_index_val = *page_index;
+                    self.mode = ManipulationMode::SelectRedactionPage((), ());
                     if let Some(total_pages) = self.manipulator.page_count(&file_path_cloned).ok() {
                         self.show_redaction_menu(&file_path_cloned, total_pages, rq, context)
                             .ok();

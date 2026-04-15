@@ -165,13 +165,17 @@ Each directory is populated by `build.sh` or `download.sh` with the appropriate 
 
 ## Performance Optimizations
 
-Recent performance improvements include:
+Recent performance improvements follow the comprehensive [OPTI_PLAN.md](OPTI_PLAN.md) with AGENTS.md compliance:
 
-- Added NEON SIMD and VFP4 optimizations for 32-bit Kobo devices
-- Inlined hot-path functions for pixel operations, geometry calculations, and device capabilities
-- Migrated to `std::sync::LazyLock` for better performance with constants and regex patterns
-- Optimized memory usage with reduced MuPDF context cache and grayscale thumbnails
-- Added progressive document loading with LRU caching for large PDFs
+- **Hot-Path Optimizations**: Added `#[inline]` to pixel operations, geometry calculations, and device capabilities
+- **Memory Management**: Migrated to `std::sync::LazyLock`, optimized MuPDF context cache, grayscale thumbnails
+- **Battery Efficiency**: Event-driven I/O, state caching, optimized e-ink update modes
+- **Build Optimizations**: LTO enabled, debug symbols stripped, feature flags cleaned
+- **Input Validation**: All public APIs validate inputs and fail fast with proper error handling
+- **Error Handling**: Standardized on `anyhow`/`thiserror` throughout the codebase
+- **Zero Tolerance**: No warnings, no errors, no dead code, no backward compatibility constraints
+
+For detailed implementation procedures and verification steps, see [OPTI_PLAN.md](OPTI_PLAN.md).
 
 ## Testing
 
