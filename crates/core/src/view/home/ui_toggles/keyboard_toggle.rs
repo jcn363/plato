@@ -61,14 +61,12 @@ impl Home {
     /// Toggle keyboard visibility
     pub fn toggle_keyboard(
         &mut self,
-        enable: bool,
-        _animated: bool,
-        _view_id: Option<ViewId>,
-        _hub: &Hub,
+        enable: Option<bool>,
+        hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable;
+        let should_enable = enable.unwrap_or(!self.keyboard.is_some());
         
         if should_enable {
             self.show_keyboard(rq, context);

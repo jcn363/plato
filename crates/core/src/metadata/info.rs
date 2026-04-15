@@ -48,6 +48,8 @@ pub struct Info {
     pub reader_info: Option<ReaderInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub toc: Option<Vec<SimpleTocEntry>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub simple_toc: Option<Vec<SimpleTocEntry>>,
     #[serde(with = "datetime_format")]
     pub added: NaiveDateTime,
 }
