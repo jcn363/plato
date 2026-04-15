@@ -91,6 +91,11 @@ pub trait View: Downcast {
         false
     }
 
+    fn set_text(&mut self, _text: &str) {
+        // Default implementation does nothing
+        // Override for input fields and text-based views
+    }
+
     fn view_id(&self) -> Option<ViewId> {
         None
     }

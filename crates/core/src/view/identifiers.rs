@@ -87,6 +87,10 @@ pub enum ViewId {
     DirectoryView,
     Dialog,
     HighlightMenu,
+    NavigationBar,
+    LibraryMenu,
+    Shelf(usize),
+    BookView,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

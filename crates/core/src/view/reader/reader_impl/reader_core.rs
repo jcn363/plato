@@ -45,6 +45,12 @@ pub enum State {
     AdjustSelection,
 }
 
+impl Default for State {
+    fn default() -> Self {
+        State::Idle
+    }
+}
+
 /// Text selection with anchor point
 #[derive(Debug, Clone)]
 pub struct Selection {

@@ -98,6 +98,7 @@ impl std::fmt::Display for TextAlign {
 pub enum ZoomMode {
     FitToPage,
     FitToWidth,
+    Fit(f32),
     Custom(f32),
 }
 
@@ -105,6 +106,7 @@ pub enum ZoomMode {
 pub enum ScrollMode {
     Screen,
     Page,
+    Vertical,
 }
 
 impl PartialEq for ZoomMode {
@@ -112,6 +114,7 @@ impl PartialEq for ZoomMode {
         match (self, other) {
             (ZoomMode::FitToPage, ZoomMode::FitToPage) => true,
             (ZoomMode::FitToWidth, ZoomMode::FitToWidth) => true,
+            (ZoomMode::Fit(z1), ZoomMode::Fit(z2)) => (z1 - z2).abs() < f32::EPSILON,
             (ZoomMode::Custom(z1), ZoomMode::Custom(z2)) => (z1 - z2).abs() < f32::EPSILON,
             _ => false,
         }

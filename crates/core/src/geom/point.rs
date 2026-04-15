@@ -79,6 +79,12 @@ impl Point {
 
     #[inline]
     #[must_use]
+    pub fn distance_to(self, other: Point) -> f32 {
+        ((other.x - self.x).pow(2) as f32 + (other.y - self.y).pow(2) as f32).sqrt()
+    }
+
+    #[inline]
+    #[must_use]
     pub fn angle(self) -> f32 {
         (-self.y as f32).atan2(self.x as f32)
     }

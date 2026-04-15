@@ -113,6 +113,7 @@ pub enum TouchProto {
 pub enum FingerStatus {
     Down,
     Motion,
+    Move,
     Up,
 }
 
@@ -224,6 +225,11 @@ pub enum DeviceEvent {
     Button {
         time: f64,
         code: ButtonCode,
+        status: ButtonStatus,
+    },
+    Keyboard {
+        time: f64,
+        code: u32,
         status: ButtonStatus,
     },
     Plug(PowerSource),
