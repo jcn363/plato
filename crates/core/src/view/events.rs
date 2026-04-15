@@ -52,6 +52,7 @@ pub enum Event {
     Define(String),
     Submit(ViewId, String),
     SearchBarSubmit(String),
+    AddressBarSubmit(String),
     Slider(SliderId, f32, FingerStatus),
     ToggleNear(ViewId, Rectangle),
     ToggleInputHistoryMenu(ViewId, Rectangle),
