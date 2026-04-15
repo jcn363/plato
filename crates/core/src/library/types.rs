@@ -160,4 +160,19 @@ impl Library {
                 .unwrap_or_else(|| Fp(0))
         })
     }
+
+    /// Returns the number of books in the library
+    pub fn len(&self) -> usize {
+        self.db.len()
+    }
+
+    /// Returns true if the library contains no books
+    pub fn is_empty(&self) -> bool {
+        self.db.is_empty()
+    }
+
+    /// Returns an iterator over the books in the library
+    pub fn iter(&self) -> impl Iterator<Item = (&Fp, &Info)> {
+        self.db.iter()
+    }
 }
