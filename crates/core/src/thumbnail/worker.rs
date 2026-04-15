@@ -1,8 +1,8 @@
+use std::mem;
 use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
-use std::mem;
 
 use crate::document::open;
 use crate::framebuffer::{Framebuffer, Pixmap};
@@ -28,7 +28,7 @@ impl ThumbnailWorker {
         thread::spawn(move || {
             while let Ok(request) = self.receiver.recv() {
                 let result = self.process_request(&request);
-                
+
                 // Send result back to requester
                 if let Err(_) = request.response_tx.send(result) {
                     // Log error but continue processing other requests
@@ -63,15 +63,19 @@ impl ThumbnailWorker {
                     crate::device::CURRENT_DEVICE.color_samples(),
                 )
             })
-            .ok_or_else(|| ThumbnailError::document_processing(
-                anyhow::anyhow!("Failed to generate preview pixmap"),
-                request.file_path.display().to_string(),
-            ))?;
+            .ok_or_else(|| {
+                ThumbnailError::document_processing(
+                    anyhow::anyhow!("Failed to generate preview pixmap"),
+                    request.file_path.display().to_string(),
+                )
+            })?;
 
         // Save thumbnail to disk
         pixmap
             .save(request.thumbnail_path.to_str().unwrap_or("thumbnail.png"))
-            .map_err(|_| ThumbnailError::save_failed(request.thumbnail_path.display().to_string()))?;
+            .map_err(|_| {
+                ThumbnailError::save_failed(request.thumbnail_path.display().to_string())
+            })?;
 
         Ok(request.thumbnail_path.clone())
     }
@@ -125,7 +129,8 @@ impl ThumbnailWorkerPool {
 
         // Wait for all workers to finish
         for handle in self.handles.drain(..) {
-            handle.join()
+            handle
+                .join()
                 .map_err(|_| ThumbnailError::thread_pool("failed to join worker thread"))?;
         }
 
@@ -196,7 +201,7 @@ mod tests {
     #[test]
     fn test_request_validation() {
         let (request, _) = create_test_request();
-        
+
         // Valid request should pass
         assert!(request.validate().is_ok());
 

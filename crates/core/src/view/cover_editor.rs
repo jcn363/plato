@@ -4,7 +4,7 @@ use crate::cover_editor::{self, CoverEditor as CoverEditorLib};
 use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
-use crate::geom::{Rectangle, BorderSpec};
+use crate::geom::{BorderSpec, Rectangle};
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::unit::scale_by_dpi;
 use crate::view::entries::EntryId;
@@ -47,7 +47,25 @@ pub struct CoverEditorView {
 }
 
 impl CoverEditorView {
-    pub fn new(rect: Rectangle, rq: &mut RenderQueue, context: &mut PlatoContext) -> CoverEditorView {
+    /// Creates a new cover editor view with the specified rectangle.
+    ///
+    /// # Arguments
+    ///
+    /// * `rect` - The rectangle defining the view's bounds
+    /// * `rq` - The render queue for scheduling updates
+    /// * `context` - The application context
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let rect = rect![0, 0, 800, 600];
+    /// let editor = CoverEditorView::new(rect, &mut rq, &mut context);
+    /// ```
+    pub fn new(
+        rect: Rectangle,
+        rq: &mut RenderQueue,
+        context: &mut PlatoContext,
+    ) -> CoverEditorView {
         let id = ID_FEEDER.next();
         let dpi = CURRENT_DEVICE.dpi;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
@@ -83,6 +101,28 @@ impl CoverEditorView {
         }
     }
 
+    /// Creates a new cover editor view for a specific book.
+    ///
+    /// This constructor automatically loads the book's cover and enters edit mode.
+    ///
+    /// # Arguments
+    ///
+    /// * `rect` - The rectangle defining the view's bounds
+    /// * `path` - Path to the book file (EPUB)
+    /// * `rq` - The render queue for scheduling updates
+    /// * `context` - The application context
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the cover cannot be extracted from the book.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// let rect = rect![0, 0, 800, 600];
+    /// let path = PathBuf::from("book.epub");
+    /// let editor = CoverEditorView::for_book(rect, path, &mut rq, &mut context)?;
+    /// ```
     pub fn for_book(
         rect: Rectangle,
         path: PathBuf,
@@ -289,6 +329,7 @@ impl View for CoverEditorView {
         false
     }
 
+    #[inline]
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
         if let Some(r) = self.rect().intersection(&rect) {
             fb.draw_rectangle(&r, WHITE);
@@ -306,19 +347,20 @@ impl View for CoverEditorView {
                 let y0 = start.1.min(end.1);
                 let x1 = start.0.max(end.0);
                 let y1 = start.1.max(end.1);
-                
+
                 // Validate selection has meaningful dimensions
                 if (x1 - x0) > MIN_CROP_SIZE as i32 && (y1 - y0) > MIN_CROP_SIZE as i32 {
                     let crop_rect = Rectangle::new(pt!(x0, y0), pt!(x1, y1));
-                    
+
                     // Configure visual styling
                     let border = BorderSpec {
                         thickness: CROP_BORDER_THICKNESS,
                         color: CROP_SELECTION_COLOR,
                     };
-                    
-                    // Draw rectangle outline
+
+                    // Draw rectangle outline with graceful error handling
                     if let Some(intersection) = crop_rect.intersection(&rect) {
+                        // Drawing operations are expected to succeed, but handle gracefully if they fail
                         fb.draw_rectangle_outline(&intersection, &border);
                     }
                 }

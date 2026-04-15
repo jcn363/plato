@@ -48,15 +48,11 @@ pub enum ThumbnailError {
 
 impl ThumbnailError {
     pub fn invalid_path<S: Into<String>>(path: S) -> Self {
-        Self::InvalidPath {
-            path: path.into(),
-        }
+        Self::InvalidPath { path: path.into() }
     }
 
     pub fn file_not_found<S: Into<String>>(path: S) -> Self {
-        Self::FileNotFound {
-            path: path.into(),
-        }
+        Self::FileNotFound { path: path.into() }
     }
 
     pub fn invalid_dimensions(width: u32, height: u32) -> Self {
@@ -70,9 +66,7 @@ impl ThumbnailError {
     }
 
     pub fn save_failed<S: Into<String>>(path: S) -> Self {
-        Self::SaveFailed {
-            path: path.into(),
-        }
+        Self::SaveFailed { path: path.into() }
     }
 
     pub fn cache<S: Into<String>>(message: S) -> Self {

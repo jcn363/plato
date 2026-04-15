@@ -6,8 +6,8 @@ mod library;
 mod preset;
 mod reading;
 mod theme;
-mod tools;
 mod thumbnail;
+mod tools;
 
 use crate::frontlight::LightLevels;
 use crate::metadata::{SortMethod, TextAlign};
@@ -24,8 +24,8 @@ pub use features::*;
 pub use interface::*;
 pub use library::*;
 pub use reading::*;
-pub use tools::*;
 pub use thumbnail::*;
+pub use tools::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]

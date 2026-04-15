@@ -4,9 +4,9 @@ use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use std::sync::mpsc::{self, Receiver, Sender};
 use dashmap::DashMap;
 use rustc_hash::FxHashMap;
+use std::sync::mpsc::{self, Receiver, Sender};
 
 use crate::framebuffer::Pixmap;
 use crate::thumbnail::cache::ThumbnailCache;
@@ -129,7 +129,9 @@ impl ThumbnailManager {
         let worker_pool = ThumbnailWorkerPool::new(validated_config.worker_count)?;
 
         // Create cache
-        let cache = Arc::new(Mutex::new(ThumbnailCache::new(validated_config.cache_size)?));
+        let cache = Arc::new(Mutex::new(ThumbnailCache::new(
+            validated_config.cache_size,
+        )?));
 
         // Create communication channels
         let (request_sender, request_receiver) = mpsc::channel::<ThumbnailRequest>();
@@ -219,7 +221,7 @@ impl ThumbnailManager {
             Ok(result) => {
                 // Remove from pending
                 self.pending_requests.remove(&file_path);
-                
+
                 match result {
                     Ok(path) => {
                         // Cache the result
@@ -248,7 +250,7 @@ impl ThumbnailManager {
         let file_name = file_path
             .file_stem()
             .ok_or_else(|| ThumbnailError::invalid_path("invalid file name"))?;
-        
+
         let thumbnail_name = format!("{}.png", file_name.to_string_lossy());
         Ok(file_path
             .parent()
@@ -288,10 +290,10 @@ impl Drop for ThumbnailManager {
     fn drop(&mut self) {
         // Cancel all pending requests
         self.pending_requests.clear();
-        
+
         // Clear cache
         let _ = self.clear_cache();
-        
+
         // Worker pool will be dropped automatically
     }
 }
@@ -319,7 +321,7 @@ mod tests {
     fn test_config_new_invalid_worker_count() {
         let config = ThumbnailConfig::new(0, 20, 240, 320, true);
         assert!(config.is_err());
-        
+
         let config = ThumbnailConfig::new(10, 20, 240, 320, true);
         assert!(config.is_err());
     }
@@ -328,7 +330,7 @@ mod tests {
     fn test_config_new_invalid_cache_size() {
         let config = ThumbnailConfig::new(2, 0, 240, 320, true);
         assert!(config.is_err());
-        
+
         let config = ThumbnailConfig::new(2, 100, 240, 320, true);
         assert!(config.is_err());
     }
@@ -337,10 +339,10 @@ mod tests {
     fn test_config_new_invalid_dimensions() {
         let config = ThumbnailConfig::new(2, 20, 0, 320, true);
         assert!(config.is_err());
-        
+
         let config = ThumbnailConfig::new(2, 20, 240, 0, true);
         assert!(config.is_err());
-        
+
         let config = ThumbnailConfig::new(2, 20, 2000, 320, true);
         assert!(config.is_err());
     }

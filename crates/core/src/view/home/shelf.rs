@@ -97,8 +97,11 @@ impl Shelf {
                         }
                         Err(e) => {
                             // Log error and show placeholder
-                            eprintln!("Thumbnail request failed for {}: {:?}", 
-                                     info.file.path.display(), e);
+                            eprintln!(
+                                "Thumbnail request failed for {}: {:?}",
+                                info.file.path.display(),
+                                e
+                            );
                             Some(PathBuf::default())
                         }
                     }

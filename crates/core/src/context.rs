@@ -13,7 +13,7 @@ use crate::plugin::PluginSystem;
 use crate::rtc::Rtc;
 use crate::settings::Settings;
 use crate::sync::BackgroundSync;
-use crate::thumbnail::{ThumbnailManager, ThumbnailConfig};
+use crate::thumbnail::{ThumbnailConfig, ThumbnailManager};
 use crate::view::keyboard::Layout;
 use crate::view::ViewId;
 use bitflags::bitflags;
@@ -92,7 +92,7 @@ impl Context {
         let dims = fb.dims();
         let rotation = CURRENT_DEVICE.transformed_rotation(fb.rotation());
         let rng = Xoroshiro128Plus::seed_from_u64(Local::now().timestamp_subsec_nanos() as u64);
-        
+
         // Initialize thumbnail manager if enabled
         let thumbnail_manager = if settings.thumbnail.enabled {
             let config = ThumbnailConfig::new(
@@ -101,7 +101,8 @@ impl Context {
                 settings.thumbnail.thumbnail_width,
                 settings.thumbnail.thumbnail_height,
                 true,
-            ).ok();
+            )
+            .ok();
             config.map(|c| ThumbnailManager::new(c).ok()).flatten()
         } else {
             None
