@@ -65,7 +65,7 @@ impl EpubEditor {
         context: &mut Context,
     ) -> Result<EpubEditor, Error> {
         let id = ID_FEEDER.next();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let side = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
 
         let core = EpubEditorCore::new(&epub_path)?;
@@ -160,7 +160,7 @@ impl EpubEditor {
             })
             .collect();
 
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let rect = rect![
             self.rect.min.x,
@@ -189,7 +189,7 @@ impl EpubEditor {
             EntryKind::Command("Discard".to_string(), EntryId::Discard),
         ];
 
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let rect = rect![
             self.rect.min.x,
@@ -224,7 +224,7 @@ impl EpubEditor {
         self.children
             .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
 
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (small_thickness, _) = halves(thickness);
@@ -318,7 +318,7 @@ impl EpubEditor {
     fn show_search_replace(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         self.children.retain(|c| !c.is::<SearchReplaceView>());
 
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let popup_height = 160;
         let popup_rect = rect![

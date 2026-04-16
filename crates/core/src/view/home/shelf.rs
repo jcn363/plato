@@ -33,7 +33,7 @@ impl Shelf {
         second_column: SecondColumn,
         thumbnail_previews: bool,
     ) -> Shelf {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let big_height = scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let max_lines = ((rect.height() as i32 + thickness) / big_height) as usize;
@@ -68,88 +68,105 @@ impl Shelf {
         context: &Context,
     ) {
         self.children.clear();
-        let dpi = CURRENT_DEVICE.dpi;
-        let big_height = scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32;
-        let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
-        let (small_thickness, big_thickness) = halves(thickness);
-        let max_lines = ((self.rect.height() as i32 + thickness) / big_height) as usize;
-        let book_heights = divide(self.rect.height() as i32, max_lines as i32);
+        let (max_lines, book_heights, thickness, big_thickness) = Self::calculate_layout_metrics(&self.rect);
         let mut y_pos = self.rect.min.y;
-        let th = big_height;
-        let _tw = 3 * th / 4;
 
         for (index, info) in metadata.iter().enumerate() {
-            let y_min = y_pos + if index > 0 { big_thickness } else { 0 };
-            let y_max = y_pos + book_heights[index]
-                - if index < max_lines - 1 {
-                    small_thickness
-                } else {
-                    0
-                };
-
-            let preview_path: Option<PathBuf> = if self.thumbnail_previews {
-                if let Some(thumbnail_manager) = context.thumbnail_manager() {
-                    match thumbnail_manager.request_thumbnail(&info.file.path) {
-                        Ok(Some(path)) => Some(path),
-                        Ok(None) => {
-                            // Thumbnail generation in progress, show placeholder
-                            Some(PathBuf::default())
-                        }
-                        Err(e) => {
-                            // Log error and show placeholder
-                            eprintln!(
-                                "Thumbnail request failed for {}: {:?}",
-                                info.file.path.display(),
-                                e
-                            );
-                            Some(PathBuf::default())
-                        }
-                    }
-                } else {
-                    // Fallback to old behavior if thumbnail manager not available
-                    let thumb_path = context.library.thumbnail_preview(&info.file.path);
-                    if thumb_path.exists() {
-                        Some(thumb_path)
-                    } else {
-                        Some(PathBuf::default())
-                    }
-                }
-            } else {
-                None
-            };
-
-            let book = Book::new(
-                rect![self.rect.min.x, y_min, self.rect.max.x, y_max],
-                info.clone(),
-                index,
-                self.first_column,
-                self.second_column,
-                preview_path,
-            );
-            self.children.push(Box::new(book) as Box<dyn View>);
-
-            if index < max_lines - 1 {
-                let separator = Filler::new(
-                    rect![self.rect.min.x, y_max, self.rect.max.x, y_max + thickness],
-                    sep(theme::is_dark_mode()),
-                );
-                self.children.push(Box::new(separator) as Box<dyn View>);
-            }
-
+            let (y_min, y_max) = Self::calculate_book_rect(y_pos, index, &book_heights, max_lines, thickness, big_thickness);
+            let preview_path = Self::get_preview_path(info, context);
+            Self::add_book(&mut self.children, &self.rect, y_min, y_max, info, index, preview_path);
+            Self::add_separator_if_needed(&mut self.children, &self.rect, index, max_lines, y_max, thickness);
             y_pos += book_heights[index];
         }
 
-        if metadata.len() < max_lines {
-            let y_start = y_pos + if metadata.is_empty() { 0 } else { thickness };
-            let filler = Filler::new(
-                rect![self.rect.min.x, y_start, self.rect.max.x, self.rect.max.y],
-                bg(theme::is_dark_mode()),
-            );
-            self.children.push(Box::new(filler) as Box<dyn View>);
-        }
-
+        Self::add_filler_if_needed(&mut self.children, &self.rect, metadata.len(), max_lines, y_pos, thickness);
         self.max_lines = max_lines;
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+    }
+
+    fn calculate_layout_metrics(rect: &Rectangle) -> (usize, Vec<i32>, i32, i32) {
+        let dpi = crate::unit::get_device_dpi();
+        let big_height = scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32;
+        let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
+        let (small_thickness, big_thickness) = halves(thickness);
+        let max_lines = ((rect.height() as i32 + thickness) / big_height) as usize;
+        let book_heights = divide(rect.height() as i32, max_lines as i32);
+        (max_lines, book_heights, thickness, big_thickness)
+    }
+
+    fn calculate_book_rect(y_pos: i32, index: usize, book_heights: &[i32], max_lines: usize, thickness: i32, big_thickness: i32) -> (i32, i32) {
+        let y_min = y_pos + if index > 0 { big_thickness } else { 0 };
+        let y_max = y_pos + book_heights[index]
+            - if index < max_lines - 1 {
+                thickness / 2
+            } else {
+                0
+            };
+        (y_min, y_max)
+    }
+
+    fn get_preview_path(info: &Info, context: &Context) -> Option<PathBuf> {
+        if !context.thumbnail_previews() {
+            return None;
+        }
+        if let Some(thumbnail_manager) = context.thumbnail_manager() {
+            Self::request_thumbnail_from_manager(thumbnail_manager, &info.file.path)
+        } else {
+            Self::get_fallback_thumbnail(context, &info.file.path)
+        }
+    }
+
+    fn request_thumbnail_from_manager(thumbnail_manager: &dyn ThumbnailManager, path: &Path) -> Option<PathBuf> {
+        match thumbnail_manager.request_thumbnail(path) {
+            Ok(Some(path)) => Some(path),
+            Ok(None) => Some(PathBuf::default()),
+            Err(e) => {
+                eprintln!("Thumbnail request failed for {}: {:?}", path.display(), e);
+                Some(PathBuf::default())
+            }
+        }
+    }
+
+    fn get_fallback_thumbnail(context: &Context, path: &Path) -> Option<PathBuf> {
+        let thumb_path = context.library.thumbnail_preview(path);
+        if thumb_path.exists() {
+            Some(thumb_path)
+        } else {
+            Some(PathBuf::default())
+        }
+    }
+
+    fn add_book(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, y_min: i32, y_max: i32, info: &Info, index: usize, preview_path: Option<PathBuf>) {
+        let book = Book::new(
+            rect![rect.min.x, y_min, rect.max.x, y_max],
+            info.clone(),
+            index,
+            FirstColumn::default(),
+            SecondColumn::default(),
+            preview_path,
+        );
+        children.push(Box::new(book) as Box<dyn View>);
+    }
+
+    fn add_separator_if_needed(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, index: usize, max_lines: usize, y_max: i32, thickness: i32) {
+        if index < max_lines - 1 {
+            let separator = Filler::new(
+                rect![rect.min.x, y_max, rect.max.x, y_max + thickness],
+                sep(theme::is_dark_mode()),
+            );
+            children.push(Box::new(separator) as Box<dyn View>);
+        }
+    }
+
+    fn add_filler_if_needed(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, metadata_len: usize, max_lines: usize, y_pos: i32, thickness: i32) {
+        if metadata_len < max_lines {
+            let y_start = y_pos + if metadata_len == 0 { 0 } else { thickness };
+            let filler = Filler::new(
+                rect![rect.min.x, y_start, rect.max.x, rect.max.y],
+                bg(theme::is_dark_mode()),
+            );
+            children.push(Box::new(filler) as Box<dyn View>);
+        }
     }
 }
 

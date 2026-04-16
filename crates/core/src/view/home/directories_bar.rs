@@ -156,10 +156,14 @@ impl DirectoriesBar {
         current_directory: &Path,
         fonts: &mut Fonts,
     ) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let layout = self.create_layout(fonts);
+        self.build_pages(directories, current_directory, fonts, &layout);
+    }
+
+    fn create_layout(&self, fonts: &mut Fonts) -> Layout {
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let min_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32 - thickness;
-        let mut start_index = 0;
         let mut font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let x_height = font.x_heights.0 as i32;
         let padding = font.em() as i32;
@@ -167,24 +171,34 @@ impl DirectoriesBar {
         let max_line_width = self.rect.width() as i32 - 2 * padding;
         let max_lines = ((self.rect.height() as i32 - vertical_padding / 2)
             / (x_height + vertical_padding / 2)) as usize;
-        let layout = Layout {
+        Layout {
             x_height,
             padding,
             max_line_width,
             max_lines,
-        };
+        }
+    }
 
+    fn build_pages(
+        &mut self,
+        directories: &BTreeSet<PathBuf>,
+        current_directory: &Path,
+        fonts: &mut Fonts,
+        layout: &Layout,
+    ) {
         let pages_count = self.pages.len();
         self.pages.clear();
         self.selection_page = None;
+        let mut start_index = 0;
+        let mut font = font_from_style(fonts, &NORMAL_STYLE, crate::unit::get_device_dpi());
 
         loop {
             let mut has_selection = false;
             let (children, end_index) = {
-                let page = self.make_page(start_index, &layout, directories, &mut font);
+                let page = self.make_page(start_index, layout, directories, &mut font);
                 let children = self.make_children(
                     &page,
-                    &layout,
+                    layout,
                     current_directory,
                     directories,
                     &mut has_selection,
@@ -201,6 +215,10 @@ impl DirectoriesBar {
             start_index = end_index;
         }
 
+        self.restore_page_position(pages_count);
+    }
+
+    fn restore_page_position(&mut self, pages_count: usize) {
         let previous_position = if pages_count > 0 {
             self.current_page as f32 / pages_count as f32
         } else {
@@ -226,9 +244,37 @@ impl DirectoriesBar {
             ..
         } = *layout;
         let mut end_index = start_index;
-        let mut line = Line::default();
+        let mut line = self.create_start_line(start_index, padding);
         let mut page = Page::default();
 
+        self.build_lines_from_directories(
+            start_index,
+            layout,
+            directories,
+            font,
+            &mut line,
+            &mut page,
+            &mut end_index,
+        );
+
+        self.add_last_line_if_space(max_lines, &mut page, &mut line, &mut end_index);
+
+        self.add_right_navigation_icon(
+            end_index,
+            directories.len(),
+            padding,
+            max_line_width,
+            &mut page,
+            &mut end_index,
+        );
+
+        page.start_index = start_index;
+        page.end_index = end_index;
+        page
+    }
+
+    fn create_start_line(&self, start_index: usize, padding: i32) -> Line {
+        let mut line = Line::default();
         if start_index > 0 {
             if let Some(pixmap) = ICONS_PIXMAPS.get("angle-left-small") {
                 line.width += pixmap.width as i32 + padding;
@@ -238,6 +284,25 @@ impl DirectoriesBar {
                 });
             }
         }
+        line
+    }
+
+    fn build_lines_from_directories<'a>(
+        &self,
+        start_index: usize,
+        layout: &Layout,
+        directories: &'a BTreeSet<PathBuf>,
+        font: &mut Font,
+        line: &mut Line<'a>,
+        page: &mut Page<'a>,
+        end_index: &mut usize,
+    ) {
+        let Layout {
+            padding,
+            max_line_width,
+            max_lines,
+            ..
+        } = *layout;
 
         for dir in directories.iter().skip(start_index) {
             let mut dir_width = font
@@ -258,7 +323,7 @@ impl DirectoriesBar {
 
             line.labels_count += 1;
             line.width += dir_width;
-            end_index += 1;
+            *end_index += 1;
             let label = Item::Label {
                 path: dir.as_path(),
                 width: dir_width,
@@ -269,32 +334,9 @@ impl DirectoriesBar {
             if line.width >= max_line_width {
                 let mut next_line = Line::default();
                 if line.width > max_line_width {
-                    if line.labels_count > 1 {
-                        if let Some(item) = line.items.pop() {
-                            line.width -= item.width() + padding;
-                            line.labels_count -= 1;
-                            next_line.width += item.width() + padding;
-                            next_line.items.push(item);
-                            next_line.labels_count += 1;
-                        }
-                    }
-                    if line.labels_count == 1 {
-                        let occupied_width =
-                            line.width - line.items.last().map_or(0, |item| item.width());
-                        if let Some(&mut Item::Label {
-                            ref mut width,
-                            ref mut max_width,
-                            ..
-                        }) = line.items.last_mut()
-                        {
-                            *width = max_line_width - occupied_width;
-                            *max_width = Some(*width);
-                        }
-                        line.width = max_line_width;
-                    }
+                    self.handle_line_overflow(line, &mut next_line, padding, max_line_width);
                 }
-                page.lines.push(line);
-                line = next_line;
+                page.lines.push(std::mem::replace(line, next_line));
                 if page.lines.len() >= max_lines {
                     break;
                 }
@@ -302,14 +344,63 @@ impl DirectoriesBar {
                 line.width += padding;
             }
         }
+    }
 
-        if page.lines.len() < max_lines {
-            page.lines.push(line);
-        } else {
-            end_index -= line.items.len();
+    fn handle_line_overflow<'a>(
+        &self,
+        line: &mut Line<'a>,
+        next_line: &mut Line<'a>,
+        padding: i32,
+        max_line_width: i32,
+    ) {
+        if line.labels_count > 1 {
+            if let Some(item) = line.items.pop() {
+                line.width -= item.width() + padding;
+                line.labels_count -= 1;
+                next_line.width += item.width() + padding;
+                next_line.items.push(item);
+                next_line.labels_count += 1;
+            }
         }
+        if line.labels_count == 1 {
+            let occupied_width = line.width - line.items.last().map_or(0, |item| item.width());
+            if let Some(&mut Item::Label {
+                ref mut width,
+                ref mut max_width,
+                ..
+            }) = line.items.last_mut()
+            {
+                *width = max_line_width - occupied_width;
+                *max_width = Some(*width);
+            }
+            line.width = max_line_width;
+        }
+    }
 
-        if end_index < directories.len() {
+    fn add_last_line_if_space<'a>(
+        &self,
+        max_lines: usize,
+        page: &mut Page<'a>,
+        line: &mut Line<'a>,
+        end_index: &mut usize,
+    ) {
+        if page.lines.len() < max_lines {
+            page.lines.push(std::mem::take(line));
+        } else {
+            *end_index -= line.items.len();
+        }
+    }
+
+    fn add_right_navigation_icon<'a>(
+        &self,
+        end_index: usize,
+        directories_count: usize,
+        padding: i32,
+        max_line_width: i32,
+        page: &mut Page<'a>,
+        new_end_index: &mut usize,
+    ) {
+        if end_index < directories_count {
             if let Some(mut line) = page.lines.pop() {
                 if let Some(pixmap) = ICONS_PIXMAPS.get("angle-right-small") {
                     line.width += pixmap.width as i32 + padding;
@@ -319,7 +410,7 @@ impl DirectoriesBar {
                             if let Some(Item::Label { width, .. }) = line.items.pop() {
                                 line.width -= width + padding;
                                 line.labels_count -= 1;
-                                end_index -= 1;
+                                *new_end_index -= 1;
                             } else {
                                 break;
                             }
@@ -347,10 +438,6 @@ impl DirectoriesBar {
                 }
             }
         }
-
-        page.start_index = start_index;
-        page.end_index = end_index;
-        page
     }
 
     fn make_children(

@@ -41,7 +41,7 @@ impl Reader {
         context: &mut Context,
     ) {
         if !self.children.is_empty() {
-            let dpi = CURRENT_DEVICE.dpi;
+            let dpi = crate::unit::get_device_dpi();
             let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
             let (small_thickness, big_thickness) = halves(thickness);
             let (small_height, big_height) = (

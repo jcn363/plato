@@ -47,7 +47,7 @@ impl Keyboard {
     pub fn new(rect: &mut Rectangle, number: bool, context: &mut Context) -> Keyboard {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
 
         let layout = context.keyboard_layouts[&context.settings.keyboard_layout].clone();
 
@@ -331,7 +331,7 @@ impl View for Keyboard {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let max_width = self
             .layout
             .widths

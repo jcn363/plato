@@ -1,5 +1,5 @@
 use super::LightSensor;
-use anyhow::Error;
+use anyhow::{Context, Error};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::time::{Duration, Instant};

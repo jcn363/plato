@@ -48,7 +48,7 @@ impl NavigationBar {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let min_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32 - thickness;
         let font = font_from_style(&mut context.fonts, &NORMAL_STYLE, dpi);
@@ -252,7 +252,7 @@ impl NavigationBar {
     }
 
     pub fn shrink(&mut self, delta_y: i32, fonts: &mut Fonts) -> i32 {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let min_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32 - thickness;
         let bars_count = (self.children.len() + 1) / 2;
@@ -301,7 +301,7 @@ impl NavigationBar {
     }
 
     fn resize_child(&mut self, index: usize, delta_y: i32, fonts: &mut Fonts) -> i32 {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let min_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32 - thickness;
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);

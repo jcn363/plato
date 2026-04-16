@@ -144,7 +144,7 @@ use crate::view::{Id, ViewId, ID_FEEDER};
 use crate::view::{BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::Error;
 use rustc_hash::{FxHashMap, FxHashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Child;
 
 pub const TRASH_DIRNAME: &str = ".trash";
@@ -211,30 +211,51 @@ impl Home {
         context: &mut Context,
     ) -> Result<Home, Error> {
         let id = ID_FEEDER.next();
-        let dpi = CURRENT_DEVICE.dpi;
+        let (dpi, thickness, small_thickness, big_thickness, small_height, big_height) = Self::calculate_dimensions();
+        let (selected_library, library_settings, current_directory, sort_method, reverse_order) = Self::get_library_settings(context);
+        
+        context.library.sort(sort_method, reverse_order);
+        let (visible_books, dirs) = context.library.list(&current_directory, None, false);
+        let count = visible_books.len();
+        let current_page = 0;
+        
         let mut children = Vec::new();
+        let mut y_start = rect.min.y + small_height + big_thickness;
+        let mut shelf_index = 2;
 
+        Self::add_top_bar(&mut children, rect, small_height, small_thickness, big_thickness, sort_method, context);
+        y_start = Self::add_address_bar_if_enabled(&mut children, context, rect, y_start, thickness, small_height, small_thickness, &current_directory, shelf_index);
+        shelf_index = if context.settings.home.address_bar { shelf_index + 2 } else { shelf_index };
+        y_start = Self::add_navigation_bar_if_enabled(&mut children, context, rect, y_start, thickness, small_height, big_height, small_thickness, &current_directory, &dirs, shelf_index);
+        shelf_index = if context.settings.home.navigation_bar { shelf_index + 2 } else { shelf_index };
+        let pages_count = Self::add_shelf_and_bottom_bar(&mut children, hub, context, rect, y_start, small_height, small_thickness, big_height, thickness, &visible_books, current_page, library_settings, count);
+
+        rq.add(RenderData::new(id, rect, UpdateMode::Full));
+
+        Ok(Self::create_home(id, rect, children, current_page, pages_count, shelf_index, sort_method, reverse_order, visible_books, current_directory))
+    }
+
+    fn calculate_dimensions() -> (u16, i32, i32, i32, i32, i32) {
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (small_thickness, big_thickness) = halves(thickness);
         let (small_height, big_height) = (
             scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32,
             scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32,
         );
+        (dpi, thickness, small_thickness, big_thickness, small_height, big_height)
+    }
 
+    fn get_library_settings(context: &mut Context) -> (usize, &crate::settings::LibrarySettings, PathBuf, crate::metadata::SortMethod, bool) {
         let selected_library = context.settings.selected_library;
         let library_settings = &context.settings.libraries[selected_library];
-
         let current_directory = context.library.home.clone();
         let sort_method = library_settings.sort_method;
         let reverse_order = sort_method.reverse_order();
+        (selected_library, library_settings, current_directory, sort_method, reverse_order)
+    }
 
-        context.library.sort(sort_method, reverse_order);
-
-        let (visible_books, dirs) = context.library.list(&current_directory, None, false);
-        let count = visible_books.len();
-        let current_page = 0;
-        let mut shelf_index = 2;
-
+    fn add_top_bar(children: &mut Vec<Box<dyn View>>, rect: Rectangle, small_height: i32, small_thickness: i32, big_thickness: i32, sort_method: crate::metadata::SortMethod, context: &mut Context) {
         let top_bar = TopBar::new(
             rect![
                 rect.min.x,
@@ -258,9 +279,10 @@ impl Home {
             crate::color::foreground(theme::is_dark_mode()),
         );
         children.push(Box::new(separator) as Box<dyn View>);
+    }
 
-        let mut y_start = rect.min.y + small_height + big_thickness;
-
+    fn add_address_bar_if_enabled(children: &mut Vec<Box<dyn View>>, context: &mut Context, rect: Rectangle, y_start: i32, thickness: i32, small_height: i32, small_thickness: i32, current_directory: &Path, shelf_index: usize) -> i32 {
+        let mut y_start = y_start;
         if context.settings.home.address_bar {
             let addr_bar = AddressBar::new(
                 rect![
@@ -281,9 +303,12 @@ impl Home {
             );
             children.push(Box::new(separator) as Box<dyn View>);
             y_start += thickness;
-            shelf_index += 2;
         }
+        y_start
+    }
 
+    fn add_navigation_bar_if_enabled(children: &mut Vec<Box<dyn View>>, context: &mut Context, rect: Rectangle, y_start: i32, thickness: i32, small_height: i32, big_height: i32, small_thickness: i32, current_directory: &Path, dirs: &std::collections::BTreeSet<PathBuf>, shelf_index: usize) -> i32 {
+        let mut y_start = y_start;
         if context.settings.home.navigation_bar {
             let mut nav_bar = NavigationBar::new(
                 rect![
@@ -296,7 +321,7 @@ impl Home {
                 context.settings.home.max_levels,
             );
 
-            nav_bar.set_path(&current_directory, &dirs, &mut RenderQueue::new(), context);
+            nav_bar.set_path(current_directory, dirs, &mut RenderQueue::new(), context);
             y_start = nav_bar.rect().max.y;
 
             children.push(Box::new(nav_bar) as Box<dyn View>);
@@ -307,9 +332,11 @@ impl Home {
             );
             children.push(Box::new(separator) as Box<dyn View>);
             y_start += thickness;
-            shelf_index += 2;
         }
+        y_start
+    }
 
+    fn add_shelf_and_bottom_bar(children: &mut Vec<Box<dyn View>>, hub: &Hub, context: &mut Context, rect: Rectangle, y_start: i32, small_height: i32, small_thickness: i32, big_height: i32, thickness: i32, visible_books: &[crate::metadata::Info], current_page: usize, library_settings: &crate::settings::LibrarySettings, count: usize) -> usize {
         let selected_library = context.settings.selected_library;
         let library_settings = &context.settings.libraries[selected_library];
 
@@ -365,9 +392,11 @@ impl Home {
         );
         children.push(Box::new(bottom_bar) as Box<dyn View>);
 
-        rq.add(RenderData::new(id, rect, UpdateMode::Full));
+        pages_count
+    }
 
-        Ok(Home {
+    fn create_home(id: Id, rect: Rectangle, children: Vec<Box<dyn View>>, current_page: usize, pages_count: usize, shelf_index: usize, sort_method: crate::metadata::SortMethod, reverse_order: bool, visible_books: Vec<crate::metadata::Info>, current_directory: PathBuf) -> Home {
+        Home {
             id,
             rect,
             children,
@@ -384,7 +413,6 @@ impl Home {
             background_fetchers: FxHashMap::default(),
             batch_mode: false,
             batch_selected: FxHashSet::default(),
-            // UI toggle fields initialized to None
             keyboard: None,
             address_bar: None,
             navigation_bar: None,
@@ -398,7 +426,188 @@ impl Home {
             book_view: None,
             directory_view: None,
             bottom_bar: None,
-        })
+        }
+    }
+
+    fn calculate_resize_dimensions() -> (i32, i32, i32, i32, i32) {
+        let dpi = crate::unit::get_device_dpi();
+        let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
+        let (small_thickness, big_thickness) = halves(thickness);
+        let (small_height, big_height) = (
+            scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32,
+            scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32,
+        );
+        (thickness, small_thickness, big_thickness, small_height, big_height)
+    }
+
+    fn resize_top_bar(children: &mut Vec<Box<dyn View>>, rect: Rectangle, small_height: i32, small_thickness: i32, big_thickness: i32, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+        let top_bar_rect = rect![
+            rect.min.x,
+            rect.min.y,
+            rect.max.x,
+            rect.min.y + small_height - small_thickness
+        ];
+        children[0].resize(top_bar_rect, hub, rq, context);
+
+        let separator_rect = rect![
+            rect.min.x,
+            rect.min.y + small_height - small_thickness,
+            rect.max.x,
+            rect.min.y + small_height + big_thickness
+        ];
+        children[1].resize(separator_rect, hub, rq, context);
+    }
+
+    fn resize_address_bar_if_enabled(children: &mut Vec<Box<dyn View>>, context: &mut Context, rect: Rectangle, shelf_min_y: i32, thickness: i32, small_height: i32, index: usize, hub: &Hub, rq: &mut RenderQueue, context2: &mut Context) -> usize {
+        let mut index = index;
+        if context.settings.home.address_bar {
+            children[index].resize(
+                rect![
+                    rect.min.x,
+                    shelf_min_y,
+                    rect.max.x,
+                    shelf_min_y + small_height - thickness
+                ],
+                hub,
+                rq,
+                context2,
+            );
+            index += 1;
+
+            children[index].resize(
+                rect![rect.min.x, shelf_min_y + small_height - thickness, rect.max.x, shelf_min_y + small_height - thickness + thickness],
+                hub,
+                rq,
+                context2,
+            );
+            index += 1;
+        }
+        index
+    }
+
+    fn get_address_bar_end_y(context: &mut Context, rect: Rectangle, shelf_min_y: i32, thickness: i32, small_height: i32) -> i32 {
+        if context.settings.home.address_bar {
+            shelf_min_y + small_height - thickness + thickness
+        } else {
+            shelf_min_y
+        }
+    }
+
+    fn resize_navigation_bar_if_enabled(children: &mut Vec<Box<dyn View>>, context: &mut Context, rect: Rectangle, shelf_min_y: i32, thickness: i32, small_height: i32, big_height: i32, small_thickness: i32, index: usize, hub: &Hub, rq: &mut RenderQueue, context2: &mut Context) -> (usize, i32) {
+        let mut index = index;
+        let mut shelf_min_y = shelf_min_y;
+        
+        if context.settings.home.navigation_bar {
+            let count = if children[index + 2].is::<SearchBar>() { 2 } else { 1 };
+            let (_, dirs) = context.library.list(&context2.library.home.clone(), None, true);
+            if let Some(nav_bar) = children[index].as_mut().downcast_mut::<NavigationBar>() {
+                nav_bar.clear();
+                nav_bar.resize(
+                    rect![
+                        rect.min.x,
+                        shelf_min_y,
+                        rect.max.x,
+                        shelf_min_y + small_height - thickness
+                    ],
+                    hub,
+                    rq,
+                    context2,
+                );
+                nav_bar.vertical_limit = rect.max.y - count * small_height - big_height - small_thickness;
+                nav_bar.set_path(&context2.library.home.clone(), &dirs, &mut RenderQueue::new(), context2);
+                shelf_min_y += nav_bar.rect().height() as i32;
+                index += 1;
+
+                children[index].resize(
+                    rect![rect.min.x, shelf_min_y, rect.max.x, shelf_min_y + thickness],
+                    hub,
+                    rq,
+                    context2,
+                );
+                shelf_min_y += thickness;
+            }
+        }
+        (index, shelf_min_y)
+    }
+
+    fn resize_bottom_bar(children: &mut Vec<Box<dyn View>>, rect: Rectangle, small_height: i32, small_thickness: i32, big_thickness: i32, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) -> usize {
+        let Some(bottom_bar_index) = rlocate::<BottomBar>(children) else {
+            return 0;
+        };
+        let index = bottom_bar_index;
+
+        let separator_rect = rect![
+            rect.min.x,
+            rect.max.y - small_height - small_thickness,
+            rect.max.x,
+            rect.max.y - small_height + big_thickness
+        ];
+        children[index - 1].resize(separator_rect, hub, rq, context);
+
+        let bottom_bar_rect = rect![
+            rect.min.x,
+            rect.max.y - small_height + big_thickness,
+            rect.max.x,
+            rect.max.y
+        ];
+        children[index].resize(bottom_bar_rect, hub, rq, context);
+
+        bottom_bar_index
+    }
+
+    fn resize_keyboard_and_search_bar(children: &mut Vec<Box<dyn View>>, rect: Rectangle, bottom_bar_index: usize, shelf_index: usize, small_height: i32, big_height: i32, thickness: i32, small_thickness: i32, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) -> i32 {
+        let mut shelf_max_y = rect.max.y - small_height - small_thickness;
+        let mut index = bottom_bar_index;
+
+        if index - shelf_index > 2 {
+            index -= 2;
+            if children[index].is::<Keyboard>() {
+                let (_, big_thickness) = halves(thickness);
+                let kb_rect = rect![
+                    rect.min.x,
+                    rect.max.y - (small_height + 3 * big_height) as i32 + big_thickness,
+                    rect.max.x,
+                    rect.max.y - small_height - small_thickness
+                ];
+                children[index].resize(kb_rect, hub, rq, context);
+                let s_max_y = children[index].rect().min.y;
+                children[index - 1].resize(
+                    rect![rect.min.x, s_max_y - thickness, rect.max.x, s_max_y],
+                    hub,
+                    rq,
+                    context,
+                );
+                index -= 2;
+            }
+            if children[index].is::<SearchBar>() {
+                let sp_rect = *children[index + 1].rect() - pt!(0, small_height);
+                children[index].resize(
+                    rect![
+                        rect.min.x,
+                        sp_rect.max.y,
+                        rect.max.x,
+                        sp_rect.max.y + small_height - thickness
+                    ],
+                    hub,
+                    rq,
+                    context,
+                );
+                children[index - 1].resize(sp_rect, hub, rq, context);
+                shelf_max_y -= small_height;
+            }
+        }
+        shelf_max_y
+    }
+
+    fn resize_shelf(children: &mut Vec<Box<dyn View>>, rect: Rectangle, shelf_min_y: i32, shelf_max_y: i32, shelf_index: usize, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+        let shelf_rect = rect![rect.min.x, shelf_min_y, rect.max.x, shelf_max_y];
+        children[shelf_index].resize(shelf_rect, hub, rq, context);
+    }
+
+    fn resize_floating_windows(children: &mut Vec<Box<dyn View>>, rect: Rectangle, bottom_bar_index: usize, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+        for i in bottom_bar_index + 1..children.len() {
+            children[i].resize(rect, hub, rq, context);
+        }
     }
 }
 
@@ -417,184 +626,25 @@ impl View for Home {
     fn render(&self, _fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {}
 
     fn resize(&mut self, rect: Rectangle, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
-        let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
-        let (small_thickness, big_thickness) = halves(thickness);
-        let (small_height, big_height) = (
-            scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32,
-            scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32,
-        );
-
+        let (thickness, small_thickness, big_thickness, small_height, big_height) = Self::calculate_resize_dimensions();
+        
         self.children.retain(|child| !child.is::<Menu>());
-
-        // Top bar.
-        let top_bar_rect = rect![
-            rect.min.x,
-            rect.min.y,
-            rect.max.x,
-            rect.min.y + small_height - small_thickness
-        ];
-        self.children[0].resize(top_bar_rect, hub, rq, context);
-
-        let separator_rect = rect![
-            rect.min.x,
-            rect.min.y + small_height - small_thickness,
-            rect.max.x,
-            rect.min.y + small_height + big_thickness
-        ];
-        self.children[1].resize(separator_rect, hub, rq, context);
 
         let mut shelf_min_y = rect.min.y + small_height + big_thickness;
         let mut index = 2;
 
-        // Address bar.
-        if context.settings.home.address_bar {
-            self.children[index].resize(
-                rect![
-                    rect.min.x,
-                    shelf_min_y,
-                    rect.max.x,
-                    shelf_min_y + small_height - thickness
-                ],
-                hub,
-                rq,
-                context,
-            );
-            shelf_min_y += small_height - thickness;
-            index += 1;
-
-            self.children[index].resize(
-                rect![rect.min.x, shelf_min_y, rect.max.x, shelf_min_y + thickness],
-                hub,
-                rq,
-                context,
-            );
-            shelf_min_y += thickness;
-            index += 1;
-        }
-
-        // Navigation bar.
-        if context.settings.home.navigation_bar {
-            let count = if self.children[self.shelf_index + 2].is::<SearchBar>() {
-                2
-            } else {
-                1
-            };
-            let (_, dirs) = context.library.list(&self.current_directory, None, true);
-            if let Some(nav_bar) = self.children[index]
-                .as_mut()
-                .downcast_mut::<NavigationBar>()
-            {
-                nav_bar.clear();
-                nav_bar.resize(
-                    rect![
-                        rect.min.x,
-                        shelf_min_y,
-                        rect.max.x,
-                        shelf_min_y + small_height - thickness
-                    ],
-                    hub,
-                    rq,
-                    context,
-                );
-                nav_bar.vertical_limit =
-                    rect.max.y - count * small_height - big_height - small_thickness;
-                nav_bar.set_path(
-                    &self.current_directory,
-                    &dirs,
-                    &mut RenderQueue::new(),
-                    context,
-                );
-                shelf_min_y += nav_bar.rect().height() as i32;
-                index += 1;
-
-                self.children[index].resize(
-                    rect![rect.min.x, shelf_min_y, rect.max.x, shelf_min_y + thickness],
-                    hub,
-                    rq,
-                    context,
-                );
-                shelf_min_y += thickness;
-            }
-        }
-
-        // Bottom bar.
-        let Some(bottom_bar_index) = rlocate::<BottomBar>(self) else {
-            return;
-        };
-        index = bottom_bar_index;
-
-        let separator_rect = rect![
-            rect.min.x,
-            rect.max.y - small_height - small_thickness,
-            rect.max.x,
-            rect.max.y - small_height + big_thickness
-        ];
-        self.children[index - 1].resize(separator_rect, hub, rq, context);
-
-        let bottom_bar_rect = rect![
-            rect.min.x,
-            rect.max.y - small_height + big_thickness,
-            rect.max.x,
-            rect.max.y
-        ];
-        self.children[index].resize(bottom_bar_rect, hub, rq, context);
-
-        let mut shelf_max_y = rect.max.y - small_height - small_thickness;
-
-        if index - self.shelf_index > 2 {
-            index -= 2;
-            // Keyboard.
-            if self.children[index].is::<Keyboard>() {
-                let kb_rect = rect![
-                    rect.min.x,
-                    rect.max.y - (small_height + 3 * big_height) as i32 + big_thickness,
-                    rect.max.x,
-                    rect.max.y - small_height - small_thickness
-                ];
-                self.children[index].resize(kb_rect, hub, rq, context);
-                let s_max_y = self.children[index].rect().min.y;
-                self.children[index - 1].resize(
-                    rect![rect.min.x, s_max_y - thickness, rect.max.x, s_max_y],
-                    hub,
-                    rq,
-                    context,
-                );
-                index -= 2;
-            }
-            // Search bar.
-            if self.children[index].is::<SearchBar>() {
-                let sp_rect = *self.children[index + 1].rect() - pt!(0, small_height);
-                self.children[index].resize(
-                    rect![
-                        rect.min.x,
-                        sp_rect.max.y,
-                        rect.max.x,
-                        sp_rect.max.y + small_height - thickness
-                    ],
-                    hub,
-                    rq,
-                    context,
-                );
-                self.children[index - 1].resize(sp_rect, hub, rq, context);
-                shelf_max_y -= small_height;
-            }
-        }
-
-        // Shelf.
-        let shelf_rect = rect![rect.min.x, shelf_min_y, rect.max.x, shelf_max_y];
-        self.children[self.shelf_index].resize(shelf_rect, hub, rq, context);
-
+        Self::resize_top_bar(&mut self.children, rect, small_height, small_thickness, big_thickness, hub, rq, context);
+        index = Self::resize_address_bar_if_enabled(&mut self.children, context, rect, shelf_min_y, thickness, small_height, index, hub, rq, context);
+        shelf_min_y = Self::get_address_bar_end_y(context, rect, shelf_min_y, thickness, small_height);
+        (index, shelf_min_y) = Self::resize_navigation_bar_if_enabled(&mut self.children, context, rect, shelf_min_y, thickness, small_height, big_height, small_thickness, index, hub, rq, context);
+        let bottom_bar_index = Self::resize_bottom_bar(&mut self.children, rect, small_height, small_thickness, big_thickness, hub, rq, context);
+        let shelf_max_y = Self::resize_keyboard_and_search_bar(&mut self.children, rect, bottom_bar_index, self.shelf_index, small_height, big_height, thickness, small_thickness, hub, rq, context);
+        Self::resize_shelf(&mut self.children, rect, shelf_min_y, shelf_max_y, self.shelf_index, hub, rq, context);
         self.update_shelf(true, hub, &mut RenderQueue::new(), context);
         self.update_bottom_bar(&mut RenderQueue::new(), context);
-
-        // Floating windows.
-        for i in bottom_bar_index + 1..self.children.len() {
-            self.children[i].resize(rect, hub, rq, context);
-        }
+        Self::resize_floating_windows(&mut self.children, rect, bottom_bar_index, hub, rq, context);
 
         self.rect = rect;
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
     }
 
     fn rect(&self) -> &Rectangle {

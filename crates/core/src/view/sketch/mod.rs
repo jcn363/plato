@@ -17,7 +17,7 @@ use crate::view::notification::Notification;
 use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{BORDER_RADIUS_SMALL, SMALL_BAR_HEIGHT};
-use anyhow::Error;
+use anyhow::{Context as AnyhowContext, Error};
 use chrono::Local;
 use globset::Glob;
 use rustc_hash::FxHashMap;

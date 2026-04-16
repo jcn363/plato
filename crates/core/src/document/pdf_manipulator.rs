@@ -350,25 +350,10 @@ impl PdfManipulator {
     }
 
     pub fn merge_pdfs(&mut self, inputs: &[&Path], output_path: &Path) -> Result<PathBuf, Error> {
-        let mut total_size: u64 = 0;
-        for input_path in inputs {
-            if let Ok(meta) = fs::metadata(input_path) {
-                total_size += meta.len();
-            }
-        }
-        let total_mb = total_size / (1024 * 1024);
-
-        if total_mb > MAX_FILE_SIZE_MB {
-            return Err(format_err!(
-                "Total size of files to merge ({}MB) exceeds limit of {}MB. \
-                Please merge fewer or smaller files.",
-                total_mb,
-                MAX_FILE_SIZE_MB
-            ));
-        }
-
+        let total_mb = self.calculate_total_size(inputs)?;
+        self.validate_merge_size(total_mb)?;
         self.check_memory_available(total_mb + 30)?;
-
+        
         if total_mb > WARNING_FILE_SIZE_MB {
             log_warn!(
                 "WARNING: Merging {}MB of PDFs. This may be slow. \
@@ -382,6 +367,35 @@ impl PdfManipulator {
             .new_pdf_document()
             .ok_or_else(|| format_err!("Failed to create new PDF"))?;
 
+        self.merge_documents(inputs, &new_doc)?;
+        self.save_merged_document(&new_doc, output_path, inputs.len())?;
+
+        Ok(output_path.to_path_buf())
+    }
+
+    fn calculate_total_size(&self, inputs: &[&Path]) -> Result<u64, Error> {
+        let mut total_size: u64 = 0;
+        for input_path in inputs {
+            if let Ok(meta) = fs::metadata(input_path) {
+                total_size += meta.len();
+            }
+        }
+        Ok(total_size / (1024 * 1024))
+    }
+
+    fn validate_merge_size(&self, total_mb: u64) -> Result<(), Error> {
+        if total_mb > MAX_FILE_SIZE_MB {
+            return Err(format_err!(
+                "Total size of files to merge ({}MB) exceeds limit of {}MB. \
+                Please merge fewer or smaller files.",
+                total_mb,
+                MAX_FILE_SIZE_MB
+            ));
+        }
+        Ok(())
+    }
+
+    fn merge_documents(&mut self, inputs: &[&Path], new_doc: &mupdf::Document) -> Result<(), Error> {
         let total_inputs = inputs.len();
 
         for (file_idx, input_path) in inputs.iter().enumerate() {
@@ -392,24 +406,30 @@ impl PdfManipulator {
             );
 
             if let Some(doc) = self.ctx.open_document(input_path) {
-                let file_pages = doc.pdf_page_count();
-
-                for page_idx in 0..file_pages {
-                    self.report_progress(page_idx + 1, file_pages, "Adding pages...");
-
-                    if let Ok(page) = doc.load_page(page_idx as i32) {
-                        new_doc.pdf_insert_page(&page, -1);
-                    }
-                }
+                self.add_document_pages(&doc, new_doc);
             }
         }
+        Ok(())
+    }
 
+    fn add_document_pages(&mut self, doc: &mupdf::Document, new_doc: &mupdf::Document) {
+        let file_pages = doc.pdf_page_count();
+
+        for page_idx in 0..file_pages {
+            self.report_progress(page_idx + 1, file_pages, "Adding pages...");
+
+            if let Ok(page) = doc.load_page(page_idx as i32) {
+                new_doc.pdf_insert_page(&page, -1);
+            }
+        }
+    }
+
+    fn save_merged_document(&mut self, new_doc: &mupdf::Document, output_path: &Path, total: usize) -> Result<(), Error> {
         let opts = mupdf::FzWriteOptions::default();
-        self.report_progress(total_inputs, total_inputs, "Saving merged PDF...");
+        self.report_progress(total, total, "Saving merged PDF...");
         new_doc.save(output_path, &opts, "pdf");
-
-        self.report_progress(total_inputs, total_inputs, "Merge complete!");
-        Ok(output_path.to_path_buf())
+        self.report_progress(total, total, "Merge complete!");
+        Ok(())
     }
 
     pub fn cleanup_temp_files(&self, dir: &Path) -> Result<u64, Error> {

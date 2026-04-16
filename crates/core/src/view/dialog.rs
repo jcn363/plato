@@ -34,7 +34,7 @@ impl Dialog {
     ) -> Dialog {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (width, height) = context.display.dims;
 
         let font = font_from_style(&mut context.fonts, &NORMAL_STYLE, dpi);
@@ -144,7 +144,7 @@ impl View for Dialog {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
 
         let border_radius = scale_by_dpi(BORDER_RADIUS_MEDIUM, dpi) as i32;
         let border_thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as u16;
@@ -161,7 +161,7 @@ impl View for Dialog {
     }
 
     fn resize(&mut self, _rect: Rectangle, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (width, height) = context.display.dims;
         let dialog_width = self.rect.width() as i32;
         let dialog_height = self.rect.height() as i32;

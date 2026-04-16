@@ -1,6 +1,6 @@
 use super::{Frontlight, LightLevels};
 use crate::device::{Model, CURRENT_DEVICE};
-use anyhow::Error;
+use anyhow::{Context, Error};
 use rustc_hash::FxHashMap;
 use std::fs::File;
 use std::fs::OpenOptions;

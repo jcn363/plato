@@ -109,7 +109,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let big_height = scale_by_dpi(crate::view::BIG_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(crate::view::THICKNESS_MEDIUM, dpi) as i32;
         let shelf = match self.children[self.shelf_index]

@@ -2,6 +2,7 @@ use crate::helpers::{load_json, save_json, Fingerprint};
 use crate::settings::LibraryMode;
 use crate::{log_error, log_warn};
 use std::fs;
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use super::types::{
@@ -14,7 +15,13 @@ impl Library {
             return;
         }
 
-        let fps = walkdir::WalkDir::new(&self.home)
+        let fps = self.collect_valid_fingerprints();
+        self.cleanup_reading_states(&fps);
+        self.cleanup_orphaned_files(&fps);
+    }
+
+    fn collect_valid_fingerprints(&self) -> rustc_hash::FxHashSet<Fingerprint> {
+        walkdir::WalkDir::new(&self.home)
             .min_depth(1)
             .into_iter()
             .filter_map(|entry| entry.ok())
@@ -28,8 +35,10 @@ impl Library {
                         .and_then(|md| md.fingerprint(self.fat32_epoch).ok())
                 }
             })
-            .collect::<rustc_hash::FxHashSet<_>>();
+            .collect()
+    }
 
+    fn cleanup_reading_states(&mut self, fps: &rustc_hash::FxHashSet<Fingerprint>) {
         self.reading_states.retain(|fp, _| {
             if fps.contains(fp) {
                 true
@@ -39,7 +48,9 @@ impl Library {
             }
         });
         self.modified_reading_states.retain(|fp| fps.contains(fp));
+    }
 
+    fn cleanup_orphaned_files(&self, fps: &rustc_hash::FxHashSet<Fingerprint>) {
         let reading_states_dir = self.home.join(READING_STATES_DIRNAME);
         let thumbnail_previews_dir = self.home.join(THUMBNAIL_PREVIEWS_DIRNAME);
         let reading_entries = fs::read_dir(&reading_states_dir).ok().into_iter().flatten();
@@ -65,6 +76,12 @@ impl Library {
     }
 
     pub fn reload(&mut self) {
+        self.reload_database();
+        self.reload_reading_states();
+        self.rebuild_paths();
+    }
+
+    fn reload_database(&mut self) {
         if self.mode == LibraryMode::Database {
             let path = self.home.join(METADATA_FILENAME);
 
@@ -79,7 +96,9 @@ impl Library {
                 }
             }
         }
+    }
 
+    fn reload_reading_states(&mut self) {
         let path = self.home.join(READING_STATES_DIRNAME);
 
         self.modified_reading_states.clear();
@@ -100,22 +119,28 @@ impl Library {
                 .and_then(|v| v.to_str())
                 .and_then(|v| crate::helpers::Fp::from_str(v).ok())
             {
-                if let Ok(reader_info) =
-                    load_json(path).map_err(|e| log_error!("Can't load reading state: {:#}.", e))
-                {
-                    if self.mode == LibraryMode::Database {
-                        if let Some(info) = self.db.get_mut(&fp) {
-                            info.reader = Some(reader_info);
-                        } else {
-                            log_warn!("Unknown fingerprint: {}.", fp);
-                        }
-                    } else {
-                        self.reading_states.insert(fp, reader_info);
-                    }
-                }
+                self.load_reading_state(path, fp);
             }
         }
+    }
 
+    fn load_reading_state(&mut self, path: PathBuf, fp: Fingerprint) {
+        if let Ok(reader_info) =
+            load_json(path).map_err(|e| log_error!("Can't load reading state: {:#}.", e))
+        {
+            if self.mode == LibraryMode::Database {
+                if let Some(info) = self.db.get_mut(&fp) {
+                    info.reader = Some(reader_info);
+                } else {
+                    log_warn!("Unknown fingerprint: {}.", fp);
+                }
+            } else {
+                self.reading_states.insert(fp, reader_info);
+            }
+        }
+    }
+
+    fn rebuild_paths(&mut self) {
         if self.mode == LibraryMode::Database {
             self.paths = self
                 .db

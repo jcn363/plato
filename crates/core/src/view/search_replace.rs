@@ -31,7 +31,28 @@ impl SearchReplaceView {
         context: &mut Context,
     ) -> SearchReplaceView {
         let id = ID_FEEDER.next();
+        let (padding, row_height, label_width, input_x, title_padding, thickness) = Self::calculate_layout_metrics(&rect);
         let mut children = Vec::new();
+
+        Self::add_title_label(&mut children, &rect, padding, title_padding);
+        Self::add_search_fields(&mut children, &rect, padding, row_height, label_width, input_x, search_text, context);
+        Self::add_replace_fields(&mut children, &rect, padding, row_height, label_width, input_x, title_padding, replace_text, context);
+        Self::add_buttons(&mut children, &rect, padding, row_height, title_padding, thickness);
+        Self::add_separator(&mut children, &rect, padding, row_height, title_padding, thickness);
+        Self::add_status_label(&mut children, &rect, padding, row_height, title_padding, thickness);
+
+        SearchReplaceView {
+            id,
+            rect,
+            children,
+            search_text: search_text.to_string(),
+            replace_text: replace_text.to_string(),
+            match_count: 0,
+            current_match: 0,
+        }
+    }
+
+    fn calculate_layout_metrics(rect: &Rectangle) -> (i32, i32, i32, i32, i32, i32) {
         let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let row_height = scale_by_dpi(36.0, dpi) as i32;
@@ -39,19 +60,24 @@ impl SearchReplaceView {
         let label_width = scale_by_dpi(60.0, dpi) as i32;
         let input_x = rect.min.x + label_width + scale_by_dpi(5.0, dpi) as i32;
         let title_padding = scale_by_dpi(4.0, dpi) as i32;
+        (padding, row_height, label_width, input_x, title_padding, thickness)
+    }
 
+    fn add_title_label(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, padding: i32, title_padding: i32) {
         let title_label = Label::new(
             rect![
                 rect.min.x + padding,
                 rect.min.y + title_padding,
                 rect.max.x - padding,
-                rect.min.y + title_padding + row_height / 2
+                rect.min.y + title_padding + scale_by_dpi(18.0, crate::unit::get_device_dpi()) as i32
             ],
             "Search & Replace".to_string(),
             Align::Left(0),
         );
         children.push(Box::new(title_label) as Box<dyn View>);
+    }
 
+    fn add_search_fields(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, padding: i32, row_height: i32, label_width: i32, input_x: i32, search_text: &str, context: &mut Context) {
         let search_label = Label::new(
             rect![
                 rect.min.x + padding,
@@ -77,7 +103,9 @@ impl SearchReplaceView {
         .text(search_text, context)
         .placeholder("Search text...");
         children.push(Box::new(search_input) as Box<dyn View>);
+    }
 
+    fn add_replace_fields(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, padding: i32, row_height: i32, label_width: i32, input_x: i32, title_padding: i32, replace_text: &str, context: &mut Context) {
         let replace_label = Label::new(
             rect![
                 rect.min.x + padding,
@@ -103,7 +131,10 @@ impl SearchReplaceView {
         .text(replace_text, context)
         .placeholder("Replace with...");
         children.push(Box::new(replace_input) as Box<dyn View>);
+    }
 
+    fn add_buttons(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, padding: i32, row_height: i32, title_padding: i32, thickness: i32) {
+        let dpi = crate::unit::get_device_dpi();
         let btn_spacing = scale_by_dpi(8.0, dpi) as i32;
         let btn_y = rect.min.y + 3 * row_height + title_padding + btn_spacing;
         let btn_height = scale_by_dpi(32.0, dpi) as i32;
@@ -156,7 +187,13 @@ impl SearchReplaceView {
             "Close".to_string(),
         );
         children.push(Box::new(close_btn) as Box<dyn View>);
+    }
 
+    fn add_separator(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, padding: i32, row_height: i32, title_padding: i32, thickness: i32) {
+        let dpi = crate::unit::get_device_dpi();
+        let btn_spacing = scale_by_dpi(8.0, dpi) as i32;
+        let btn_height = scale_by_dpi(32.0, dpi) as i32;
+        let btn_y = rect.min.y + 3 * row_height + title_padding + btn_spacing;
         let sep_rect = rect![
             rect.min.x,
             btn_y + btn_height,
@@ -165,7 +202,13 @@ impl SearchReplaceView {
         ];
         let separator = Filler::new(sep_rect, BLACK);
         children.push(Box::new(separator) as Box<dyn View>);
+    }
 
+    fn add_status_label(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, padding: i32, row_height: i32, title_padding: i32, thickness: i32) {
+        let dpi = crate::unit::get_device_dpi();
+        let btn_spacing = scale_by_dpi(8.0, dpi) as i32;
+        let btn_height = scale_by_dpi(32.0, dpi) as i32;
+        let btn_y = rect.min.y + 3 * row_height + title_padding + btn_spacing;
         let status_padding = scale_by_dpi(6.0, dpi) as i32;
         let bottom_padding = scale_by_dpi(4.0, dpi) as i32;
         let status_label = Label::new(
@@ -179,16 +222,6 @@ impl SearchReplaceView {
             Align::Center,
         );
         children.push(Box::new(status_label) as Box<dyn View>);
-
-        SearchReplaceView {
-            id,
-            rect,
-            children,
-            search_text: search_text.to_string(),
-            replace_text: replace_text.to_string(),
-            match_count: 0,
-            current_match: 0,
-        }
     }
 
     pub fn update_matches(&mut self, count: usize, rq: &mut RenderQueue) {

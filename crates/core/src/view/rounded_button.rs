@@ -67,7 +67,7 @@ impl View for RoundedButton {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as u16;
         let button_radius = self.rect.height() as i32 / 2;
         let dark = crate::theme::is_dark_mode();

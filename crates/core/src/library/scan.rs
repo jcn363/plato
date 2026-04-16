@@ -5,6 +5,7 @@ use crate::metadata::BookQuery;
 use crate::metadata::{extract_metadata_from_document, sort, FileInfo, Info};
 use crate::settings::{ImportSettings, LibraryMode};
 use std::fs;
+use std::fs::Metadata;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use walkdir::WalkDir;
@@ -160,118 +161,78 @@ impl Library {
                 continue;
             };
 
-            if self.db.contains_key(&fp) {
-                if relat != self.db[&fp].file.path {
-                    log_info!(
-                        "Update path for {}: {} → {}.",
-                        fp,
-                        self.db[&fp].file.path.display(),
-                        relat.display()
-                    );
-                    self.paths.remove(&self.db[&fp].file.path);
-                    self.paths.insert(relat.to_path_buf(), fp);
-                    self.db[&fp].file.path = relat.to_path_buf();
-                    self.has_db_changed = true;
-                }
-            } else if let Some(fp2) = self.paths.get(relat).cloned() {
-                log_info!(
-                    "Update fingerprint for {}: {} → {}.",
-                    relat.display(),
-                    fp2,
-                    fp
-                );
-                let Some(mut info) = self.db.swap_remove(&fp2) else {
-                    continue;
-                };
-                if settings.sync_metadata && settings.metadata_kinds.contains(&info.file.kind) {
-                    extract_metadata_from_document(&self.home, &mut info);
-                }
-                self.db.insert(fp, info);
-                self.db[&fp].file.size = md.len();
-                self.paths.insert(relat.to_path_buf(), fp);
-                let rp1 = self.reading_state_path(fp2);
-                let rp2 = self.reading_state_path(fp);
-                fs::rename(rp1, rp2).ok();
-                let tpp = self.thumbnail_preview_path(fp2);
-                if tpp.exists() {
-                    fs::remove_file(tpp).ok();
-                }
-                self.has_db_changed = true;
-            } else {
-                let fp1 = self
-                    .fat32_epoch
-                    .checked_sub(std::time::Duration::from_secs(1))
-                    .and_then(|epoch| md.fingerprint(epoch).ok())
-                    .unwrap_or(fp);
-                let fp2 = self
-                    .fat32_epoch
-                    .checked_add(std::time::Duration::from_secs(1))
-                    .and_then(|epoch| md.fingerprint(epoch).ok())
-                    .unwrap_or(fp);
-
-                let nfp = if fp1 != fp && self.db.contains_key(&fp1) {
-                    Some(fp1)
-                } else if fp2 != fp && self.db.contains_key(&fp2) {
-                    Some(fp2)
-                } else {
-                    None
-                };
-
-                if let Some(nfp) = nfp {
-                    log_info!(
-                        "Update fingerprint for {}: {} → {}.",
-                        self.db[&nfp].file.path.display(),
-                        nfp,
-                        fp
-                    );
-                    let Some(info) = self.db.swap_remove(&nfp) else {
-                        continue;
-                    };
-                    self.db.insert(fp, info);
-                    let rp1 = self.reading_state_path(nfp);
-                    let rp2 = self.reading_state_path(fp);
-                    fs::rename(rp1, rp2).ok();
-                    let tp1 = self.thumbnail_preview_path(nfp);
-                    let tp2 = self.thumbnail_preview_path(fp);
-                    fs::rename(tp1, tp2).ok();
-                    if relat != self.db[&fp].file.path {
-                        log_info!(
-                            "Update path for {}: {} → {}.",
-                            fp,
-                            self.db[&fp].file.path.display(),
-                            relat.display()
-                        );
-                        self.paths.remove(&self.db[&fp].file.path);
-                        self.paths.insert(relat.to_path_buf(), fp);
-                        self.db[&fp].file.path = relat.to_path_buf();
-                    }
-                } else {
-                    let kind = file_kind(&path).unwrap_or_default();
-                    if !settings.allowed_kinds.contains(&kind) {
-                        continue;
-                    }
-                    log_info!("Add new entry: {}, {}.", fp, relat.display());
-                    let size = md.len();
-                    let file = FileInfo {
-                        path: relat.to_path_buf(),
-                        kind,
-                        size,
-                    };
-                    let mut info = Info {
-                        file,
-                        ..Default::default()
-                    };
-                    if settings.metadata_kinds.contains(&info.file.kind) {
-                        extract_metadata_from_document(&self.home, &mut info);
-                    }
-                    self.db.insert(fp, info);
-                    self.paths.insert(relat.to_path_buf(), fp);
-                }
-
-                self.has_db_changed = true;
-            }
+            self.import_entry(path, relat, &md, fp, settings);
         }
 
+        self.cleanup_removed_entries();
+    }
+
+    fn import_entry(&mut self, path: &Path, relat: &Path, md: &Metadata, fp: Fingerprint, settings: &ImportSettings) {
+        let nfp = self.paths.get(relat).cloned();
+
+        if let Some(nfp) = nfp {
+            self.update_existing_fingerprint(relat, fp, nfp, path, md);
+        } else {
+            self.add_new_entry(path, relat, md, fp, settings);
+        }
+    }
+
+    fn update_existing_fingerprint(&mut self, relat: &Path, fp: Fingerprint, nfp: Fingerprint, path: &Path, md: &Metadata) {
+        log_info!(
+            "Update fingerprint for {}: {} → {}.",
+            self.db[&nfp].file.path.display(),
+            nfp,
+            fp
+        );
+        let Some(info) = self.db.swap_remove(&nfp) else {
+            return;
+        };
+        self.db.insert(fp, info);
+        let rp1 = self.reading_state_path(nfp);
+        let rp2 = self.reading_state_path(fp);
+        fs::rename(rp1, rp2).ok();
+        let tp1 = self.thumbnail_preview_path(nfp);
+        let tp2 = self.thumbnail_preview_path(fp);
+        fs::rename(tp1, tp2).ok();
+        if relat != self.db[&fp].file.path {
+            log_info!(
+                "Update path for {}: {} → {}.",
+                fp,
+                self.db[&fp].file.path.display(),
+                relat.display()
+            );
+            self.paths.remove(&self.db[&fp].file.path);
+            self.paths.insert(relat.to_path_buf(), fp);
+            self.db[&fp].file.path = relat.to_path_buf();
+        }
+        self.has_db_changed = true;
+    }
+
+    fn add_new_entry(&mut self, path: &Path, relat: &Path, md: &Metadata, fp: Fingerprint, settings: &ImportSettings) {
+        let kind = file_kind(path).unwrap_or_default();
+        if !settings.allowed_kinds.contains(&kind) {
+            return;
+        }
+        log_info!("Add new entry: {}, {}.", fp, relat.display());
+        let size = md.len();
+        let file = FileInfo {
+            path: relat.to_path_buf(),
+            kind,
+            size,
+        };
+        let mut info = Info {
+            file,
+            ..Default::default()
+        };
+        if settings.metadata_kinds.contains(&info.file.kind) {
+            extract_metadata_from_document(&self.home, &mut info);
+        }
+        self.db.insert(fp, info);
+        self.paths.insert(relat.to_path_buf(), fp);
+        self.has_db_changed = true;
+    }
+
+    fn cleanup_removed_entries(&mut self) {
         let home = &self.home;
         let len = self.db.len();
 

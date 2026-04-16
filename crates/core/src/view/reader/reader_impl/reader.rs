@@ -226,6 +226,13 @@ pub struct Reader {
 impl Reader {
     pub fn new(rect: Rectangle, info: Info, _hub: &Hub, context: &mut Context) -> Option<Reader> {
         let id = ID_FEEDER.next();
+        let (doc, pages_count, reflowable) = Self::open_document(&info)?;
+        let children = Self::create_toolbar(rect, reflowable, &info, context);
+
+        Some(Self::create_reader(id, rect, children, doc, pages_count, reflowable, info))
+    }
+
+    fn open_document(info: &Info) -> Option<(Arc<Mutex<dyn Document>>, usize, bool)> {
         let doc = match crate::document::open(&info.file.path) {
             Some(d) => d,
             None => {
@@ -236,10 +243,12 @@ impl Reader {
         let doc = Arc::new(Mutex::new(doc));
         let pages_count = doc.lock().expect("doc lock").pages_count();
         let reflowable = doc.lock().expect("doc lock").is_reflowable();
+        Some((doc, pages_count, reflowable))
+    }
 
-        let dpi = CURRENT_DEVICE.dpi;
+    fn create_toolbar(rect: Rectangle, reflowable: bool, info: &Info, context: &mut Context) -> Vec<Box<dyn View>> {
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-        let _thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
 
         let top_bar_rect = rect![
             rect.min.x,
@@ -253,9 +262,11 @@ impl Reader {
             info.reader.as_ref(),
             &context.settings.reader,
         );
-        let children = vec![Box::new(tool_bar) as Box<dyn View>];
+        vec![Box::new(tool_bar) as Box<dyn View>]
+    }
 
-        Some(Reader {
+    fn create_reader(id: Id, rect: Rectangle, children: Vec<Box<dyn View>>, doc: Arc<Mutex<dyn Document>>, pages_count: usize, reflowable: bool, info: Info) -> Reader {
+        Reader {
             id,
             rect,
             children,
@@ -285,7 +296,7 @@ impl Reader {
             finished: false,
             animation: None,
             previous_chunks: Vec::new(),
-        })
+        }
     }
 
     pub fn from_html(
@@ -296,24 +307,23 @@ impl Reader {
         context: &mut Context,
     ) -> Result<Reader, Error> {
         let id = ID_FEEDER.next();
+        let (doc, pages_count, reflowable) = Self::open_html_document(html)?;
+        let children = Self::create_toolbar(rect, reflowable, &Info::default(), context);
+        let info = Self::create_html_info(html);
+
+        Ok(Self::create_reader(id, rect, children, doc, pages_count, reflowable, info))
+    }
+
+    fn open_html_document(html: &str) -> Result<(Arc<Mutex<dyn Document>>, usize, bool), Error> {
         let doc = crate::document::open_html(html).context("Failed to open HTML document")?;
         let doc = Arc::new(Mutex::new(doc));
         let pages_count = doc.lock().expect("doc lock").pages_count();
         let reflowable = doc.lock().expect("doc lock").is_reflowable();
+        Ok((doc, pages_count, reflowable))
+    }
 
-        let dpi = CURRENT_DEVICE.dpi;
-        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-
-        let top_bar_rect = rect![
-            rect.min.x,
-            rect.min.y,
-            rect.max.x,
-            rect.min.y + small_height
-        ];
-        let tool_bar = ToolBar::new(top_bar_rect, reflowable, None, &context.settings.reader);
-        let children = vec![Box::new(tool_bar) as Box<dyn View>];
-
-        let info = Info {
+    fn create_html_info(html: &str) -> Info {
+        Info {
             file: crate::metadata::FileInfo {
                 path: std::path::PathBuf::from("memory.html"),
                 kind: "html".to_string(),
@@ -321,114 +331,94 @@ impl Reader {
             },
             reader: None,
             ..Default::default()
-        };
-
-        Ok(Reader {
-            id,
-            rect,
-            children,
-            _doc: doc,
-            cache: BTreeMap::new(),
-            chunks: Vec::new(),
-            text: FxHashMap::default(),
-            _annotations: FxHashMap::default(),
-            _noninverted_regions: FxHashMap::default(),
-            focus: None,
-            search: None,
-            search_direction: LinearDir::Forward,
-            held_buttons: FxHashSet::default(),
-            selection: None,
-            _target_annotation: None,
-            history: VecDeque::new(),
-            state: State::Idle,
-            info,
-            current_page: 0,
-            pages_count,
-            view_port: ViewPort::default(),
-            contrast: Contrast::default(),
-            _synthetic: false,
-            _page_turns: 0,
-            reflowable,
-            ephemeral: true,
-            finished: false,
-            animation: None,
-            previous_chunks: Vec::new(),
-        })
+        }
     }
 
     #[allow(dead_code)] // Used by Reader::render method
     fn render_animation(&self, fb: &mut dyn Framebuffer, rect: Rectangle) {
         if let Some(ref anim) = self.animation {
             for chunk in &self.previous_chunks {
-                if let Some(resource) = self.cache.get(&chunk.location) {
-                    let Resource {
-                        ref pixmap,
-                        scale: _,
-                        ..
-                    } = resource;
-                    let chunk_rect = chunk.frame - chunk.frame.min + chunk.position;
-
-                    if let Some(region_rect) = rect.intersection(&chunk_rect) {
-                        let chunk_frame = region_rect - chunk.position + chunk.frame.min;
-                        let chunk_position = region_rect.min;
-
-                        match anim {
-                            PageAnimation::None => {}
-                            PageAnimation::Slide(kind) => {
-                                let offset = (kind.progress * rect.width() as f32) as i32;
-                                let adjusted_position =
-                                    if matches!(kind.direction, LinearDir::Forward) {
-                                        pt!(chunk_position.x - offset, chunk_position.y)
-                                    } else {
-                                        pt!(chunk_position.x + offset, chunk_position.y)
-                                    };
-                                let alpha = (1.0 - kind.progress) as u8;
-                                fb.draw_framed_pixmap_contrast_alpha(
-                                    pixmap,
-                                    &chunk_frame,
-                                    adjusted_position,
-                                    self.contrast.exponent,
-                                    self.contrast.gray,
-                                    alpha,
-                                );
-                            }
-                            PageAnimation::Peel(state) => match state.kind {
-                                PageAnimKind::Fade => {
-                                    let alpha = ((1.0 - state.progress) * 255.0) as u8;
-                                    fb.draw_framed_pixmap_contrast_alpha(
-                                        pixmap,
-                                        &chunk_frame,
-                                        chunk_position,
-                                        self.contrast.exponent,
-                                        self.contrast.gray,
-                                        alpha,
-                                    );
-                                }
-                                PageAnimKind::Flip => {
-                                    let offset = (state.progress * rect.width() as f32) as i32;
-                                    let adjusted_position =
-                                        if matches!(state.direction, LinearDir::Forward) {
-                                            pt!(chunk_position.x - offset, chunk_position.y)
-                                        } else {
-                                            pt!(chunk_position.x + offset, chunk_position.y)
-                                        };
-                                    let alpha = ((1.0 - state.progress * 0.5) * 255.0) as u8;
-                                    fb.draw_framed_pixmap_contrast_alpha(
-                                        pixmap,
-                                        &chunk_frame,
-                                        adjusted_position,
-                                        self.contrast.exponent,
-                                        self.contrast.gray,
-                                        alpha,
-                                    );
-                                }
-                                _ => {}
-                            },
-                        }
-                    }
-                }
+                self.render_chunk_animation(fb, rect, chunk, anim);
             }
         }
+    }
+
+    fn render_chunk_animation(&self, fb: &mut dyn Framebuffer, rect: Rectangle, chunk: &RenderChunk, anim: &PageAnimation) {
+        if let Some(resource) = self.cache.get(&chunk.location) {
+            let chunk_rect = chunk.frame - chunk.frame.min + chunk.position;
+
+            if let Some(region_rect) = rect.intersection(&chunk_rect) {
+                let chunk_frame = region_rect - chunk.position + chunk.frame.min;
+                let chunk_position = region_rect.min;
+                let pixmap = &resource.pixmap;
+
+                self.render_animation_kind(fb, pixmap, &chunk_frame, chunk_position, anim, rect);
+            }
+        }
+    }
+
+    fn render_animation_kind(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, anim: &PageAnimation, rect: Rectangle) {
+        match anim {
+            PageAnimation::None => {}
+            PageAnimation::Slide(kind) => self.render_slide_animation(fb, pixmap, chunk_frame, chunk_position, kind, rect),
+            PageAnimation::Peel(state) => self.render_peel_animation(fb, pixmap, chunk_frame, chunk_position, state, rect),
+        }
+    }
+
+    fn render_slide_animation(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, kind: &PageSlideKind, rect: Rectangle) {
+        let offset = (kind.progress * rect.width() as f32) as i32;
+        let adjusted_position = if matches!(kind.direction, LinearDir::Forward) {
+            pt!(chunk_position.x - offset, chunk_position.y)
+        } else {
+            pt!(chunk_position.x + offset, chunk_position.y)
+        };
+        let alpha = (1.0 - kind.progress) as u8;
+        fb.draw_framed_pixmap_contrast_alpha(
+            pixmap,
+            chunk_frame,
+            adjusted_position,
+            self.contrast.exponent,
+            self.contrast.gray,
+            alpha,
+        );
+    }
+
+    fn render_peel_animation(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, state: &PagePeelState, rect: Rectangle) {
+        match state.kind {
+            PageAnimKind::Fade => self.render_fade_animation(fb, pixmap, chunk_frame, chunk_position, state),
+            PageAnimKind::Flip => self.render_flip_animation(fb, pixmap, chunk_frame, chunk_position, state, rect),
+            _ => {}
+        }
+    }
+
+    fn render_fade_animation(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, state: &PagePeelState) {
+        let alpha = ((1.0 - state.progress) * 255.0) as u8;
+        fb.draw_framed_pixmap_contrast_alpha(
+            pixmap,
+            chunk_frame,
+            chunk_position,
+            self.contrast.exponent,
+            self.contrast.gray,
+            alpha,
+        );
+    }
+
+    fn render_flip_animation(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, state: &PagePeelState, rect: Rectangle) {
+        let offset = (state.progress * rect.width() as f32) as i32;
+        let adjusted_position = if matches!(state.direction, LinearDir::Forward) {
+            pt!(chunk_position.x - offset, chunk_position.y)
+        } else {
+            pt!(chunk_position.x + offset, chunk_position.y)
+        };
+        let alpha = ((1.0 - state.progress * 0.5) * 255.0) as u8;
+        fb.draw_framed_pixmap_contrast_alpha(
+            pixmap,
+            chunk_frame,
+            adjusted_position,
+            self.contrast.exponent,
+            self.contrast.gray,
+            alpha,
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -828,7 +818,7 @@ impl Reader {
             .as_ref()
             .map_or(false, |r| r.bookmarks.contains(&self.current_page))
         {
-            let dpi = CURRENT_DEVICE.dpi;
+            let dpi = crate::unit::get_device_dpi();
             let thickness = scale_by_dpi(3.0, dpi) as u16;
             let radius = mm_to_px(0.4, dpi) as i32 + thickness as i32;
             let center = pt!(self.rect.max.x - 5 * radius, self.rect.min.y + 5 * radius);

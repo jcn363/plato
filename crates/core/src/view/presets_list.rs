@@ -28,66 +28,69 @@ impl PresetsList {
     }
 
     pub fn update(&mut self, presets: &[LightPreset], rq: &mut RenderQueue, fonts: &mut Fonts) {
+        let (preset_width, preset_height, max_per_line) = Self::calculate_preset_dimensions(&self.rect, fonts, presets);
+        let dx = Self::calculate_start_offset(&self.rect, preset_width, max_per_line, presets.len());
+
+        self.pages.clear();
+        self.build_pages(presets, preset_width, preset_height, max_per_line, dx);
+        self.current_page = self.current_page.min(self.pages.len().saturating_sub(1));
+
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    }
+
+    fn calculate_preset_dimensions(rect: &Rectangle, fonts: &mut Fonts, presets: &[LightPreset]) -> (i32, i32, i32) {
         let dpi = crate::unit::get_device_dpi();
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let x_height = font.x_heights.0 as i32;
         let preset_height = 4 * x_height;
         let padding = font.em() as i32;
         let preset_width = font.plan(&presets[0].name(), None, None).width + padding;
-        let max_per_line = (self.rect.width() as i32 + padding) / (preset_width + padding);
+        let max_per_line = (rect.width() as i32 + padding) / (preset_width + padding);
+        (preset_width, preset_height, max_per_line)
+    }
 
-        self.pages.clear();
-        // Pre-allocate children with estimated capacity based on max_per_line
-        let mut children = Vec::with_capacity(max_per_line as usize);
-
-        let presets_count = presets.len() as i32;
+    fn calculate_start_offset(rect: &Rectangle, preset_width: i32, max_per_line: i32, presets_count: usize) -> i32 {
+        let padding = preset_width / 4;
+        let presets_count = presets_count as i32;
         let first_line_count = max_per_line.min(presets_count);
+        (rect.width() as i32 - (first_line_count * preset_width + (first_line_count - 1) * padding)) / 2
+    }
+
+    fn build_pages(&mut self, presets: &[LightPreset], preset_width: i32, preset_height: i32, max_per_line: i32, dx: i32) {
+        let presets_count = presets.len() as i32;
+        let mut children = Vec::with_capacity(max_per_line as usize);
         let mut item_index = 0;
         let mut index = 0;
 
-        let dx = (self.rect.width() as i32
-            - (first_line_count * preset_width + (first_line_count - 1) * padding))
-            / 2;
-
         while index < presets_count {
             let position = item_index % max_per_line;
-            let x = self.rect.min.x + dx + position * (preset_width + padding);
+            let x = self.rect.min.x + dx + position * (preset_width + preset_width / 4);
             let preset_rect = rect![
                 x,
                 self.rect.max.y - preset_height,
                 x + preset_width,
                 self.rect.max.y
             ];
-            let kind = if (position == 0 && index > 0)
-                || (position == max_per_line - 1 && index < presets_count - 1)
-            {
-                let dir = if position == 0 {
-                    CycleDir::Previous
-                } else {
-                    CycleDir::Next
-                };
-                PresetKind::Page(dir)
-            } else {
-                let name = presets[index as usize].name();
-                let kind = PresetKind::Normal(name, index as usize);
-                index += 1;
-                kind
-            };
-
+            let kind = Self::determine_preset_kind(position, max_per_line, index, presets_count, presets);
             let preset = Preset::new(preset_rect, kind);
             children.push(Box::new(preset) as Box<dyn View>);
             item_index += 1;
 
             if item_index % max_per_line == 0 || index == presets_count {
                 self.pages.push(children);
-                // Pre-allocate next batch with same capacity
                 children = Vec::with_capacity(max_per_line as usize);
             }
         }
+    }
 
-        self.current_page = self.current_page.min(self.pages.len().saturating_sub(1));
-
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    fn determine_preset_kind(position: i32, max_per_line: i32, index: i32, presets_count: i32, presets: &[LightPreset]) -> PresetKind {
+        if (position == 0 && index > 0) || (position == max_per_line - 1 && index < presets_count - 1) {
+            let dir = if position == 0 { CycleDir::Previous } else { CycleDir::Next };
+            PresetKind::Page(dir)
+        } else {
+            let name = presets[index as usize].name();
+            PresetKind::Normal(name, index as usize)
+        }
     }
 
     pub fn set_current_page(&mut self, dir: CycleDir) {

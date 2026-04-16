@@ -32,10 +32,10 @@ use self::style::StyleSheet;
 use self::xml::XmlParser;
 use crate::document::{BoundedText, Document, Location, TocEntry};
 use crate::framebuffer::Pixmap;
-use crate::geom::{Boundary, CycleDir, Edge};
+use crate::geom::{Boundary, CycleDir, Edge, Rectangle};
 use crate::helpers::decode_entities;
 use crate::unit::pt_to_px;
-use anyhow::Error;
+use anyhow::{Context, Error};
 use rustc_hash::FxHashMap;
 use std::fs::{self, File};
 use std::io::{Read, Write};
@@ -187,81 +187,13 @@ impl HtmlDocument {
     }
 
     fn build_pages(&mut self) -> Vec<Page> {
-        let mut stylesheet = StyleSheet::new();
-        let spine_dir = PathBuf::default();
-
-        if let Ok(text) = fs::read_to_string(&self.viewer_stylesheet) {
-            let mut css = CssParser::new(&text).parse();
-            stylesheet.append(&mut css, true);
-        }
-
-        if let Ok(text) = fs::read_to_string(&self.user_stylesheet) {
-            let mut css = CssParser::new(&text).parse();
-            stylesheet.append(&mut css, true);
-        }
-
-        if !self.ignore_document_css {
-            let mut inner_css = StyleSheet::new();
-
-            if let Some(head) = self.content.root().find("head") {
-                for child in head.children() {
-                    if child.tag_name() == Some("link")
-                        && child.attribute("rel") == Some("stylesheet")
-                    {
-                        if let Some(href) = child.attribute("href") {
-                            if let Some(name) = spine_dir
-                                .join(href)
-                                .canonicalize()
-                                .unwrap_or_else(|_| spine_dir.join(href))
-                                .to_str()
-                            {
-                                if let Ok(buf) = self.parent.fetch(name) {
-                                    if let Ok(text) = String::from_utf8(buf) {
-                                        let mut css = CssParser::new(&text).parse();
-                                        inner_css.append(&mut css, false);
-                                    }
-                                }
-                            }
-                        }
-                    } else if child.tag_name() == Some("style")
-                        && child.attribute("type") == Some("text/css")
-                    {
-                        let mut css = CssParser::new(&child.text()).parse();
-                        inner_css.append(&mut css, false);
-                    }
-                }
-            }
-
-            stylesheet.append(&mut inner_css, true);
-        }
-
+        let mut stylesheet = self.load_stylesheets();
         let mut pages = Vec::new();
 
         let mut rect = self.engine.rect();
         rect.shrink(&self.engine.margin);
 
-        let language = self
-            .content
-            .root()
-            .find("html")
-            .and_then(|html| html.attribute("xml:lang"))
-            .map(String::from);
-
-        let style = StyleData {
-            language,
-            font_size: self.engine.font_size,
-            line_height: pt_to_px(
-                self.engine.line_height * self.engine.font_size,
-                self.engine.dpi,
-            )
-            .round() as i32,
-            text_align: self.engine.text_align,
-            start_x: rect.min.x,
-            end_x: rect.max.x,
-            width: rect.max.x - rect.min.x,
-            ..Default::default()
-        };
-
+        let style = self.create_style_data(&rect);
         let loop_context = LoopContext::default();
         let mut draw_state = DrawState {
             position: rect.min,
@@ -270,7 +202,7 @@ impl HtmlDocument {
 
         let root_data = RootData {
             start_offset: 0,
-            spine_dir,
+            spine_dir: PathBuf::default(),
             rect,
         };
 
@@ -287,6 +219,91 @@ impl HtmlDocument {
             &mut pages,
         );
 
+        self.finalize_pages(pages)
+    }
+
+    fn load_stylesheets(&self) -> StyleSheet {
+        let mut stylesheet = StyleSheet::new();
+
+        if let Ok(text) = fs::read_to_string(&self.viewer_stylesheet) {
+            let mut css = CssParser::new(&text).parse();
+            stylesheet.append(&mut css, true);
+        }
+
+        if let Ok(text) = fs::read_to_string(&self.user_stylesheet) {
+            let mut css = CssParser::new(&text).parse();
+            stylesheet.append(&mut css, true);
+        }
+
+        if !self.ignore_document_css {
+            let mut inner_css = self.load_document_css();
+            stylesheet.append(&mut inner_css, true);
+        }
+
+        stylesheet
+    }
+
+    fn load_document_css(&mut self) -> StyleSheet {
+        let mut inner_css = StyleSheet::new();
+        let spine_dir = PathBuf::default();
+
+        if let Some(head) = self.content.root().find("head") {
+            for child in head.children() {
+                if child.tag_name() == Some("link")
+                    && child.attribute("rel") == Some("stylesheet")
+                {
+                    if let Some(href) = child.attribute("href") {
+                        if let Some(name) = spine_dir
+                            .join(href)
+                            .canonicalize()
+                            .unwrap_or_else(|_| spine_dir.join(href))
+                            .to_str()
+                        {
+                            if let Ok(buf) = (&mut self.parent).fetch(name) {
+                                if let Ok(text) = String::from_utf8(buf) {
+                                    let mut css = CssParser::new(&text).parse();
+                                    inner_css.append(&mut css, false);
+                                }
+                            }
+                        }
+                    }
+                } else if child.tag_name() == Some("style")
+                    && child.attribute("type") == Some("text/css")
+                {
+                    let mut css = CssParser::new(&child.text()).parse();
+                    inner_css.append(&mut css, false);
+                }
+            }
+        }
+
+        inner_css
+    }
+
+    fn create_style_data(&self, rect: &Rectangle) -> StyleData {
+        let language = self
+            .content
+            .root()
+            .find("html")
+            .and_then(|html| html.attribute("xml:lang"))
+            .map(String::from);
+
+        StyleData {
+            language,
+            font_size: self.engine.font_size,
+            line_height: pt_to_px(
+                self.engine.line_height * self.engine.font_size,
+                self.engine.dpi,
+            )
+            .round() as i32,
+            text_align: self.engine.text_align,
+            start_x: rect.min.x,
+            end_x: rect.max.x,
+            width: rect.max.x - rect.min.x,
+            ..Default::default()
+        }
+    }
+
+    fn finalize_pages(&self, mut pages: Vec<Page>) -> Vec<Page> {
         pages.retain(|page| !page.is_empty());
 
         if pages.is_empty() {

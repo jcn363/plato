@@ -78,7 +78,7 @@ pub(crate) fn toggle_bookmark(
     }
 
     // Invalidate bookmark indicator region
-    let dpi = CURRENT_DEVICE.dpi;
+    let dpi = crate::unit::get_device_dpi();
     let thickness = scale_by_dpi(3.0, dpi) as u16;
     let radius = mm_to_px(0.4, dpi) as i32 + thickness as i32;
     let center = Point {

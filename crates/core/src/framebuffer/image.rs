@@ -2,7 +2,7 @@ use super::{Framebuffer, UpdateMode};
 use crate::color::{background, Color};
 use crate::geom::{lerp, Point, Rectangle};
 use crate::theme;
-use anyhow::{format_err, Error};
+use anyhow::{format_err, Context, Error};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;

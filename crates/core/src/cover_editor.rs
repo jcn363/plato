@@ -1,5 +1,5 @@
 use crate::settings::CoverEditorSettings;
-use anyhow::{format_err, Error};
+use anyhow::{format_err, Context, Error};
 use image::{DynamicImage, GenericImageView, ImageFormat};
 use std::io::Write;
 use std::path::Path;
@@ -139,10 +139,10 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
         "Cover.jpeg",
     ];
 
-    let names: Vec<String> = archive.file_names().map(|n| n.to_string()).collect();
+    let names: Vec<String> = archive.file_names().map(|n: &str| n.to_string()).collect();
 
     for name in &names {
-        let name_lower = name.to_lowercase();
+        let name_lower: String = name.to_lowercase();
         if name_lower.starts_with("cover.") {
             if let Ok(mut file) = archive.by_name(name) {
                 let mut buffer = Vec::new();
@@ -154,7 +154,7 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
     }
 
     for entry in &names {
-        let entry_lower = entry.to_lowercase();
+        let entry_lower: String = entry.to_lowercase();
         if (entry_lower.contains("cover") || entry_lower.contains("image"))
             && (entry_lower.ends_with(".jpg")
                 || entry_lower.ends_with(".jpeg")

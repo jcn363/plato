@@ -3,7 +3,7 @@ use crate::document::html::engine::{Engine, Page, ResourceFetcher};
 use crate::document::html::xml::XmlParser;
 use crate::helpers::decode_entities;
 use crate::log_error;
-use anyhow::{format_err, Error};
+use anyhow::{format_err, Context, Error};
 use percent_encoding::percent_decode_str;
 use rustc_hash::FxHashMap;
 use std::fs::File;
@@ -46,6 +46,7 @@ impl EpubDocument {
             .with_context(|| format!("can't open EPUB file {}", path.as_ref().display()))?;
         let mut archive = ZipArchive::new(file)?;
 
+        // Extract OPF path from container.xml
         let opf_path = {
             let mut zf = archive.by_name("META-INF/container.xml")?;
             let size = zf.size() as usize;
@@ -56,13 +57,14 @@ impl EpubDocument {
                 .find("rootfile")
                 .and_then(|e| e.attribute("full-path"))
                 .map(String::from)
-        }
-        .ok_or_else(|| format_err!("can't get the OPF path"))?;
+                .ok_or_else(|| format_err!("can't get the OPF path"))?
+        };
 
         let parent = Path::new(&opf_path)
             .parent()
             .unwrap_or_else(|| Path::new(""));
 
+        // Read OPF content
         let text = {
             let mut zf = archive.by_name(&opf_path)?;
             let size = zf.size() as usize;
@@ -71,6 +73,7 @@ impl EpubDocument {
             text
         };
 
+        // Build spine
         let info = XmlParser::new(&text).parse();
         let mut spine = Vec::new();
 
@@ -102,9 +105,9 @@ impl EpubDocument {
                                         "Can't retrieve '{}' from the archive: {:#}.",
                                         path,
                                         e
-                                    )
+                                    );
                                 })
-                                .map(|zf| (zf.size() as usize, path.to_string()))
+                                .map(|zf: zip::read::ZipFile| (zf.size() as usize, path.to_string()))
                                 .ok()
                         })
                     });
@@ -121,7 +124,7 @@ impl EpubDocument {
 
         Ok(EpubDocument {
             archive,
-            info,
+            info: XmlParser::new(&text).parse(),
             parent: parent.to_path_buf(),
             engine: Engine::new(),
             spine,

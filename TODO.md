@@ -65,13 +65,38 @@
 - **Font Loading**: Repeated font loading patterns in multiple view modules
 - **Scale by DPI**: Migrate existing `let dpi = CURRENT_DEVICE.dpi` + `scale_by_dpi()` pattern to use new helpers
 
-**IN PROGRESS:** DPI Migration
+**IN PROGRESS:** Function Size Compliance
+- Found `build_pages()` in document/html/mod.rs (~108 lines) - Split into 4 helper functions
+- Found `update_content()` in view/home/directories_bar.rs (~60 lines) - Split into 3 helper functions
+- Found `make_page()` in view/home/directories_bar.rs (~140 lines) - Split into 5 helper functions
+- Found `copy_to()` in library/manage.rs (~82 lines) - Split into 8 helper functions
+- Found `move_to()` in library/manage.rs (~78 lines) - Split into 6 helper functions
+- Found `import()` in library/scan.rs (~126 lines) - Split into 4 helper functions
+- Found `clean_up()` in library/maintenance.rs (~53 lines) - Split into 3 helper functions
+- Found `reload()` in library/maintenance.rs (~59 lines) - Split into 4 helper functions
+- Found `new()` in document/epub/opener.rs (~60 lines) - Split into 5 helper functions
+- Found `merge_pdfs()` in document/pdf_manipulator.rs (~60 lines) - Split into 6 helper functions
+- Found `new()` in view/home/mod.rs (~195 lines) - Split into 6 helper functions
+- Found `new()` in view/reader/reader_impl/reader.rs (~62 lines) - Split into 3 helper functions
+- Found `from_html()` in view/reader/reader_impl/reader.rs (~66 lines) - Split into 3 helper functions
+- Found `render_animation()` in view/reader/reader_impl/reader.rs (~73 lines) - Split into 6 helper functions
+- Found `update()` in view/presets_list.rs (~60 lines) - Split into 4 helper functions
+- Found `handle_event()` in view/rotation_values/mod.rs (~75 lines) - Split into 4 helper functions
+- Found `new()` in view/search_replace.rs (~165 lines) - Split into 7 helper functions
+- Found `new()` in view/search_bar.rs (~69 lines) - Split into 6 helper functions
+- Found `parse_atom()` in opds.rs (~60 lines) - Split into 3 helper functions + AtomParserState struct
+- Found `parse_nav()` in opds.rs (~55 lines) - Split into 2 helper functions + NavParserState struct
+- Found `update()` in view/home/shelf.rs (~90 lines) - Split into 8 helper functions
+- Found `new()` in view/reader/bottom_bar.rs (~71 lines) - Split into 5 helper functions
+- Found `guess_frontlight()` in settings/preset.rs (~53 lines) - Split into 3 helper functions
+- Found `parse_device_events()` in input.rs (~180 lines) - Split into 6 helper functions
+- Remaining: Search for and split other functions >50 lines
+
+**✅ COMPLETED:** DPI Migration
 - Found 60+ instances of `let dpi = CURRENT_DEVICE.dpi` across view modules
 - Helpers added to unit.rs: `scale_by_device_dpi()`, `scale_by_device_dpi_raw()`, `get_device_dpi()`
-- Migrated: view/intermission.rs, view/preset.rs, view/clock.rs, view/slider.rs, view/menu.rs, view/calculator/display.rs, view/calculator/state.rs, view/calculator/code_area.rs, view/calculator/input_bar.rs, view/rotation_values.rs, view/menu_entry.rs, view/label.rs, view/button.rs, view/presets_list.rs, view/notification.rs, view/page_label.rs, view/statistics.rs, view/frontlight.rs, view/settings/mod.rs, view/reader/results_label.rs, view/reader/margin_cropper.rs, view/reader/chapter_label.rs, view/search_bar.rs, view/search_replace.rs (21 files, 31 instances)
-- Remaining: 29+ instances across view/reader/reader_impl/reader.rs, view/reader/reader_impl/reader_rendering_impl.rs, view/reader/tool_bar/layout.rs, view/cover_editor.rs, view/key.rs, view/sketch/, view/dictionary/, view/rounded_button.rs, view/dialog.rs, view/input_field.rs, view/named_input.rs, view/pdf_manipulator.rs, view/home/library_label.rs, view/home/ui_toggles/, view/home/shelf.rs, view/home/directory.rs, view/home/address_bar.rs, view/home/directories_bar.rs, view/home/navigation_bar.rs, view/home/updates.rs, view/home/book.rs, view/battery.rs, and more
-
-- [ ] Complete migration of existing DPI usage to new helpers (29+ instances remaining)
+- Migrated all 57 instances across 37 files: view/intermission.rs, view/preset.rs, view/clock.rs, view/slider.rs, view/menu.rs, view/calculator/display.rs, view/calculator/state.rs, view/calculator/code_area.rs, view/calculator/input_bar.rs, view/rotation_values.rs, view/menu_entry.rs, view/label.rs, view/button.rs, view/presets_list.rs, view/notification.rs, view/page_label.rs, view/statistics.rs, view/frontlight.rs, view/settings/mod.rs, view/reader/results_label.rs, view/reader/margin_cropper.rs, view/reader/chapter_label.rs, view/search_bar.rs, view/search_replace.rs, view/cover_editor.rs, view/key.rs, view/sketch/, view/rounded_button.rs, view/dialog.rs, view/input_field.rs, view/named_input.rs, view/battery.rs, view/reader/reader_impl/reader.rs, view/reader/reader_impl/reader_annotations.rs, view/reader/reader_impl/reader_rendering_impl.rs, view/reader/tool_bar/layout.rs, view/keyboard.rs, view/pdf_manipulator.rs, view/touch_events/mod.rs, view/epub_editor/mod.rs, view/dictionary/display.rs, view/dictionary/mod.rs, view/dictionary/events.rs, view/dictionary/lookup.rs, view/home/book.rs, view/home/address_bar.rs, view/home/directory.rs, view/home/navigation_bar.rs, view/home/shelf.rs, view/home/library_label.rs, view/home/mod.rs, view/home/directories_bar.rs, view/home/updates.rs, view/home/ui_toggles/utils.rs
+- All view modules now use centralized DPI helpers per DRY rule
 - [ ] Extract device rotation helpers (to_canonical, mirroring_scheme)
 - [ ] Consolidate font loading patterns
 - [ ] Extract common `match` arm patterns into methods

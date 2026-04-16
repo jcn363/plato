@@ -212,7 +212,7 @@ impl InputField {
         if self.text.is_empty() {
             return 0;
         }
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let padding = font.em() as i32;
         let max_width = self.rect.width().saturating_sub(2 * padding as u32) as i32;
@@ -313,7 +313,7 @@ impl View for InputField {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let padding = font.em() as i32;
         let x_height = font.x_heights.0 as i32;

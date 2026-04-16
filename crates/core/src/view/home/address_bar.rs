@@ -24,7 +24,7 @@ impl AddressBar {
     pub fn new<S: AsRef<str>>(rect: Rectangle, text: S, context: &mut Context) -> AddressBar {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let side = rect.height() as i32;
 
@@ -124,7 +124,7 @@ impl View for AddressBar {
     fn render(&self, _fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {}
 
     fn resize(&mut self, rect: Rectangle, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let side = rect.height() as i32;
         self.children[0].resize(rect![rect.min, rect.min + side], hub, rq, context);

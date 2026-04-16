@@ -25,7 +25,7 @@ impl TouchEvents {
     pub fn new(rect: Rectangle, rq: &mut RenderQueue, context: &mut Context) -> TouchEvents {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let dx = (rect.width() as i32 - small_height) / 2;
         let dy = (rect.height() as i32 - small_height) / 3;
@@ -115,7 +115,7 @@ impl View for TouchEvents {
     }
 
     fn resize(&mut self, rect: Rectangle, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let dx = (rect.width() as i32 - small_height) / 2;
         let dy = (rect.height() as i32 - small_height) / 3;

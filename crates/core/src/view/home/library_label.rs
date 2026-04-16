@@ -89,7 +89,7 @@ impl View for LibraryLabel {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let padding = font.em() as i32 / 2;
         let max_width = self.rect.width().saturating_sub(2 * padding as u32) as i32;

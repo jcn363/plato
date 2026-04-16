@@ -311,7 +311,7 @@ pub(super) fn build_common_children(rect: Rectangle, side: i32) -> Vec<Box<dyn V
 }
 
 pub(super) fn calc_side(rect: Rectangle) -> i32 {
-    let dpi = CURRENT_DEVICE.dpi;
+    let dpi = crate::unit::get_device_dpi();
     let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
     (rect.height() as i32 + thickness) / 2 - thickness
 }

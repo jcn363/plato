@@ -28,11 +28,26 @@ impl SearchBar {
         context: &mut Context,
     ) -> SearchBar {
         let id = ID_FEEDER.next();
+        let (thickness, side) = Self::calculate_metrics(&rect);
         let mut children = Vec::new();
+
+        Self::add_search_icon(&mut children, &rect, side);
+        Self::add_left_separator(&mut children, &rect, thickness, side);
+        Self::add_input_field(&mut children, &rect, thickness, side, input_id, text, placeholder, context);
+        Self::add_right_separator(&mut children, &rect, thickness, side);
+        Self::add_close_icon(&mut children, &rect, side);
+
+        SearchBar { id, rect, children }
+    }
+
+    fn calculate_metrics(rect: &Rectangle) -> (i32, i32) {
         let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let side = rect.height() as i32;
+        (thickness, side)
+    }
 
+    fn add_search_icon(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, side: i32) {
         let search_rect = rect![rect.min, rect.min + side];
         let search_icon = Icon::new(
             "search",
@@ -40,9 +55,10 @@ impl SearchBar {
             Event::ToggleNear(ViewId::SearchMenu, search_rect),
         )
         .background(text_bump_small(crate::theme::is_dark_mode())[0]);
-
         children.push(Box::new(search_icon) as Box<dyn View>);
+    }
 
+    fn add_left_separator(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, thickness: i32, side: i32) {
         let sep = Filler::new(
             rect![
                 pt!(rect.min.x + side, rect.min.y),
@@ -50,9 +66,10 @@ impl SearchBar {
             ],
             separator(crate::theme::is_dark_mode()),
         );
-
         children.push(Box::new(sep) as Box<dyn View>);
+    }
 
+    fn add_input_field(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, thickness: i32, side: i32, input_id: ViewId, text: &str, placeholder: &str, context: &mut Context) {
         let input_field = InputField::new(
             rect![
                 pt!(rect.min.x + side + thickness, rect.min.y),
@@ -63,9 +80,10 @@ impl SearchBar {
         .border(false)
         .text(text, context)
         .placeholder(placeholder);
-
         children.push(Box::new(input_field) as Box<dyn View>);
+    }
 
+    fn add_right_separator(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, thickness: i32, side: i32) {
         let sep = Filler::new(
             rect![
                 pt!(rect.max.x - side - thickness, rect.min.y),
@@ -73,9 +91,10 @@ impl SearchBar {
             ],
             separator(crate::theme::is_dark_mode()),
         );
-
         children.push(Box::new(sep) as Box<dyn View>);
+    }
 
+    fn add_close_icon(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, side: i32) {
         let close_icon = Icon::new(
             "close",
             rect![
@@ -85,10 +104,7 @@ impl SearchBar {
             Event::Close(ViewId::SearchBar),
         )
         .background(text_bump_small(crate::theme::is_dark_mode())[0]);
-
         children.push(Box::new(close_icon) as Box<dyn View>);
-
-        SearchBar { id, rect, children }
     }
 
     pub fn set_text(&mut self, text: &str, rq: &mut RenderQueue, context: &mut Context) {

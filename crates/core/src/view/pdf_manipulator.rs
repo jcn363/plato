@@ -59,7 +59,7 @@ impl PdfManipulatorView {
         context: &mut Context,
     ) -> Result<PdfManipulatorView, Error> {
         let id = ID_FEEDER.next();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
 
@@ -666,6 +666,9 @@ impl View for PdfManipulatorView {
                             };
                             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                             return true;
+                        }
+                        FingerStatus::Move => {
+                            // Ignore move events during redaction selection
                         }
                         FingerStatus::Motion => {
                             if let RedactionState::Selecting { start, .. } = &self.redaction_state {

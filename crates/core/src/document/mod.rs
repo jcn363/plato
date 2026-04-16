@@ -16,7 +16,7 @@ use crate::geom::{Boundary, CycleDir, Point};
 use crate::log_error;
 use crate::metadata::{Annotation, TextAlign};
 use crate::settings::INTERNAL_CARD_ROOT;
-use anyhow::{format_err, Error};
+use anyhow::{format_err, Context, Error};
 use nix::sys::statvfs;
 #[cfg(target_os = "linux")]
 use nix::sys::sysinfo;

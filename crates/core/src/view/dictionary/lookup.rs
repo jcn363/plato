@@ -140,7 +140,7 @@ impl Dictionary {
     }
 
     pub fn underlying_word(&mut self, pt: Point) -> Option<String> {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (_, big_thickness) = halves(thickness);
@@ -162,7 +162,7 @@ impl Dictionary {
     }
 
     pub fn follow_link(&mut self, pt: Point, rq: &mut RenderQueue, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (_, big_thickness) = halves(thickness);

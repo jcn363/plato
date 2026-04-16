@@ -17,7 +17,7 @@ use super::super::Home;
 impl Home {
     /// Calculate top offset for view positioning based on visible UI elements
     pub fn calculate_top_offset(&self) -> i32 {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (small_thickness, _) = halves(thickness);
@@ -41,7 +41,7 @@ impl Home {
 
     /// Calculate bottom offset for view positioning based on visible UI elements  
     pub fn calculate_bottom_offset(&self) -> i32 {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (small_thickness, _) = halves(thickness);

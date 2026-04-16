@@ -57,6 +57,78 @@ impl RotationValues {
             taps: Vec::new(),
         }
     }
+
+    fn process_tap(&mut self, mut pt: Point, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+        pt = self.adjust_point(pt);
+        log_info!("Tap {} {:?}", pt, context.fb.dims());
+
+        self.taps.push(pt);
+        self.finished = self.taps.len() >= 2 * CORNERS_COUNT;
+
+        if self.taps.len() >= CORNERS_COUNT {
+            self.update_rotation(context);
+        }
+
+        if self.finished {
+            self.infer_and_log_mirroring(hub);
+        } else {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
+        }
+    }
+
+    fn adjust_point(&self, mut pt: Point) -> Point {
+        if self.mirror_x {
+            pt.x = self.width - 1 - pt.x;
+        }
+        if self.mirror_y {
+            pt.y = self.height - 1 - pt.y;
+        }
+        if self.swap_xy {
+            mem::swap(&mut pt.x, &mut pt.y);
+        }
+        pt
+    }
+
+    fn update_rotation(&mut self, context: &mut Context) {
+        let rotation = if self.finished {
+            self.written_rotation
+        } else {
+            (self.taps.len() - CORNERS_COUNT) as i8
+        };
+        context
+            .fb
+            .set_rotation(rotation)
+            .map_err(|e| log_error!("Can't set rotation: {:#}.", e))
+            .ok();
+        if context.fb.rotation() == self.read_rotation {
+            self.written_rotation = rotation;
+        }
+        self.children.clear();
+        self.rect = context.fb.rect();
+    }
+
+    fn infer_and_log_mirroring(&self, hub: &Hub) {
+        let first = self.taps[0];
+        let startup_rotation = self.taps[CORNERS_COUNT..2 * CORNERS_COUNT]
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, &pt)| first.dist2(pt))
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+        let origin = self.taps[CORNERS_COUNT..2 * CORNERS_COUNT]
+            .iter()
+            .enumerate()
+            .min_by_key(|(_, pt)| pt.x + pt.y)
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+        let center = (origin + 2) % 4;
+        let next = self.taps[CORNERS_COUNT + (center + 1) % 4];
+        let polarity = 2 * ((origin + startup_rotation) as i8 % 2) - 1;
+        let dir = if next.x < next.y { polarity } else { -polarity };
+        log_info!("Startup rotation: {}.", startup_rotation);
+        log_info!("Mirroring scheme: ({}, {}).", center, dir);
+        hub.send(Event::Back).ok();
+    }
 }
 
 impl View for RotationValues {
@@ -70,67 +142,7 @@ impl View for RotationValues {
     ) -> bool {
         match *evt {
             Event::Gesture(GestureEvent::Tap(mut pt)) if !self.finished => {
-                if self.mirror_x {
-                    pt.x = self.width - 1 - pt.x;
-                }
-
-                if self.mirror_y {
-                    pt.y = self.height - 1 - pt.y;
-                }
-
-                if self.swap_xy {
-                    mem::swap(&mut pt.x, &mut pt.y);
-                }
-
-                log_info!("Tap {} {:?}", pt, context.fb.dims());
-
-                self.taps.push(pt);
-                self.finished = self.taps.len() >= 2 * CORNERS_COUNT;
-
-                if self.taps.len() >= CORNERS_COUNT {
-                    let rotation = if self.finished {
-                        self.written_rotation
-                    } else {
-                        (self.taps.len() - CORNERS_COUNT) as i8
-                    };
-                    context
-                        .fb
-                        .set_rotation(rotation)
-                        .map_err(|e| log_error!("Can't set rotation: {:#}.", e))
-                        .ok();
-                    if context.fb.rotation() == self.read_rotation {
-                        self.written_rotation = rotation;
-                    }
-                    self.children.clear();
-                    self.rect = context.fb.rect();
-                }
-
-                if self.finished {
-                    // Infer the startup rotation and the mirroring scheme.
-                    let first = self.taps[0];
-                    let startup_rotation = self.taps[CORNERS_COUNT..2 * CORNERS_COUNT]
-                        .iter()
-                        .enumerate()
-                        .min_by_key(|(_, &pt)| first.dist2(pt))
-                        .map(|(i, _)| i)
-                        .unwrap_or(0);
-                    let origin = self.taps[CORNERS_COUNT..2 * CORNERS_COUNT]
-                        .iter()
-                        .enumerate()
-                        .min_by_key(|(_, pt)| pt.x + pt.y)
-                        .map(|(i, _)| i)
-                        .unwrap_or(0);
-                    let center = (origin + 2) % 4;
-                    let next = self.taps[CORNERS_COUNT + (center + 1) % 4];
-                    let polarity = 2 * ((origin + startup_rotation) as i8 % 2) - 1;
-                    let dir = if next.x < next.y { polarity } else { -polarity };
-                    log_info!("Startup rotation: {}.", startup_rotation);
-                    log_info!("Mirroring scheme: ({}, {}).", center, dir);
-                    hub.send(Event::Back).ok();
-                } else {
-                    rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
-                }
-
+                self.process_tap(pt, hub, rq, context);
                 true
             }
             _ => false,

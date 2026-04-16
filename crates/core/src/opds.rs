@@ -40,129 +40,204 @@ impl OPDSCatalog {
 
     fn parse_atom(body: &str, base_url: &str) -> Result<Self, Error> {
         let mut title = String::new();
-        // Pre-allocate with estimated capacity to reduce reallocations
         let mut entries = Vec::with_capacity(32);
+        let mut state = AtomParserState::new();
 
-        let parser = quick_xml::Reader::from_str(body);
-        let mut parser = parser;
-        parser.config_mut().trim_text(true);
+        let parser = Self::create_parser(body);
+        Self::parse_atom_loop(parser, &mut title, &mut entries, &mut state);
 
-        let mut buf = Vec::with_capacity(1024);
-        let mut in_title = false;
-        let mut in_entry = false;
-        let mut current_entry: Option<OPDSEntry> = None;
-        let mut in_content = false;
-
-        loop {
-            match parser.read_event_into(&mut buf) {
-                Ok(quick_xml::events::Event::Start(e)) => {
-                    let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                    if name == "title" && !in_entry {
-                        in_title = true;
-                    } else if name == "entry" {
-                        in_entry = true;
-                        current_entry = Some(OPDSEntry::default());
-                    } else if name == "content" && in_entry {
-                        in_content = true;
-                    }
-                }
-                Ok(quick_xml::events::Event::Text(e)) => {
-                    let text = e.decode()?;
-                    if in_title {
-                        title.push_str(&text);
-                    } else if in_entry {
-                        if let Some(ref mut entry) = current_entry {
-                            if in_content {
-                                entry.summary = text.to_string();
-                            }
-                        }
-                    }
-                }
-                Ok(quick_xml::events::Event::End(e)) => {
-                    let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                    if name == "title" && !in_entry {
-                        in_title = false;
-                    } else if name == "entry" {
-                        if let Some(entry) = current_entry.take() {
-                            entries.push(entry);
-                        }
-                        in_entry = false;
-                    } else if name == "content" {
-                        in_content = false;
-                    }
-                }
-                Ok(quick_xml::events::Event::Eof) => break,
-                _ => {}
-            }
-            buf.clear();
-        }
-
-        let id = base_url.to_string();
         Ok(OPDSCatalog {
-            _id: id,
+            _id: base_url.to_string(),
             title,
             _url: base_url.to_string(),
             entries,
         })
     }
 
-    fn parse_nav(body: &str, _base_url: &str) -> Result<Self, Error> {
+    fn create_parser(body: &str) -> quick_xml::Reader<&[u8]> {
         let parser = quick_xml::Reader::from_str(body);
         let mut parser = parser;
         parser.config_mut().trim_text(true);
+        parser
+    }
 
+    fn parse_atom_loop(parser: quick_xml::Reader<&[u8]>, title: &mut String, entries: &mut Vec<OPDSEntry>, state: &mut AtomParserState) {
+        let mut parser = parser;
         let mut buf = Vec::with_capacity(1024);
-        // Pre-allocate with estimated capacity to reduce reallocations
-        let mut entries = Vec::with_capacity(16);
-        let mut title = String::new();
-        let mut in_link = false;
-        let mut href = String::new();
 
         loop {
             match parser.read_event_into(&mut buf) {
                 Ok(quick_xml::events::Event::Start(e)) => {
-                    let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                    if name == "nav" {
-                        for attr in e.attributes().flatten() {
-                            if attr.key.as_ref() == b"href" {
-                                href = String::from_utf8_lossy(&attr.value).to_string();
-                            }
-                        }
-                    }
+                    state.handle_start_event(e);
                 }
                 Ok(quick_xml::events::Event::Text(e)) => {
-                    let text = e.decode()?;
-                    if !text.is_empty() && in_link {
-                        entries.push(OPDSEntry {
-                            id: href.clone(),
-                            title: text.to_string(),
-                            links: FxHashMap::default(),
-                            summary: String::new(),
-                        });
-                    } else if !text.is_empty() {
-                        title.push_str(&text);
+                    if let Ok(text) = e.decode() {
+                        state.handle_text_event(title, text);
                     }
                 }
                 Ok(quick_xml::events::Event::End(e)) => {
-                    let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                    if name == "nav" {
-                        in_link = false;
-                    }
+                    state.handle_end_event(entries, e);
                 }
                 Ok(quick_xml::events::Event::Eof) => break,
                 _ => {}
             }
             buf.clear();
         }
+    }
+
+    fn parse_nav(body: &str, _base_url: &str) -> Result<Self, Error> {
+        let parser = Self::create_parser(body);
+        let mut state = NavParserState::new();
+
+        Self::parse_nav_loop(parser, &mut state);
 
         Ok(OPDSCatalog {
             _id: String::new(),
-            title,
+            title: state.title,
             _url: String::new(),
-            entries,
+            entries: state.entries,
         })
     }
 
+    fn parse_nav_loop(parser: quick_xml::Reader<&[u8]>, state: &mut NavParserState) {
+        let mut parser = parser;
+        let mut buf = Vec::with_capacity(1024);
+
+        loop {
+            match parser.read_event_into(&mut buf) {
+                Ok(quick_xml::events::Event::Start(e)) => {
+                    state.handle_start_event(e);
+                }
+                Ok(quick_xml::events::Event::Text(e)) => {
+                    if let Ok(text) = e.decode() {
+                        state.handle_text_event(text);
+                    }
+                }
+                Ok(quick_xml::events::Event::End(e)) => {
+                    state.handle_end_event(e);
+                }
+                Ok(quick_xml::events::Event::Eof) => break,
+                _ => {}
+            }
+            buf.clear();
+        }
+    }
+}
+
+struct NavParserState {
+    entries: Vec<OPDSEntry>,
+    title: String,
+    in_link: bool,
+    href: String,
+}
+
+impl NavParserState {
+    fn new() -> Self {
+        NavParserState {
+            entries: Vec::with_capacity(16),
+            title: String::new(),
+            in_link: false,
+            href: String::new(),
+        }
+    }
+
+    fn handle_start_event(&mut self, e: quick_xml::events::Event<&[u8]>) {
+        if let quick_xml::events::Event::Start(elem) = e {
+            let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
+            if name == "nav" {
+                for attr in elem.attributes().flatten() {
+                    if attr.key.as_ref() == b"href" {
+                        self.href = String::from_utf8_lossy(&attr.value).to_string();
+                    }
+                }
+            }
+        }
+    }
+
+    fn handle_text_event(&mut self, text: &str) {
+        if !text.is_empty() && self.in_link {
+            self.entries.push(OPDSEntry {
+                id: self.href.clone(),
+                title: text.to_string(),
+                links: FxHashMap::default(),
+                summary: String::new(),
+            });
+        } else if !text.is_empty() {
+            self.title.push_str(text);
+        }
+    }
+
+    fn handle_end_event(&mut self, e: quick_xml::events::Event<&[u8]>) {
+        if let quick_xml::events::Event::End(elem) = e {
+            let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
+            if name == "nav" {
+                self.in_link = false;
+            }
+        }
+    }
+}
+
+struct AtomParserState {
+    in_title: bool,
+    in_entry: bool,
+    current_entry: Option<OPDSEntry>,
+    in_content: bool,
+}
+
+impl AtomParserState {
+    fn new() -> Self {
+        AtomParserState {
+            in_title: false,
+            in_entry: false,
+            current_entry: None,
+            in_content: false,
+        }
+    }
+
+    fn handle_start_event(&mut self, e: quick_xml::events::Event<&[u8]>) {
+        if let quick_xml::events::Event::Start(elem) = e {
+            let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
+            if name == "title" && !self.in_entry {
+                self.in_title = true;
+            } else if name == "entry" {
+                self.in_entry = true;
+                self.current_entry = Some(OPDSEntry::default());
+            } else if name == "content" && self.in_entry {
+                self.in_content = true;
+            }
+        }
+    }
+
+    fn handle_text_event(&mut self, title: &mut String, text: &str) {
+        if self.in_title {
+            title.push_str(text);
+        } else if self.in_entry {
+            if let Some(ref mut entry) = self.current_entry {
+                if self.in_content {
+                    entry.summary = text.to_string();
+                }
+            }
+        }
+    }
+
+    fn handle_end_event(&mut self, entries: &mut Vec<OPDSEntry>, e: quick_xml::events::Event<&[u8]>) {
+        if let quick_xml::events::Event::End(elem) = e {
+            let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
+            if name == "title" && !self.in_entry {
+                self.in_title = false;
+            } else if name == "entry" {
+                if let Some(entry) = self.current_entry.take() {
+                    entries.push(entry);
+                }
+                self.in_entry = false;
+            } else if name == "content" {
+                self.in_content = false;
+            }
+        }
+    }
+}
+
+impl OPDSCatalog {
     pub fn title(&self) -> &str {
         &self.title
     }
