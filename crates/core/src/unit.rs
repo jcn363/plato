@@ -33,3 +33,17 @@ pub fn scale_by_dpi_raw(x: f32, dpi: u16) -> f32 {
 pub fn scale_by_dpi(x: f32, dpi: u16) -> f32 {
     scale_by_dpi_raw(x, dpi).round().max(1.0)
 }
+
+/// Scale value by current device DPI.
+/// DRY helper to avoid repeated `let dpi = CURRENT_DEVICE.dpi` pattern across view modules.
+#[inline]
+pub fn scale_by_device_dpi(x: f32) -> f32 {
+    scale_by_dpi(x, crate::device::CURRENT_DEVICE.dpi)
+}
+
+/// Scale value by current device DPI (raw, no rounding).
+/// DRY helper to avoid repeated `let dpi = CURRENT_DEVICE.dpi` pattern across view modules.
+#[inline]
+pub fn scale_by_device_dpi_raw(x: f32) -> f32 {
+    scale_by_dpi_raw(x, crate::device::CURRENT_DEVICE.dpi)
+}

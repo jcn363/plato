@@ -43,7 +43,7 @@ impl ReaderSettingsManager {
             font_size: 12.0,
             font_family: DEFAULT_FONT_FAMILY.to_string(),
             text_align: TextAlign::Left,
-            zoom_mode: ZoomMode::Fit,
+            zoom_mode: ZoomMode::Fit(1.0),
             scroll_mode: ScrollMode::Vertical,
             line_height: 1.2,
             margin_width: 8,

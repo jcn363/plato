@@ -7,7 +7,7 @@ use crate::geom::Rectangle;
 use crate::theme;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 
-#[allow(dead_code)]
+#[allow(dead_code)] // Used for search results display
 pub struct ResultsLabel {
     id: Id,
     rect: Rectangle,
@@ -16,7 +16,7 @@ pub struct ResultsLabel {
     completed: bool,
 }
 
-#[allow(dead_code)]
+#[allow(dead_code)] // Search results UI implementation
 impl ResultsLabel {
     pub fn new(rect: Rectangle, count: usize, completed: bool) -> ResultsLabel {
         ResultsLabel {

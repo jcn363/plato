@@ -9,7 +9,7 @@ use crate::gesture::GestureEvent;
 use crate::theme;
 use crate::view::Bus;
 
-#[allow(dead_code)]
+#[allow(dead_code)] // Used for chapter navigation display
 pub struct ChapterLabel {
     id: Id,
     rect: Rectangle,
@@ -18,7 +18,7 @@ pub struct ChapterLabel {
     progress: f32,
 }
 
-#[allow(dead_code)]
+#[allow(dead_code)] // Chapter navigation UI implementation
 impl ChapterLabel {
     pub fn new(rect: Rectangle, title: String, progress: f32) -> ChapterLabel {
         ChapterLabel {

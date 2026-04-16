@@ -134,7 +134,7 @@ impl OPDSCatalog {
                     let text = e.decode()?;
                     if !text.is_empty() && in_link {
                         entries.push(OPDSEntry {
-                            id: href,
+                            id: href.clone(),
                             title: text.to_string(),
                             links: FxHashMap::default(),
                             summary: String::new(),

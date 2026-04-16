@@ -93,13 +93,14 @@ impl TextShaper {
 
         // Shape the text (simplified implementation)
         let glyphs = self.simple_shape(text);
+        let width = self.calculate_width(&glyphs);
 
         // Cache the result
         self.font_cache.insert(cache_key, glyphs.clone());
 
         ShapedText {
             glyphs,
-            width: self.calculate_width(&glyphs),
+            width,
             height: self.config.font_size,
             x_bearing: 0.0,
             y_bearing: self.config.font_size * 0.8,
@@ -136,7 +137,7 @@ impl TextShaper {
     }
 
     /// Get glyph advance width (simplified)
-    fn get_glyph_advance(&self, glyph_id: u32) -> f32 {
+    fn get_glyph_advance(&self, _glyph_id: u32) -> f32 {
         // Simplified advance calculation
         self.config.font_size * 0.6
     }

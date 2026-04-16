@@ -201,7 +201,7 @@ impl ThumbnailManager {
 
     /// Gets cache statistics for monitoring
     pub fn cache_stats(&self) -> crate::thumbnail::cache::CacheStats {
-        self.cache.lock().unwrap().stats()
+        self.cache.lock().expect("cache lock poisoned").stats()
     }
 
     /// Gets the number of pending requests
@@ -216,7 +216,7 @@ impl ThumbnailManager {
 
     /// Clears all cached thumbnails
     pub fn clear_cache(&mut self) -> ThumbnailResult<()> {
-        self.cache.lock().unwrap().clear();
+        self.cache.lock().expect("cache lock poisoned").clear();
         Ok(())
     }
 
@@ -290,7 +290,7 @@ mod tests {
     #[test]
     fn test_manager_new() {
         let config = ThumbnailConfig::default();
-        let _manager = ThumbnailManager::new(config.clone()).unwrap();
+        let _manager = ThumbnailManager::new(config.clone()).expect("Failed to create manager");
     }
 
     #[test]
@@ -304,7 +304,7 @@ mod tests {
     #[test]
     fn test_request_thumbnail_invalid_path() {
         let config = ThumbnailConfig::default();
-        let manager = ThumbnailManager::new(config).unwrap();
+        let manager = ThumbnailManager::new(config).expect("Failed to create manager");
         let result = manager.request_thumbnail(Path::new(""));
         assert!(result.is_err());
     }
@@ -312,9 +312,9 @@ mod tests {
     #[test]
     fn test_compute_thumbnail_path() {
         let config = ThumbnailConfig::default();
-        let manager = ThumbnailManager::new(config).unwrap();
+        let manager = ThumbnailManager::new(config).expect("Failed to create manager");
         let file_path = Path::new("/home/user/book.pdf");
-        let thumbnail_path = manager.compute_thumbnail_path(file_path).unwrap();
+        let thumbnail_path = manager.compute_thumbnail_path(file_path).expect("Failed to compute thumbnail path");
         assert!(thumbnail_path.ends_with(".thumbnail-previews/book.png"));
     }
 
@@ -322,7 +322,7 @@ mod tests {
     fn test_cache_stats() {
         let config = ThumbnailConfig::default();
         let cache_size = config.cache_size;
-        let manager = ThumbnailManager::new(config).unwrap();
+        let manager = ThumbnailManager::new(config).expect("Failed to create manager");
         let stats = manager.cache_stats();
         assert_eq!(stats.current_size, 0);
         assert_eq!(stats.max_size, cache_size);
@@ -331,7 +331,7 @@ mod tests {
     #[test]
     fn test_pending_count() {
         let config = ThumbnailConfig::default();
-        let manager = ThumbnailManager::new(config).unwrap();
+        let manager = ThumbnailManager::new(config).expect("Failed to create manager");
         assert_eq!(manager.pending_count(), 0);
     }
 }

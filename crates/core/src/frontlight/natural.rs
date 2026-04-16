@@ -1,13 +1,13 @@
 use super::{Frontlight, LightLevels};
 use crate::device::{Model, CURRENT_DEVICE};
 use anyhow::Error;
-use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
 const FRONTLIGHT_INTERFACE: &str = "/sys/class/backlight";
 
@@ -35,9 +35,8 @@ pub enum LightColor {
     Orange,
 }
 
-lazy_static! {
-    pub static ref FRONTLIGHT_DIRS: FxHashMap<LightColor, &'static str> = match CURRENT_DEVICE.model
-    {
+pub static FRONTLIGHT_DIRS: LazyLock<FxHashMap<LightColor, &'static str>> = LazyLock::new(|| {
+    match CURRENT_DEVICE.model {
         Model::AuraONE | Model::AuraONELimEd => {
             [
                 (LightColor::White, FRONTLIGHT_WHITE_A),
@@ -57,8 +56,8 @@ lazy_static! {
             .cloned()
             .collect()
         }
-    };
-}
+    }
+});
 
 pub struct NaturalFrontlight {
     intensity: f32,

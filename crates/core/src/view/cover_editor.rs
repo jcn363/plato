@@ -317,6 +317,17 @@ impl View for CoverEditorView {
                                 return true;
                             }
                         }
+                        FingerStatus::Move => {
+                            // Handle Move status (similar to Motion)
+                            if let CropState::Selecting { start, .. } = &self.crop_state {
+                                self.crop_state = CropState::Selecting {
+                                    start: *start,
+                                    end: (position.x, position.y),
+                                };
+                                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                                return true;
+                            }
+                        }
                     }
                 }
                 return false;

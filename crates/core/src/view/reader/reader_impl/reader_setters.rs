@@ -12,8 +12,7 @@
 //! 5. Queue appropriate render updates
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
-use crate::document::{Document, Location};
-use crate::framebuffer::UpdateMode;
+use crate::document::Location;
 use crate::geom::Rectangle;
 use crate::metadata::Margin;
 use crate::metadata::{CroppingMargins, ScrollMode, TextAlign, ZoomMode};
@@ -21,7 +20,7 @@ use crate::settings::DEFAULT_FONT_FAMILY;
 use crate::view::common::locate_by_id;
 use crate::view::menu_entry::MenuEntry;
 use crate::view::{Hub, RenderQueue, View, ViewId};
-use std::sync::{Arc, MutexGuard};
+use std::sync::Arc;
 
 use super::reader::Reader;
 use super::reader_core::Resource;
@@ -295,7 +294,13 @@ impl Reader {
     }
 
     pub fn toggle_bookmark(&mut self, _hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        super::reader_annotations::toggle_bookmark(self.current_page, &mut self.info);
+        super::reader_annotations::toggle_bookmark(
+            self.current_page,
+            &mut self.info,
+            self.id,
+            self.rect,
+            rq,
+        );
         self.update_tool_bar(rq, context);
     }
 

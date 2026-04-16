@@ -12,10 +12,10 @@ use crate::view::rounded_button::RoundedButton;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 
-#[allow(dead_code)]
+#[allow(dead_code)] // Used for margin cropper UI button sizing
 pub const BUTTON_DIAMETER: f32 = 40.0;
 
-#[allow(dead_code)]
+#[allow(dead_code)] // Used for PDF margin cropping interface
 pub struct MarginCropper {
     id: Id,
     rect: Rectangle,
@@ -24,7 +24,7 @@ pub struct MarginCropper {
     frame: Rectangle,
 }
 
-#[allow(dead_code)]
+#[allow(dead_code)] // Margin cropping UI implementation
 impl MarginCropper {
     pub fn new(
         rect: Rectangle,

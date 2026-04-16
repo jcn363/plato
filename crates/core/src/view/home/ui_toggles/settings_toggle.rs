@@ -161,8 +161,8 @@ impl Home {
                 self.hide_settings_menu(rq, context);
                 true
             }
-            Event::Select(name) => {
-                self.handle_settings_selection(name, hub, rq, context);
+            Event::Select(ref entry_id) => {
+                self.handle_settings_selection(entry_id, hub, rq, context);
                 true
             }
             _ => false,
@@ -172,37 +172,24 @@ impl Home {
     /// Handle settings menu selection
     fn handle_settings_selection(
         &mut self,
-        name: &str,
+        entry_id: &EntryId,
         hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        match name {
-            "font_settings" => {
-                // TODO: Send appropriate font settings event
-                self.hide_settings_menu(rq, context);
-            }
-            "display_settings" => {
-                // TODO: Send appropriate display settings event
-                self.hide_settings_menu(rq, context);
-            }
-            "reading_settings" => {
-                // TODO: Send appropriate reading settings event
-                self.hide_settings_menu(rq, context);
-            }
-            "advanced_settings" => {
-                // TODO: Send appropriate advanced settings event
-                self.hide_settings_menu(rq, context);
-            }
-            "about" => {
+        match entry_id {
+            EntryId::About => {
                 // TODO: Send appropriate about event
                 self.hide_settings_menu(rq, context);
             }
-            "help" => {
-                // TODO: Send appropriate help event
+            EntryId::SystemInfo => {
+                // TODO: Send appropriate system info event
                 self.hide_settings_menu(rq, context);
             }
-            _ => {}
+            _ => {
+                // Handle any other settings entry IDs
+                self.hide_settings_menu(rq, context);
+            }
         }
     }
 

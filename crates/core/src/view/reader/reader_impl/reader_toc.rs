@@ -3,7 +3,7 @@
 //! This module handles table of contents functionality for the Reader view,
 //! including TOC navigation, page lookup, and chapter management.
 
-use crate::document::{Location, SimpleTocEntry, TocEntry, TocLocation};
+use crate::document::{SimpleTocEntry, TocEntry, TocLocation};
 use crate::metadata::Info;
 use std::collections::HashMap;
 
@@ -56,7 +56,7 @@ impl ReaderTocManager {
 
             let toc_entry = TocEntry {
                 index: *index,
-                location: location.clone(),
+                location: location.clone().into(),
                 title: title.to_string(),
                 children: if !children.is_empty() {
                     self.build_toc_aux_internal(children, index, info)
@@ -79,7 +79,7 @@ impl ReaderTocManager {
         &mut self,
         simple_toc: &[SimpleTocEntry],
         index: &mut usize,
-        find_page: F,
+        find_page: &F,
     ) -> Vec<TocEntry>
     where
         F: Fn(&str) -> Option<usize>,
@@ -94,14 +94,14 @@ impl ReaderTocManager {
 
             let toc_entry = TocEntry {
                 index: *index,
-                location: location.clone(),
+                location: location.clone().into(),
                 title: title.to_string(),
                 children: if !children.is_empty() {
-                    self.build_toc_aux(children, index, find_page)
+                    self.build_toc_aux(children, index, &find_page)
                 } else {
                     Vec::new()
                 },
-                page: location.as_page(),
+                page: None,
                 level: 0,
             };
 

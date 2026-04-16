@@ -163,7 +163,7 @@ impl LineBreaker {
     }
 
     /// Calculate penalty for a break point
-    fn calculate_penalty(&self, current_width: f32, word_width: f32) -> f32 {
+    fn calculate_penalty(&self, current_width: f32, _word_width: f32) -> f32 {
         let ratio = (self.config.max_width - current_width) / self.config.max_width;
 
         if ratio < 0.0 {

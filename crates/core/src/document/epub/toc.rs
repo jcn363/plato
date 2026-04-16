@@ -74,12 +74,13 @@ impl EpubDocument {
             };
 
             if let Some(location) = loc {
+                let page = location.as_page();
                 entries.push(TocEntry {
                     title,
                     location,
                     index: current_index,
                     children: sub_entries,
-                    page: location.as_page(),
+                    page,
                     level: 0,
                 });
             }
@@ -135,12 +136,13 @@ impl EpubDocument {
                 };
 
                 if let Some(location) = loc {
+                    let page = location.as_page();
                     entries.push(TocEntry {
                         title,
                         location,
                         index: current_index,
                         children: sub_entries,
-                        page: location.as_page(),
+                        page,
                         level: 0,
                     });
                 }

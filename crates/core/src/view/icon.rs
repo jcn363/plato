@@ -10,79 +10,77 @@ use crate::gesture::GestureEvent;
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::theme;
 use crate::unit::scale_by_dpi_raw;
-use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
 use std::path::Path;
+use std::sync::LazyLock;
 
 const ICON_SCALE: f32 = 1.0 / 32.0;
 
-lazy_static! {
-    pub static ref ICONS_PIXMAPS: FxHashMap<&'static str, Pixmap> = {
-        let mut m = FxHashMap::default();
-        let scale = scale_by_dpi_raw(ICON_SCALE, CURRENT_DEVICE.dpi);
-        let dir = Path::new("icons");
-        for name in [
-            "home",
-            "search",
-            "back",
-            "frontlight",
-            "frontlight-disabled",
-            "menu",
-            "angle-left",
-            "angle-right",
-            "angle-left-small",
-            "angle-right-small",
-            "return",
-            "shift",
-            "combine",
-            "alternate",
-            "delete-backward",
-            "delete-forward",
-            "move-backward",
-            "move-backward-short",
-            "move-forward",
-            "move-forward-short",
-            "close",
-            "check_mark-small",
-            "check_mark",
-            "check_mark-large",
-            "bullet",
-            "arrow-left",
-            "arrow-right",
-            "angle-down",
-            "angle-up",
-            "crop",
-            "toc",
-            "font_family",
-            "font_size",
-            "line_height",
-            "align-justify",
-            "align-left",
-            "align-right",
-            "align-center",
-            "margin",
-            "plug",
-            "cover",
-            "enclosed_menu",
-            "contrast",
-            "gray",
-        ]
-        .iter()
-        .cloned()
-        {
-            let path = dir.join(&format!("{}.svg", name));
-            let doc = PdfOpener::new()
-                .and_then(|o| o.open(path))
-                .expect("failed to open icon");
-            let pixmap = doc
-                .page(0)
-                .and_then(|p| p.pixmap(scale, 1))
-                .expect("failed to render icon");
-            m.insert(name, pixmap);
-        }
-        m
-    };
-}
+pub static ICONS_PIXMAPS: LazyLock<FxHashMap<&'static str, Pixmap>> = LazyLock::new(|| {
+    let mut m = FxHashMap::default();
+    let scale = scale_by_dpi_raw(ICON_SCALE, CURRENT_DEVICE.dpi);
+    let dir = Path::new("icons");
+    for name in [
+        "home",
+        "search",
+        "back",
+        "frontlight",
+        "frontlight-disabled",
+        "menu",
+        "angle-left",
+        "angle-right",
+        "angle-left-small",
+        "angle-right-small",
+        "return",
+        "shift",
+        "combine",
+        "alternate",
+        "delete-backward",
+        "delete-forward",
+        "move-backward",
+        "move-backward-short",
+        "move-forward",
+        "move-forward-short",
+        "close",
+        "check_mark-small",
+        "check_mark",
+        "check_mark-large",
+        "bullet",
+        "arrow-left",
+        "arrow-right",
+        "angle-down",
+        "angle-up",
+        "crop",
+        "toc",
+        "font_family",
+        "font_size",
+        "line_height",
+        "align-justify",
+        "align-left",
+        "align-right",
+        "align-center",
+        "margin",
+        "plug",
+        "cover",
+        "enclosed_menu",
+        "contrast",
+        "gray",
+    ]
+    .iter()
+    .cloned()
+    {
+        let path = dir.join(&format!("{}.svg", name));
+        let doc = PdfOpener::new()
+            .and_then(|o| o.open(path))
+            .expect("failed to open icon");
+        let pixmap = doc
+            .page(0)
+            .and_then(|p| p.pixmap(scale, 1))
+            .expect("failed to render icon");
+        m.insert(name, pixmap);
+    }
+    m
+});
 
 pub struct Icon {
     id: Id,

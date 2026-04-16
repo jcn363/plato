@@ -74,19 +74,21 @@ impl TextRenderer {
         framebuffer: &mut dyn Framebuffer,
         rect: Rectangle,
     ) -> TextRenderResult {
-        let mut x = rect.min.x as f32;
-        let mut y = rect.min.y as f32 + self.config.font_size * 0.8; // Baseline
+        let start_x = rect.min.x as f32;
+        let mut x = start_x;
+        let y_baseline = rect.min.y as f32 + self.config.font_size * 0.8; // Baseline
         let mut glyph_count = 0;
 
         for ch in text.chars() {
             let glyph_id = self.get_glyph_id(ch);
-            let glyph_data = self.get_or_create_glyph_data(glyph_id);
+            let advance = self.get_or_create_glyph_data(glyph_id).advance;
+            let bitmap = self.get_or_create_glyph_data(glyph_id).bitmap.clone();
 
-            if let Some(bitmap) = &glyph_data.bitmap {
-                self.render_glyph(bitmap, framebuffer, x, y);
+            if let Some(ref bm) = bitmap {
+                self.render_glyph(bm, framebuffer, x, y_baseline);
             }
 
-            x += glyph_data.advance;
+            x += advance;
             glyph_count += 1;
         }
 
@@ -114,7 +116,7 @@ impl TextRenderer {
             self.glyph_cache.insert(glyph_id, glyph_data);
         }
 
-        self.glyph_cache.get(&glyph_id).unwrap()
+        self.glyph_cache.get(&glyph_id).expect("glyph_id should be in cache after insertion")
     }
 
     /// Create glyph data
@@ -135,7 +137,7 @@ impl TextRenderer {
     }
 
     /// Create glyph bitmap
-    fn create_glyph_bitmap(&self, glyph_id: u32) -> Option<Vec<u8>> {
+    fn create_glyph_bitmap(&self, _glyph_id: u32) -> Option<Vec<u8>> {
         // Simplified bitmap creation
         let width = (self.config.font_size * 0.6) as usize;
         let height = self.config.font_size as usize;

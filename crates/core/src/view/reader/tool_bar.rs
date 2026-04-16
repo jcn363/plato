@@ -54,37 +54,37 @@ impl ToolBar {
         }
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Toolbar update method for margin width setting
     pub fn update_margin_width(&mut self, margin_width: i32, rq: &mut RenderQueue) {
         update_margin_width(&mut self.children, margin_width, rq, self.reflowable);
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Toolbar update method for font family setting
     pub fn update_font_family(&mut self, font_family: String, rq: &mut RenderQueue) {
         update_font_family(&mut self.children, font_family, rq);
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Toolbar update method for line height setting
     pub fn update_line_height(&mut self, line_height: f32, rq: &mut RenderQueue) {
         update_line_height(&mut self.children, line_height, rq);
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Toolbar update method for text alignment icon
     pub fn update_text_align_icon(&mut self, text_align: TextAlign, rq: &mut RenderQueue) {
         update_text_align_icon(&mut self.children, text_align, rq);
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Toolbar update method for font size slider
     pub fn update_font_size_slider(&mut self, font_size: f32, rq: &mut RenderQueue) {
         update_font_size_slider(&mut self.children, font_size, rq);
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Toolbar update method for contrast exponent slider
     pub fn update_contrast_exponent_slider(&mut self, exponent: f32, rq: &mut RenderQueue) {
         update_contrast_exponent_slider(&mut self.children, exponent, rq);
     }
 
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Toolbar update method for contrast gray slider
     pub fn update_contrast_gray_slider(&mut self, gray: f32, rq: &mut RenderQueue) {
         update_contrast_gray_slider(&mut self.children, gray, rq);
     }

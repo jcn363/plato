@@ -135,7 +135,7 @@ use crate::document::{BoundedText, Document, SimpleTocEntry, TextLocation, TocEn
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{BorderSpec, Boundary, CornerSpec, Point, Rectangle, Vec2};
-use crate::geom::{CycleDir, LinearDir};
+use crate::geom::LinearDir;
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent};
 use crate::log_error;
 use crate::metadata::{Annotation, Info, ZoomMode};

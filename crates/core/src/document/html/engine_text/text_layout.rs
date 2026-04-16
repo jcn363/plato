@@ -64,7 +64,7 @@ impl TextLayoutEngine {
     }
 
     /// Layout text with the current configuration
-    pub fn layout_text(&self, text: &str, style: &StyleData) -> TextLayoutResult {
+    pub fn layout_text(&self, text: &str, _style: &StyleData) -> TextLayoutResult {
         let mut lines = Vec::new();
         let mut current_y = 0.0;
         let max_width = self.config.max_width;

@@ -141,6 +141,8 @@ where
                     location: current_location,
                     index: current_index,
                     children: current_children,
+                    level: 0,
+                    page: None,
                 });
             }
         }

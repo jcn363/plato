@@ -158,12 +158,13 @@ impl Engine {
     pub fn render_page(
         &mut self,
         page: &[DrawCommand],
-        scale_factor: f32,
-        samples: usize,
-        resource_fetcher: &mut dyn ResourceFetcher,
+        _scale_factor: f32,
+        _samples: usize,
+        _resource_fetcher: &mut dyn ResourceFetcher,
     ) -> Option<crate::framebuffer::Pixmap> {
         // TODO: Implement render_page method
         // This is a placeholder to maintain API compatibility
+        let _ = page;
         None
     }
 }

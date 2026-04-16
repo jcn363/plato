@@ -219,7 +219,7 @@ impl Iterator for TextCharIter {
 
 /// Safe wrapper around an MuPDF text character. Not owned — borrows from TextLine.
 pub struct TextChar {
-    #[allow(dead_code)]
+    #[allow(dead_code)] // MuPDF context reference for text character operations
     ctx: *mut FzContext,
     text_char: *mut FzTextChar,
 }

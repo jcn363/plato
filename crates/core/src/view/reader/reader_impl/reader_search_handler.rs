@@ -223,8 +223,8 @@ impl ReaderSearchHandler {
         // Remove old results for this page and add new ones
         self.search_results.retain(|r| r.page != page);
         self.search_results.extend(page_results);
-        self.search_results
-            .sort_by(|a, b| a.location.cmp(&b.location));
+        // Sort by page number since Location doesn't implement Ord
+        self.search_results.sort_by_key(|r| r.page);
 
         // Adjust current index if needed
         if self.current_result_index >= self.search_results.len() {

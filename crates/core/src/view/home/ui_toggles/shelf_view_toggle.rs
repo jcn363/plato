@@ -5,7 +5,7 @@
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
-use crate::settings::interface::{FirstColumn, SecondColumn};
+use crate::settings::{FirstColumn, SecondColumn};
 use crate::view::home::Shelf;
 use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 

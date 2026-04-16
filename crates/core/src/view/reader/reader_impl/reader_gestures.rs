@@ -58,7 +58,7 @@ fn update_selection_rects_forward(
 }
 
 /// Update selection rectangles in backward direction (for handle_selection_up)
-#[allow(dead_code)]
+#[allow(dead_code)] // Backward selection rectangle update for gesture handling
 fn update_selection_rects_backward(
     rects: &[(Rectangle, Point)],
     boundary_low: Point,
@@ -103,7 +103,7 @@ fn merge_rects_at_boundary(rect: &mut Rectangle, other: Rectangle) {
 }
 
 /// Update selection rectangles by dispatching to forward or backward handler
-#[allow(dead_code)]
+#[allow(dead_code)] // Used for selection rectangle updates in gesture handling
 fn update_selection_rects(
     rects: &[(Rectangle, Point)],
     boundary_low: Point,
@@ -223,7 +223,7 @@ impl Reader {
         context: &mut Context,
     ) -> bool {
         match self.view_port.zoom_mode {
-            ZoomMode::FitToPage | ZoomMode::FitToWidth => match dir {
+            ZoomMode::FitToPage | ZoomMode::FitToWidth | ZoomMode::Fit(_) => match dir {
                 Dir::West => self.go_to_neighbor(CycleDir::Next, hub, rq, context),
                 Dir::East => self.go_to_neighbor(CycleDir::Previous, hub, rq, context),
                 Dir::South | Dir::North => {

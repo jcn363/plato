@@ -24,8 +24,14 @@ impl ThumbnailCache {
             ));
         }
 
+        if max_size == 0 {
+            return Err(crate::thumbnail::error::ThumbnailError::cache(
+                "cache size must be greater than 0",
+            ));
+        }
+
         Ok(Self {
-            cache: lru::LruCache::new(std::num::NonZeroUsize::new(max_size).unwrap()),
+            cache: lru::LruCache::new(std::num::NonZeroUsize::new(max_size).expect("max_size > 0 validated above")),
             max_size,
         })
     }

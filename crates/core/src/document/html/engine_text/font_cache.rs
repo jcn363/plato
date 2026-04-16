@@ -59,10 +59,12 @@ impl FontCache {
 
     /// Get a cached glyph
     pub fn get(&mut self, glyph_id: u32) -> Option<&FontCacheEntry> {
-        if let Some(entry) = self.cache.get_mut(&glyph_id) {
-            entry.last_accessed = std::time::Instant::now();
+        if self.cache.contains_key(&glyph_id) {
             self.update_access_order(glyph_id);
-            Some(entry)
+            self.cache.get_mut(&glyph_id).map(|entry| {
+                entry.last_accessed = std::time::Instant::now();
+                &*entry
+            })
         } else {
             None
         }

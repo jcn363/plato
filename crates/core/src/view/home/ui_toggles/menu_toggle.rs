@@ -6,6 +6,7 @@
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
+use crate::metadata::SortMethod;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::{EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId};
 
@@ -240,49 +241,44 @@ impl Home {
     /// Handle menu selection
     fn handle_menu_selection(
         &mut self,
-        name: &str,
+        entry_id: &EntryId,
         hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        match name {
-            "sort_title" => {
+        match entry_id {
+            EntryId::Sort(SortMethod::Title) => {
                 // TODO: Implement sort by title
                 self.hide_sort_menu(rq, context);
             }
-            "sort_author" => {
+            EntryId::Sort(SortMethod::Author) => {
                 // TODO: Implement sort by author
                 self.hide_sort_menu(rq, context);
             }
-            "sort_date" => {
+            EntryId::Sort(SortMethod::Date) => {
                 // TODO: Implement sort by date
                 self.hide_sort_menu(rq, context);
             }
-            "sort_size" => {
+            EntryId::Sort(SortMethod::Size) => {
                 // TODO: Implement sort by size
                 self.hide_sort_menu(rq, context);
             }
-            "book_open" => {
+            EntryId::Load(_) => {
                 // TODO: Implement book open
                 self.hide_book_menu(rq, context);
             }
-            "book_rename" => {
+            EntryId::Rename(_) => {
                 // TODO: Implement book rename
                 self.hide_book_menu(rq, context);
             }
-            "book_delete" => {
+            EntryId::Remove(_) => {
                 // TODO: Implement book delete
                 self.hide_book_menu(rq, context);
             }
-            "book_bookmark" => {
-                // TODO: Implement add bookmark
+            _ => {
+                // Handle any other entry IDs
                 self.hide_book_menu(rq, context);
             }
-            "book_info" => {
-                // TODO: Implement view info
-                self.hide_book_menu(rq, context);
-            }
-            _ => {}
         }
     }
 

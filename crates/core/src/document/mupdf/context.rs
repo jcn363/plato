@@ -50,6 +50,16 @@ impl MuPdfContext {
             .ok_or_else(|| format_err!("Failed to create MuPDF context"))
     }
 
+    /// Create a new MuPDF context with a custom error message.
+    /// Shared helper for DRY compliance when context creation fails.
+    pub fn new_with_context<T: AsRef<str>>(context: T) -> Result<Self, Error> {
+        new_mupdf_context()
+            .map(|ctx| MuPdfContext {
+                inner: Rc::new(ContextInner { ctx }),
+            })
+            .ok_or_else(|| format_err!("Failed to create MuPDF context: {}", context.as_ref()))
+    }
+
     /// Get the raw FFI context pointer.
     #[inline]
     pub fn as_ptr(&self) -> *mut FzContext {

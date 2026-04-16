@@ -116,7 +116,7 @@ pub struct PdfDocument {
 }
 
 /// PDF page for rendering and text extraction.
-#[allow(dead_code)]
+#[allow(dead_code)] // Used for PDF page-level operations and text extraction
 pub struct PdfPage<'a> {
     page: mupdf::Page,
     index: usize,

@@ -12,33 +12,33 @@ static AUTO_THRESHOLD: LazyLock<std::sync::Mutex<u16>> =
 
 #[inline]
 pub fn is_dark_mode() -> bool {
-    *DARK_MODE.lock().unwrap()
+    *DARK_MODE.lock().expect("DARK_MODE lock poisoned")
 }
 
 #[inline]
 pub fn is_sepia_mode() -> bool {
-    *THEME_MODE.lock().unwrap() == ThemeMode::Sepia
+    *THEME_MODE.lock().expect("THEME_MODE lock poisoned") == ThemeMode::Sepia
 }
 
 #[inline]
 pub fn theme_mode() -> ThemeMode {
-    *THEME_MODE.lock().unwrap()
+    *THEME_MODE.lock().expect("THEME_MODE lock poisoned")
 }
 
 #[inline]
 pub fn set_dark_mode(enabled: bool) {
-    *DARK_MODE.lock().unwrap() = enabled;
+    *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = enabled;
 }
 
 #[inline]
 pub fn set_theme_mode(mode: ThemeMode) {
-    *THEME_MODE.lock().unwrap() = mode;
+    *THEME_MODE.lock().expect("THEME_MODE lock poisoned") = mode;
     match mode {
         ThemeMode::Light | ThemeMode::Sepia => {
-            *DARK_MODE.lock().unwrap() = false;
+            *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = false;
         }
         ThemeMode::Dark => {
-            *DARK_MODE.lock().unwrap() = true;
+            *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = true;
         }
         ThemeMode::Auto | ThemeMode::Scheduled => {}
     }
@@ -46,27 +46,27 @@ pub fn set_theme_mode(mode: ThemeMode) {
 
 #[inline]
 pub fn set_auto_threshold(threshold: u16) {
-    *AUTO_THRESHOLD.lock().unwrap() = threshold;
+    *AUTO_THRESHOLD.lock().expect("AUTO_THRESHOLD lock poisoned") = threshold;
 }
 
 #[inline]
 pub fn auto_threshold() -> u16 {
-    *AUTO_THRESHOLD.lock().unwrap()
+    *AUTO_THRESHOLD.lock().expect("AUTO_THRESHOLD lock poisoned")
 }
 
 #[inline]
 pub fn update_from_light_sensor(light_level: u16) {
-    let mode = *THEME_MODE.lock().unwrap();
+    let mode = *THEME_MODE.lock().expect("THEME_MODE lock poisoned");
     if mode == ThemeMode::Auto {
-        let threshold = *AUTO_THRESHOLD.lock().unwrap();
+        let threshold = *AUTO_THRESHOLD.lock().expect("AUTO_THRESHOLD lock poisoned");
         let dark = light_level < threshold;
-        *DARK_MODE.lock().unwrap() = dark;
+        *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = dark;
     }
 }
 
 #[inline]
 pub fn update_from_schedule(schedule: &ThemeSchedule, current_time: &DateTime<Local>) {
-    if *THEME_MODE.lock().unwrap() != ThemeMode::Scheduled || !schedule.enabled {
+    if *THEME_MODE.lock().expect("THEME_MODE lock poisoned") != ThemeMode::Scheduled || !schedule.enabled {
         return;
     }
 
@@ -81,7 +81,7 @@ pub fn update_from_schedule(schedule: &ThemeSchedule, current_time: &DateTime<Lo
         now_minutes >= start_minutes || now_minutes < end_minutes
     };
 
-    *DARK_MODE.lock().unwrap() = is_dark;
+    *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = is_dark;
 }
 
 #[inline]

@@ -65,6 +65,7 @@ pub enum ViewId {
     DictionarySearchInput,
     CalculatorInput,
     SearchBar,
+    SearchBarInput,
     AddressBar,
     AddressBarInput,
     Keyboard,

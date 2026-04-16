@@ -12,13 +12,13 @@ use std::str;
 
 pub struct Font {
     face: Face,
-    #[allow(dead_code)]
+    #[allow(dead_code)] // HarfBuzz font for text shaping
     hb_font: HbFont,
     pub size: u32,
     pub dpi: u16,
     pub ellipsis: RenderPlan,
     pub x_heights: (u32, u32),
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Space codepoint for text layout
     space_codepoint: u32,
 }
 

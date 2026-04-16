@@ -23,8 +23,8 @@ use crate::view::reader::bottom_bar::BottomBar;
 use crate::view::reader::tool_bar::ToolBar;
 use crate::view::search_bar::SearchBar;
 use crate::view::top_bar::TopBar;
-use crate::view::{Hub, RenderQueue, View, BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use std::sync::{Arc, MutexGuard};
+use crate::view::{Hub, RenderQueue, BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use std::sync::MutexGuard;
 
 use super::reader::Reader;
 
