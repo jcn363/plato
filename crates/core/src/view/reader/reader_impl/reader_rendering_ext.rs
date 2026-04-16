@@ -110,7 +110,7 @@ impl ReaderRenderEngine {
         rect: Rectangle,
         framebuffer: &mut dyn Framebuffer,
         context: &mut Context,
-    ) -> Result<(), String> {
+    ) -> Result<(), Error> {
         // Check if page is already cached
         if let Some(pixmap) = self.cache.get(page) {
             self.render_cached_page(pixmap, rect, framebuffer);
@@ -136,8 +136,8 @@ impl ReaderRenderEngine {
         let scale = self.calculate_scale_factor(pixmap.width(), pixmap.height(), rect);
         let dest_rect = self.calculate_dest_rect(pixmap.width(), pixmap.height(), rect, scale);
 
-        // Draw the pixmap
-        framebuffer.draw_pixmap(pixmap, &dest_rect);
+        // Draw the pixmap at the destination rectangle's top-left corner
+        framebuffer.draw_pixmap(pixmap, dest_rect.min);
     }
 
     /// Render page to pixmap
@@ -184,8 +184,8 @@ impl ReaderRenderEngine {
         let scaled_width = (pixmap_width as f32 * scale) as i32;
         let scaled_height = (pixmap_height as f32 * scale) as i32;
 
-        let x = rect.min.x + (rect.width() - scaled_width) / 2;
-        let y = rect.min.y + (rect.height() - scaled_height) / 2;
+        let x = rect.min.x + (rect.width() as i32 - scaled_width) / 2;
+        let y = rect.min.y + (rect.height() as i32 - scaled_height) / 2;
 
         rect![x, y, scaled_width, scaled_height]
     }

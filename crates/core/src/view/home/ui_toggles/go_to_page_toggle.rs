@@ -75,10 +75,10 @@ impl Home {
 
         let rect = self.calculate_go_to_page_rect(context);
         let go_to_page = NamedInput::new(
-            rect,
             "Go to Page".to_string(),
-            "Enter page number:".to_string(),
-            self.id,
+            ViewId::GoToPageInput,
+            ViewId::GoToPageInput,
+            5,
             context,
         );
 
@@ -137,13 +137,9 @@ impl Home {
         context: &mut Context,
     ) -> bool {
         match event {
-            Event::Submit(text) => {
-                if self.focus == Some(ViewId::GoToPage) {
-                    self.handle_go_to_page_submit(text, hub, rq, context);
-                    true
-                } else {
-                    false
-                }
+            Event::Submit(ViewId::GoToPageInput, text) => {
+                self.handle_go_to_page_submit(&text, hub, rq, context);
+                true
             }
             Event::Close(ViewId::GoToPage) => {
                 self.hide_go_to_page(rq, context);

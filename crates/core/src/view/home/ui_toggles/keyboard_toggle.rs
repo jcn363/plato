@@ -80,8 +80,8 @@ impl Home {
             return;
         }
 
-        let rect = self.calculate_keyboard_rect(context);
-        let keyboard = Keyboard::new(rect, self.id, context);
+        let mut rect = self.calculate_keyboard_rect(context);
+        let keyboard = Keyboard::new(&mut rect, false, context);
 
         self.keyboard = Some(Box::new(keyboard) as Box<dyn View>);
         self.focus = Some(ViewId::Keyboard);
@@ -153,13 +153,9 @@ impl Home {
         context: &mut Context,
     ) -> bool {
         match event {
-            Event::Submit(text) => {
-                if self.focus == Some(ViewId::Keyboard) {
-                    self.handle_keyboard_submit(text, hub, rq, context);
-                    true
-                } else {
-                    false
-                }
+            Event::Submit(ViewId::Keyboard, text) => {
+                self.handle_keyboard_submit(&text, hub, rq, context);
+                true
             }
             Event::Close(ViewId::Keyboard) => {
                 self.hide_keyboard(rq, context);
@@ -177,17 +173,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        // Handle keyboard submission based on current context
-        if let Some(ref mut address_bar) = self.address_bar {
-            if self.focus == Some(ViewId::AddressBar) {
-                address_bar.set_text(text.to_string());
-                self.hide_keyboard(rq, context);
-                hub.send(Event::AddressBarSubmit(text.to_string())).ok();
-                return;
-            }
-        }
-
-        // Handle other keyboard contexts
+        // Handle keyboard submission - just hide keyboard for now
         self.hide_keyboard(rq, context);
     }
 

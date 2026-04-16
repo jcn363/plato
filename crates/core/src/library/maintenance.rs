@@ -149,7 +149,7 @@ impl Library {
         }
     }
 
-    pub fn is_empty(&self) -> Option<bool> {
+    pub fn is_database_empty(&self) -> Option<bool> {
         if self.mode == LibraryMode::Database {
             Some(self.db.is_empty())
         } else {

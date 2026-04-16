@@ -44,6 +44,15 @@ pub enum Location {
     Uri(String),
 }
 
+impl Location {
+    pub fn as_page(&self) -> Option<usize> {
+        match self {
+            Location::Exact(page) => Some(*page),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct BoundedText {
     pub text: String,
@@ -91,6 +100,25 @@ pub struct TocEntry {
     pub location: Location,
     pub index: usize,
     pub children: Vec<TocEntry>,
+    #[doc(hidden)]
+    pub page: Option<usize>,
+    #[doc(hidden)]
+    pub level: usize,
+}
+
+impl TocEntry {
+    pub fn new(title: String, location: Location, index: usize, children: Vec<TocEntry>) -> Self {
+        let page = location.as_page();
+        let level = 0;
+        Self {
+            title,
+            location,
+            index,
+            children,
+            page,
+            level,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

@@ -7,10 +7,13 @@ use crate::context::Context;
 use crate::document::Location;
 use crate::geom::LinearDir;
 use crate::geom::Rectangle;
+use crate::rustc_hash::FxHashMap;
 use crate::view::reader::reader_impl::reader_core::Search;
 use crate::view::search_bar::SearchBar;
+use crate::view::ViewId;
 use crate::view::{Hub, Id, RenderQueue};
 use std::collections::VecDeque;
+use std::sync::atomic::AtomicBool;
 
 /// Search result information
 #[derive(Debug, Clone)]
@@ -58,9 +61,12 @@ impl ReaderSearchHandler {
 
         // Initialize search
         self.current_search = Some(Search {
-            query: query.clone(),
+            _query: query,
             results: Vec::new(),
-            current_index: 0,
+            index: 0,
+            running: AtomicBool::new(false),
+            _results_count: 0,
+            highlights: FxHashMap::default(),
             direction,
         });
         self.search_direction = direction;
@@ -136,7 +142,7 @@ impl ReaderSearchHandler {
 
     /// Get current search query
     pub fn get_current_query(&self) -> Option<&str> {
-        self.current_search.as_ref().map(|s| s.query.as_str())
+        self.current_search.as_ref().map(|s| s._query.as_str())
     }
 
     /// Get search direction
@@ -175,7 +181,7 @@ impl ReaderSearchHandler {
     /// Create search bar with current query
     pub fn create_search_bar(&self, rect: Rectangle, context: &mut Context) -> SearchBar {
         let query = self.get_current_query().unwrap_or("").to_string();
-        SearchBar::new(rect, query, self.id, context)
+        SearchBar::new(rect, ViewId::SearchBarInput, "", &query, context)
     }
 
     /// Handle search completion

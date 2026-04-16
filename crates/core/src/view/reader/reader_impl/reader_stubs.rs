@@ -16,7 +16,9 @@ use crate::context::Context;
 use crate::document::Location;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{CycleDir, Point};
-use crate::view::{Hub, RenderData, RenderQueue};
+use crate::input::DeviceEvent;
+use crate::view::key::KeyKind;
+use crate::view::{Event, Hub, RenderData, RenderQueue};
 
 use super::reader::Reader;
 
@@ -350,6 +352,83 @@ impl Reader {
     /// Stub: Handle adjust selection
     pub fn handle_adjust_selection(
         &mut self,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Handle menu event
+    pub fn handle_menu_event(
+        &mut self,
+        _evt: &Event,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) -> bool {
+        self.queue_partial_update(rq);
+        false
+    }
+
+    /// Stub: Handle device event
+    pub fn handle_device_event(
+        &mut self,
+        _device_event: DeviceEvent,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Handle keyboard
+    pub fn handle_keyboard(
+        &mut self,
+        _key: KeyKind,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Handle shown
+    pub fn handle_shown(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Handle open
+    pub fn handle_open(
+        &mut self,
+        _file: &Box<crate::metadata::Info>,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Handle back
+    pub fn handle_back(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Go to results page
+    pub fn go_to_results_page(
+        &mut self,
+        _index: usize,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Go to results neighbor
+    pub fn go_to_results_neighbor(
+        &mut self,
+        _dir: CycleDir,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,

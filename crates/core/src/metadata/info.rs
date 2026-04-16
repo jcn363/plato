@@ -178,10 +178,11 @@ impl Default for Info {
             tags: BTreeSet::new(),
             collection: None,
             file: FileInfo::default(),
-            added: Local::now().naive_local(),
             reader: None,
             reader_info: None,
             toc: None,
+            simple_toc: None,
+            added: Local::now().naive_local(),
         }
     }
 }

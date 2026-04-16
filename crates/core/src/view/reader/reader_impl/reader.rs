@@ -134,8 +134,8 @@ use crate::device::CURRENT_DEVICE;
 use crate::document::{BoundedText, Document, SimpleTocEntry, TextLocation, TocEntry};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
-use crate::geom::LinearDir;
 use crate::geom::{BorderSpec, Boundary, CornerSpec, Point, Rectangle, Vec2};
+use crate::geom::{CycleDir, LinearDir};
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent};
 use crate::log_error;
 use crate::metadata::{Annotation, Info, ZoomMode};
@@ -190,7 +190,7 @@ pub const ANNOTATION_DRIFT: f32 = 0.05;
 pub struct Reader {
     pub(crate) id: Id,
     pub(crate) rect: Rectangle,
-    children: Vec<Box<dyn View>>,
+    pub(crate) children: Vec<Box<dyn View>>,
     pub(crate) _doc: Arc<Mutex<Box<dyn Document>>>,
     pub(crate) cache: BTreeMap<usize, Resource>,
     pub(crate) chunks: Vec<RenderChunk>,

@@ -126,13 +126,9 @@ impl Home {
         context: &mut Context,
     ) -> bool {
         match event {
-            Event::Submit(text) => {
-                if self.focus == Some(ViewId::AddressBar) {
-                    self.handle_address_bar_submit(text, hub, rq, context);
-                    true
-                } else {
-                    false
-                }
+            Event::Submit(ViewId::AddressBarInput, text) => {
+                self.handle_address_bar_submit(&text, hub, rq, context);
+                true
             }
             Event::Close(ViewId::AddressBar) => {
                 self.hide_address_bar(rq, context);
@@ -209,11 +205,9 @@ pub mod utils {
         }
 
         // Add recent directories (simplified)
-        if let Some(ref recent) = context.history.recent {
-            for path in recent.iter().take(5) {
-                if path.to_string_lossy().contains(input) {
-                    suggestions.push(path.to_string_lossy().to_string());
-                }
+        for path in context.history.iter().take(5) {
+            if path.contains(input) {
+                suggestions.push(path.clone());
             }
         }
 

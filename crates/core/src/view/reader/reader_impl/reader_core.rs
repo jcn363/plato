@@ -119,6 +119,7 @@ pub struct Search {
     pub running: atomic::AtomicBool,
     pub _results_count: usize,
     pub highlights: FxHashMap<usize, Vec<Rectangle>>,
+    pub direction: crate::geom::LinearDir,
 }
 
 /// Cached rendered resource

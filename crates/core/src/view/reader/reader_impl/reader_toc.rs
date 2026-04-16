@@ -3,7 +3,7 @@
 //! This module handles table of contents functionality for the Reader view,
 //! including TOC navigation, page lookup, and chapter management.
 
-use crate::document::{SimpleTocEntry, TocEntry};
+use crate::document::{Location, SimpleTocEntry, TocEntry, TocLocation};
 use crate::metadata::Info;
 use std::collections::HashMap;
 
@@ -53,18 +53,22 @@ impl ReaderTocManager {
         let mut toc = Vec::new();
 
         for entry in simple_toc {
-            let page = find_page(&entry.name).or_else(|| find_page(&entry.title));
+            let (title, location, children) = match entry {
+                SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, Vec::new()),
+                SimpleTocEntry::Container(t, loc, c) => (t.as_str(), loc, c.as_slice()),
+            };
 
             let toc_entry = TocEntry {
-                level: entry.level,
-                title: entry.title.clone(),
-                name: entry.name.clone(),
-                page,
-                children: if !entry.children.is_empty() {
-                    self.build_toc_aux(&entry.children, index, find_page)
+                index: *index,
+                location: location.clone(),
+                title: title.to_string(),
+                children: if !children.is_empty() {
+                    self.build_toc_aux(children, index, find_page)
                 } else {
                     Vec::new()
                 },
+                page: location.as_page(),
+                level: 0,
             };
 
             toc.push(toc_entry);
@@ -84,11 +88,15 @@ impl ReaderTocManager {
         // Search in simple TOC
         if let Some(ref simple_toc) = info.simple_toc {
             for entry in simple_toc {
-                if entry.name == name || entry.title == name {
-                    return entry.page;
+                let (title, location, children) = match entry {
+                    SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, Vec::new()),
+                    SimpleTocEntry::Container(t, loc, c) => (t.as_str(), loc, c.as_slice()),
+                };
+                if title == name {
+                    return Self::extract_page(location);
                 }
                 // Search recursively in children
-                if let Some(page) = self.find_page_in_children(&entry.children, name) {
+                if let Some(page) = self.find_page_in_children(children, name) {
                     return Some(page);
                 }
             }
@@ -100,14 +108,26 @@ impl ReaderTocManager {
     /// Find page in children entries
     fn find_page_in_children(&self, children: &[SimpleTocEntry], name: &str) -> Option<usize> {
         for entry in children {
-            if entry.name == name || entry.title == name {
-                return entry.page;
+            let (title, location, grandchildren) = match entry {
+                SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, Vec::new()),
+                SimpleTocEntry::Container(t, loc, c) => (t.as_str(), loc, c.as_slice()),
+            };
+            if title == name {
+                return Self::extract_page(location);
             }
-            if let Some(page) = self.find_page_in_children(&entry.children, name) {
+            if let Some(page) = self.find_page_in_children(grandchildren, name) {
                 return Some(page);
             }
         }
         None
+    }
+
+    /// Extract page number from TocLocation
+    fn extract_page(location: &TocLocation) -> Option<usize> {
+        match location {
+            TocLocation::Exact(page) => Some(*page),
+            TocLocation::Uri(_) => None,
+        }
     }
 
     /// Get current table of contents
@@ -254,11 +274,12 @@ pub mod utils {
 
         for entry in entries {
             flattened.push(TocEntry {
-                level: entry.level,
+                index: entry.index,
+                location: entry.location.clone(),
                 title: entry.title.clone(),
-                name: entry.name.clone(),
+                children: Vec::new(),
                 page: entry.page,
-                children: Vec::new(), // Don't include children in flattened version
+                level: entry.level,
             });
 
             // Recursively add children

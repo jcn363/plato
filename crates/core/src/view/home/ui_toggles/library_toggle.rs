@@ -164,7 +164,8 @@ impl Home {
                 self.hide_library_menu(rq, context);
                 true
             }
-            Event::Select(name) => {
+            Event::Select(entry_id) => {
+                let name = entry_id.as_str();
                 self.handle_library_selection(name, hub, rq, context);
                 true
             }

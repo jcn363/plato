@@ -75,7 +75,7 @@ impl Home {
         }
 
         let rect = self.calculate_search_bar_rect(context);
-        let search_bar = SearchBar::new(rect, self.id, context);
+        let search_bar = SearchBar::new(rect, ViewId::SearchBar, "Search...", "", context);
 
         self.search_bar = Some(Box::new(search_bar) as Box<dyn View>);
         self.focus = Some(ViewId::SearchBar);
@@ -127,13 +127,9 @@ impl Home {
         context: &mut Context,
     ) -> bool {
         match event {
-            Event::Submit(text) => {
-                if self.focus == Some(ViewId::SearchBar) {
-                    self.handle_search_bar_submit(text, hub, rq, context);
-                    true
-                } else {
-                    false
-                }
+            Event::Submit(ViewId::SearchBar, text) => {
+                self.handle_search_bar_submit(&text, hub, rq, context);
+                true
             }
             Event::Close(ViewId::SearchBar) => {
                 self.hide_search_bar(rq, context);
@@ -210,12 +206,9 @@ pub mod utils {
         }
 
         // Add recent searches (simplified)
-        if let Some(ref recent) = context.history.recent {
-            for path in recent.iter().take(5) {
-                let path_str = path.to_string_lossy();
-                if path_str.to_lowercase().contains(&input.to_lowercase()) {
-                    suggestions.push(path_str.to_string());
-                }
+        for path in context.history.iter().take(5) {
+            if path.to_lowercase().contains(&input.to_lowercase()) {
+                suggestions.push(path.clone());
             }
         }
 

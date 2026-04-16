@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::document::TextLocation;
 use crate::helpers::datetime_format;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Annotation {
     #[serde(skip_serializing_if = "String::is_empty")]

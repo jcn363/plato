@@ -294,9 +294,9 @@ impl Reader {
         self.update(None, hub, rq, context);
     }
 
-    pub fn toggle_bookmark(&mut self, rq: &mut RenderQueue) {
+    pub fn toggle_bookmark(&mut self, _hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         super::reader_annotations::toggle_bookmark(self.current_page, &mut self.info);
-        self.update_tool_bar(rq, &crate::context::Context::default());
+        self.update_tool_bar(rq, context);
     }
 
     pub fn scaling_factor(

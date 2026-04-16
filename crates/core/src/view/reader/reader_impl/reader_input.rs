@@ -5,6 +5,7 @@
 
 use crate::context::Context;
 use crate::geom::Point;
+use crate::gesture::GestureEvent;
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::view::{Event, Hub, Id, RenderQueue};
 
@@ -56,7 +57,9 @@ impl ReaderInputHandler {
                 status, position, ..
             } => match status {
                 FingerStatus::Down => vec![ReaderInputEvent::TouchStart(position)],
-                FingerStatus::Move => vec![ReaderInputEvent::TouchMove(position)],
+                FingerStatus::Move | FingerStatus::Motion => {
+                    vec![ReaderInputEvent::TouchMove(position)]
+                }
                 FingerStatus::Up => vec![ReaderInputEvent::TouchEnd(position)],
             },
             DeviceEvent::Button { code, status, .. } => match status {
@@ -64,13 +67,13 @@ impl ReaderInputHandler {
                     self.held_buttons.insert(code);
                     vec![ReaderInputEvent::ButtonPress(code)]
                 }
-                ButtonStatus::Released => {
+                ButtonStatus::Released | ButtonStatus::Repeated => {
                     self.held_buttons.remove(&code);
                     vec![ReaderInputEvent::ButtonRelease(code)]
                 }
             },
-            DeviceEvent::Keyboard { text, .. } => {
-                vec![ReaderInputEvent::KeyboardInput(text)]
+            DeviceEvent::Keyboard { code, .. } => {
+                vec![ReaderInputEvent::KeyboardInput(code.to_string())]
             }
             _ => vec![],
         }
@@ -110,32 +113,34 @@ impl ReaderInputHandler {
     ) -> Vec<Event> {
         match gesture {
             ReaderGesture::Tap(pos) => {
-                vec![Event::Tap(pos, self.id)]
+                vec![Event::Tap(pos)]
             }
             ReaderGesture::Swipe(start, end) => {
-                vec![Event::Swipe(start, end, self.id)]
+                vec![Event::Swipe(start, end)]
             }
             ReaderGesture::DoubleTap(pos) => {
-                vec![Event::DoubleTap(pos, self.id)]
+                vec![Event::DoubleTap(pos)]
             }
             ReaderGesture::LongPress(pos) => {
-                vec![Event::Hold(pos, self.id)]
+                vec![Event::Hold(pos)]
             }
             ReaderGesture::Pinch(center, _, scale) => {
-                vec![Event::Gesture {
-                    name: "pinch".to_string(),
+                vec![Event::Gesture(GestureEvent::Pinch {
+                    axis: crate::geom::Axis::Horizontal,
                     center,
-                    scale,
-                    id: self.id,
-                }]
+                    factor: *scale,
+                })]
             }
             ReaderGesture::Pan(start, end) => {
-                vec![Event::Gesture {
-                    name: "pan".to_string(),
-                    center: start,
-                    scale: end.x - start.x,
-                    id: self.id,
-                }]
+                vec![Event::Gesture(GestureEvent::Swipe {
+                    dir: if end.x > start.x {
+                        crate::geom::Dir::East
+                    } else {
+                        crate::geom::Dir::West
+                    },
+                    start,
+                    end,
+                })]
             }
         }
     }

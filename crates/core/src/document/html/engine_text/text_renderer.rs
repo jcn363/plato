@@ -237,8 +237,8 @@ pub mod utils {
         let width = text.len() as f32 * font_size * 0.6;
         let height = font_size;
         Rectangle::new(
-            crate::geom::Point::new(0.0, 0.0),
-            crate::geom::Point::new(width, height),
+            crate::geom::Point::new(0, 0),
+            crate::geom::Point::new(width as i32, height as i32),
         )
     }
 

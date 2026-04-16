@@ -91,7 +91,7 @@ impl HomeInputExt for Home {
                         let path = context.library.home.clone();
                         self.select_directory(&path, hub, rq, context);
                     }
-                    Dir::South => self.toggle_search_bar(None, hub, rq, context),
+                    Dir::South => self.toggle_search_bar(None, false, hub, rq, context),
                 };
                 true
             }
@@ -124,7 +124,7 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Toggle(ViewId::SearchBar) => {
-                self.toggle_search_bar(None, hub, rq, context);
+                self.toggle_search_bar(None, false, hub, rq, context);
                 true
             }
             Event::ToggleNear(ViewId::TitleMenu, rect) => {
@@ -148,7 +148,7 @@ impl HomeInputExt for Home {
                 true
             }
             Event::ToggleNear(ViewId::LibraryMenu, rect) => {
-                self.toggle_library_menu(rect, None, rq, context);
+                self.toggle_library_menu(None, hub, rq, context);
                 true
             }
             Event::Close(ViewId::AddressBar) => {
@@ -156,7 +156,7 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Close(ViewId::SearchBar) => {
-                self.toggle_search_bar(Some(false), hub, rq, context);
+                self.toggle_search_bar(Some(false), false, hub, rq, context);
                 true
             }
             Event::Close(ViewId::SortMenu) => {
@@ -164,7 +164,7 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Close(ViewId::LibraryMenu) => {
-                self.toggle_library_menu(Rectangle::default(), Some(false), rq, context);
+                self.toggle_library_menu(Some(false), hub, rq, context);
                 true
             }
             Event::Close(ViewId::MainMenu) => {
@@ -292,14 +292,14 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Submit(ViewId::AddressBarInput, ref addr) => {
-                self.toggle_keyboard(false, true, None, hub, rq, context);
+                self.toggle_keyboard(Some(false), hub, rq, context);
                 self.select_directory(Path::new(addr), hub, rq, context);
                 true
             }
             Event::Submit(ViewId::HomeSearchInput, ref text) => {
                 self.query = BookQuery::new(text);
                 if self.query.is_some() {
-                    self.toggle_keyboard(false, false, None, hub, rq, context);
+                    self.toggle_keyboard(Some(false), hub, rq, context);
                     for i in self.shelf_index + 1..=self.shelf_index + 2 {
                         rq.add(RenderData::new(
                             self.child(i).id(),
@@ -401,7 +401,7 @@ impl HomeInputExt for Home {
                 if query.is_some() {
                     self.query = query;
                     self.toggle_search_bar(Some(true), false, hub, rq, context);
-                    self.toggle_keyboard(false, false, None, hub, rq, context);
+                    self.toggle_keyboard(Some(false), hub, rq, context);
                     if let Some(search_bar) =
                         self.children[self.shelf_index + 2].downcast_mut::<SearchBar>()
                     {

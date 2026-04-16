@@ -213,11 +213,18 @@ impl PdfDocument {
                 .map(|down| Self::walk_toc(&down, index))
                 .unwrap_or_default();
 
+            let page_num = if page_loc.chapter >= 0 && page_loc.page >= 0 {
+                (page_loc.chapter * 1000 + page_loc.page) as usize
+            } else {
+                0
+            };
             vec.push(TocEntry {
-                title,
-                location,
+                title: title.to_string(),
+                location: location,
                 index: current_index,
-                children,
+                children: children,
+                page: Some(page_num),
+                level: 0,
             });
 
             current = entry.next();

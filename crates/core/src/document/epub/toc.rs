@@ -79,6 +79,8 @@ impl EpubDocument {
                     location,
                     index: current_index,
                     children: sub_entries,
+                    page: location.as_page(),
+                    level: 0,
                 });
             }
         }
@@ -138,6 +140,8 @@ impl EpubDocument {
                         location,
                         index: current_index,
                         children: sub_entries,
+                        page: location.as_page(),
+                        level: 0,
                     });
                 }
             }
