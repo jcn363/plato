@@ -6,6 +6,10 @@
 /libs
 /bin
 /Settings.toml
+/.cargo
+/.opencode
+/.qodo
+/.qwen
 /.metadata.json
 /.reading-states
 /.fat32-epoch
@@ -19,3 +23,5 @@
 /plato-*.zip
 /thirdparty/*/*
 !/thirdparty/*/*kobo*
+.codex
+.metadata.json
