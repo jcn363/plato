@@ -13,8 +13,7 @@
 //! while the actual implementation logic resides in other specialized modules.
 
 use crate::framebuffer::UpdateMode;
-use crate::geom::Point;
-use crate::unit::CycleDir;
+use crate::geom::{CycleDir, Point};
 use crate::document::Location;
 use crate::view::{Hub, RenderData, RenderQueue};
 use crate::context::Context;

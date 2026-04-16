@@ -12,12 +12,13 @@
 //! 5. Queue appropriate render updates
 use crate::context::Context;
 use crate::metadata::Margin;
-use crate::view::{Hub, RenderQueue, ViewId, locate_by_id, View};
+use crate::view::{Hub, RenderQueue, ViewId, View};
+use crate::view::common::locate_by_id;
 use crate::view::menu::MenuEntry;
 use crate::document::{Document, Location};
 use crate::metadata::{TextAlign, ZoomMode, ScrollMode, CroppingMargins};
 use crate::framebuffer::UpdateMode;
-use crate::CURRENT_DEVICE;
+use crate::device::CURRENT_DEVICE;
 use crate::settings::DEFAULT_FONT_FAMILY;
 use std::sync::{Arc, MutexGuard};
 

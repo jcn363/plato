@@ -6,9 +6,10 @@ use std::path::PathBuf;
 
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
+use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
-use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use crate::view::{Hub, RenderData, RenderQueue, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use crate::geom::helpers::halves;
 
 use super::super::Home;

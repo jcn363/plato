@@ -129,6 +129,7 @@
 // ===========================================================================
 
 use crate::color::{background, foreground};
+use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{BoundedText, Document, SimpleTocEntry, TextLocation, TocEntry};
 use crate::font::Fonts;
