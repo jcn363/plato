@@ -46,8 +46,7 @@ impl ReaderRenderCache {
         
         // Check if we need to evict entries
         while self.current_memory_usage + pixmap_size > self.max_cache_size && !self.cache.is_empty() {
-            if let Some((&oldest_page, oldest_pixmap)) = self.cache.iter().next() {
-                let oldest_page = oldest_page;
+            if let Some((&oldest_page, _)) = self.cache.iter().next() {
                 if let Some(removed_pixmap) = self.cache.remove(&oldest_page) {
                     self.current_memory_usage -= removed_pixmap.width() as usize * removed_pixmap.height() as usize * 4;
                 }
