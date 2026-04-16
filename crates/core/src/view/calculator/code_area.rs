@@ -39,7 +39,7 @@ impl CodeArea {
         screen_lines: i32,
         context: &mut Context,
     ) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let font = &mut context.fonts.monospace.regular;
         font.set_size((64.0 * self.font_size) as u32, dpi);
         let line_height = font.ascender() - font.descender();
@@ -115,7 +115,7 @@ impl View for CodeArea {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let color = text_normal(theme::is_dark_mode());
 
         if let Some(irect) = self.rect.intersection(&rect) {

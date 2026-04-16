@@ -256,7 +256,8 @@ pub fn file_kind<P: AsRef<Path>>(path: P) -> Option<String> {
 }
 
 pub fn guess_kind<P: AsRef<Path>>(path: P) -> Result<&'static str, Error> {
-    let file = File::open(path.as_ref())?;
+    let file = File::open(path.as_ref())
+        .with_context(|| format!("can't open file {}", path.as_ref().display()))?;
     let mut magic = [0; 4];
     file.read_exact_at(&mut magic, 0)?;
 

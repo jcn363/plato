@@ -83,7 +83,7 @@ impl View for Intermission {
 
         match self.message {
             Message::Text(ref text) => {
-                let dpi = CURRENT_DEVICE.dpi;
+                let dpi = crate::unit::get_device_dpi();
 
                 let font = font_from_style(fonts, &DISPLAY_STYLE, dpi);
                 let padding = font.em() as i32;

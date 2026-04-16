@@ -117,7 +117,7 @@ impl Library {
 
         fs::copy(&src, &dest)?;
         {
-            let fdest = File::open(&dest)?;
+            let fdest = File::open(&dest).with_context(|| format!("can't open destination file {}", dest.display()))?;
             fdest.set_modified(md.modified()?)?;
         }
 

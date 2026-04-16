@@ -32,7 +32,7 @@ impl SearchReplaceView {
     ) -> SearchReplaceView {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let row_height = scale_by_dpi(36.0, dpi) as i32;
         let padding = scale_by_dpi(10.0, dpi) as i32;
@@ -268,7 +268,7 @@ impl View for SearchReplaceView {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let color = text_normal(theme::is_dark_mode());
 

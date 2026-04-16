@@ -62,7 +62,7 @@ impl Sketch {
     ) -> Result<Sketch, Error> {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let border_radius = scale_by_dpi(BORDER_RADIUS_SMALL, dpi) as i32;
         let pixmap = &ICONS_PIXMAPS[ICON_NAME];
@@ -208,7 +208,7 @@ impl Sketch {
 
     fn load(&mut self, filename: &PathBuf) -> Result<(), Error> {
         let path = self.save_path.join(filename);
-        let file = File::open(path)?;
+        let file = File::open(&path).with_context(|| format!("can't open sketch file {}", path.display()))?;
         let decoder = png::Decoder::new(BufReader::new(file));
         let mut reader = decoder.read_info()?;
         reader.next_frame(self.pixmap.data_mut())?;

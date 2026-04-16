@@ -65,7 +65,13 @@
 - **Font Loading**: Repeated font loading patterns in multiple view modules
 - **Scale by DPI**: Migrate existing `let dpi = CURRENT_DEVICE.dpi` + `scale_by_dpi()` pattern to use new helpers
 
-- [ ] Migrate existing DPI usage to new helpers (40+ instances)
+**IN PROGRESS:** DPI Migration
+- Found 60+ instances of `let dpi = CURRENT_DEVICE.dpi` across view modules
+- Helpers added to unit.rs: `scale_by_device_dpi()`, `scale_by_device_dpi_raw()`, `get_device_dpi()`
+- Migrated: view/intermission.rs, view/preset.rs, view/clock.rs, view/slider.rs, view/menu.rs, view/calculator/display.rs, view/calculator/state.rs, view/calculator/code_area.rs, view/calculator/input_bar.rs, view/rotation_values.rs, view/menu_entry.rs, view/label.rs, view/button.rs, view/presets_list.rs, view/notification.rs, view/page_label.rs, view/statistics.rs, view/frontlight.rs, view/settings/mod.rs, view/reader/results_label.rs, view/reader/margin_cropper.rs, view/reader/chapter_label.rs, view/search_bar.rs, view/search_replace.rs (21 files, 31 instances)
+- Remaining: 29+ instances across view/reader/reader_impl/reader.rs, view/reader/reader_impl/reader_rendering_impl.rs, view/reader/tool_bar/layout.rs, view/cover_editor.rs, view/key.rs, view/sketch/, view/dictionary/, view/rounded_button.rs, view/dialog.rs, view/input_field.rs, view/named_input.rs, view/pdf_manipulator.rs, view/home/library_label.rs, view/home/ui_toggles/, view/home/shelf.rs, view/home/directory.rs, view/home/address_bar.rs, view/home/directories_bar.rs, view/home/navigation_bar.rs, view/home/updates.rs, view/home/book.rs, view/battery.rs, and more
+
+- [ ] Complete migration of existing DPI usage to new helpers (29+ instances remaining)
 - [ ] Extract device rotation helpers (to_canonical, mirroring_scheme)
 - [ ] Consolidate font loading patterns
 - [ ] Extract common `match` arm patterns into methods
@@ -80,14 +86,26 @@
 - `document/html/engine_text/text_renderer.rs`: 1 instance - Replaced with `.expect("glyph_id should be in cache")`
 - `thumbnail/cache.rs`: 1 instance - Added validation and `.expect("max_size > 0 validated above")`
 
+**✅ COMPLETED:** Added .with_context() to I/O operations
+- `battery/kobo.rs`: Added context to File::open calls for battery files
+- `library/manage.rs`: Added context to File::open for destination file
+- `lightsensor/kobo.rs`: Added context to File::open for light sensor file
+- `view/sketch/mod.rs`: Added context to File::open for sketch file
+- `document/epub/opener.rs`: Added context to File::open for EPUB file
+- `document/html/mod.rs`: Added context to File::open calls (2 instances)
+- `document/mod.rs`: Added context to File::open for file type detection
+- `frontlight/natural.rs`: Added context to File::open for frontlight max value
+- `cover_editor.rs`: Added context to File::open and File::create calls
+- `framebuffer/image.rs`: Added context to File::open for PNG file
+- `dictionary/dictreader.rs`: Added error context to File::open calls
+- `rtc.rs`: Added context to File::open for RTC device file
+- `dictionary/indexing.rs`: Added error context to File::open call
+
 **Remaining unwrap() instances (mostly test code and static regex):**
 - `metadata/constants.rs`: 2 instances (static Regex::new - acceptable for compile-time patterns)
 - `view/reader/reader_impl/reader.rs`: 3 instances (LazyLock regex - acceptable for static regex)
 - `thumbnail/cache.rs`: 7 instances (test code - acceptable)
 - `thumbnail/worker.rs`: 3 instances (test code - acceptable)
-
-- [ ] Replace remaining production code unwrap() (minimal remaining)
-- [ ] Add `.with_context()` to all I/O operations
 
 ### 5.1. Modern Static Initialization (LazyLock Migration)
 **AGENTS.md rule:** Use `std::sync::LazyLock` for runtime initialization, not `lazy_static!`.

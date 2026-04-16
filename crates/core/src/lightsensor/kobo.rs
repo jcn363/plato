@@ -19,7 +19,8 @@ pub struct KoboLightSensor {
 
 impl KoboLightSensor {
     pub fn new() -> Result<Self, Error> {
-        let file = File::open(VISIBLE_PHOTODIODE)?;
+        let file = File::open(VISIBLE_PHOTODIODE)
+            .with_context(|| format!("can't open light sensor file {}", VISIBLE_PHOTODIODE))?;
         Ok(KoboLightSensor {
             file,
             cached_level: None,

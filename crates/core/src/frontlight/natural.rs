@@ -79,7 +79,8 @@ impl NaturalFrontlight {
         for (light, name) in FRONTLIGHT_DIRS.iter() {
             let dir = base.join(name);
             let mut buf = String::with_capacity(16);
-            let mut file = File::open(dir.join(FRONTLIGHT_MAX_VALUE))?;
+            let mut file = File::open(dir.join(FRONTLIGHT_MAX_VALUE))
+                .with_context(|| format!("can't open frontlight max value file {}", dir.join(FRONTLIGHT_MAX_VALUE).display()))?;
             file.read_to_string(&mut buf)?;
             maxima.insert(*light, buf.trim_end().parse()?);
             let file = OpenOptions::new()

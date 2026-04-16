@@ -36,7 +36,7 @@ impl SettingsEditor {
         let fonts = &mut context.fonts;
         let settings = &context.settings;
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (width, height) = context.display.dims;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as i32;
@@ -253,7 +253,7 @@ impl View for SettingsEditor {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let border_radius = scale_by_dpi(BORDER_RADIUS_MEDIUM, dpi) as i32;
         let border_thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as u16;
 

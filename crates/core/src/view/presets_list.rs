@@ -28,7 +28,7 @@ impl PresetsList {
     }
 
     pub fn update(&mut self, presets: &[LightPreset], rq: &mut RenderQueue, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let x_height = font.x_heights.0 as i32;
         let preset_height = 4 * x_height;

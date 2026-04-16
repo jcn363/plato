@@ -83,7 +83,7 @@ impl View for Button {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let dark = crate::theme::is_dark_mode();
 
         let scheme = if self.active {

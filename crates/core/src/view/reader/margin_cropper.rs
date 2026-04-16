@@ -47,7 +47,7 @@ impl MarginCropper {
             pt.y + pixmap.height as i32 - (margin.bottom * pixmap.height as f32).round() as i32;
         let frame = rect![x_min, y_min, x_max, y_max];
 
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let big_button_diameter = small_height;
         let padding = big_button_diameter / 2;
@@ -125,7 +125,7 @@ impl MarginCropper {
             }
         }
 
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let button_radius = scale_by_dpi(BUTTON_DIAMETER / 2.0, dpi) as i32;
 
         self.frame.min.x = self.frame.min.x.max(self.rect.min.x + button_radius);
@@ -188,7 +188,7 @@ impl View for MarginCropper {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let dx = (self.rect.width() as i32 - self.pixmap.width as i32) / 2;
         let dy = (self.rect.height() as i32 - self.pixmap.height as i32) / 2;
 

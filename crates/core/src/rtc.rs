@@ -59,7 +59,8 @@ pub struct Rtc(File);
 
 impl Rtc {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Rtc, Error> {
-        let file = File::open(path)?;
+        let file = File::open(path.as_ref())
+            .with_context(|| format!("can't open RTC device file {}", path.as_ref().display()))?;
         Ok(Rtc(file))
     }
 

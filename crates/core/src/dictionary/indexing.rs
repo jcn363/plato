@@ -235,7 +235,8 @@ pub fn parse_index_from_file<P: AsRef<Path>>(
     path: P,
     lazy: bool,
 ) -> Result<Index<BufReader<File>>, DictError> {
-    let file = File::open(path)?;
+    let file = File::open(path.as_ref())
+        .map_err(|e| DictError::Io(format!("can't open dictionary index file {}: {}", path.as_ref().display(), e)))?;
     let reader = BufReader::new(file);
     parse_index(reader, lazy)
 }

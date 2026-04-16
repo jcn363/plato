@@ -65,7 +65,7 @@ impl View for Clock {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let plan = font.plan(&self.time.format(&self.format).to_string(), None, None);
         let dx = (self.rect.width() as i32 - plan.width) / 2;

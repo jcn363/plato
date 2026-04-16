@@ -60,7 +60,8 @@ pub struct HtmlDocument {
 
 impl ResourceFetcher for PathBuf {
     fn fetch(&mut self, name: &str) -> Result<Vec<u8>, Error> {
-        let mut file = File::open(self.join(name))?;
+        let mut file = File::open(self.join(name))
+            .with_context(|| format!("can't open HTML resource file {}", self.join(name).display()))?;
         let size = file.metadata()?.len() as usize;
         let mut buf = Vec::with_capacity(size);
         file.read_to_end(&mut buf)?;
@@ -73,7 +74,8 @@ unsafe impl Sync for HtmlDocument {}
 
 impl HtmlDocument {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<HtmlDocument, Error> {
-        let mut file = File::open(&path)?;
+        let mut file = File::open(&path)
+            .with_context(|| format!("can't open HTML file {}", path.as_ref().display()))?;
         let size = file.metadata()?.len() as usize;
         let mut text = String::with_capacity(size);
         file.read_to_string(&mut text)?;

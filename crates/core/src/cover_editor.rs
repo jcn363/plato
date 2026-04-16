@@ -127,7 +127,8 @@ impl Default for CoverEditor {
 
 pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicImage, Error> {
     let path = epub_path.as_ref();
-    let file = std::fs::File::open(path)?;
+    let file = std::fs::File::open(path)
+        .with_context(|| format!("can't open EPUB file {}", path.display()))?;
     let mut archive = zip::ZipArchive::new(file)?;
 
     let _cover_patterns = [
@@ -183,13 +184,15 @@ pub fn set_cover_in_epub<P: AsRef<Path>>(epub_path: P, cover_path: P) -> Result<
     let mut cursor = std::io::Cursor::new(&mut buffer);
     resized.write_to(&mut cursor, ImageFormat::Jpeg)?;
 
-    let file = std::fs::File::open(epub_path)?;
+    let file = std::fs::File::open(epub_path)
+        .with_context(|| format!("can't open EPUB file {}", epub_path.display()))?;
     let mut archive = zip::ZipArchive::new(file)?;
 
     let temp_path = epub_path.with_extension("epub.bak");
     std::fs::copy(epub_path, &temp_path)?;
 
-    let temp_file = std::fs::File::create(&temp_path)?;
+    let temp_file = std::fs::File::create(&temp_path)
+        .with_context(|| format!("can't create temporary file {}", temp_path.display()))?;
     let mut new_archive = zip::ZipWriter::new(temp_file);
 
     let options = zip::write::SimpleFileOptions::default()

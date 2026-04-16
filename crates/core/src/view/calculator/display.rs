@@ -15,7 +15,7 @@ use crate::view::{
 
 impl Calculator {
     pub(super) fn update_size(&mut self, rq: &mut RenderQueue, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let font = &mut context.fonts.monospace.regular;
         font.set_size((64.0 * self.font_size) as u32, dpi);
         let char_width = font.plan(" ", None, None).width;
@@ -151,7 +151,7 @@ impl Calculator {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (small_height, big_height) = (
             scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32,
             scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32,

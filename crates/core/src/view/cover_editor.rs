@@ -69,7 +69,7 @@ impl CoverEditorView {
         context: &mut PlatoContext,
     ) -> CoverEditorView {
         let id = ID_FEEDER.next();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
 
         let mut children = Vec::new();

@@ -81,7 +81,7 @@ impl View for Preset {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
 
         let (scheme, border_radius) = if self.active {
             (

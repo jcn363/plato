@@ -102,10 +102,12 @@ impl<B: Read + Seek> DictReader for DictReaderRaw<B> {
 /// the GZ compressed file is invalid.
 pub fn load_dict<P: AsRef<Path>>(path: P) -> Result<Box<dyn DictReader>, DictError> {
     if path.as_ref().extension() == Some(OsStr::new("dz")) {
-        let reader = File::open(path)?;
+        let reader = File::open(path.as_ref())
+            .map_err(|e| DictError::Io(format!("can't open dictionary file {}: {}", path.as_ref().display(), e)))?;
         Ok(Box::new(DictReaderDz::new(reader)?))
     } else {
-        let reader = BufReader::new(File::open(path)?);
+        let reader = BufReader::new(File::open(path.as_ref())
+            .map_err(|e| DictError::Io(format!("can't open dictionary file {}: {}", path.as_ref().display(), e)))?);
         Ok(Box::new(DictReaderRaw::new(reader)?))
     }
 }

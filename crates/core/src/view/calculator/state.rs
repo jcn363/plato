@@ -115,7 +115,7 @@ impl Calculator {
         }
 
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (small_height, big_height) = (
             scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32,
             scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32,
@@ -394,7 +394,7 @@ impl Calculator {
     }
 
     pub(crate) fn scroll_pixels(&mut self, dy: i32, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let line_height = {
             let font = &mut context.fonts.monospace.regular;
             font.set_size((64.0 * self.font_size) as u32, dpi);

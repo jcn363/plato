@@ -54,7 +54,7 @@ impl Notification {
         let view_id = ViewId::MessageNotif(id);
         let index = context.notification_index;
 
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (width, _) = context.display.dims;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
 
@@ -137,7 +137,7 @@ impl View for Notification {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
 
         let border_radius = scale_by_dpi(BORDER_RADIUS_MEDIUM, dpi) as i32;
         let border_thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as u16;
@@ -171,7 +171,7 @@ impl View for Notification {
         _rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (width, height) = context.display.dims;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let side = (self.index / 3) % 2;

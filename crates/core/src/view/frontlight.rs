@@ -36,7 +36,7 @@ impl FrontlightWindow {
         let levels = context.frontlight.levels();
         let presets = &context.settings.frontlight_presets;
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (width, height) = context.display.dims;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as i32;
@@ -218,7 +218,7 @@ impl FrontlightWindow {
     }
 
     fn toggle_presets(&mut self, enable: bool, rq: &mut RenderQueue, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
 
         if enable {
@@ -385,7 +385,7 @@ impl View for FrontlightWindow {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
 
         let border_radius = scale_by_dpi(BORDER_RADIUS_MEDIUM, dpi) as i32;
         let border_thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as u16;
@@ -402,7 +402,7 @@ impl View for FrontlightWindow {
     }
 
     fn resize(&mut self, _rect: Rectangle, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (width, height) = context.display.dims;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as i32;

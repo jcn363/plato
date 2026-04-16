@@ -42,7 +42,8 @@ impl ResourceFetcher for ZipArchive<File> {
 
 impl EpubDocument {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<EpubDocument, Error> {
-        let file = File::open(path)?;
+        let file = File::open(path.as_ref())
+            .with_context(|| format!("can't open EPUB file {}", path.as_ref().display()))?;
         let mut archive = ZipArchive::new(file)?;
 
         let opf_path = {

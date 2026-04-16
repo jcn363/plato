@@ -78,7 +78,7 @@ impl View for Label {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let dark = crate::theme::is_dark_mode();
 
         fb.draw_rectangle(&self.rect, text_normal(dark)[0]);

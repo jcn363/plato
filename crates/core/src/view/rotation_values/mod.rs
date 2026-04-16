@@ -138,7 +138,7 @@ impl View for RotationValues {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let width = self.rect.width() as i32;
         let height = self.rect.height() as i32;
         let side = width.min(height) / 4;

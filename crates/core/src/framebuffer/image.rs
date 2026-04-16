@@ -61,7 +61,8 @@ impl Pixmap {
     }
 
     pub fn from_png<P: AsRef<Path>>(path: P) -> Result<Pixmap, Error> {
-        let file = File::open(path.as_ref())?;
+        let file = File::open(path.as_ref())
+            .with_context(|| format!("can't open PNG file {}", path.as_ref().display()))?;
         let decoder = png::Decoder::new(BufReader::new(file));
         let mut reader = decoder.read_info()?;
         let info = reader.info();

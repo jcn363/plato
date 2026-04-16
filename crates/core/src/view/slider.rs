@@ -49,7 +49,7 @@ impl Slider {
     }
 
     pub fn update_value(&mut self, x_hit: i32) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let button_diameter = scale_by_dpi(BUTTON_DIAMETER, dpi) as i32;
         let (small_radius, big_radius) = halves(button_diameter);
         let x_offset = x_hit
@@ -118,7 +118,7 @@ impl View for Slider {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let progress_height = scale_by_dpi(PROGRESS_HEIGHT, dpi) as i32;
         let button_diameter = scale_by_dpi(BUTTON_DIAMETER, dpi) as i32;
         let border_thickness = scale_by_dpi(THICKNESS_SMALL, dpi) as u16;

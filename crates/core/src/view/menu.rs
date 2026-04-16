@@ -50,7 +50,7 @@ impl Menu {
     ) -> Menu {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let (width, height) = context.display.dims;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
 
@@ -341,7 +341,7 @@ impl View for Menu {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = CURRENT_DEVICE.dpi;
+        let dpi = crate::unit::get_device_dpi();
         let border_radius = scale_by_dpi(BORDER_RADIUS_MEDIUM, dpi) as i32;
         let border_thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as u16;
 
