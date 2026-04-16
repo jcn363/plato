@@ -171,26 +171,30 @@ pub fn check_network_and_sync(
     Ok(())
 }
 
-fn build_curl_command(
+/// Builds and executes a curl command safely using direct argument passing,
+/// avoiding shell interpretation that could lead to command injection.
+fn run_curl_command(
     url: &str,
     username: Option<&str>,
     password: Option<&str>,
     extra_args: &[&str],
-) -> String {
-    let mut curl_cmd = String::from("curl");
+) -> Result<std::process::Output, Error> {
+    let mut cmd = Command::new("curl");
 
     for arg in extra_args {
-        curl_cmd.push(' ');
-        curl_cmd.push_str(arg);
+        // Skip shell redirections that don't apply to direct execution
+        if !arg.starts_with("2>") {
+            cmd.arg(arg);
+        }
     }
 
     if let (Some(user), Some(pass)) = (username, password) {
-        curl_cmd.push_str(&format!(" -u {}:{}", user, pass));
+        cmd.arg("-u").arg(format!("{}:{}", user, pass));
     }
 
-    curl_cmd.push(' ');
-    curl_cmd.push_str(url);
-    curl_cmd
+    cmd.arg(url);
+    cmd.output()
+        .map_err(|e| format_err!("Failed to execute curl: {}", e))
 }
 
 fn sync_with_webdav(
@@ -204,18 +208,13 @@ fn sync_with_webdav(
         let base_url = url.trim_end_matches('/');
         let full_url = format!("{}{}", base_url, remote_path);
 
-        let curl_cmd = build_curl_command(
+        let output = run_curl_command(
             &full_url,
             username,
             password,
-            &["-s", "-X", "PROPFIND", "-H", "Depth: 1", "2>/dev/null"],
-        );
-
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg(&curl_cmd)
-            .output()
-            .map_err(|e| format_err!("WebDAV sync failed: {}", e))?;
+            &["-s", "-X", "PROPFIND", "-H", "Depth: 1"],
+        )
+        .map_err(|e| format_err!("WebDAV sync failed: {}", e))?;
 
         let response = String::from_utf8_lossy(&output.stdout);
 
@@ -238,18 +237,13 @@ pub fn list_webdav_files(
         let base_url = url.trim_end_matches('/');
         let full_url = format!("{}{}", base_url, remote_path);
 
-        let curl_cmd = build_curl_command(
+        let output = run_curl_command(
             &full_url,
             username,
             password,
             &["-s", "-X", "PROPFIND", "-H", "Depth: 1"],
-        );
-
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg(&curl_cmd)
-            .output()
-            .map_err(|e| format_err!("WebDAV list failed: {}", e))?;
+        )
+        .map_err(|e| format_err!("WebDAV list failed: {}", e))?;
 
         let response = String::from_utf8_lossy(&output.stdout);
         // Pre-allocate files vector with estimated capacity to reduce reallocations
@@ -289,14 +283,9 @@ pub fn download_from_webdav(
     #[cfg(target_os = "linux")]
     {
         let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
-        let output_arg = format!("-o {}", local_path.display());
+        let local_path_str = local_path.display().to_string();
 
-        let curl_cmd = build_curl_command(&full_url, username, password, &[&output_arg]);
-
-        Command::new("sh")
-            .arg("-c")
-            .arg(&curl_cmd)
-            .output()
+        run_curl_command(&full_url, username, password, &["-o", &local_path_str])
             .map_err(|e| format_err!("Download failed: {}", e))?;
     }
 
@@ -313,14 +302,9 @@ pub fn upload_to_webdav(
     #[cfg(target_os = "linux")]
     {
         let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
-        let upload_arg = format!("-T {}", local_path.display());
+        let local_path_str = local_path.display().to_string();
 
-        let curl_cmd = build_curl_command(&full_url, username, password, &[&upload_arg]);
-
-        Command::new("sh")
-            .arg("-c")
-            .arg(&curl_cmd)
-            .output()
+        run_curl_command(&full_url, username, password, &["-T", &local_path_str])
             .map_err(|e| format_err!("Upload failed: {}", e))?;
     }
 
@@ -387,12 +371,7 @@ fn fetch_remote_file(
     {
         let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
 
-        let curl_cmd = build_curl_command(&full_url, username, password, &["-s"]);
-
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg(&curl_cmd)
-            .output()
+        let output = run_curl_command(&full_url, username, password, &["-s"])
             .map_err(|e| format_err!("Fetch failed: {}", e))?;
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())

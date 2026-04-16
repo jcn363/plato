@@ -138,9 +138,19 @@ impl EpubEditorCore {
 
         for i in 0..archive.len() {
             let mut file = archive.by_index(i)?;
-            let outpath = self.temp_dir.join(file.name());
 
-            if file.name().ends_with('/') {
+            // Prevent zip slip: reject entries containing path traversal components
+            let name = file.name();
+            if name.contains("..") || name.starts_with('/') || name.starts_with('\\') {
+                return Err(format_err!(
+                    "Zip entry contains path traversal: {}",
+                    name
+                ));
+            }
+
+            let outpath = self.temp_dir.join(name);
+
+            if name.ends_with('/') {
                 fs::create_dir_all(&outpath)?;
             } else {
                 if let Some(p) = outpath.parent() {
