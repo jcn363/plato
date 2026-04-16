@@ -9,7 +9,7 @@ use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::named_input::NamedInput;
 use crate::view::BIG_BAR_HEIGHT;
-use crate::view::{EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId};
+use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
