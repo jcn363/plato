@@ -6,7 +6,6 @@ use super::layout::{
 use super::style::StyleSheet;
 
 // Include modularized components
-use crate::document::html::engine_helpers::*;
 use crate::geom::{Edge, Point, Rectangle};
 use crate::settings::{
     DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT, DEFAULT_MARGIN_WIDTH, DEFAULT_TEXT_ALIGN,

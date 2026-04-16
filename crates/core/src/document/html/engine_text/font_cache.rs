@@ -2,7 +2,6 @@
 //!
 //! This module provides font glyph caching functionality for text rendering.
 
-use crate::geom::Rectangle;
 use std::collections::HashMap;
 use std::sync::Arc;
 

@@ -7,7 +7,6 @@ use crate::context::Context;
 use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::Rectangle;
 use crate::view::reader::reader_impl::reader_core::{RenderChunk, State, ViewPort};
-use crate::view::{Hub, RenderQueue};
 use anyhow::Error;
 use std::collections::HashMap;
 

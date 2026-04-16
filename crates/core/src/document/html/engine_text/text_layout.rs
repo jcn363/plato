@@ -4,8 +4,6 @@
 
 use crate::document::html::layout::{FontKind, TextAlign, TextElement};
 use crate::document::html::StyleData;
-use crate::geom::{Point, Rectangle};
-use std::collections::VecDeque;
 
 /// Text layout configuration
 #[derive(Debug, Clone)]

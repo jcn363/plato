@@ -2,9 +2,6 @@
 //!
 //! This module provides line breaking algorithms for text layout.
 
-use crate::geom::Rectangle;
-use std::collections::VecDeque;
-
 /// Line breaking configuration
 #[derive(Debug, Clone)]
 pub struct LineBreakConfig {

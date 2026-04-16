@@ -4,7 +4,6 @@
 //! including bookmarks, highlights, and notes management.
 
 use crate::document::Location;
-use crate::geom::Rectangle;
 use crate::metadata::Annotation;
 use crate::view::reader::reader_impl::reader_core::Selection;
 

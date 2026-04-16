@@ -2,7 +2,6 @@
 //!
 //! This module provides text shaping functionality using HarfBuzz for complex scripts.
 
-use crate::geom::Rectangle;
 use std::collections::HashMap;
 
 /// Text shaping configuration

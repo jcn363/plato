@@ -15,6 +15,7 @@
 /.fat32-epoch
 /.thumbnail-previews
 /.trash
+/actions-runner
 /css/*-user.css
 /hyphenation-patterns
 /dictionaries

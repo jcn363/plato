@@ -148,7 +148,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{atomic, Arc, LazyLock, Mutex};
 
-use crate::view::common::{locate, toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
+use crate::view::common::locate;
 use crate::view::top_bar::TopBar;
 use crate::view::{
     Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER, SMALL_BAR_HEIGHT,
