@@ -68,12 +68,13 @@ Created modules:
 - `view/home/ui_toggles/settings_toggle.rs` - Settings menu
 - `view/home/ui_toggles/library_toggle.rs` - Library operations
 
-#### 1.4 Reader Module (`view/reader/reader_impl/reader.rs`) 🔄 IN PROGRESS
+#### 1.4 Reader Module (`view/reader/reader_impl/reader.rs`) 
 **Status**: Modular structure created, method extraction ongoing
 
 Created modules:
 - `view/reader/reader_impl/reader_core.rs` - Core types and structs
-- `view/reader/reader_impl/reader.rs` - Main implementation (still 2,681 lines - needs reduction)
+- `view/reader/reader_impl/reader_stubs.rs` - Stub method implementations (~430 lines extracted from reader.rs)
+- `view/reader/reader_impl/reader_menus.rs` - Menu toggle wrapper methods (~379 lines extracted from reader.rs)
 - `view/reader/reader_impl/reader_input.rs` - Input and gesture processing
 - `view/reader/reader_impl/reader_state.rs` - State management
 - `view/reader/reader_impl/reader_navigation.rs` - Page navigation
@@ -132,6 +133,7 @@ Created modules:
 
 2. **Reduce reader.rs Below 1000 Lines** (~1,223 lines remaining to extract)
    - ✅ Extracted 430 lines of stub methods to reader_stubs.rs
+   - ✅ Extracted 379 lines of menu toggle methods to reader_menus.rs
    - Extract rendering methods to reader_rendering_ext.rs (~200 lines)
    - Extract search-related methods to reader_search.rs (~200 lines)
    - Extract TOC methods to reader_toc.rs (~150 lines)
@@ -262,7 +264,7 @@ After each change:
 - [x] `document/html/engine.rs` - Reduced from 2,679 to 175 lines
 - [x] `document/html/engine_text.rs` - Split into 6 submodules (all <1000 lines)
 - [x] `view/home/ui_toggles.rs` - Split into 11 submodules (all <1000 lines)
-- [ ] `view/reader/reader_impl/reader.rs` - Reduced from 2,682 to ~2,223 lines (need further reduction to <1000)
+- [ ] `view/reader/reader_impl/reader.rs` - Reduced from 2,682 to ~1,844 lines (need further reduction to <1000)
 
 ### Code Quality
 - [ ] All functions under 50 lines
