@@ -102,18 +102,18 @@ Created modules:
 - **Warnings**: ~110 warnings (unused imports, unused variables)
 
 ### 🔄 ARM Kobo Target (arm-unknown-linux-gnueabihf)
-- **Status**: ~80 compilation errors remaining (reduced from 336)
+- **Status**: ~70 compilation errors remaining (reduced from 336)
 - **Command**: `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
-- **Progress**: Fixed 256+ errors so far
-- **Error Categories** (~80 remaining):
-  - 3 E0599: No method/variant found (cloned, ok_or_else, Location iterator)
+- **Progress**: Fixed 266+ errors so far
+- **Error Categories** (~70 remaining):
+  - 2 E0599: No method/variant found (ok_or_else on wrong type, Location iterator)
   - 16 E0308: Type mismatches
   - Various other errors
 
 ### Remaining Work to Complete Modularization
 
 #### Immediate Priority (High)
-1. **Fix ARM Kobo Build Errors** (~80 remaining)
+1. **Fix ARM Kobo Build Errors** (~70 remaining)
    - ✅ Add missing ViewId variants (SettingsMenu, DirectoryView, Dialog, HighlightMenu, NavigationBar, LibraryMenu, Shelf, BookView)
    - ✅ Add missing EntryId variant (HighlightColor)
    - ✅ Add missing SortMethod::Date variant
@@ -130,6 +130,8 @@ Created modules:
    - ✅ Add missing fields to Context and Info structs
    - ✅ Fix toggle method signatures (removed ui_toggles_original.rs)
    - ✅ Fix Menu API usage in all toggle modules
+   - ✅ Fix EntryKind imports in toggle modules
+   - ✅ Fix Pixmap::new() signature mismatch
    - Resolve remaining type mismatches (16 E0308)
 
 2. **Reduce reader.rs Below 1000 Lines**
@@ -253,7 +255,7 @@ After each change:
 
 ### Build & Compilation
 - [x] Host target (x86_64) compiles without errors
-- [ ] ARM Kobo target (arm-unknown-linux-gnueabihf) compiles without errors **(~80 errors remaining)**
+- [ ] ARM Kobo target (arm-unknown-linux-gnueabihf) compiles without errors **(~70 errors remaining)**
 - [ ] ARM64 Kobo target (aarch64) compiles without errors
 - [ ] Zero clippy warnings with `-D warnings`
 - [ ] All tests pass
@@ -363,5 +365,5 @@ cargo test --target x86_64-unknown-linux-gnu
 ---
 
 **Last Updated**: April 2026  
-**Status**: 3 of 4 critical files modularized, ARM build errors being resolved (256+ of 336 fixed)  
-**Next Milestone**: Fix remaining ~80 ARM build errors, reduce reader.rs below 1000 lines
+**Status**: 3 of 4 critical files modularized, ARM build errors being resolved (266+ of 336 fixed)  
+**Next Milestone**: Fix remaining ~70 ARM build errors, reduce reader.rs below 1000 lines
