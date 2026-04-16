@@ -8,23 +8,23 @@
 //! - `resize`: Handles view resizing and child view repositioning
 //! - `render_rect`: Calculates visible rectangles for rendering operations
 use crate::context::Context;
+use crate::device::CURRENT_DEVICE;
 use crate::document::{Document, Location};
+use crate::framebuffer::UpdateMode;
+use crate::geom::halves;
 use crate::geom::Rectangle;
-use std::sync::{Arc, MutexGuard};
-use crate::view::{Hub, RenderQueue, View, SMALL_BAR_HEIGHT, BIG_BAR_HEIGHT, THICKNESS_MEDIUM};
-use crate::view::top_bar::TopBar;
+use crate::metadata::ZoomMode;
+use crate::unit::scale_by_dpi;
+use crate::view::common::locate;
 use crate::view::filler::Filler;
+use crate::view::keyboard::Keyboard;
+use crate::view::menu::Menu;
 use crate::view::reader::bottom_bar::BottomBar;
 use crate::view::reader::tool_bar::ToolBar;
-use crate::view::keyboard::Keyboard;
 use crate::view::search_bar::SearchBar;
-use crate::view::menu::Menu;
-use crate::metadata::ZoomMode;
-use crate::framebuffer::UpdateMode;
-use crate::unit::scale_by_dpi;
-use crate::geom::helpers::halves;
-use crate::view::common::locate;
-use crate::device::CURRENT_DEVICE;
+use crate::view::top_bar::TopBar;
+use crate::view::{Hub, RenderQueue, View, BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use std::sync::{Arc, MutexGuard};
 
 use super::reader::Reader;
 
@@ -33,7 +33,13 @@ impl Reader {
         rect.intersection(&self.rect).unwrap_or(self.rect)
     }
 
-    pub fn resize(&mut self, rect: Rectangle, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn resize(
+        &mut self,
+        rect: Rectangle,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         if !self.children.is_empty() {
             let dpi = CURRENT_DEVICE.dpi;
             let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
@@ -193,10 +199,11 @@ impl Reader {
                 .as_ref()
                 .and_then(|r| r.font_size)
                 .unwrap_or(context.settings.reader.font_size);
-            let mut doc = self
-                ._doc
-                .lock()
-                .unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
+            let mut doc = self._doc.lock().unwrap_or_else(
+                |poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| {
+                    poisoned.into_inner()
+                },
+            );
             doc.layout(rect.width(), rect.height(), font_size, CURRENT_DEVICE.dpi);
             let current_page = self.current_page.min(doc.pages_count() - 1);
             if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {

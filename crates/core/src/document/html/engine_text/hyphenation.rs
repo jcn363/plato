@@ -123,7 +123,9 @@ pub mod utils {
         text.split_whitespace()
             .map(|word| {
                 if engine.should_hyphenate(word) {
-                    engine.hyphenate_word(word).join(&engine.config().hyphen_char.to_string())
+                    engine
+                        .hyphenate_word(word)
+                        .join(&engine.config().hyphen_char.to_string())
                 } else {
                     word.to_string()
                 }
@@ -135,12 +137,13 @@ pub mod utils {
     /// Find optimal hyphenation points for a word
     pub fn find_optimal_hyphenation_points(word: &str, engine: &HyphenationEngine) -> Vec<usize> {
         let points = engine.find_hyphenation_points(word);
-        
+
         // Filter points based on minimum prefix and suffix length
-        points.into_iter()
+        points
+            .into_iter()
             .filter(|&point| {
-                point >= engine.config().min_prefix_length &&
-                (word.len() - point) >= engine.config().min_suffix_length
+                point >= engine.config().min_prefix_length
+                    && (word.len() - point) >= engine.config().min_suffix_length
             })
             .collect()
     }

@@ -32,7 +32,7 @@ enum RedactionState {
 
 enum ManipulationMode {
     SelectFile,
-    SelectAction(()), // Unused field
+    SelectAction(()),            // Unused field
     SelectRedactionPage((), ()), // Unused fields
     DefiningRedaction {
         file_path: PathBuf,

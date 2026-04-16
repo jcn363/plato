@@ -1,9 +1,8 @@
 use super::dom::NodeRef;
-use super::layout::{
-    ChildArtifact, DrawCommand, DrawState, Fonts, LoopContext,
-    RootData, SiblingStyle, StyleData,
-};
 use super::layout::TextAlign;
+use super::layout::{
+    ChildArtifact, DrawCommand, DrawState, Fonts, LoopContext, RootData, SiblingStyle, StyleData,
+};
 use super::style::StyleSheet;
 
 // Include modularized components
@@ -104,9 +103,7 @@ impl Engine {
         self.dims = (width, height);
         self.font_size = font_size;
         self.dpi = dpi;
-        self.margin = Edge::uniform(
-            mm_to_px(DEFAULT_MARGIN_WIDTH as f32, self.dpi).round() as i32,
-        );
+        self.margin = Edge::uniform(mm_to_px(DEFAULT_MARGIN_WIDTH as f32, self.dpi).round() as i32);
     }
 
     pub fn set_text_align(&mut self, text_align: TextAlign) {
@@ -118,7 +115,6 @@ impl Engine {
         // This method is expected by the Document trait but not yet implemented
     }
 
-    
     pub fn set_margin_width(&mut self, width: i32) {
         self.margin = Edge::uniform(width);
     }
@@ -172,4 +168,3 @@ impl Engine {
         None
     }
 }
-

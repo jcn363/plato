@@ -66,7 +66,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.keyboard.is_some());
-        
+
         if should_enable {
             self.show_keyboard(rq, context);
         } else {
@@ -82,10 +82,10 @@ impl Home {
 
         let rect = self.calculate_keyboard_rect(context);
         let keyboard = Keyboard::new(rect, self.id, context);
-        
+
         self.keyboard = Some(Box::new(keyboard) as Box<dyn View>);
         self.focus = Some(ViewId::Keyboard);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -97,7 +97,7 @@ impl Home {
 
         self.keyboard = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -105,7 +105,7 @@ impl Home {
     fn calculate_keyboard_rect(&self, context: &Context) -> Rectangle {
         let screen_height = context.display.dims.1 as i32;
         let keyboard_height = scale_by_dpi(240.0, CURRENT_DEVICE.dpi) as i32;
-        
+
         match self.get_keyboard_state().config.position {
             KeyboardPosition::Bottom => {
                 rect![
@@ -116,19 +116,14 @@ impl Home {
                 ]
             }
             KeyboardPosition::Top => {
-                rect![
-                    0,
-                    0,
-                    self.rect.width() as i32,
-                    keyboard_height
-                ]
+                rect![0, 0, self.rect.width() as i32, keyboard_height]
             }
             KeyboardPosition::Floating => {
                 let width = scale_by_dpi(600.0, CURRENT_DEVICE.dpi) as i32;
                 let height = keyboard_height;
                 let x = (self.rect.width() as i32 - width) / 2;
                 let y = (self.rect.height() as i32 - height) / 2;
-                
+
                 rect![x, y, width, height]
             }
         }
@@ -191,7 +186,7 @@ impl Home {
                 return;
             }
         }
-        
+
         // Handle other keyboard contexts
         self.hide_keyboard(rq, context);
     }
@@ -225,7 +220,10 @@ pub mod utils {
 
     /// Check if keyboard should be shown for input
     pub fn should_show_keyboard_for_input(input_type: InputType) -> bool {
-        matches!(input_type, InputType::Text | InputType::Search | InputType::Url)
+        matches!(
+            input_type,
+            InputType::Text | InputType::Search | InputType::Url
+        )
     }
 
     /// Input types that trigger keyboard

@@ -7,7 +7,7 @@ use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::view::menu::{Menu, MenuKind};
-use crate::view::{Event, EntryId, EntryKind, Hub, RenderData, RenderQueue, View, ViewId};
+use crate::view::{EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
@@ -57,7 +57,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.sort_menu.is_some());
-        
+
         if should_enable {
             self.show_sort_menu(rect, rq, context);
         } else {
@@ -72,10 +72,10 @@ impl Home {
         }
 
         let menu = self.create_sort_menu(rect, context);
-        
+
         self.sort_menu = Some(Box::new(menu) as Box<dyn View>);
         self.focus = Some(ViewId::SortMenu);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -87,19 +87,31 @@ impl Home {
 
         self.sort_menu = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
     /// Create sort menu
     fn create_sort_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
         let entries = vec![
-            EntryKind::Command("Sort by Title".to_string(), EntryId::Sort(crate::metadata::SortMethod::Title)),
-            EntryKind::Command("Sort by Author".to_string(), EntryId::Sort(crate::metadata::SortMethod::Author)),
-            EntryKind::Command("Sort by Date".to_string(), EntryId::Sort(crate::metadata::SortMethod::Date)),
-            EntryKind::Command("Sort by Size".to_string(), EntryId::Sort(crate::metadata::SortMethod::Size)),
+            EntryKind::Command(
+                "Sort by Title".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Title),
+            ),
+            EntryKind::Command(
+                "Sort by Author".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Author),
+            ),
+            EntryKind::Command(
+                "Sort by Date".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Date),
+            ),
+            EntryKind::Command(
+                "Sort by Size".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Size),
+            ),
         ];
-        
+
         Menu::new(rect, ViewId::SortMenu, MenuKind::DropDown, entries, context)
     }
 
@@ -113,7 +125,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.book_menu.is_some());
-        
+
         if should_enable {
             self.show_book_menu(index, rect, rq, context);
         } else {
@@ -122,16 +134,22 @@ impl Home {
     }
 
     /// Show book menu
-    fn show_book_menu(&mut self, index: usize, rect: Rectangle, rq: &mut RenderQueue, context: &mut Context) {
+    fn show_book_menu(
+        &mut self,
+        index: usize,
+        rect: Rectangle,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         if self.book_menu.is_some() {
             return;
         }
 
         let menu = self.create_book_menu(index, rect, context);
-        
+
         self.book_menu = Some(Box::new(menu) as Box<dyn View>);
         self.focus = Some(ViewId::BookMenu);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -143,7 +161,7 @@ impl Home {
 
         self.book_menu = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -151,14 +169,32 @@ impl Home {
     fn create_book_menu(&self, _index: usize, rect: Rectangle, context: &mut Context) -> Menu {
         let entries = vec![
             EntryKind::Command("Open".to_string(), EntryId::Load(std::path::PathBuf::new())),
-            EntryKind::Command("Rename".to_string(), EntryId::Rename(std::path::PathBuf::new())),
-            EntryKind::Command("Delete".to_string(), EntryId::Remove(std::path::PathBuf::new())),
+            EntryKind::Command(
+                "Rename".to_string(),
+                EntryId::Rename(std::path::PathBuf::new()),
+            ),
+            EntryKind::Command(
+                "Delete".to_string(),
+                EntryId::Remove(std::path::PathBuf::new()),
+            ),
             EntryKind::Separator,
-            EntryKind::Command("Add Bookmark".to_string(), EntryId::Load(std::path::PathBuf::new())),
-            EntryKind::Command("View Info".to_string(), EntryId::Load(std::path::PathBuf::new())),
+            EntryKind::Command(
+                "Add Bookmark".to_string(),
+                EntryId::Load(std::path::PathBuf::new()),
+            ),
+            EntryKind::Command(
+                "View Info".to_string(),
+                EntryId::Load(std::path::PathBuf::new()),
+            ),
         ];
-        
-        Menu::new(rect, ViewId::BookMenu, MenuKind::Contextual, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::BookMenu,
+            MenuKind::Contextual,
+            entries,
+            context,
+        )
     }
 
     /// Get menu state
@@ -330,7 +366,7 @@ pub mod utils {
         let (x, y) = position;
         let (screen_w, screen_h) = screen_size;
         let (menu_w, menu_h) = menu_size;
-        
+
         // Check if menu would fit on screen
         x + menu_w <= screen_w && y + menu_h <= screen_h
     }
@@ -344,7 +380,7 @@ pub mod utils {
         let (x, y) = position;
         let (screen_w, screen_h) = screen_size;
         let (menu_w, menu_h) = menu_size;
-        
+
         // Adjust x position
         let mut adjusted_x = x;
         if x + menu_w > screen_w {
@@ -353,7 +389,7 @@ pub mod utils {
         if adjusted_x < 0 {
             adjusted_x = 0;
         }
-        
+
         // Adjust y position
         let mut adjusted_y = y;
         if y + menu_h > screen_h {
@@ -362,7 +398,7 @@ pub mod utils {
         if adjusted_y < 0 {
             adjusted_y = 0;
         }
-        
+
         (adjusted_x, adjusted_y)
     }
 }

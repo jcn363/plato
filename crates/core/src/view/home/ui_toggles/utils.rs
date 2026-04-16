@@ -7,10 +7,10 @@ use std::path::PathBuf;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
+use crate::geom::halves;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::{Hub, RenderData, RenderQueue, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use crate::geom::helpers::halves;
 
 use super::super::Home;
 
@@ -21,21 +21,21 @@ impl Home {
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (small_thickness, _) = halves(thickness);
-        
+
         let mut offset = small_height + small_thickness;
-        
+
         // Account for address bar if visible
         if self.address_bar.is_some() {
             offset += small_height - thickness;
             offset += thickness; // separator
         }
-        
+
         // Account for navigation bar if visible
         if self.navigation_bar.is_some() {
             offset += small_height - thickness;
             offset += thickness; // separator
         }
-        
+
         offset
     }
 
@@ -45,7 +45,7 @@ impl Home {
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (small_thickness, _) = halves(thickness);
-        
+
         // Bottom bar is always present
         small_height - small_thickness
     }
@@ -61,7 +61,7 @@ impl Home {
         // TODO: Implement rename document dialog toggle
         // This is a placeholder to fix compilation errors
         let should_enable = enable.unwrap_or(false);
-        
+
         if should_enable {
             // Show rename dialog
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
@@ -115,7 +115,7 @@ pub fn clear_menus(home: &mut Home) {
 
 /// Check if any menu is currently open
 pub fn is_any_menu_open(home: &Home) -> bool {
-    home.sort_menu.is_some() 
+    home.sort_menu.is_some()
         || home.book_menu.is_some()
         || home.library_menu.is_some()
         || home.settings_menu.is_some()

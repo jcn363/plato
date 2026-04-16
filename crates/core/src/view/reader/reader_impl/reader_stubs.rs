@@ -12,11 +12,11 @@
 //! Many of these methods are delegating stubs that trigger UI updates
 //! while the actual implementation logic resides in other specialized modules.
 
+use crate::context::Context;
+use crate::document::Location;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{CycleDir, Point};
-use crate::document::Location;
 use crate::view::{Hub, RenderData, RenderQueue};
-use crate::context::Context;
 
 use super::reader::Reader;
 

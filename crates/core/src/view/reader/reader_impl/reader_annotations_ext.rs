@@ -27,7 +27,10 @@ impl ReaderAnnotationManager {
 
     /// Add a new annotation
     pub fn add_annotation(&mut self, page: usize, annotation: Annotation) {
-        self.annotations.entry(page).or_insert_with(Vec::new).push(annotation);
+        self.annotations
+            .entry(page)
+            .or_insert_with(Vec::new)
+            .push(annotation);
     }
 
     /// Remove an annotation
@@ -44,7 +47,10 @@ impl ReaderAnnotationManager {
 
     /// Get all annotations for a page
     pub fn get_annotations(&self, page: usize) -> &[Annotation] {
-        self.annotations.get(&page).map(|v| v.as_slice()).unwrap_or(&[])
+        self.annotations
+            .get(&page)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
     }
 
     /// Set the current selection
@@ -73,11 +79,19 @@ impl ReaderAnnotationManager {
     }
 
     /// Create a new bookmark
-    pub fn create_bookmark(&mut self, page: usize, location: Location, title: String) -> Annotation {
+    pub fn create_bookmark(
+        &mut self,
+        page: usize,
+        location: Location,
+        title: String,
+    ) -> Annotation {
         let bookmark = Annotation {
             note: title.clone(),
             text: title,
-            selection: [crate::document::TextLocation::Dynamic(0), crate::document::TextLocation::Dynamic(1)],
+            selection: [
+                crate::document::TextLocation::Dynamic(0),
+                crate::document::TextLocation::Dynamic(1),
+            ],
             ..Default::default()
         };
         self.add_annotation(page, bookmark.clone());
@@ -95,7 +109,10 @@ impl ReaderAnnotationManager {
         let highlight = Annotation {
             note: String::new(),
             text,
-            selection: [crate::document::TextLocation::Dynamic(0), crate::document::TextLocation::Dynamic(1)],
+            selection: [
+                crate::document::TextLocation::Dynamic(0),
+                crate::document::TextLocation::Dynamic(1),
+            ],
             ..Default::default()
         };
         self.add_annotation(page, highlight.clone());
@@ -113,7 +130,10 @@ impl ReaderAnnotationManager {
         let annotation = Annotation {
             note,
             text,
-            selection: [crate::document::TextLocation::Dynamic(0), crate::document::TextLocation::Dynamic(1)],
+            selection: [
+                crate::document::TextLocation::Dynamic(0),
+                crate::document::TextLocation::Dynamic(1),
+            ],
             ..Default::default()
         };
         self.add_annotation(page, annotation.clone());

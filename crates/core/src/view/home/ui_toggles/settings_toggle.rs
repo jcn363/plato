@@ -6,7 +6,7 @@ use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::view::menu::{Menu, MenuKind};
-use crate::view::{Event, EntryId, EntryKind, Hub, RenderData, RenderQueue, View, ViewId};
+use crate::view::{EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
@@ -56,7 +56,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.settings_menu.is_some());
-        
+
         if should_enable {
             self.show_settings_menu(rq, context);
         } else {
@@ -72,10 +72,10 @@ impl Home {
 
         let rect = self.calculate_settings_menu_rect(context);
         let menu = self.create_settings_menu(rect, context);
-        
+
         self.settings_menu = Some(Box::new(menu) as Box<dyn View>);
         self.focus = Some(ViewId::SettingsMenu);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -87,7 +87,7 @@ impl Home {
 
         self.settings_menu = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -95,12 +95,12 @@ impl Home {
     fn calculate_settings_menu_rect(&self, context: &Context) -> Rectangle {
         let screen_width = context.display.dims.0 as i32;
         let screen_height = context.display.dims.1 as i32;
-        
+
         let width = (screen_width as f32 * 0.6) as i32;
         let height = (screen_height as f32 * 0.8) as i32;
         let x = (screen_width - width) / 2;
         let y = (screen_height - height) / 2;
-        
+
         rect![x, y, width, height]
     }
 
@@ -111,17 +111,26 @@ impl Home {
             EntryKind::Command("Display Settings".to_string(), EntryId::SystemInfo),
             EntryKind::Command("Reading Settings".to_string(), EntryId::SystemInfo),
         ];
-        
+
         // Add advanced settings if enabled
         if self.get_settings_state().config.show_advanced {
-            entries.push(EntryKind::Command("Advanced Settings".to_string(), EntryId::SystemInfo));
+            entries.push(EntryKind::Command(
+                "Advanced Settings".to_string(),
+                EntryId::SystemInfo,
+            ));
         }
-        
+
         entries.push(EntryKind::Separator);
         entries.push(EntryKind::Command("About".to_string(), EntryId::SystemInfo));
         entries.push(EntryKind::Command("Help".to_string(), EntryId::SystemInfo));
-        
-        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::SettingsMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Get settings state

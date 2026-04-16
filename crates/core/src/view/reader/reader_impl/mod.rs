@@ -34,8 +34,8 @@ pub use reader::Reader;
 // Feature modules (WIP)
 pub mod reader_annotations;
 pub mod reader_annotations_ext;
-pub mod reader_dialogs;
 pub mod reader_dialog_manager;
+pub mod reader_dialogs;
 pub mod reader_gestures;
 pub mod reader_input;
 pub mod reader_navigation;

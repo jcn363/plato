@@ -3,13 +3,13 @@
 //! This module handles all dialog creation and management for the Reader view,
 //! including confirmation dialogs, input dialogs, and message dialogs.
 
-use crate::color::{YELLOW, GREEN, BLUE, RED, ORANGE, PURPLE};
-use crate::geom::Rectangle;
-use crate::view::{Hub, Id, RenderQueue, ViewId};
-use crate::view::dialog::Dialog;
-use crate::view::menu::{Menu, MenuKind};
-use crate::view::entries::{EntryKind, EntryId};
+use crate::color::{BLUE, GREEN, ORANGE, PURPLE, RED, YELLOW};
 use crate::context::Context;
+use crate::geom::Rectangle;
+use crate::view::dialog::Dialog;
+use crate::view::entries::{EntryId, EntryKind};
+use crate::view::menu::{Menu, MenuKind};
+use crate::view::{Hub, Id, RenderQueue, ViewId};
 
 /// Dialog types for the Reader
 #[derive(Debug, Clone)]
@@ -56,10 +56,15 @@ impl ReaderDialogManager {
     }
 
     /// Create a go-to-page dialog
-    pub fn create_go_to_page_dialog(&self, current_page: usize, total_pages: usize, context: &mut Context) -> Dialog {
+    pub fn create_go_to_page_dialog(
+        &self,
+        current_page: usize,
+        total_pages: usize,
+        context: &mut Context,
+    ) -> Dialog {
         let title = format!("Go to Page (1-{})", total_pages);
         let message = format!("Current page: {}", current_page + 1);
-        
+
         // TODO: Create proper dialog with input functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
@@ -73,7 +78,7 @@ impl ReaderDialogManager {
     pub fn create_edit_note_dialog(&self, note_text: &str, context: &mut Context) -> Dialog {
         let title = "Edit Note".to_string();
         let message = "Enter your note:".to_string();
-        
+
         // TODO: Create proper dialog with input functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
@@ -87,7 +92,7 @@ impl ReaderDialogManager {
     pub fn create_search_dialog(&self, current_query: &str, context: &mut Context) -> Dialog {
         let title = "Search".to_string();
         let message = "Enter search text:".to_string();
-        
+
         // TODO: Create proper dialog with input functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
@@ -101,7 +106,7 @@ impl ReaderDialogManager {
     pub fn create_bookmark_dialog(&self, page_title: &str, context: &mut Context) -> Dialog {
         let title = "Add Bookmark".to_string();
         let message = format!("Bookmark for: {}", page_title);
-        
+
         // TODO: Create proper dialog with input functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
@@ -121,12 +126,23 @@ impl ReaderDialogManager {
             EntryKind::Command("Orange".to_string(), EntryId::HighlightColor(ORANGE)),
             EntryKind::Command("Purple".to_string(), EntryId::HighlightColor(PURPLE)),
         ];
-        
-        Menu::new(Rectangle::default(), ViewId::HighlightMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            Rectangle::default(),
+            ViewId::HighlightMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Create a confirmation dialog
-    pub fn create_confirmation_dialog(&self, title: String, message: String, context: &mut Context) -> Dialog {
+    pub fn create_confirmation_dialog(
+        &self,
+        title: String,
+        message: String,
+        context: &mut Context,
+    ) -> Dialog {
         // TODO: Create proper dialog with confirmation functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
@@ -137,7 +153,12 @@ impl ReaderDialogManager {
     }
 
     /// Create an info dialog
-    pub fn create_info_dialog(&self, title: String, message: String, context: &mut Context) -> Dialog {
+    pub fn create_info_dialog(
+        &self,
+        title: String,
+        message: String,
+        context: &mut Context,
+    ) -> Dialog {
         Dialog::new(
             crate::view::ViewId::Dialog,
             None,
@@ -157,11 +178,15 @@ impl ReaderDialogManager {
     }
 
     /// Show a dialog
-    pub fn show_dialog(&mut self, dialog_type: ReaderDialogType, dialog_data: ReaderDialogData) -> bool {
+    pub fn show_dialog(
+        &mut self,
+        dialog_type: ReaderDialogType,
+        dialog_data: ReaderDialogData,
+    ) -> bool {
         if self.dialog_stack.len() >= self.max_stack_size {
             return false;
         }
-        
+
         self.current_dialog = Some(dialog_type.clone());
         self.dialog_stack.push(dialog_data);
         true

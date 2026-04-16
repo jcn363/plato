@@ -21,7 +21,7 @@ fn locate_by_id_in_vec(children: &[Box<dyn View>], id: ViewId) -> Option<usize> 
 }
 
 /// Helper to toggle a dialog view with common logic.
-/// 
+///
 /// This reduces duplication across dialog toggle functions by handling:
 /// - Checking if the view already exists
 /// - Handling enable/disable flags
@@ -49,11 +49,7 @@ where
             return false; // Explicitly disabled
         }
         let view = make_view();
-        rq.add(RenderData::new(
-            view.id(),
-            *view.rect(),
-            UpdateMode::Gui,
-        ));
+        rq.add(RenderData::new(view.id(), *view.rect(), UpdateMode::Gui));
         children.push(view);
         true
     }
@@ -87,7 +83,7 @@ pub(crate) fn toggle_edit_note(
         },
         rq,
     );
-    
+
     if created {
         hub.send(Event::Focus(Some(ViewId::EditNoteInput))).ok();
     }
@@ -116,7 +112,7 @@ pub(crate) fn toggle_name_page(
         },
         rq,
     );
-    
+
     if created {
         hub.send(Event::Focus(Some(ViewId::NamePageInput))).ok();
     }

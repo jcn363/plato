@@ -2,9 +2,9 @@
 //!
 //! This module provides text rendering functionality for the HTML engine.
 
-use crate::geom::Rectangle;
-use crate::framebuffer::Framebuffer;
 use crate::color::Color;
+use crate::framebuffer::Framebuffer;
+use crate::geom::Rectangle;
 use std::collections::HashMap;
 
 /// Text rendering configuration
@@ -113,7 +113,7 @@ impl TextRenderer {
             let glyph_data = self.create_glyph_data(glyph_id);
             self.glyph_cache.insert(glyph_id, glyph_data);
         }
-        
+
         self.glyph_cache.get(&glyph_id).unwrap()
     }
 
@@ -167,11 +167,11 @@ impl TextRenderer {
             for xi in 0..width {
                 let idx = (yi * width + xi) as usize;
                 let alpha = bitmap[idx];
-                
+
                 if alpha > 0 {
                     let pixel_x = start_x + xi;
                     let pixel_y = start_y + yi;
-                    
+
                     // Set pixel with color and alpha
                     let color = self.config.color;
                     framebuffer.set_pixel(pixel_x as u32, pixel_y as u32, color);
@@ -201,7 +201,10 @@ impl TextRenderer {
     pub fn cache_stats(&self) -> (usize, usize) {
         (
             self.glyph_cache.len(),
-            self.glyph_cache.values().map(|g| g.bitmap.as_ref().map_or(0, |b| b.len())).sum(),
+            self.glyph_cache
+                .values()
+                .map(|g| g.bitmap.as_ref().map_or(0, |b| b.len()))
+                .sum(),
         )
     }
 }
@@ -248,7 +251,7 @@ pub mod utils {
     /// Calculate text rendering quality metrics
     pub fn calculate_rendering_quality(renderer: &TextRenderer) -> RenderingQuality {
         let (cache_size, cache_memory) = renderer.cache_stats();
-        
+
         RenderingQuality {
             cache_hit_rate: 0.0, // TODO: Track hit rate
             cache_size,

@@ -36,7 +36,8 @@ impl PluginSystem {
             return Ok(());
         }
 
-        let canonical_plugins_dir = plugins_dir.canonicalize()
+        let canonical_plugins_dir = plugins_dir
+            .canonicalize()
             .map_err(|e| format_err!("Failed to canonicalize plugins directory: {}", e))?;
 
         for entry in fs::read_dir(plugins_dir)? {
@@ -48,10 +49,14 @@ impl PluginSystem {
             }
 
             // Validate plugin path stays within the plugins directory
-            let canonical_path = path.canonicalize()
+            let canonical_path = path
+                .canonicalize()
                 .map_err(|e| format_err!("Failed to canonicalize plugin path: {}", e))?;
             if !canonical_path.starts_with(&canonical_plugins_dir) {
-                log_warn!("Skipping plugin outside plugins directory: {}", path.display());
+                log_warn!(
+                    "Skipping plugin outside plugins directory: {}",
+                    path.display()
+                );
                 continue;
             }
 

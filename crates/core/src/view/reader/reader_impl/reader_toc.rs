@@ -3,7 +3,7 @@
 //! This module handles table of contents functionality for the Reader view,
 //! including TOC navigation, page lookup, and chapter management.
 
-use crate::document::{TocEntry, SimpleTocEntry};
+use crate::document::{SimpleTocEntry, TocEntry};
 use crate::metadata::Info;
 use std::collections::HashMap;
 
@@ -51,12 +51,10 @@ impl ReaderTocManager {
         F: Fn(&str) -> Option<usize>,
     {
         let mut toc = Vec::new();
-        
+
         for entry in simple_toc {
-            let page = find_page(&entry.name).or_else(|| {
-                find_page(&entry.title)
-            });
-            
+            let page = find_page(&entry.name).or_else(|| find_page(&entry.title));
+
             let toc_entry = TocEntry {
                 level: entry.level,
                 title: entry.title.clone(),
@@ -68,11 +66,11 @@ impl ReaderTocManager {
                     Vec::new()
                 },
             };
-            
+
             toc.push(toc_entry);
             *index += 1;
         }
-        
+
         toc
     }
 
@@ -159,7 +157,7 @@ impl ReaderTocManager {
                     } else {
                         true
                     };
-                    
+
                     if is_last_chapter || next_chapter_starts_after {
                         return Some(i);
                     }
@@ -221,14 +219,14 @@ impl ReaderTocManager {
         if entries.is_empty() {
             return 0;
         }
-        
+
         let mut max_depth = 0;
         for entry in entries {
             let depth = entry.level as u32;
             let child_depth = self.calculate_max_depth(&entry.children);
             max_depth = max_depth.max(depth).max(child_depth);
         }
-        
+
         max_depth
     }
 }
@@ -253,7 +251,7 @@ pub mod utils {
     /// Flatten TOC entries into a linear list
     pub fn flatten_toc(entries: &[TocEntry]) -> Vec<TocEntry> {
         let mut flattened = Vec::new();
-        
+
         for entry in entries {
             flattened.push(TocEntry {
                 level: entry.level,
@@ -262,77 +260,79 @@ pub mod utils {
                 page: entry.page,
                 children: Vec::new(), // Don't include children in flattened version
             });
-            
+
             // Recursively add children
             flattened.extend(flatten_toc(&entry.children));
         }
-        
+
         flattened
     }
 
     /// Search TOC entries by title
     pub fn search_toc_by_title<'a>(entries: &'a [TocEntry], query: &str) -> Vec<&'a TocEntry> {
         let mut matches = Vec::new();
-        
+
         for entry in entries {
             if entry.title.to_lowercase().contains(&query.to_lowercase()) {
                 matches.push(entry);
             }
-            
+
             // Search in children
             matches.extend(search_toc_by_title(&entry.children, query));
         }
-        
+
         matches
     }
 
     /// Get chapter title for page
-    pub fn get_chapter_title_for_page(
-        entries: &[TocEntry],
-        page: usize,
-    ) -> Option<String> {
+    pub fn get_chapter_title_for_page(entries: &[TocEntry], page: usize) -> Option<String> {
         for entry in entries {
             if let Some(entry_page) = entry.page {
                 if entry_page <= page {
                     // Check if this is the last chapter or if next chapter starts after current page
-                    let is_last_chapter = entry.children.is_empty() && 
-                        entries.iter().all(|e| e.page.map_or(true, |p| p <= page));
-                    
-                    if is_last_chapter || entry.children.iter().all(|c| c.page.map_or(true, |p| p > page)) {
+                    let is_last_chapter = entry.children.is_empty()
+                        && entries.iter().all(|e| e.page.map_or(true, |p| p <= page));
+
+                    if is_last_chapter
+                        || entry
+                            .children
+                            .iter()
+                            .all(|c| c.page.map_or(true, |p| p > page))
+                    {
                         return Some(entry.title.clone());
                     }
                 }
             }
-            
+
             // Check children
             if let Some(title) = get_chapter_title_for_page(&entry.children, page) {
                 return Some(title);
             }
         }
-        
+
         None
     }
 
     /// Validate TOC structure
     pub fn validate_toc_structure(entries: &[TocEntry]) -> Vec<String> {
         let mut errors = Vec::new();
-        
+
         for (i, entry) in entries.iter().enumerate() {
             if entry.title.is_empty() {
                 errors.push(format!("Chapter {} has empty title", i + 1));
             }
-            
+
             if entry.level == 0 {
                 errors.push(format!("Chapter {} has invalid level 0", i + 1));
             }
-            
+
             // Validate children
             let child_errors = validate_toc_structure(&entry.children);
             for error in child_errors {
                 errors.push(format!("Chapter {}.{}", i + 1, error));
             }
         }
-        
+
         errors
     }
 }

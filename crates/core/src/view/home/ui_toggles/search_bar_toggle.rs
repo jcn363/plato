@@ -8,8 +8,8 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::search_bar::SearchBar;
-use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 use crate::view::BIG_BAR_HEIGHT;
+use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
@@ -60,7 +60,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.search_bar.is_some());
-        
+
         if should_enable {
             self.show_search_bar(rq, context);
         } else {
@@ -76,10 +76,10 @@ impl Home {
 
         let rect = self.calculate_search_bar_rect(context);
         let search_bar = SearchBar::new(rect, self.id, context);
-        
+
         self.search_bar = Some(Box::new(search_bar) as Box<dyn View>);
         self.focus = Some(ViewId::SearchBar);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -91,7 +91,7 @@ impl Home {
 
         self.search_bar = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -99,13 +99,8 @@ impl Home {
     fn calculate_search_bar_rect(&self, context: &Context) -> Rectangle {
         let height = scale_by_dpi(BIG_BAR_HEIGHT, CURRENT_DEVICE.dpi) as i32;
         let width = self.rect.width() as i32;
-        
-        rect![
-            0,
-            0,
-            width,
-            height
-        ]
+
+        rect![0, 0, width, height]
     }
 
     /// Get search bar state
@@ -196,7 +191,7 @@ pub mod utils {
 
         let prefix = &query[..prefix_len];
         let suffix = &query[query.len() - suffix_len..];
-        
+
         format!("{}{}{}", prefix, ellipsis, suffix)
     }
 
@@ -208,12 +203,12 @@ pub mod utils {
     /// Get search suggestions for input
     pub fn get_search_suggestions(input: &str, context: &Context) -> Vec<String> {
         let mut suggestions = Vec::new();
-        
+
         // Add current query as suggestion
         if !input.is_empty() {
             suggestions.push(input.to_string());
         }
-        
+
         // Add recent searches (simplified)
         if let Some(ref recent) = context.history.recent {
             for path in recent.iter().take(5) {
@@ -223,7 +218,7 @@ pub mod utils {
                 }
             }
         }
-        
+
         suggestions
     }
 
@@ -237,14 +232,14 @@ pub mod utils {
         let mut highlights = Vec::new();
         let text_lower = text.to_lowercase();
         let query_lower = query.to_lowercase();
-        
+
         let mut start = 0;
         while let Some(pos) = text_lower[start..].find(&query_lower) {
             let absolute_pos = start + pos;
             highlights.push((absolute_pos, absolute_pos + query.len()));
             start = absolute_pos + query.len();
         }
-        
+
         highlights
     }
 }

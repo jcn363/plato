@@ -8,8 +8,8 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::home::NavigationBar;
-use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 use crate::view::SMALL_BAR_HEIGHT;
+use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
@@ -59,7 +59,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.navigation_bar.is_some());
-        
+
         if should_enable {
             self.show_navigation_bar(rq, context);
         } else {
@@ -75,9 +75,9 @@ impl Home {
 
         let rect = self.calculate_navigation_bar_rect(context);
         let navigation_bar = NavigationBar::new(rect, self.id, context);
-        
+
         self.navigation_bar = Some(Box::new(navigation_bar) as Box<dyn View>);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -88,7 +88,7 @@ impl Home {
         }
 
         self.navigation_bar = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -101,13 +101,8 @@ impl Home {
         } else {
             0
         };
-        
-        rect![
-            0,
-            y,
-            width,
-            height
-        ]
+
+        rect![0, y, width, height]
     }
 
     /// Get navigation bar state
@@ -173,26 +168,26 @@ pub mod utils {
     /// Format breadcrumbs for display
     pub fn format_breadcrumbs(path: &str, max_length: usize) -> String {
         let parts: Vec<&str> = path.split('/').filter(|p| !p.is_empty()).collect();
-        
+
         if parts.len() <= 3 {
             return path.to_string();
         }
 
         let mut result = String::new();
-        
+
         // Always include root
         result.push('/');
-        
+
         // Include middle parts with ellipsis
         result.push_str(".../");
-        
+
         // Include last two parts
         if parts.len() >= 2 {
             result.push_str(parts[parts.len() - 2]);
             result.push('/');
             result.push_str(parts[parts.len() - 1]);
         }
-        
+
         result
     }
 
@@ -206,7 +201,7 @@ pub mod utils {
         } else {
             0
         };
-        
+
         base_height + extra_height
     }
 

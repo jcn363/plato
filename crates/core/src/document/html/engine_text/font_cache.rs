@@ -77,7 +77,7 @@ impl FontCache {
         }
 
         let memory_size = self.calculate_memory_size(&entry);
-        
+
         // Remove existing entry if present
         if let Some(old_entry) = self.cache.remove(&glyph_id) {
             self.current_memory -= self.calculate_memory_size(&old_entry);
@@ -111,15 +111,15 @@ impl FontCache {
         CacheStats {
             entries: self.cache.len(),
             memory_mb: self.current_memory / (1024 * 1024),
-            hit_rate: 0.0, // TODO: Track hit rate
+            hit_rate: 0.0,     // TODO: Track hit rate
             eviction_count: 0, // TODO: Track evictions
         }
     }
 
     /// Check if cleanup is needed
     fn should_cleanup(&self) -> bool {
-        self.cache.len() > self.config.max_entries ||
-        self.current_memory > (self.config.max_memory_mb * 1024 * 1024)
+        self.cache.len() > self.config.max_entries
+            || self.current_memory > (self.config.max_memory_mb * 1024 * 1024)
     }
 
     /// Cleanup old entries
@@ -137,7 +137,9 @@ impl FontCache {
         // Remove entries if still over limits
         if self.cache.len() - to_remove.len() > self.config.max_entries {
             let excess = self.cache.len() - to_remove.len() - self.config.max_entries;
-            let oldest_entries = self.access_order.iter()
+            let oldest_entries = self
+                .access_order
+                .iter()
                 .take(excess)
                 .cloned()
                 .collect::<Vec<_>>();
@@ -155,9 +157,7 @@ impl FontCache {
 
     /// Calculate memory size of an entry
     fn calculate_memory_size(&self, entry: &FontCacheEntry) -> usize {
-        let pixmap_size = entry.pixmap.as_ref()
-            .map(|p| p.len())
-            .unwrap_or(0);
+        let pixmap_size = entry.pixmap.as_ref().map(|p| p.len()).unwrap_or(0);
         std::mem::size_of::<FontCacheEntry>() + pixmap_size
     }
 
@@ -215,10 +215,7 @@ pub mod utils {
     }
 
     /// Estimate cache memory usage
-    pub fn estimate_cache_memory_usage(
-        entries: usize,
-        average_glyph_size: usize,
-    ) -> usize {
+    pub fn estimate_cache_memory_usage(entries: usize, average_glyph_size: usize) -> usize {
         entries * (std::mem::size_of::<FontCacheEntry>() + average_glyph_size)
     }
 

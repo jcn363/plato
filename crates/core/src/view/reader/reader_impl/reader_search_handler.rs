@@ -3,13 +3,13 @@
 //! This module handles all search functionality for the Reader view,
 //! including text search, result navigation, and search history.
 
-use crate::document::Location;
-use crate::geom::Rectangle;
-use crate::geom::LinearDir;
-use crate::view::reader::reader_impl::reader_core::Search;
-use crate::view::{Hub, Id, RenderQueue};
-use crate::view::search_bar::SearchBar;
 use crate::context::Context;
+use crate::document::Location;
+use crate::geom::LinearDir;
+use crate::geom::Rectangle;
+use crate::view::reader::reader_impl::reader_core::Search;
+use crate::view::search_bar::SearchBar;
+use crate::view::{Hub, Id, RenderQueue};
 use std::collections::VecDeque;
 
 /// Search result information
@@ -185,7 +185,13 @@ impl ReaderSearchHandler {
     }
 
     /// Handle search navigation
-    pub fn handle_navigation(&mut self, direction: LinearDir, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) -> bool {
+    pub fn handle_navigation(
+        &mut self,
+        direction: LinearDir,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) -> bool {
         match direction {
             LinearDir::Forward => self.next_result(),
             LinearDir::Backward => self.previous_result(),
@@ -206,8 +212,9 @@ impl ReaderSearchHandler {
         // Remove old results for this page and add new ones
         self.search_results.retain(|r| r.page != page);
         self.search_results.extend(page_results);
-        self.search_results.sort_by(|a, b| a.location.cmp(&b.location));
-        
+        self.search_results
+            .sort_by(|a, b| a.location.cmp(&b.location));
+
         // Adjust current index if needed
         if self.current_result_index >= self.search_results.len() {
             self.current_result_index = self.search_results.len().saturating_sub(1);

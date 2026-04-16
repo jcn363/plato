@@ -55,7 +55,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.directory_view.is_some());
-        
+
         if should_enable {
             self.show_directory_view(rq, context);
         } else {
@@ -72,9 +72,9 @@ impl Home {
         let rect = self.calculate_directory_view_rect(context);
         // TODO: Create actual directory view
         // let directory_view = DirectoryView::new(rect, self.id, context);
-        
+
         // self.directory_view = Some(Box::new(directory_view) as Box<dyn View>);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -85,7 +85,7 @@ impl Home {
         }
 
         self.directory_view = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -93,7 +93,7 @@ impl Home {
     fn calculate_directory_view_rect(&self, context: &Context) -> Rectangle {
         let top_offset = self.calculate_top_offset();
         let bottom_offset = self.calculate_bottom_offset();
-        
+
         rect![
             0,
             top_offset,
@@ -102,7 +102,6 @@ impl Home {
         ]
     }
 
-    
     /// Get directory view state
     fn get_directory_view_state(&self) -> DirectoryViewToggleState {
         DirectoryViewToggleState {
@@ -192,7 +191,7 @@ pub mod utils {
         if !show_hidden && file_name.starts_with('.') {
             return true;
         }
-        
+
         // Check for other hidden patterns
         matches!(file_name, "Thumbs.db" | "Desktop.ini" | ".DS_Store")
     }

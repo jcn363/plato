@@ -2,9 +2,9 @@
 //!
 //! This module provides text layout algorithms and utilities for the HTML rendering engine.
 
-use crate::geom::{Point, Rectangle};
-use crate::document::html::layout::{TextElement, TextAlign, FontKind};
+use crate::document::html::layout::{FontKind, TextAlign, TextElement};
 use crate::document::html::StyleData;
+use crate::geom::{Point, Rectangle};
 use std::collections::VecDeque;
 
 /// Text layout configuration
@@ -78,18 +78,18 @@ impl TextLayoutEngine {
 
         for word in &words {
             let word_width = self.measure_word(word);
-            
+
             if current_line_width + word_width > max_width && !current_line_words.is_empty() {
                 // Current line is full, create a line
                 let line = self.create_line(&current_line_words, current_line_width, current_y);
                 lines.push(line);
                 current_y += self.config.line_height * self.config.font_size;
-                
+
                 // Start new line
                 current_line_words.clear();
                 current_line_width = 0.0;
             }
-            
+
             current_line_words.push(word.clone());
             current_line_width += word_width + self.config.word_spacing;
         }
@@ -182,7 +182,7 @@ pub mod utils {
             font_size,
             ..Default::default()
         });
-        
+
         let result = engine.layout_text(text, &StyleData::default());
         result.lines.into_iter().map(|line| line.text).collect()
     }

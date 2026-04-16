@@ -56,7 +56,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.shelf.is_some());
-        
+
         if should_enable {
             self.show_shelf_view(rq, context);
         } else {
@@ -72,9 +72,9 @@ impl Home {
 
         let rect = self.calculate_shelf_view_rect(context);
         let shelf = Shelf::new(rect, self.id, context);
-        
+
         self.shelf = Some(Box::new(shelf) as Box<dyn View>);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -85,7 +85,7 @@ impl Home {
         }
 
         self.shelf = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -93,7 +93,7 @@ impl Home {
     fn calculate_shelf_view_rect(&self, context: &Context) -> Rectangle {
         let top_offset = self.calculate_top_offset();
         let bottom_offset = self.calculate_bottom_offset();
-        
+
         rect![
             0,
             top_offset,
@@ -102,7 +102,6 @@ impl Home {
         ]
     }
 
-    
     /// Get shelf view state
     fn get_shelf_view_state(&self) -> ShelfViewToggleState {
         ShelfViewToggleState {
@@ -175,7 +174,7 @@ pub mod utils {
         let total_padding = padding * (grid_columns as i32 - 1);
         let item_width = (available_width - total_padding) / grid_columns as i32;
         let item_height = (item_width as f32 * 1.4) as i32; // Book aspect ratio
-        
+
         (item_width, item_height)
     }
 

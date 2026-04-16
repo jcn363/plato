@@ -3,11 +3,11 @@
 //! This module contains the core state management functionality for the Reader view,
 //! including state initialization, updates, and persistence.
 
-use crate::metadata::Info;
+use crate::context::Context;
 use crate::geom::Rectangle;
+use crate::metadata::Info;
 use crate::view::reader::reader_impl::reader_core::State;
 use crate::view::{Hub, RenderQueue};
-use crate::context::Context;
 
 /// Reader state management utilities
 pub struct ReaderStateManager {
@@ -43,7 +43,7 @@ impl ReaderStateManager {
         if let Some(count) = new_pages_count {
             self.pages_count = count;
         }
-        
+
         // Trigger state update
         rq.add(crate::view::RenderData::new(
             crate::view::ID_FEEDER.next(),

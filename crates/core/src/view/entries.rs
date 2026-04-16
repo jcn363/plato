@@ -288,6 +288,7 @@ impl EntryId {
             EntryId::OpenFileBrowser => "OpenFileBrowser",
             EntryId::SelectFile(_) => "SelectFile",
             EntryId::OpenRedactionEditor(_, _) => "OpenRedactionEditor",
+            EntryId::HighlightColor(_) => "HighlightColor",
         }
     }
 }

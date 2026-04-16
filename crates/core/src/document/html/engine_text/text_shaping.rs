@@ -94,7 +94,7 @@ impl TextShaper {
 
         // Shape the text (simplified implementation)
         let glyphs = self.simple_shape(text);
-        
+
         // Cache the result
         self.font_cache.insert(cache_key, glyphs.clone());
 

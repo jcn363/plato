@@ -8,8 +8,8 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::home::AddressBar;
-use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 use crate::view::BIG_BAR_HEIGHT;
+use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
@@ -59,7 +59,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.address_bar.is_some());
-        
+
         if should_enable {
             self.show_address_bar(rq, context);
         } else {
@@ -75,10 +75,10 @@ impl Home {
 
         let rect = self.calculate_address_bar_rect(context);
         let address_bar = AddressBar::new(rect, self.id, context);
-        
+
         self.address_bar = Some(Box::new(address_bar) as Box<dyn View>);
         self.focus = Some(ViewId::AddressBar);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -90,7 +90,7 @@ impl Home {
 
         self.address_bar = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -98,13 +98,8 @@ impl Home {
     fn calculate_address_bar_rect(&self, context: &Context) -> Rectangle {
         let height = scale_by_dpi(BIG_BAR_HEIGHT, CURRENT_DEVICE.dpi) as i32;
         let width = self.rect.width() as i32;
-        
-        rect![
-            0,
-            0,
-            width,
-            height
-        ]
+
+        rect![0, 0, width, height]
     }
 
     /// Get address bar state
@@ -195,7 +190,7 @@ pub mod utils {
 
         let prefix = &path[..prefix_len];
         let suffix = &path[path.len() - suffix_len..];
-        
+
         format!("{}{}{}", prefix, ellipsis, suffix)
     }
 
@@ -207,12 +202,12 @@ pub mod utils {
     /// Get address bar suggestions for input
     pub fn get_address_bar_suggestions(input: &str, context: &Context) -> Vec<String> {
         let mut suggestions = Vec::new();
-        
+
         // Add current directory suggestion
         if !input.is_empty() {
             suggestions.push(input.to_string());
         }
-        
+
         // Add recent directories (simplified)
         if let Some(ref recent) = context.history.recent {
             for path in recent.iter().take(5) {
@@ -221,7 +216,7 @@ pub mod utils {
                 }
             }
         }
-        
+
         suggestions
     }
 }

@@ -3,13 +3,13 @@
 //! This module handles all settings menu creation and management for the Reader view,
 //! including font settings, display options, and configuration dialogs.
 
-use crate::geom::Rectangle;
-use crate::metadata::{TextAlign, ZoomMode, ScrollMode};
-use crate::view::{Hub, Id, RenderQueue, ViewId};
-use crate::view::menu::{Menu, MenuKind};
-use crate::view::entries::{EntryKind, EntryId};
 use crate::context::Context;
+use crate::geom::Rectangle;
+use crate::metadata::{ScrollMode, TextAlign, ZoomMode};
 use crate::settings::DEFAULT_FONT_FAMILY;
+use crate::view::entries::{EntryId, EntryKind};
+use crate::view::menu::{Menu, MenuKind};
+use crate::view::{Hub, Id, RenderQueue, ViewId};
 
 /// Settings menu types for the Reader
 #[derive(Debug, Clone)]
@@ -59,31 +59,70 @@ impl ReaderSettingsManager {
             EntryKind::Command("Annotation Settings".to_string(), EntryId::SystemInfo),
             EntryKind::Command("Search Settings".to_string(), EntryId::SystemInfo),
         ];
-        
-        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::SettingsMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Create the font settings menu
     pub fn create_font_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
         let entries = vec![
-            EntryKind::Command(format!("Font Size: {:.1}", self.font_size), EntryId::SystemInfo),
-            EntryKind::Command(format!("Font Family: {}", self.font_family), EntryId::SystemInfo),
-            EntryKind::Command(format!("Line Height: {:.1}", self.line_height), EntryId::SystemInfo),
+            EntryKind::Command(
+                format!("Font Size: {:.1}", self.font_size),
+                EntryId::SystemInfo,
+            ),
+            EntryKind::Command(
+                format!("Font Family: {}", self.font_family),
+                EntryId::SystemInfo,
+            ),
+            EntryKind::Command(
+                format!("Line Height: {:.1}", self.line_height),
+                EntryId::SystemInfo,
+            ),
         ];
-        
-        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::SettingsMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Create the display settings menu
     pub fn create_display_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
         let entries = vec![
-            EntryKind::Command(format!("Text Align: {:?}", self.text_align), EntryId::SystemInfo),
-            EntryKind::Command(format!("Zoom Mode: {:?}", self.zoom_mode), EntryId::SystemInfo),
-            EntryKind::Command(format!("Scroll Mode: {:?}", self.scroll_mode), EntryId::SystemInfo),
-            EntryKind::Command(format!("Margin Width: {}", self.margin_width), EntryId::SystemInfo),
+            EntryKind::Command(
+                format!("Text Align: {:?}", self.text_align),
+                EntryId::SystemInfo,
+            ),
+            EntryKind::Command(
+                format!("Zoom Mode: {:?}", self.zoom_mode),
+                EntryId::SystemInfo,
+            ),
+            EntryKind::Command(
+                format!("Scroll Mode: {:?}", self.scroll_mode),
+                EntryId::SystemInfo,
+            ),
+            EntryKind::Command(
+                format!("Margin Width: {}", self.margin_width),
+                EntryId::SystemInfo,
+            ),
         ];
-        
-        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::SettingsMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Create the navigation settings menu
@@ -94,8 +133,14 @@ impl ReaderSettingsManager {
             EntryKind::Command("Button Mapping".to_string(), EntryId::SystemInfo),
             EntryKind::Command("History Settings".to_string(), EntryId::SystemInfo),
         ];
-        
-        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::SettingsMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Create the annotation settings menu
@@ -106,8 +151,14 @@ impl ReaderSettingsManager {
             EntryKind::Command("Bookmark Settings".to_string(), EntryId::SystemInfo),
             EntryKind::Command("Export Options".to_string(), EntryId::SystemInfo),
         ];
-        
-        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::SettingsMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Create the search settings menu
@@ -117,8 +168,14 @@ impl ReaderSettingsManager {
             EntryKind::Command("Search History".to_string(), EntryId::SystemInfo),
             EntryKind::Command("Search Filters".to_string(), EntryId::SystemInfo),
         ];
-        
-        Menu::new(rect, ViewId::SettingsMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::SettingsMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Handle a settings menu selection

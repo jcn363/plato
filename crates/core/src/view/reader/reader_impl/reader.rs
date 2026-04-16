@@ -153,8 +153,8 @@ use std::sync::{atomic, Arc, LazyLock, Mutex};
 use crate::view::common::{locate, toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
 use crate::view::top_bar::TopBar;
 use crate::view::{
-    Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
-    ID_FEEDER,
+    Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER, SMALL_BAR_HEIGHT,
+    THICKNESS_MEDIUM,
 };
 
 use crate::view::reader::tool_bar::ToolBar;

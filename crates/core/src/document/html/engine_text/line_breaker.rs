@@ -100,11 +100,11 @@ impl LineBreaker {
 
         for (i, word) in words.iter().enumerate() {
             let word_width = self.measure_word(word, font_size);
-            
+
             if current_width + word_width > self.config.max_width && i > 0 {
                 // Create a break point
                 let penalty = self.calculate_penalty(current_width, word_width);
-                
+
                 break_points.push(BreakPoint {
                     position: current_position,
                     penalty,
@@ -168,7 +168,7 @@ impl LineBreaker {
     /// Calculate penalty for a break point
     fn calculate_penalty(&self, current_width: f32, word_width: f32) -> f32 {
         let ratio = (self.config.max_width - current_width) / self.config.max_width;
-        
+
         if ratio < 0.0 {
             // Line is too tight
             (-ratio).powf(3.0) * 1000.0
@@ -184,7 +184,7 @@ impl LineBreaker {
     /// Calculate fitness of a line
     fn calculate_fitness(&self, width: f32) -> f32 {
         let ratio = width / self.config.max_width;
-        
+
         if ratio < 0.5 {
             0.0 // Very tight
         } else if ratio < 0.75 {
@@ -227,18 +227,18 @@ pub mod utils {
 
         for word in words {
             let word_width = word.len() as f32 * font_size * 0.6;
-            
+
             if current_width + word_width > max_width && !current_line.is_empty() {
                 lines.push(current_line.clone());
                 current_line.clear();
                 current_width = 0.0;
             }
-            
+
             if !current_line.is_empty() {
                 current_line.push(' ');
                 current_width += font_size * 0.1; // Space width
             }
-            
+
             current_line.push_str(word);
             current_width += word_width;
         }

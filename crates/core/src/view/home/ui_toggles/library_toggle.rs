@@ -6,7 +6,7 @@ use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::view::menu::{Menu, MenuKind};
-use crate::view::{Event, EntryId, EntryKind, Hub, RenderData, RenderQueue, View, ViewId};
+use crate::view::{EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
@@ -56,7 +56,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.library_menu.is_some());
-        
+
         if should_enable {
             self.show_library_menu(rq, context);
         } else {
@@ -72,10 +72,10 @@ impl Home {
 
         let rect = self.calculate_library_menu_rect(context);
         let menu = self.create_library_menu(rect, context);
-        
+
         self.library_menu = Some(Box::new(menu) as Box<dyn View>);
         self.focus = Some(ViewId::LibraryMenu);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -87,7 +87,7 @@ impl Home {
 
         self.library_menu = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -95,12 +95,12 @@ impl Home {
     fn calculate_library_menu_rect(&self, context: &Context) -> Rectangle {
         let screen_width = context.display.dims.0 as i32;
         let screen_height = context.display.dims.1 as i32;
-        
+
         let width = (screen_width as f32 * 0.5) as i32;
         let height = (screen_height as f32 * 0.6) as i32;
         let x = (screen_width - width) / 2;
         let y = (screen_height - height) / 2;
-        
+
         rect![x, y, width, height]
     }
 
@@ -110,15 +110,30 @@ impl Home {
             EntryKind::Command("Import Books".to_string(), EntryId::Import),
             EntryKind::Command("Library Statistics".to_string(), EntryId::SystemInfo),
             EntryKind::Separator,
-            EntryKind::Command("Sort by Title".to_string(), EntryId::Sort(crate::metadata::SortMethod::Title)),
-            EntryKind::Command("Sort by Author".to_string(), EntryId::Sort(crate::metadata::SortMethod::Author)),
-            EntryKind::Command("Sort by Date".to_string(), EntryId::Sort(crate::metadata::SortMethod::Date)),
+            EntryKind::Command(
+                "Sort by Title".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Title),
+            ),
+            EntryKind::Command(
+                "Sort by Author".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Author),
+            ),
+            EntryKind::Command(
+                "Sort by Date".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Date),
+            ),
             EntryKind::Separator,
             EntryKind::Command("Filter by Format".to_string(), EntryId::SystemInfo),
             EntryKind::Command("Filter by Category".to_string(), EntryId::SystemInfo),
         ];
-        
-        Menu::new(rect, ViewId::LibraryMenu, MenuKind::DropDown, entries, context)
+
+        Menu::new(
+            rect,
+            ViewId::LibraryMenu,
+            MenuKind::DropDown,
+            entries,
+            context,
+        )
     }
 
     /// Get library state
@@ -276,18 +291,20 @@ pub mod utils {
     /// Calculate library statistics
     pub fn calculate_library_statistics(context: &Context) -> LibraryStatistics {
         let total_books = context.library.len();
-        let pdf_count = context.library.iter()
+        let pdf_count = context
+            .library
+            .iter()
             .filter(|(_, info)| info.file.kind == "pdf")
             .count();
-        let epub_count = context.library.iter()
+        let epub_count = context
+            .library
+            .iter()
             .filter(|(_, info)| info.file.kind == "epub")
             .count();
         let other_count = total_books - pdf_count - epub_count;
-        
-        let total_size = context.library.iter()
-            .map(|(_, info)| info.file.size)
-            .sum();
-        
+
+        let total_size = context.library.iter().map(|(_, info)| info.file.size).sum();
+
         LibraryStatistics {
             total_books,
             pdf_count,

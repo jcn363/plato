@@ -142,10 +142,7 @@ impl EpubEditorCore {
             // Prevent zip slip: reject entries containing path traversal components
             let name = file.name();
             if name.contains("..") || name.starts_with('/') || name.starts_with('\\') {
-                return Err(format_err!(
-                    "Zip entry contains path traversal: {}",
-                    name
-                ));
+                return Err(format_err!("Zip entry contains path traversal: {}", name));
             }
 
             let outpath = self.temp_dir.join(name);

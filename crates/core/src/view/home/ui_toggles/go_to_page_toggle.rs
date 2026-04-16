@@ -8,8 +8,8 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::named_input::NamedInput;
-use crate::view::{Event, EntryId, EntryKind, Hub, RenderData, RenderQueue, View, ViewId};
 use crate::view::BIG_BAR_HEIGHT;
+use crate::view::{EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
@@ -59,7 +59,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.go_to_page.is_some());
-        
+
         if should_enable {
             self.show_go_to_page(rq, context);
         } else {
@@ -81,10 +81,10 @@ impl Home {
             self.id,
             context,
         );
-        
+
         self.go_to_page = Some(Box::new(go_to_page) as Box<dyn View>);
         self.focus = Some(ViewId::GoToPage);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -96,7 +96,7 @@ impl Home {
 
         self.go_to_page = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -104,12 +104,12 @@ impl Home {
     fn calculate_go_to_page_rect(&self, context: &Context) -> Rectangle {
         let screen_width = context.display.dims.0 as i32;
         let screen_height = context.display.dims.1 as i32;
-        
+
         let width = (screen_width as f32 * 0.6) as i32;
         let height = scale_by_dpi(BIG_BAR_HEIGHT, CURRENT_DEVICE.dpi) as i32;
         let x = (screen_width - width) / 2;
         let y = (screen_height - height) / 2;
-        
+
         rect![x, y, width, height]
     }
 
@@ -165,7 +165,7 @@ impl Home {
             let page_index = page_num.saturating_sub(1); // Convert to 0-based index
             self.go_to_page(page_index, hub, rq, context);
         }
-        
+
         self.hide_go_to_page(rq, context);
     }
 
@@ -199,7 +199,8 @@ pub mod utils {
             return Err("Please enter a valid number".to_string());
         }
 
-        let page_num = input.parse::<usize>()
+        let page_num = input
+            .parse::<usize>()
             .map_err(|_| "Invalid number format".to_string())?;
 
         if page_num == 0 {
@@ -207,7 +208,10 @@ pub mod utils {
         }
 
         if page_num > max_page {
-            return Err(format!("Page number must be less than or equal to {}", max_page));
+            return Err(format!(
+                "Page number must be less than or equal to {}",
+                max_page
+            ));
         }
 
         Ok(page_num)
@@ -225,10 +229,10 @@ pub mod utils {
     /// Get page number suggestions
     pub fn get_page_number_suggestions(current_page: usize, total_pages: usize) -> Vec<String> {
         let mut suggestions = Vec::new();
-        
+
         // Add current page
         suggestions.push((current_page + 1).to_string());
-        
+
         // Add first and last pages
         if current_page != 0 {
             suggestions.push("1".to_string());
@@ -236,7 +240,7 @@ pub mod utils {
         if current_page != total_pages - 1 {
             suggestions.push(total_pages.to_string());
         }
-        
+
         // Add nearby pages
         for offset in [-5, -1, 1, 5].iter() {
             let suggested_page = current_page as isize + *offset;
@@ -244,7 +248,7 @@ pub mod utils {
                 suggestions.push(suggested_page.to_string());
             }
         }
-        
+
         suggestions.sort();
         suggestions.dedup();
         suggestions

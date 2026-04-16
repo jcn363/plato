@@ -55,7 +55,7 @@ impl Home {
         context: &mut Context,
     ) {
         let should_enable = enable.unwrap_or(!self.book_view.is_some());
-        
+
         if should_enable {
             self.show_book_view(rq, context);
         } else {
@@ -72,10 +72,10 @@ impl Home {
         let rect = self.calculate_book_view_rect(context);
         // TODO: Create actual book view
         // let book_view = BookView::new(rect, self.id, context);
-        
+
         // self.book_view = Some(Box::new(book_view) as Box<dyn View>);
         self.focus = Some(ViewId::BookView);
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -87,7 +87,7 @@ impl Home {
 
         self.book_view = None;
         self.focus = None;
-        
+
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
@@ -95,7 +95,7 @@ impl Home {
     fn calculate_book_view_rect(&self, context: &Context) -> Rectangle {
         let top_offset = self.calculate_top_offset();
         let bottom_offset = self.calculate_bottom_offset();
-        
+
         rect![
             0,
             top_offset,
@@ -104,7 +104,6 @@ impl Home {
         ]
     }
 
-    
     /// Get book view state
     fn get_book_view_state(&self) -> BookViewToggleState {
         BookViewToggleState {
@@ -148,7 +147,12 @@ impl Home {
     }
 
     /// Open book in book view
-    pub fn open_book_in_view(&mut self, book_path: &str, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn open_book_in_view(
+        &mut self,
+        book_path: &str,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         // TODO: Implement book opening
         self.show_book_view(rq, context);
     }

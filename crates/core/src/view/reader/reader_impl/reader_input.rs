@@ -4,8 +4,8 @@
 //! including touch events, button presses, and keyboard input.
 
 use crate::context::Context;
-use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::geom::Point;
+use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::view::{Event, Hub, Id, RenderQueue};
 
 /// Input event types for the Reader
@@ -52,25 +52,23 @@ impl ReaderInputHandler {
     /// Process a device event and convert it to reader input
     pub fn handle_device_event(&mut self, event: DeviceEvent) -> Vec<ReaderInputEvent> {
         match event {
-            DeviceEvent::Finger { status, position, .. } => {
-                match status {
-                    FingerStatus::Down => vec![ReaderInputEvent::TouchStart(position)],
-                    FingerStatus::Move => vec![ReaderInputEvent::TouchMove(position)],
-                    FingerStatus::Up => vec![ReaderInputEvent::TouchEnd(position)],
+            DeviceEvent::Finger {
+                status, position, ..
+            } => match status {
+                FingerStatus::Down => vec![ReaderInputEvent::TouchStart(position)],
+                FingerStatus::Move => vec![ReaderInputEvent::TouchMove(position)],
+                FingerStatus::Up => vec![ReaderInputEvent::TouchEnd(position)],
+            },
+            DeviceEvent::Button { code, status, .. } => match status {
+                ButtonStatus::Pressed => {
+                    self.held_buttons.insert(code);
+                    vec![ReaderInputEvent::ButtonPress(code)]
                 }
-            }
-            DeviceEvent::Button { code, status, .. } => {
-                match status {
-                    ButtonStatus::Pressed => {
-                        self.held_buttons.insert(code);
-                        vec![ReaderInputEvent::ButtonPress(code)]
-                    }
-                    ButtonStatus::Released => {
-                        self.held_buttons.remove(&code);
-                        vec![ReaderInputEvent::ButtonRelease(code)]
-                    }
+                ButtonStatus::Released => {
+                    self.held_buttons.remove(&code);
+                    vec![ReaderInputEvent::ButtonRelease(code)]
                 }
-            }
+            },
             DeviceEvent::Keyboard { text, .. } => {
                 vec![ReaderInputEvent::KeyboardInput(text)]
             }
@@ -152,4 +150,3 @@ impl ReaderInputHandler {
         self.held_buttons.iter().cloned().collect()
     }
 }
-

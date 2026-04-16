@@ -6,8 +6,8 @@
 use crate::context::Context;
 use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::Rectangle;
+use crate::view::reader::reader_impl::reader_core::{RenderChunk, State, ViewPort};
 use crate::view::{Hub, RenderQueue};
-use crate::view::reader::reader_impl::reader_core::{State, ViewPort, RenderChunk};
 use anyhow::Error;
 use std::collections::HashMap;
 
@@ -39,21 +39,25 @@ impl ReaderRenderCache {
     pub fn insert(&mut self, page: usize, pixmap: Pixmap) {
         // Calculate memory usage
         let pixmap_size = pixmap.width() as usize * pixmap.height() as usize * 4; // RGBA
-        
+
         // Remove old entry if exists
         if let Some(old_pixmap) = self.cache.remove(&page) {
-            self.current_memory_usage -= old_pixmap.width() as usize * old_pixmap.height() as usize * 4;
+            self.current_memory_usage -=
+                old_pixmap.width() as usize * old_pixmap.height() as usize * 4;
         }
-        
+
         // Check if we need to evict entries
-        while self.current_memory_usage + pixmap_size > self.max_cache_size && !self.cache.is_empty() {
+        while self.current_memory_usage + pixmap_size > self.max_cache_size
+            && !self.cache.is_empty()
+        {
             if let Some((&oldest_page, _)) = self.cache.iter().next() {
                 if let Some(removed_pixmap) = self.cache.remove(&oldest_page) {
-                    self.current_memory_usage -= removed_pixmap.width() as usize * removed_pixmap.height() as usize * 4;
+                    self.current_memory_usage -=
+                        removed_pixmap.width() as usize * removed_pixmap.height() as usize * 4;
                 }
             }
         }
-        
+
         self.cache.insert(page, pixmap);
         self.current_memory_usage += pixmap_size;
     }
@@ -118,7 +122,7 @@ impl ReaderRenderEngine {
         let pixmap = self.render_page_to_pixmap(page, rect, context)?;
         self.cache.insert(page, pixmap.clone());
         self.render_cached_page(&pixmap, rect, framebuffer);
-        
+
         Ok(())
     }
 
@@ -132,7 +136,7 @@ impl ReaderRenderEngine {
         // Calculate scaling and positioning
         let scale = self.calculate_scale_factor(pixmap.width(), pixmap.height(), rect);
         let dest_rect = self.calculate_dest_rect(pixmap.width(), pixmap.height(), rect, scale);
-        
+
         // Draw the pixmap
         framebuffer.draw_pixmap(pixmap, &dest_rect);
     }
@@ -148,20 +152,25 @@ impl ReaderRenderEngine {
         // This would involve calling the document's render method
         let width = rect.width() as u32;
         let height = rect.height() as u32;
-        
+
         Pixmap::new(width, height, 4)
     }
 
     /// Calculate scale factor for rendering
-    fn calculate_scale_factor(&self, pixmap_width: u32, pixmap_height: u32, rect: Rectangle) -> f32 {
+    fn calculate_scale_factor(
+        &self,
+        pixmap_width: u32,
+        pixmap_height: u32,
+        rect: Rectangle,
+    ) -> f32 {
         let rect_width = rect.width() as f32;
         let rect_height = rect.height() as f32;
         let pixmap_width_f = pixmap_width as f32;
         let pixmap_height_f = pixmap_height as f32;
-        
+
         let scale_x = rect_width / pixmap_width_f;
         let scale_y = rect_height / pixmap_height_f;
-        
+
         scale_x.min(scale_y)
     }
 
@@ -175,10 +184,10 @@ impl ReaderRenderEngine {
     ) -> Rectangle {
         let scaled_width = (pixmap_width as f32 * scale) as i32;
         let scaled_height = (pixmap_height as f32 * scale) as i32;
-        
+
         let x = rect.min.x + (rect.width() - scaled_width) / 2;
         let y = rect.min.y + (rect.height() - scaled_height) / 2;
-        
+
         rect![x, y, scaled_width, scaled_height]
     }
 
@@ -266,15 +275,23 @@ pub mod utils {
     }
 
     /// Determine if page should be preloaded
-    pub fn should_preload_page(current_page: usize, target_page: usize, total_pages: usize) -> bool {
+    pub fn should_preload_page(
+        current_page: usize,
+        target_page: usize,
+        total_pages: usize,
+    ) -> bool {
         let distance = (target_page as isize - current_page as isize).abs();
         distance <= 2 // Preload up to 2 pages ahead/behind
     }
 
     /// Get pages to preload around current page
-    pub fn get_pages_to_preload(current_page: usize, total_pages: usize, preload_count: usize) -> Vec<usize> {
+    pub fn get_pages_to_preload(
+        current_page: usize,
+        total_pages: usize,
+        preload_count: usize,
+    ) -> Vec<usize> {
         let mut pages = Vec::new();
-        
+
         // Add pages ahead
         for i in 1..=preload_count {
             let page = current_page + i;
@@ -282,14 +299,14 @@ pub mod utils {
                 pages.push(page);
             }
         }
-        
+
         // Add pages behind
         for i in 1..=preload_count {
             if current_page >= i {
                 pages.push(current_page - i);
             }
         }
-        
+
         pages
     }
 
