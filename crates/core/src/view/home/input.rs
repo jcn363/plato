@@ -292,14 +292,14 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Submit(ViewId::AddressBarInput, ref addr) => {
-                self.toggle_keyboard(false, true, None, hub, rq, context);
+                self.toggle_keyboard(Some(false), true, hub, rq, context);
                 self.select_directory(Path::new(addr), hub, rq, context);
                 true
             }
             Event::Submit(ViewId::HomeSearchInput, ref text) => {
                 self.query = BookQuery::new(text);
                 if self.query.is_some() {
-                    self.toggle_keyboard(false, false, None, hub, rq, context);
+                    self.toggle_keyboard(Some(false), false, hub, rq, context);
                     for i in self.shelf_index + 1..=self.shelf_index + 2 {
                         rq.add(RenderData::new(
                             self.child(i).id(),
@@ -401,7 +401,7 @@ impl HomeInputExt for Home {
                 if query.is_some() {
                     self.query = query;
                     self.toggle_search_bar(Some(true), false, hub, rq, context);
-                    self.toggle_keyboard(false, false, None, hub, rq, context);
+                    self.toggle_keyboard(Some(false), false, hub, rq, context);
                     if let Some(search_bar) =
                         self.children[self.shelf_index + 2].downcast_mut::<SearchBar>()
                     {
