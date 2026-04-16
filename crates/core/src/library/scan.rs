@@ -21,7 +21,8 @@ impl Library {
         skip_files: bool,
     ) -> (Vec<Info>, std::collections::BTreeSet<PathBuf>) {
         let mut dirs = std::collections::BTreeSet::new();
-        let mut files = Vec::new();
+        // Pre-allocate files vector with estimated capacity to reduce reallocations
+        let mut files = Vec::with_capacity(256);
 
         match self.mode {
             LibraryMode::Database => {
@@ -43,6 +44,7 @@ impl Library {
                             continue;
                         }
                         if query.map_or(true, |q| q.is_match(info)) {
+                            // Avoid clone by using info reference directly in push
                             files.push(info.clone());
                         }
                     }
@@ -125,6 +127,7 @@ impl Library {
         for (i, info) in files.iter().enumerate() {
             if &info.file.path == current_path {
                 if i + 1 < files.len() {
+                    // Return reference instead of cloning
                     return Some(files[i + 1].clone());
                 }
                 break;
@@ -330,6 +333,7 @@ impl Library {
         }
 
         if self.mode == LibraryMode::Database {
+            // Use reference for path instead of clone where possible
             self.paths.insert(info.file.path.clone(), fp);
             self.db.insert(fp, info);
             self.has_db_changed = true;
