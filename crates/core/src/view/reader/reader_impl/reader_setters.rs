@@ -26,6 +26,17 @@ use super::reader_core::Resource;
 use super::{reader_rendering, reader_settings};
 
 impl Reader {
+    /// Helper: Refresh UI after document settings change
+    /// Clears caches, updates view, and refreshes toolbars
+    #[inline]
+    fn refresh_after_change(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+        self.cache.clear();
+        self.text.clear();
+        self.update(None, hub, rq, context);
+        self.update_tool_bar(rq, context);
+        self.update_bottom_bar(rq);
+    }
+
     pub fn set_font_size(&mut self, font_size: f32, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         if Arc::strong_count(&self._doc) > 1 { return; }
         if let Some(ref mut r) = self.info.reader { r.font_size = Some(font_size); }
@@ -44,11 +55,7 @@ impl Reader {
                 self.current_page = (ratio * self.current_page).min(self.pages_count - 1);
             }
         }
-        self.cache.clear();
-        self.text.clear();
-        self.update(None, hub, rq, context);
-        self.update_tool_bar(rq, context);
-        self.update_bottom_bar(rq);
+        self.refresh_after_change(hub, rq, context);
     }
 
     pub fn set_text_align(&mut self, text_align: TextAlign, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
@@ -67,11 +74,7 @@ impl Reader {
                 self.current_page = self.current_page.min(self.pages_count - 1);
             }
         }
-        self.cache.clear();
-        self.text.clear();
-        self.update(None, hub, rq, context);
-        self.update_tool_bar(rq, context);
-        self.update_bottom_bar(rq);
+        self.refresh_after_change(hub, rq, context);
     }
 
     pub fn set_font_family(&mut self, font_family: &str, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
@@ -91,11 +94,7 @@ impl Reader {
                 self.current_page = self.current_page.min(self.pages_count - 1);
             }
         }
-        self.cache.clear();
-        self.text.clear();
-        self.update(None, hub, rq, context);
-        self.update_tool_bar(rq, context);
-        self.update_bottom_bar(rq);
+        self.refresh_after_change(hub, rq, context);
     }
 
     pub fn set_line_height(&mut self, line_height: f32, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {

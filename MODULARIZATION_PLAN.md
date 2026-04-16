@@ -152,7 +152,8 @@ Created modules:
 4. **Extract Common Helpers**
    - ✅ Created toggle_dialog_view() helper in reader_dialogs.rs (eliminated ~40 lines)
    - ✅ Created queue_partial_update() helper in reader_stubs.rs (eliminated ~100 lines)
-   - Find more patterns in reader_setters.rs and other modules
+   - ✅ Created refresh_after_change() helper in reader_setters.rs (eliminated ~20 lines)
+   - Find more patterns in other modules
    - Extract view update patterns to common macros
 
 5. **Function Size Optimization**
