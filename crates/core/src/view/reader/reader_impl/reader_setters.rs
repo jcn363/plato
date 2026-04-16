@@ -40,7 +40,7 @@ impl Reader {
     /// Helper: Update page tracking after a doc setting change that affects layout.
     /// Handles both synthetic and real documents.
     #[inline]
-    fn update_page_after_relayout(&mut self, doc: &dyn Document) {
+    fn update_page_after_relayout(&mut self, doc: &mut dyn Document) {
         if self._synthetic {
             let current_page = self.current_page.min(doc.pages_count() - 1);
             if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {
@@ -118,7 +118,7 @@ impl Reader {
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
             doc.set_text_align(text_align);
-            self.update_page_after_relayout(doc.as_ref());
+            self.update_page_after_relayout(doc.as_mut());
         }
         self.refresh_after_change(hub, rq, context);
     }
@@ -147,7 +147,7 @@ impl Reader {
                 &context.settings.reader.font_path
             };
             doc.set_font_family(font_family, font_path);
-            self.update_page_after_relayout(doc.as_ref());
+            self.update_page_after_relayout(doc.as_mut());
         }
         self.refresh_after_change(hub, rq, context);
     }
@@ -171,7 +171,7 @@ impl Reader {
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
             doc.set_line_height(line_height);
-            self.update_page_after_relayout(doc.as_ref());
+            self.update_page_after_relayout(doc.as_mut());
         }
         self.refresh_after_change(hub, rq, context);
     }
@@ -204,7 +204,7 @@ impl Reader {
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
             doc.set_margin_width(width);
-            self.update_page_after_relayout(doc.as_ref());
+            self.update_page_after_relayout(doc.as_mut());
         }
         self.refresh_after_change(hub, rq, context);
     }
