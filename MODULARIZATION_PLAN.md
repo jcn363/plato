@@ -148,23 +148,23 @@ Created modules:
    - Each module has single responsibility
    - Proper use of `pub` vs `pub(crate)` vs private
 
-#### Secondary Priority (Medium)
-4. **Update Documentation** ✅ COMPLETE
-   - ✅ Add module-level documentation to all new files
-   - ✅ Document module purposes and patterns
-   - Document public APIs with examples (ongoing)
-   - Update architecture documentation (ongoing)
+#### Phase 2: Shared Pattern Extraction (IN PROGRESS)
+4. **Extract Common Helpers**
+   - ✅ Created toggle_dialog_view() helper in reader_dialogs.rs (eliminated ~40 lines)
+   - ✅ Created queue_partial_update() helper in reader_stubs.rs (eliminated ~100 lines)
+   - Find more patterns in reader_setters.rs and other modules
+   - Extract view update patterns to common macros
 
-5. **Clean Up Warnings** ✅ COMPLETE
-   - ✅ Fix all unused imports in extraction modules
-   - Fix all unused variables (ongoing)
-   - Remove dead code (ongoing)
-   - Run `cargo clippy -- -D warnings` (pending)
+5. **Function Size Optimization**
+   - Analyze functions >50 lines
+   - Extract sub-functions where appropriate
+   - Document intentionally large functions
 
-6. **Testing** ✅ COMPLETE
-   - ✅ Run all tests on host target
-   - ✅ Verify functionality preserved
-   - Add tests for new modules where appropriate
+6. **Code Quality**
+   - ✅ Fixed unused imports in all extraction modules
+   - ✅ Added comprehensive module documentation
+   - Run clippy with -D warnings
+   - Add inline attributes to hot-path helpers
 
 ### Phase 2: Extract Shared Patterns
 Create common modules for duplicated patterns:
