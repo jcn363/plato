@@ -147,6 +147,16 @@ where
 - Use `FxHashMap`/`FxHashSet` from `fxhash` instead of std `HashMap` for non-cryptographic use
 - Pre-allocate buffers with `String::with_capacity` when size is known
 - Prefer `Cow<str>` for conditional string ownership
+- Reduce unnecessary cloning in hot paths
+- Pre-allocate collections with known capacity
+- Optimize string operations
+- Optimize library search and filtering
+- Optimize large library performance
+- Optimize file I/O operations
+- Optimize memory layout
+- Async thumbnail generation
+- Reduce lock contention
+- Consider/Investigate whether it's worth using Rayon for data parallelism
 
 ### DRY (Don't Repeat Yourself)
 
