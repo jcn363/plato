@@ -252,7 +252,8 @@ pub fn list_webdav_files(
             .map_err(|e| format_err!("WebDAV list failed: {}", e))?;
 
         let response = String::from_utf8_lossy(&output.stdout);
-        let mut files = Vec::new();
+        // Pre-allocate files vector with estimated capacity to reduce reallocations
+        let mut files = Vec::with_capacity(64);
 
         let re = regex::Regex::new(r"<d:href>([^<]+)</d:href>").expect("invalid WebDAV href regex");
         for cap in re.captures_iter(&response) {
@@ -407,7 +408,8 @@ fn merge_json(local: &str, remote: &str) -> String {
     let remote_val: serde_json::Value =
         serde_json::from_str(remote).unwrap_or(serde_json::Value::Array(Vec::new()));
 
-    let mut merged = Vec::new();
+    // Pre-allocate merged vector with estimated capacity to reduce reallocations
+    let mut merged = Vec::with_capacity(32);
     let mut seen = HashSet::with_hasher(FxBuildHasher::default());
 
     let empty = Vec::new();
@@ -534,7 +536,8 @@ fn prepare_upload_data(
     });
 
     if reading_states_dir.exists() {
-        let mut books_to_upload = Vec::new();
+        // Pre-allocate books vector with estimated capacity to reduce reallocations
+        let mut books_to_upload = Vec::with_capacity(16);
         for entry in std::fs::read_dir(reading_states_dir)? {
             let entry = entry?;
             let path = entry.path();
