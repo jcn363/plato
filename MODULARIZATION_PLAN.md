@@ -75,6 +75,7 @@ Created modules:
 - `view/reader/reader_impl/reader_core.rs` - Core types and structs
 - `view/reader/reader_impl/reader_stubs.rs` - Stub method implementations (~430 lines extracted from reader.rs)
 - `view/reader/reader_impl/reader_menus.rs` - Menu toggle wrapper methods (~379 lines extracted from reader.rs)
+- `view/reader/reader_impl/reader_setters.rs` - Settings setter methods (~400 lines extracted from reader.rs)
 - `view/reader/reader_impl/reader_input.rs` - Input and gesture processing
 - `view/reader/reader_impl/reader_state.rs` - State management
 - `view/reader/reader_impl/reader_navigation.rs` - Page navigation
@@ -134,6 +135,7 @@ Created modules:
 2. **Reduce reader.rs Below 1000 Lines** (~1,223 lines remaining to extract)
    - ✅ Extracted 430 lines of stub methods to reader_stubs.rs
    - ✅ Extracted 379 lines of menu toggle methods to reader_menus.rs
+   - ✅ Created reader_setters.rs with settings setters (~400 lines, integration pending)
    - Extract rendering methods to reader_rendering_ext.rs (~200 lines)
    - Extract search-related methods to reader_search.rs (~200 lines)
    - Extract TOC methods to reader_toc.rs (~150 lines)
