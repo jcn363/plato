@@ -190,7 +190,7 @@ pub const ANNOTATION_DRIFT: f32 = 0.05;
 pub struct Reader {
     pub(crate) id: Id,
     pub(crate) rect: Rectangle,
-    children: Vec<Box<dyn View>>,
+    pub(crate) children: Vec<Box<dyn View>>,
     pub(crate) _doc: Arc<Mutex<Box<dyn Document>>>,
     pub(crate) cache: BTreeMap<usize, Resource>,
     pub(crate) chunks: Vec<RenderChunk>,
