@@ -22,6 +22,12 @@ use crate::context::Context;
 use super::reader::Reader;
 
 impl Reader {
+    /// Helper: Queue a partial update for the reader view
+    #[inline]
+    fn queue_partial_update(&self, rq: &mut RenderQueue) {
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+    }
+
     /// Stub: Update the view
     pub fn update(
         &mut self,
@@ -30,24 +36,24 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Update the toolbar
     pub fn update_tool_bar(&mut self, rq: &mut RenderQueue, _context: &Context) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Update the bottom bar
     pub fn update_bottom_bar(&mut self, rq: &mut RenderQueue) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle save operation
     pub fn handle_save(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
         // Save functionality would be implemented here
         // For now, just trigger a partial update
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle focus change
@@ -58,17 +64,17 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Update annotations
     pub fn update_annotations(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Update non-inverted regions
     pub fn update_noninverted_regions(&mut self, rq: &mut RenderQueue) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Go to chapter
@@ -79,7 +85,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Go to bookmark
@@ -90,7 +96,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Go to annotation
@@ -101,12 +107,12 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Go to last page
     pub fn go_to_last_page(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Directional scroll
@@ -117,7 +123,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Vertical scroll
@@ -128,7 +134,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Toggle bars
@@ -139,7 +145,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Toggle keyboard
@@ -151,7 +157,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Toggle search bar
@@ -162,7 +168,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Toggle margin cropper
@@ -172,7 +178,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Search
@@ -183,7 +189,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Load pixmap
@@ -194,7 +200,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle go to page submit
@@ -205,7 +211,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle edit note submit
@@ -216,7 +222,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle search submit
@@ -227,7 +233,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle go to location
@@ -238,7 +244,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle close search bar
@@ -248,7 +254,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle close edit note
@@ -258,7 +264,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle show table of contents
@@ -268,7 +274,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle show annotations
@@ -278,7 +284,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle show bookmarks
@@ -288,7 +294,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle search result
@@ -299,7 +305,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle end of search
@@ -309,7 +315,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle highlight selection
@@ -319,7 +325,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle add highlight
@@ -329,7 +335,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle delete highlight
@@ -339,7 +345,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 
     /// Stub: Handle adjust selection
@@ -349,6 +355,6 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        self.queue_partial_update(rq);
     }
 }
