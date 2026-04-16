@@ -102,18 +102,17 @@ Created modules:
 - **Warnings**: ~110 warnings (unused imports, unused variables)
 
 ### 🔄 ARM Kobo Target (arm-unknown-linux-gnueabihf)
-- **Status**: ~70 compilation errors remaining (reduced from 336)
+- **Status**: ~60 compilation errors remaining (reduced from 336)
 - **Command**: `cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato`
-- **Progress**: Fixed 266+ errors so far
-- **Error Categories** (~70 remaining):
-  - 2 E0599: No method/variant found (ok_or_else on wrong type, Location iterator)
+- **Progress**: Fixed 276+ errors so far
+- **Error Categories** (~60 remaining):
   - 16 E0308: Type mismatches
   - Various other errors
 
 ### Remaining Work to Complete Modularization
 
 #### Immediate Priority (High)
-1. **Fix ARM Kobo Build Errors** (~70 remaining)
+1. **Fix ARM Kobo Build Errors** (~60 remaining)
    - ✅ Add missing ViewId variants (SettingsMenu, DirectoryView, Dialog, HighlightMenu, NavigationBar, LibraryMenu, Shelf, BookView)
    - ✅ Add missing EntryId variant (HighlightColor)
    - ✅ Add missing SortMethod::Date variant
@@ -255,7 +254,7 @@ After each change:
 
 ### Build & Compilation
 - [x] Host target (x86_64) compiles without errors
-- [ ] ARM Kobo target (arm-unknown-linux-gnueabihf) compiles without errors **(~70 errors remaining)**
+- [ ] ARM Kobo target (arm-unknown-linux-gnueabihf) compiles without errors **(~60 errors remaining)**
 - [ ] ARM64 Kobo target (aarch64) compiles without errors
 - [ ] Zero clippy warnings with `-D warnings`
 - [ ] All tests pass
@@ -365,5 +364,5 @@ cargo test --target x86_64-unknown-linux-gnu
 ---
 
 **Last Updated**: April 2026  
-**Status**: 3 of 4 critical files modularized, ARM build errors being resolved (266+ of 336 fixed)  
-**Next Milestone**: Fix remaining ~70 ARM build errors, reduce reader.rs below 1000 lines
+**Status**: 3 of 4 critical files modularized, ARM build errors being resolved (276+ of 336 fixed)  
+**Next Milestone**: Fix remaining ~60 ARM build errors, reduce reader.rs below 1000 lines
