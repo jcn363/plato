@@ -341,8 +341,9 @@ When facing multiple compilation errors, resolve in this order:
 - **Rust idioms only** — Every line must follow current Rust best practices; avoid deprecated patterns
 - **Root cause analysis** — When encountering a bug or issue, identify and fix the root cause; do not apply surface-level workarounds
 - **Eliminate dead code** — Remove unused functions, imports, fields, and modules immediately; never leave dead code for later
+- **Zero dead code without justification - All `#[allow(dead_code)]` attributes must be accompanied by a comment explaining the future use; if no justification exists, remove the code immediately
 - **No backward compatibility** — Do not add code to support old APIs, deprecated patterns, or legacy behavior unless explicitly required
-- **Project containment** — All created or used files and directories must be located inside the project root directory (`/home/user/Desktop/plato`); never create or access files outside the project workspace
+- **Project containment** — All created or used files and directories must be located inside the project root directory (`~/Desktop/plato`); never create or access files outside the project workspace
 
 ### Dead Code Investigation
 
