@@ -1,12 +1,9 @@
 //! Reader Event Handling
 use crate::context::Context;
 use crate::geom::Rectangle;
-use crate::view::{Hub, RenderQueue, View, ViewId, SliderId};
-use crate::view::menu::{Menu, toggle_main_menu, toggle_battery_menu, toggle_clock_menu};
-use crate::document::{Location};
-use crate::framebuffer::UpdateMode;
+use crate::view::{Hub, RenderQueue, ViewId, SliderId};
+use crate::view::menu::{toggle_main_menu, toggle_battery_menu, toggle_clock_menu};
 use crate::input::{FingerStatus};
-use crate::framebuffer::InputEvent;
 
 use super::reader::Reader;
 

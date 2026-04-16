@@ -1,16 +1,14 @@
 //! Reader Settings Setters
 use crate::context::Context;
-use crate::geom::{Rectangle, Margin};
-use crate::view::{Hub, RenderData, RenderQueue, ViewId, locate_by_id, View};
+use crate::geom::Margin;
+use crate::view::{Hub, RenderQueue, ViewId, locate_by_id, View};
 use crate::view::menu::MenuEntry;
 use crate::document::{Document, Location};
 use crate::metadata::{TextAlign, ZoomMode, ScrollMode, CroppingMargins};
 use crate::framebuffer::UpdateMode;
-use crate::unit::scale_by_dpi;
 use crate::CURRENT_DEVICE;
 use crate::settings::DEFAULT_FONT_FAMILY;
 use std::sync::{Arc, MutexGuard};
-use std::sync::atomic;
 
 use super::reader::Reader;
 use super::reader_core::Resource;

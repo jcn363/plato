@@ -2,14 +2,13 @@
 use crate::context::Context;
 use crate::geom::Rectangle;
 use crate::view::{Hub, RenderQueue, View, TopBar, Filler, BottomBar, ToolBar, Keyboard, SearchBar, Menu};
-use crate::document::{Document, Location};
+use crate::document::Document;
 use crate::metadata::ZoomMode;
 use crate::framebuffer::UpdateMode;
 use crate::unit::scale_by_dpi;
 use crate::helpers::{halves, locate};
 use crate::device::CURRENT_DEVICE;
 use crate::unit::{SMALL_BAR_HEIGHT, BIG_BAR_HEIGHT, THICKNESS_MEDIUM};
-use std::sync::MutexGuard;
 
 use super::reader::Reader;
 
