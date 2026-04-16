@@ -1,4 +1,12 @@
 //! Reader Rendering Implementation
+//!
+//! This module provides rendering and layout methods for the Reader view.
+//! It handles view resizing, layout calculations for UI components (toolbars,
+//! menus, search bars), and rendering helper functions.
+//!
+//! The main methods include:
+//! - `resize`: Handles view resizing and child view repositioning
+//! - `render_rect`: Calculates visible rectangles for rendering operations
 use crate::context::Context;
 use crate::geom::Rectangle;
 use crate::view::{Hub, RenderQueue, View, TopBar, Filler, BottomBar, ToolBar, Keyboard, SearchBar, Menu};

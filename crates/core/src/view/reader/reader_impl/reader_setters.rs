@@ -1,4 +1,15 @@
 //! Reader Settings Setters
+//!
+//! This module provides setter methods for the Reader's display and rendering settings.
+//! These methods handle font configuration, text alignment, zoom modes, scroll modes,
+//! contrast adjustments, and margin settings.
+//!
+//! All setter methods follow a consistent pattern:
+//! 1. Validate that the document can be modified
+//! 2. Update the info.reader configuration
+//! 3. Reapply the document with new settings
+//! 4. Refresh the UI components (tool bar, bottom bar)
+//! 5. Queue appropriate render updates
 use crate::context::Context;
 use crate::geom::Margin;
 use crate::view::{Hub, RenderQueue, ViewId, locate_by_id, View};

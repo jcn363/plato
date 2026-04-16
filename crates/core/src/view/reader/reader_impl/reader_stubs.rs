@@ -1,8 +1,16 @@
 //! Reader Stub Methods
 //!
-//! This module contains stub implementations for Reader methods that are
-//! placeholders for future functionality. These methods currently just
-//! trigger partial UI updates.
+//! This module contains stub and simplified implementations for Reader methods.
+//! These methods provide basic functionality or placeholders for:
+//! - View update operations
+//! - Document pixmap loading and caching
+//! - Text extraction and search
+//! - Page navigation and history
+//! - Annotation management
+//! - Keyboard handling
+//!
+//! Many of these methods are delegating stubs that trigger UI updates
+//! while the actual implementation logic resides in other specialized modules.
 
 use crate::framebuffer::UpdateMode;
 use crate::geom::Point;

@@ -1,4 +1,12 @@
 //! Reader Event Handling
+//!
+//! This module handles user input events for the Reader view.
+//! It processes touch events, keyboard input, and menu interactions,
+//! dispatching to appropriate handlers based on the current state.
+//!
+//! The main entry point is `handle_menu_event`, which processes
+//! events when menus are active or when standard reader interactions
+//! need to be handled.
 use crate::context::Context;
 use crate::geom::Rectangle;
 use crate::view::{Hub, RenderQueue, ViewId, SliderId};

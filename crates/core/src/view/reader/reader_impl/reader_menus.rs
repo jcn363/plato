@@ -1,4 +1,14 @@
 //! Reader Menu Toggle Methods
+//!
+//! This module provides thin wrapper methods for toggling various reader menus
+//! and dialogs. These methods delegate to specialized modules:
+//! - `reader_dialogs`: Note editing, page naming, go-to-page dialogs
+//! - `reader_settings`: Settings menus (font, display, navigation)
+//! - `reader_search`: Search functionality
+//! - `reader_annotations`: Annotation-related menus
+//!
+//! Each toggle method handles showing/hiding the specified UI component
+//! and manages focus state appropriately.
 use crate::context::Context;
 use crate::geom::Rectangle;
 use crate::view::{Hub, RenderQueue, ViewId};

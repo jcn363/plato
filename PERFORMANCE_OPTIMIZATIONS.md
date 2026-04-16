@@ -6,7 +6,7 @@ Analysis of the Plato codebase (279 Rust source files) reveals several performan
 
 ### Key Metrics
 - **Total clone() calls**: 263 instances
-- **Total to_string()/to_vec()/to_owned()**: 592 instances  
+- **Total to_string()/to_vec()/to_owned()**: 592 instances
 - **Total unwrap()/expect()/panic**: 419 instances
 - **Total Vec::new()/HashMap::new**: 231 instances (could use with_capacity)
 - **Threading**: Uses std::thread extensively, no rayon or tokio
@@ -22,7 +22,7 @@ Analysis of the Plato codebase (279 Rust source files) reveals several performan
 - `crates/core/src/view/home/mod.rs`: Book info cloning during display
 - `crates/plato/src/app.rs`: Event handling clones
 
-**Solution**: 
+**Solution**:
 - Use references (&T) instead of owned values where possible
 - Implement Copy trait for small structs (Fp, simple types)
 - Use Cow<str> for string fields that are often borrowed
