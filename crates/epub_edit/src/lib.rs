@@ -135,27 +135,18 @@ impl EpubEditorCore {
     fn extract(&self) -> Result<()> {
         let file = File::open(&self.epub_path).context("Failed to open EPUB file")?;
         let mut archive = ZipArchive::new(file).context("Failed to read ZIP archive")?;
-        let canonical_temp = self
-            .temp_dir
-            .canonicalize()
-            .context("Failed to canonicalize temp directory")?;
 
         for i in 0..archive.len() {
             let mut file = archive.by_index(i)?;
             let outpath = self.temp_dir.join(file.name());
 
-            // Prevent zip-slip path traversal: ensure the resolved path
-            // stays within the temp directory.
-            let canonical_out = outpath.canonicalize().unwrap_or_else(|_| outpath.clone());
-            if !canonical_out.starts_with(&canonical_temp) {
-                // For new files that don't exist yet, canonicalize won't work.
-                // Reject any entry whose name contains path traversal components.
-                if file.name().contains("..") {
-                    return Err(format_err!(
-                        "Zip entry contains path traversal: {}",
-                        file.name()
-                    ));
-                }
+            // Prevent zip-slip path traversal: reject any entry whose name
+            // contains ".." components, which could escape the temp directory.
+            if file.name().contains("..") {
+                return Err(format_err!(
+                    "Zip entry contains path traversal: {}",
+                    file.name()
+                ));
             }
 
             if file.name().ends_with('/') {
