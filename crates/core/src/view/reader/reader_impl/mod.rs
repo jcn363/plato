@@ -46,4 +46,10 @@ pub mod reader_search_handler;
 pub mod reader_settings;
 pub mod reader_settings_ui;
 pub mod reader_state;
+pub mod reader_stubs;
 pub mod reader_toc;
+
+// Internal helper modules
+pub(crate) mod reader_menus;
+pub(crate) mod reader_rendering_impl;
+pub(crate) mod reader_setters;

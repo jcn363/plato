@@ -156,7 +156,7 @@ where
 - Optimize memory layout
 - Async thumbnail generation
 - Reduce lock contention
-- Consider/Investigate whether it's worth using Rayon for data parallelism
+- Do not use Rayon for data parallelism. Focus on algorithmic improvements and caching instead
 
 ### DRY (Don't Repeat Yourself)
 

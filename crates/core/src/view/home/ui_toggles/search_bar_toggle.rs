@@ -8,8 +8,7 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::search_bar::SearchBar;
-use crate::view::{Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{EntryId, ViewId};
+use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 use crate::view::BIG_BAR_HEIGHT;
 
 use super::super::Home;

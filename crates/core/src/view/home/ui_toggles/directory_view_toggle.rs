@@ -3,12 +3,9 @@
 //! This module handles directory view visibility and interaction for the Home view.
 
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
-use crate::unit::scale_by_dpi;
-use crate::view::{Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{EntryId, ViewId};
+use crate::view::{Event, Hub, RenderData, RenderQueue, ViewId};
 
 use super::super::Home;
 

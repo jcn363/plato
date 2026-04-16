@@ -129,10 +129,8 @@
 // ===========================================================================
 
 use crate::color::{background, foreground};
-use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
-use std::sync::MutexGuard;
-use crate::document::{BoundedText, Document, Location, SimpleTocEntry, TextLocation, TocEntry};
+use crate::document::{BoundedText, Document, SimpleTocEntry, TextLocation, TocEntry};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, CycleDir, LinearDir};
@@ -151,21 +149,13 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{atomic, Arc, LazyLock, Mutex};
 
-use crate::view::common::{
-    locate, locate_by_id, toggle_battery_menu, toggle_clock_menu, toggle_main_menu,
-};
-use crate::view::filler::Filler;
-use crate::view::keyboard::Keyboard;
-use crate::view::menu::Menu;
-use crate::view::menu_entry::MenuEntry;
-use crate::view::search_bar::SearchBar;
+use crate::view::common::{locate, toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
 use crate::view::top_bar::TopBar;
 use crate::view::{
-    Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, SliderId, View, ViewId, BIG_BAR_HEIGHT,
-    ID_FEEDER, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
+    Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
+    ID_FEEDER,
 };
 
-use crate::view::reader::bottom_bar::BottomBar;
 use crate::view::reader::tool_bar::ToolBar;
 
 use super::reader_core::{
@@ -441,12 +431,6 @@ impl Reader {
             }
         }
     }
-
-    // Toggle menus moved to reader_menus.rs
-    mod reader_menus;
-
-    // Settings setters moved to reader_setters.rs
-    mod reader_setters;
 
     // -----------------------------------------------------------------------
     // Table of Contents and Page Lookup
@@ -864,11 +848,7 @@ impl Reader {
     // -----------------------------------------------------------------------
     // Rendering
     // -----------------------------------------------------------------------
-
-    mod reader_rendering_impl;
 }
-
-mod reader_stubs;
 
 impl View for Reader {
     fn handle_event(

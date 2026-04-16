@@ -3,14 +3,9 @@
 //! This module handles all input processing and gesture recognition for the Reader view,
 //! including touch events, button presses, and keyboard input.
 
-use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
+use crate::input::{ButtonCode, ButtonStatus, DeviceEvent};
 use crate::geom::Point;
-use crate::gesture::GestureEvent;
-use crate::view::reader::reader_impl::reader_core::{State, Selection};
-use crate::view::{Bus, Event, Hub, Id, RenderQueue};
-use crate::context::Context;
-use crate::framebuffer::UpdateMode;
-use super::reader::Reader;
+use crate::view::{Event, Hub, Id, RenderQueue};
 
 /// Input event types for the Reader
 #[derive(Debug, Clone)]

@@ -11,7 +11,7 @@
 //! 4. Refresh the UI components (tool bar, bottom bar)
 //! 5. Queue appropriate render updates
 use crate::context::Context;
-use crate::geom::Margin;
+use crate::metadata::Margin;
 use crate::view::{Hub, RenderQueue, ViewId, locate_by_id, View};
 use crate::view::menu::MenuEntry;
 use crate::document::{Document, Location};

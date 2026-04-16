@@ -8,11 +8,8 @@ use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
-use crate::view::{BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use crate::view::helpers::halves;
-use crate::view::{Event, Hub, RenderData, RenderQueue, View};
-use crate::view::ViewId;
-use crate::framebuffer::UpdateMode;
+use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use crate::geom::helpers::halves;
 
 use super::super::Home;
 

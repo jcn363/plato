@@ -88,7 +88,6 @@ pub enum ViewId {
     Dialog,
     HighlightMenu,
     NavigationBar,
-    LibraryMenu,
     Shelf(usize),
     BookView,
 }

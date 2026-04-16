@@ -15,16 +15,3 @@ pub mod directory_view_toggle;
 pub mod settings_toggle;
 pub mod library_toggle;
 pub mod utils;
-
-pub use keyboard_toggle::*;
-pub use address_bar_toggle::*;
-pub use navigation_bar_toggle::*;
-pub use search_bar_toggle::*;
-pub use go_to_page_toggle::*;
-pub use menu_toggle::*;
-pub use shelf_view_toggle::*;
-pub use book_view_toggle::*;
-pub use directory_view_toggle::*;
-pub use settings_toggle::*;
-pub use library_toggle::*;
-pub use utils::*;

@@ -7,8 +7,6 @@ use crate::document::Location;
 use crate::geom::Rectangle;
 use crate::metadata::Annotation;
 use crate::view::reader::reader_impl::reader_core::Selection;
-use crate::view::{Hub, RenderQueue};
-use crate::context::Context;
 
 /// Annotation manager for the Reader view
 pub struct ReaderAnnotationManager {

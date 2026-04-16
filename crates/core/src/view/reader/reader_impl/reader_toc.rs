@@ -3,10 +3,8 @@
 //! This module handles table of contents functionality for the Reader view,
 //! including TOC navigation, page lookup, and chapter management.
 
-use crate::document::{Location, TocEntry, SimpleTocEntry};
+use crate::document::{TocEntry, SimpleTocEntry};
 use crate::metadata::Info;
-use crate::view::{Hub, RenderQueue};
-use crate::context::Context;
 use std::collections::HashMap;
 
 /// Table of contents manager for the Reader view

@@ -3,11 +3,9 @@
 //! This module handles all dialog creation and management for the Reader view,
 //! including confirmation dialogs, input dialogs, and message dialogs.
 
-use crate::color::Color;
 use crate::geom::Rectangle;
 use crate::view::{Hub, Id, RenderQueue, ViewId};
 use crate::view::dialog::Dialog;
-use crate::view::keyboard::Keyboard;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::entries::{EntryKind, EntryId};
 use crate::context::Context;

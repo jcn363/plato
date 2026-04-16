@@ -3,10 +3,9 @@
 //! This module handles all settings menu creation and management for the Reader view,
 //! including font settings, display options, and configuration dialogs.
 
-use crate::color::Color;
 use crate::geom::Rectangle;
 use crate::metadata::{TextAlign, ZoomMode, ScrollMode};
-use crate::view::{Hub, Id, RenderQueue, ViewId};
+use crate::view::{Id, RenderQueue, ViewId};
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::entries::{EntryKind, EntryId};
 use crate::context::Context;

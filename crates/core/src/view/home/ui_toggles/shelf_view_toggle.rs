@@ -3,13 +3,10 @@
 //! This module handles shelf view visibility and interaction for the Home view.
 
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
-use crate::unit::scale_by_dpi;
 use crate::view::home::Shelf;
-use crate::view::{Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{EntryId, ViewId};
+use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 
 use super::super::Home;
 
@@ -130,7 +127,7 @@ impl Home {
         context: &mut Context,
     ) -> bool {
         match event {
-            Event::Close(ViewId::Shelf) => {
+            Event::Close(ViewId::Shelf(_)) => {
                 self.hide_shelf_view(rq, context);
                 true
             }

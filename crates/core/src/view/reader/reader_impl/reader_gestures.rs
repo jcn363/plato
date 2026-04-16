@@ -23,11 +23,87 @@ use crate::view::{Event, Hub, RenderData, RenderQueue};
 #[allow(dead_code)] // Used in handle_selection_motion and handle_selection_up functions
 const RECT_DIST_JITTER: f32 = 15.0;
 
-/// Update selection rectangles with shared while loop logic
-///
-/// This helper function extracts the common rectangle update pattern used in both
-/// handle_selection_motion and handle_selection_up functions.
-#[allow(dead_code)] // Used in handle_selection_motion and handle_selection_up functions
+/// Update selection rectangles in forward direction (for handle_selection_motion)
+#[allow(dead_code)]
+fn update_selection_rects_forward(
+    rects: &[(Rectangle, Point)],
+    boundary_low: Point,
+    boundary_high: Point,
+    rq: &mut RenderQueue,
+    view_id: crate::view::Id,
+) {
+    let Some(mut i) = rects.iter().position(|(_, loc)| *loc == boundary_low) else {
+        return;
+    };
+
+    let mut rect = rects[i].0;
+    while rects[i].1 < boundary_high {
+        let next_rect = rects[i + 1].0;
+        let should_merge = rect.max.y.min(next_rect.max.y) - rect.min.y.max(next_rect.min.y)
+            > rect.height().min(next_rect.height()) as i32 / 2;
+
+        if should_merge {
+            if rects[i + 1].1 == boundary_high {
+                merge_rects_at_boundary(&mut rect, next_rect);
+            } else {
+                rect.absorb(&next_rect);
+            }
+        } else {
+            rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
+            rect = next_rect;
+        }
+        i += 1;
+    }
+    rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
+}
+
+/// Update selection rectangles in backward direction (for handle_selection_up)
+#[allow(dead_code)]
+fn update_selection_rects_backward(
+    rects: &[(Rectangle, Point)],
+    boundary_low: Point,
+    boundary_high: Point,
+    rq: &mut RenderQueue,
+    view_id: crate::view::Id,
+) {
+    let Some(mut i) = rects.iter().rposition(|(_, loc)| *loc == boundary_high) else {
+        return;
+    };
+
+    let mut rect = rects[i].0;
+    while rects[i].1 > boundary_low {
+        let prev_rect = rects[i - 1].0;
+        let should_merge = rect.max.y.min(prev_rect.max.y) - rect.min.y.max(prev_rect.min.y)
+            > rect.height().min(prev_rect.height()) as i32 / 2;
+
+        if should_merge {
+            if rects[i - 1].1 == boundary_low {
+                merge_rects_at_boundary(&mut rect, prev_rect);
+            } else {
+                rect.absorb(&prev_rect);
+            }
+        } else {
+            rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
+            rect = prev_rect;
+        }
+        i -= 1;
+    }
+    rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
+}
+
+/// Merge two rectangles at a selection boundary, adjusting the active rect's bounds
+fn merge_rects_at_boundary(rect: &mut Rectangle, other: Rectangle) {
+    if rect.min.x < other.min.x {
+        rect.max.x = other.min.x;
+    } else {
+        rect.min.x = other.max.x;
+    }
+    rect.min.y = rect.min.y.min(other.min.y);
+    rect.max.y = rect.max.y.max(other.max.y);
+}
+
+/// Update selection rectangles by dispatching to forward or backward handler
+#[allow(dead_code)]
 fn update_selection_rects(
     rects: &[(Rectangle, Point)],
     boundary_low: Point,
@@ -36,64 +112,14 @@ fn update_selection_rects(
     view_id: crate::view::Id,
     is_forward: bool,
 ) {
-    if boundary_low != boundary_high {
-        if is_forward {
-            // Forward direction (used in handle_selection_motion)
-            if let Some(mut i) = rects.iter().position(|(_, loc)| *loc == boundary_low) {
-                let mut rect = rects[i].0;
-                while rects[i].1 < boundary_high {
-                    let next_rect = rects[i + 1].0;
-                    if rect.max.y.min(next_rect.max.y) - rect.min.y.max(next_rect.min.y)
-                        > rect.height().min(next_rect.height()) as i32 / 2
-                    {
-                        if rects[i + 1].1 == boundary_high {
-                            if rect.min.x < next_rect.min.x {
-                                rect.max.x = next_rect.min.x;
-                            } else {
-                                rect.min.x = next_rect.max.x;
-                            }
-                            rect.min.y = rect.min.y.min(next_rect.min.y);
-                            rect.max.y = rect.max.y.max(next_rect.max.y);
-                        } else {
-                            rect.absorb(&next_rect);
-                        }
-                    } else {
-                        rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
-                        rect = next_rect;
-                    }
-                    i += 1;
-                }
-                rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
-            }
-        } else {
-            // Backward direction (used in handle_selection_up)
-            if let Some(mut i) = rects.iter().rposition(|(_, loc)| *loc == boundary_high) {
-                let mut rect = rects[i].0;
-                while rects[i].1 > boundary_low {
-                    let prev_rect = rects[i - 1].0;
-                    if rect.max.y.min(prev_rect.max.y) - rect.min.y.max(prev_rect.min.y)
-                        > rect.height().min(prev_rect.height()) as i32 / 2
-                    {
-                        if rects[i - 1].1 == boundary_low {
-                            if rect.min.x < prev_rect.min.x {
-                                rect.max.x = prev_rect.min.x;
-                            } else {
-                                rect.min.x = prev_rect.max.x;
-                            }
-                            rect.min.y = rect.min.y.min(prev_rect.min.y);
-                            rect.max.y = rect.max.y.max(prev_rect.max.y);
-                        } else {
-                            rect.absorb(&prev_rect);
-                        }
-                    } else {
-                        rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
-                        rect = prev_rect;
-                    }
-                    i -= 1;
-                }
-                rq.add(RenderData::new(view_id, rect, UpdateMode::Gui));
-            }
-        }
+    if boundary_low == boundary_high {
+        return;
+    }
+
+    if is_forward {
+        update_selection_rects_forward(rects, boundary_low, boundary_high, rq, view_id);
+    } else {
+        update_selection_rects_backward(rects, boundary_low, boundary_high, rq, view_id);
     }
 }
 
