@@ -1,7 +1,3 @@
---- PERFORMANCE_OPTIMIZATIONS.md (原始)
-
-
-+++ PERFORMANCE_OPTIMIZATIONS.md (修改后)
 # Performance Optimization Plan for Plato
 
 ## Executive Summary
