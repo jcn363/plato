@@ -1,6 +1,6 @@
 use anyhow::Error;
 use reqwest::blocking::Client;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::fmt;
 
 pub struct OPDSCatalog {
@@ -40,13 +40,14 @@ impl OPDSCatalog {
 
     fn parse_atom(body: &str, base_url: &str) -> Result<Self, Error> {
         let mut title = String::new();
-        let mut entries = Vec::new();
+        // Pre-allocate with estimated capacity to reduce reallocations
+        let mut entries = Vec::with_capacity(32);
 
         let parser = quick_xml::Reader::from_str(body);
         let mut parser = parser;
         parser.config_mut().trim_text(true);
 
-        let mut buf = Vec::new();
+        let mut buf = Vec::with_capacity(1024);
         let mut in_title = false;
         let mut in_entry = false;
         let mut current_entry: Option<OPDSEntry> = None;
@@ -110,8 +111,9 @@ impl OPDSCatalog {
         let mut parser = parser;
         parser.config_mut().trim_text(true);
 
-        let mut buf = Vec::new();
-        let mut entries = Vec::new();
+        let mut buf = Vec::with_capacity(1024);
+        // Pre-allocate with estimated capacity to reduce reallocations
+        let mut entries = Vec::with_capacity(16);
         let mut title = String::new();
         let mut in_link = false;
         let mut href = String::new();
@@ -132,9 +134,9 @@ impl OPDSCatalog {
                     let text = e.decode()?;
                     if !text.is_empty() && in_link {
                         entries.push(OPDSEntry {
-                            id: href.clone(),
+                            id: href,
                             title: text.to_string(),
-                            links: HashMap::new(),
+                            links: FxHashMap::default(),
                             summary: String::new(),
                         });
                     } else if !text.is_empty() {
@@ -182,7 +184,7 @@ impl OPDSCatalog {
 pub struct OPDSEntry {
     pub id: String,
     pub title: String,
-    pub links: HashMap<String, String>,
+    pub links: FxHashMap<String, String>,
     pub summary: String,
 }
 

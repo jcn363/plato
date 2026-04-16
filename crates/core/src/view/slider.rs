@@ -37,6 +37,7 @@ impl Slider {
         Slider {
             id: ID_FEEDER.next(),
             rect,
+            // Sliders have no children, use zero capacity
             children: Vec::new(),
             slider_id,
             value,

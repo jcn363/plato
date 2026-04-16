@@ -180,7 +180,12 @@ impl ReaderSearchHandler {
 
     /// Create search bar with current query
     pub fn create_search_bar(&self, rect: Rectangle, context: &mut Context) -> SearchBar {
-        let query = self.get_current_query().unwrap_or("").to_string();
+        let query = self
+            .current_search
+            .as_ref()
+            .map(|s| s._query.as_str())
+            .unwrap_or("")
+            .to_string();
         SearchBar::new(rect, ViewId::SearchBarInput, "", &query, context)
     }
 

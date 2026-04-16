@@ -128,7 +128,7 @@ impl ReaderInputHandler {
                 vec![Event::Gesture(GestureEvent::Pinch {
                     axis: crate::geom::Axis::Horizontal,
                     center,
-                    factor: *scale,
+                    factor: scale,
                 })]
             }
             ReaderGesture::Pan(start, end) => {

@@ -74,7 +74,7 @@ impl Home {
         }
 
         let rect = self.calculate_navigation_bar_rect(context);
-        let navigation_bar = NavigationBar::new(rect, self.id, context);
+        let navigation_bar = NavigationBar::new(rect, rect.height() as i32, 3);
 
         self.navigation_bar = Some(Box::new(navigation_bar) as Box<dyn View>);
 

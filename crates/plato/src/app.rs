@@ -438,13 +438,14 @@ pub fn run() -> Result<(), Error> {
         context.frontlight.set_warmth(0.0);
     }
 
-    let mut tasks: Vec<Task> = Vec::new();
-    let mut history: Vec<HistoryItem> = Vec::new();
+    // Pre-allocate vectors with estimated capacities to reduce reallocations
+    let mut tasks: Vec<Task> = Vec::with_capacity(8);
+    let mut history: Vec<HistoryItem> = Vec::with_capacity(16);
     let mut rq = RenderQueue::new();
     let mut view: Box<dyn View> =
         Box::new(Home::new(context.fb.rect(), &tx, &mut rq, &mut context)?);
 
-    let mut updating = Vec::new();
+    let mut updating = Vec::with_capacity(8);
     let current_dir = env::current_dir()?;
 
     println!(

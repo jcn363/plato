@@ -101,6 +101,7 @@ impl Icon {
         Icon {
             id: ID_FEEDER.next(),
             rect,
+            // Icons typically have no children, pre-allocate with zero capacity
             children: Vec::new(),
             name: name.to_string(),
             background: background(theme::is_dark_mode()),

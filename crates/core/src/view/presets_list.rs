@@ -21,7 +21,8 @@ impl PresetsList {
         PresetsList {
             id: ID_FEEDER.next(),
             rect,
-            pages: Vec::new(),
+            // Pre-allocate with estimated capacity to reduce reallocations
+            pages: Vec::with_capacity(4),
             current_page: 0,
         }
     }
@@ -36,7 +37,8 @@ impl PresetsList {
         let max_per_line = (self.rect.width() as i32 + padding) / (preset_width + padding);
 
         self.pages.clear();
-        let mut children = Vec::new();
+        // Pre-allocate children with estimated capacity based on max_per_line
+        let mut children = Vec::with_capacity(max_per_line as usize);
 
         let presets_count = presets.len() as i32;
         let first_line_count = max_per_line.min(presets_count);
@@ -78,7 +80,8 @@ impl PresetsList {
 
             if item_index % max_per_line == 0 || index == presets_count {
                 self.pages.push(children);
-                children = Vec::new();
+                // Pre-allocate next batch with same capacity
+                children = Vec::with_capacity(max_per_line as usize);
             }
         }
 

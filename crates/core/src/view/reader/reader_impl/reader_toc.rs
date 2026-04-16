@@ -30,14 +30,48 @@ impl ReaderTocManager {
     pub fn build_toc(&mut self, info: &Info) -> Option<Vec<TocEntry>> {
         if let Some(ref simple_toc) = info.simple_toc {
             let mut index = 0;
-            let toc = self.build_toc_aux(simple_toc, &mut index, |name| {
-                self.find_page_by_name(info, name)
-            });
+            // Pre-collect all page names to avoid borrow issues
+            let toc = self.build_toc_aux_internal(simple_toc, &mut index, info);
             self.toc_entries = toc.clone();
             Some(toc)
         } else {
             None
         }
+    }
+
+    /// Internal TOC builder that doesn't use closure
+    fn build_toc_aux_internal(
+        &self,
+        simple_toc: &[SimpleTocEntry],
+        index: &mut usize,
+        info: &Info,
+    ) -> Vec<TocEntry> {
+        let mut toc = Vec::new();
+
+        for entry in simple_toc {
+            let (title, location, children) = match entry {
+                SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, &[][..]),
+                SimpleTocEntry::Container(t, loc, c) => (t.as_str(), loc, c.as_slice()),
+            };
+
+            let toc_entry = TocEntry {
+                index: *index,
+                location: location.clone(),
+                title: title.to_string(),
+                children: if !children.is_empty() {
+                    self.build_toc_aux_internal(children, index, info)
+                } else {
+                    Vec::new()
+                },
+                page: self.find_page_by_name(info, title),
+                level: Self::calculate_level(children),
+            };
+
+            toc.push(toc_entry);
+            *index += 1;
+        }
+
+        toc
     }
 
     /// Build table of contents from simple TOC entries
@@ -54,7 +88,7 @@ impl ReaderTocManager {
 
         for entry in simple_toc {
             let (title, location, children) = match entry {
-                SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, Vec::new()),
+                SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, &[][..]),
                 SimpleTocEntry::Container(t, loc, c) => (t.as_str(), loc, c.as_slice()),
             };
 
@@ -89,7 +123,7 @@ impl ReaderTocManager {
         if let Some(ref simple_toc) = info.simple_toc {
             for entry in simple_toc {
                 let (title, location, children) = match entry {
-                    SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, Vec::new()),
+                    SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, &[][..]),
                     SimpleTocEntry::Container(t, loc, c) => (t.as_str(), loc, c.as_slice()),
                 };
                 if title == name {
@@ -109,7 +143,7 @@ impl ReaderTocManager {
     fn find_page_in_children(&self, children: &[SimpleTocEntry], name: &str) -> Option<usize> {
         for entry in children {
             let (title, location, grandchildren) = match entry {
-                SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, Vec::new()),
+                SimpleTocEntry::Leaf(t, loc) => (t.as_str(), loc, &[][..]),
                 SimpleTocEntry::Container(t, loc, c) => (t.as_str(), loc, c.as_slice()),
             };
             if title == name {
@@ -127,6 +161,20 @@ impl ReaderTocManager {
         match location {
             TocLocation::Exact(page) => Some(*page),
             TocLocation::Uri(_) => None,
+        }
+    }
+
+    /// Calculate nesting level from children
+    fn calculate_level(children: &[SimpleTocEntry]) -> usize {
+        if children.is_empty() {
+            0
+        } else {
+            1 + children.iter().map(|c| match c {
+                SimpleTocEntry::Leaf(_, _) => 0,
+                SimpleTocEntry::Container(_, _, grandchildren) => {
+                    Self::calculate_level(grandchildren)
+                }
+            }).max().unwrap_or(0)
         }
     }
 

@@ -74,7 +74,7 @@ impl Home {
         }
 
         let rect = self.calculate_address_bar_rect(context);
-        let address_bar = AddressBar::new(rect, self.id, context);
+        let address_bar = AddressBar::new(rect, "", context);
 
         self.address_bar = Some(Box::new(address_bar) as Box<dyn View>);
         self.focus = Some(ViewId::AddressBar);

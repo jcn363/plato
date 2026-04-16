@@ -864,7 +864,7 @@ impl View for Reader {
                 true
             }
             Event::Device(device_event) => {
-                self.handle_device_event(device_event, hub, rq, context);
+                self.handle_device_event(*device_event, hub, rq, context);
                 true
             }
             Event::Key(key_code) => {

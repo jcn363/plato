@@ -5,6 +5,7 @@
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
+use crate::settings::interface::{FirstColumn, SecondColumn};
 use crate::view::home::Shelf;
 use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 
@@ -71,7 +72,12 @@ impl Home {
         }
 
         let rect = self.calculate_shelf_view_rect(context);
-        let shelf = Shelf::new(rect, self.id, context);
+        let shelf = Shelf::new(
+            rect,
+            FirstColumn::TitleAndAuthor,
+            SecondColumn::Progress,
+            false,
+        );
 
         self.shelf = Some(Box::new(shelf) as Box<dyn View>);
 

@@ -68,23 +68,29 @@ impl Library {
 
         let allowed_kinds = &self.import_settings.allowed_kinds;
 
-        WalkDir::new(external_path)
+        // Pre-allocate with estimated capacity to reduce reallocations
+        let mut files = Vec::with_capacity(64);
+
+        for entry in WalkDir::new(external_path)
             .min_depth(1)
             .into_iter()
             .filter_map(|e| e.ok())
-            .filter(|e| e.path().is_file())
-            .filter_map(|e| {
-                let path = e.path();
+        {
+            let path = entry.path();
+            if path.is_file() {
                 if let Some(kind) = file_kind(path) {
                     if allowed_kinds.contains(&kind) {
-                        let dest = self.home.join(path.file_name()?);
-                        if !dest.exists() {
-                            return Some(path.to_path_buf());
+                        if let Some(filename) = path.file_name() {
+                            let dest = self.home.join(filename);
+                            if !dest.exists() {
+                                files.push(path.to_path_buf());
+                            }
                         }
                     }
                 }
-                None
-            })
-            .collect()
+            }
+        }
+
+        files
     }
 }

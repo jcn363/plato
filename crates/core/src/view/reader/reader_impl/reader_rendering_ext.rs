@@ -221,7 +221,7 @@ impl ReaderRenderEngine {
         pages: &[usize],
         rect: Rectangle,
         context: &mut Context,
-    ) -> Result<(), String> {
+    ) -> Result<(), Error> {
         for page in pages {
             if !self.cache.cache.contains_key(page) {
                 let pixmap = self.render_page_to_pixmap(*page, rect, context)?;
