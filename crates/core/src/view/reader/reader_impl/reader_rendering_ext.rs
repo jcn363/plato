@@ -143,13 +143,13 @@ impl ReaderRenderEngine {
         page: usize,
         rect: Rectangle,
         context: &mut Context,
-    ) -> Result<Pixmap, String> {
+    ) -> Result<Pixmap, Error> {
         // TODO: Implement actual page rendering
         // This would involve calling the document's render method
         let width = rect.width() as u32;
         let height = rect.height() as u32;
         
-        Pixmap::new(width, height).ok_or_else(|| "Failed to create pixmap".to_string())
+        Pixmap::new(width, height, 4)
     }
 
     /// Calculate scale factor for rendering
