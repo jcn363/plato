@@ -91,29 +91,14 @@ impl Context {
         plugin_system: PluginSystem,
         background_sync: BackgroundSync,
     ) -> Context {
-        let dims = fb.dims();
-        let rotation = CURRENT_DEVICE.transformed_rotation(fb.rotation());
-        let rng = Xoroshiro128Plus::seed_from_u64(Local::now().timestamp_subsec_nanos() as u64);
-
-        // Initialize thumbnail manager if enabled
-        let thumbnail_manager = if settings.thumbnail.enabled {
-            let config = ThumbnailConfig::new(
-                settings.thumbnail.worker_count,
-                settings.thumbnail.cache_size,
-                settings.thumbnail.thumbnail_width,
-                settings.thumbnail.thumbnail_height,
-                true,
-            )
-            .ok();
-            config.map(|c| ThumbnailManager::new(c).ok()).flatten()
-        } else {
-            None
-        };
+        let display = Self::initialize_display(&fb);
+        let rng = Self::initialize_rng();
+        let thumbnail_manager = Self::initialize_thumbnail_manager(&settings);
 
         Context {
             fb,
             rtc,
-            display: Display { dims, rotation },
+            display,
             library,
             settings,
             fonts,
@@ -132,6 +117,32 @@ impl Context {
             flags: DeviceFlags::empty(),
             thumbnail_manager,
         }
+    }
+
+    fn initialize_display(fb: &Box<dyn Framebuffer>) -> Display {
+        let dims = fb.dims();
+        let rotation = CURRENT_DEVICE.transformed_rotation(fb.rotation());
+        Display { dims, rotation }
+    }
+
+    fn initialize_rng() -> Xoroshiro128Plus {
+        Xoroshiro128Plus::seed_from_u64(Local::now().timestamp_subsec_nanos() as u64)
+    }
+
+    fn initialize_thumbnail_manager(settings: &Settings) -> Option<ThumbnailManager> {
+        if !settings.thumbnail.enabled {
+            return None;
+        }
+
+        let config = ThumbnailConfig::new(
+            settings.thumbnail.worker_count,
+            settings.thumbnail.cache_size,
+            settings.thumbnail.thumbnail_width,
+            settings.thumbnail.thumbnail_height,
+            true,
+        )
+        .ok();
+        config.and_then(|c| ThumbnailManager::new(c).ok())
     }
 
     /// Gets a reference to the thumbnail manager if available

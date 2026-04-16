@@ -90,6 +90,7 @@
 - Found `new()` in view/reader/bottom_bar.rs (~71 lines) - Split into 5 helper functions
 - Found `guess_frontlight()` in settings/preset.rs (~53 lines) - Split into 3 helper functions
 - Found `parse_device_events()` in input.rs (~180 lines) - Split into 6 helper functions
+- Found `new()` in context.rs (~53 lines) - Split into 3 helper functions
 - Remaining: Search for and split other functions >50 lines
 
 **✅ COMPLETED:** DPI Migration

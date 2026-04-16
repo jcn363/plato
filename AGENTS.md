@@ -528,7 +528,7 @@ The Kobo Elipsa can benefit from parallel programming for workloads that are CPU
 - Partition work into coarse-grained tiles or page-level jobs to amortize thread overhead.
 - Limit peak memory by streaming and reusing buffers. Process tiles sequentially when memory is tight.
 - Prioritize interactive threads (UI, touch/pen input) and run heavy work at lower priority or in background.
-- Prefer SIMD/vectorized libraries (NEON) for image & text rendering where possible; this can yield big gains without adding threads.
+- Prefer SIMD/vectorized libraries for image & text rendering where possible; this can yield big gains without adding threads.
 - Measure: benchmark real device workloads (PDF rendering, annotation response) to confirm gains.
 - Use existing optimized libraries (MuPDF, Harfbuzz, Skia with context-appropriate builds) which already include multithreading or SIMD optimizations.
 

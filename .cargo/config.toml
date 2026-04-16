@@ -4,7 +4,6 @@ linker = 'arm-linux-gnueabihf-gcc'
 rustflags = [
     '-C', 'link-args=-L../../libs -Wl,-rpath-link,../../libs',
     '-C', 'target-cpu=cortex-a7',
-    '-C', 'target-feature=+neon,+vfp4',
     '--cap-lints', 'warn',
 ]
 
@@ -14,7 +13,6 @@ linker = "aarch64-linux-gnu-gcc"
 rustflags = [
     "-C", "link-args=-L../../libs64 -Wl,-rpath-link,../../libs64",
     "-C", "target-cpu=generic",
-    "-C", "target-feature=+neon",
 ]
 
 [build]

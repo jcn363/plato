@@ -114,7 +114,6 @@ For detailed integration progress, see [INTEGRATION_PROGRESS.md](INTEGRATION_PRO
 - **Rendering** - Added minimum font size support for better readability
 - **ePUB** - Enhanced HTML engine with improved font handling
 - **CSS** - Full CSS support including border, background, text-transform, text-decoration, tab-size
-- **ARM** - Added NEON SIMD and VFP4 optimizations for 32-bit Kobo devices
 - **Framebuffer** - Added `#[inline]` to all pixel operations for faster rendering
 - **Geometry** - Added `#[inline]` to Point, Vec2, Rectangle methods for faster calculations
 - **Document** - Added `#[inline]` to PDF page methods and font metrics
