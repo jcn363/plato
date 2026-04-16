@@ -3,9 +3,12 @@
 //! This module handles rendering functionality for the Reader view,
 //! including page rendering, caching, and display management.
 
+use crate::context::Context;
 use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::Rectangle;
+use crate::view::{Hub, RenderQueue};
 use crate::view::reader::reader_impl::reader_core::{State, ViewPort, RenderChunk};
+use anyhow::Error;
 use std::collections::HashMap;
 
 /// Rendering cache for the Reader view

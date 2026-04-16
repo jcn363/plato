@@ -8,7 +8,9 @@
 //! - `resize`: Handles view resizing and child view repositioning
 //! - `render_rect`: Calculates visible rectangles for rendering operations
 use crate::context::Context;
+use crate::document::{Document, Location};
 use crate::geom::Rectangle;
+use std::sync::{Arc, MutexGuard};
 use crate::view::{Hub, RenderQueue, View, SMALL_BAR_HEIGHT, BIG_BAR_HEIGHT, THICKNESS_MEDIUM};
 use crate::view::top_bar::TopBar;
 use crate::view::filler::Filler;
@@ -17,7 +19,6 @@ use crate::view::reader::tool_bar::ToolBar;
 use crate::view::keyboard::Keyboard;
 use crate::view::search_bar::SearchBar;
 use crate::view::menu::Menu;
-use crate::document::Document;
 use crate::metadata::ZoomMode;
 use crate::framebuffer::UpdateMode;
 use crate::unit::scale_by_dpi;

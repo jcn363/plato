@@ -3,6 +3,7 @@
 //! This module handles all input processing and gesture recognition for the Reader view,
 //! including touch events, button presses, and keyboard input.
 
+use crate::context::Context;
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::geom::Point;
 use crate::view::{Event, Hub, Id, RenderQueue};

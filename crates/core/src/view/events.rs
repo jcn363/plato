@@ -13,7 +13,7 @@ use super::entries::{EntryId, EntryKind, TextKind};
 use super::identifiers::{PluginTriggerKind, SliderId};
 use super::key::KeyKind;
 use crate::framebuffer::UpdateMode;
-use crate::geom::{CycleDir, Rectangle};
+use crate::geom::{CycleDir, Point, Rectangle};
 
 pub type Bus = VecDeque<Event>;
 pub type Hub = Sender<Event>;
