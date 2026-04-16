@@ -29,7 +29,7 @@ use crate::metadata::{
     Annotation, CroppingMargins, Info, PageScheme, ScrollMode, TextAlign, ZoomMode,
 };
 use crate::settings::DEFAULT_FONT_FAMILY;
-use crate::view::menu::Menu;
+use crate::view::menu::{Menu, MenuKind};
 use crate::view::menu_entry::MenuEntry;
 use crate::view::menu_helpers::toggle_menu_vec;
 use crate::view::{AppCmd, EntryId, EntryKind, RenderQueue, View, ViewId};
@@ -157,10 +157,6 @@ pub(crate) fn toggle_font_family_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::MenuKind;
-    use crate::view::menu_helpers::toggle_menu_vec;
-
-    let current_family_clone = current_family.clone();
     toggle_menu_vec(
         ViewId::FontFamilyMenu,
         |ctx| {
@@ -174,7 +170,7 @@ pub(crate) fn toggle_font_family_menu(
                     EntryKind::RadioButton(
                         f.clone(),
                         EntryId::SetFontFamily(f.clone()),
-                        *f == current_family_clone,
+                        *f == current_family,
                     )
                 })
                 .collect();
@@ -202,24 +198,20 @@ pub(crate) fn toggle_font_size_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::MenuKind;
-    use crate::view::menu_helpers::toggle_menu_vec;
-
     let min_font_size = context.settings.reader.font_size / 2.0;
     let max_font_size = 3.0 * context.settings.reader.font_size / 2.0;
-    let current_size_clone = current_size;
 
     toggle_menu_vec(
         ViewId::FontSizeMenu,
         |ctx| {
             let entries: Vec<_> = (0..=20)
                 .filter_map(|v| {
-                    let fs = current_size_clone - 1.0 + v as f32 / 10.0;
+                    let fs = current_size - 1.0 + v as f32 / 10.0;
                     if fs >= min_font_size && fs <= max_font_size {
                         Some(EntryKind::RadioButton(
                             format!("{:.1}", fs),
                             EntryId::SetFontSize(v),
-                            (fs - current_size_clone).abs() < 0.05,
+                            (fs - current_size).abs() < 0.05,
                         ))
                     } else {
                         None
@@ -250,14 +242,9 @@ pub(crate) fn toggle_text_align_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::MenuKind;
-    use crate::view::menu_helpers::toggle_menu_vec;
-
-    let current_align_clone = current_align;
-
     toggle_menu_vec(
         ViewId::TextAlignMenu,
-        |_ctx| {
+        |ctx| {
             let choices = [
                 TextAlign::Justify,
                 TextAlign::Left,
@@ -270,7 +257,7 @@ pub(crate) fn toggle_text_align_menu(
                     EntryKind::RadioButton(
                         v.to_string(),
                         EntryId::SetTextAlign(*v),
-                        current_align_clone == *v,
+                        current_align == *v,
                     )
                 })
                 .collect();
@@ -279,7 +266,7 @@ pub(crate) fn toggle_text_align_menu(
                 ViewId::TextAlignMenu,
                 MenuKind::Contextual,
                 entries,
-                _ctx,
+                ctx,
             )
         },
         children,
@@ -299,21 +286,16 @@ pub(crate) fn toggle_line_height_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::MenuKind;
-    use crate::view::menu_helpers::toggle_menu_vec;
-
-    let current_height_clone = current_height;
-
     toggle_menu_vec(
         ViewId::LineHeightMenu,
-        |_ctx| {
+        |ctx| {
             let entries: Vec<_> = (0..=10)
                 .map(|x| {
                     let lh = 1.0 + x as f32 / 10.0;
                     EntryKind::RadioButton(
                         format!("{:.1}", lh),
                         EntryId::SetLineHeight(x),
-                        (lh - current_height_clone).abs() < 0.05,
+                        (lh - current_height).abs() < 0.05,
                     )
                 })
                 .collect();
@@ -322,7 +304,7 @@ pub(crate) fn toggle_line_height_menu(
                 ViewId::LineHeightMenu,
                 MenuKind::DropDown,
                 entries,
-                _ctx,
+                ctx,
             )
         },
         children,
@@ -342,21 +324,16 @@ pub(crate) fn toggle_contrast_exponent_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::MenuKind;
-    use crate::view::menu_helpers::toggle_menu_vec;
-
-    let current_exponent_clone = current_exponent;
-
     toggle_menu_vec(
         ViewId::ContrastExponentMenu,
-        |_ctx| {
+        |ctx| {
             let entries: Vec<_> = (0..=8)
                 .map(|x| {
                     let e = 1.0 + x as f32 / 2.0;
                     EntryKind::RadioButton(
                         format!("{:.1}", e),
                         EntryId::SetContrastExponent(x),
-                        (e - current_exponent_clone).abs() < f32::EPSILON,
+                        (e - current_exponent).abs() < f32::EPSILON,
                     )
                 })
                 .collect();
@@ -365,7 +342,7 @@ pub(crate) fn toggle_contrast_exponent_menu(
                 ViewId::ContrastExponentMenu,
                 MenuKind::DropDown,
                 entries,
-                _ctx,
+                ctx,
             )
         },
         children,
@@ -385,21 +362,16 @@ pub(crate) fn toggle_contrast_gray_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::MenuKind;
-    use crate::view::menu_helpers::toggle_menu_vec;
-
-    let current_gray_clone = current_gray;
-
     toggle_menu_vec(
         ViewId::ContrastGrayMenu,
-        |_ctx| {
+        |ctx| {
             let entries: Vec<_> = (1..=6)
                 .map(|x| {
                     let g = ((1 << 8) - (1 << (8 - x))) as f32;
                     EntryKind::RadioButton(
                         format!("{:.1}", g),
                         EntryId::SetContrastGray(x),
-                        (g - current_gray_clone).abs() < f32::EPSILON,
+                        (g - current_gray).abs() < f32::EPSILON,
                     )
                 })
                 .collect();
@@ -408,7 +380,7 @@ pub(crate) fn toggle_contrast_gray_menu(
                 ViewId::ContrastGrayMenu,
                 MenuKind::DropDown,
                 entries,
-                _ctx,
+                ctx,
             )
         },
         children,
@@ -428,10 +400,6 @@ pub(crate) fn toggle_margin_width_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::MenuKind;
-    use crate::view::menu_helpers::toggle_menu_vec;
-
-    let current_margin_clone = current_margin_width;
     let min_margin_width = context.settings.reader.min_margin_width;
     let max_margin_width = context.settings.reader.max_margin_width;
 
@@ -443,7 +411,7 @@ pub(crate) fn toggle_margin_width_menu(
                     EntryKind::RadioButton(
                         format!("{}", mw),
                         EntryId::SetMarginWidth(mw),
-                        mw == current_margin_clone,
+                        mw == current_margin_width,
                     )
                 })
                 .collect();
@@ -473,8 +441,6 @@ pub(crate) fn toggle_page_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::{Menu, MenuKind};
-
     let has_name = info
         .reader
         .as_ref()
@@ -520,8 +486,6 @@ pub(crate) fn toggle_margin_cropper_menu(
     rq: &mut RenderQueue,
     context: &mut crate::context::Context,
 ) {
-    use crate::view::menu::{Menu, MenuKind};
-
     let is_split = info
         .reader
         .as_ref()
@@ -591,8 +555,6 @@ pub(crate) fn toggle_annotation_menu(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
-    use crate::view::menu::{Menu, MenuKind};
-
     let sel = annot.selection;
     let mut entries = Vec::new();
 
@@ -654,8 +616,6 @@ pub(crate) fn toggle_selection_menu(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
-    use crate::view::menu::{Menu, MenuKind};
-
     let mut entries = vec![
         EntryKind::Command("Highlight".to_string(), EntryId::HighlightSelection),
         EntryKind::Command("Add Note".to_string(), EntryId::AnnotateSelection),
@@ -731,8 +691,6 @@ pub(crate) fn toggle_title_menu(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
-    use crate::view::menu::{Menu, MenuKind};
-
     let sf = if let ZoomMode::Custom(sf) = zoom_mode {
         sf
     } else {
