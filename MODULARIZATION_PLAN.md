@@ -77,6 +77,7 @@ Created modules:
 - `view/reader/reader_impl/reader_menus.rs` - Menu toggle wrapper methods (~379 lines extracted from reader.rs)
 - `view/reader/reader_impl/reader_setters.rs` - Settings setter methods (~400 lines extracted from reader.rs)
 - `view/reader/reader_impl/reader_rendering_impl.rs` - Rendering and resize methods (~200 lines extracted from reader.rs)
+- `view/reader/reader_impl/reader_events.rs` - Event handling and menu dispatch (~300 lines extracted from reader.rs)
 - `view/reader/reader_impl/reader_input.rs` - Input and gesture processing
 - `view/reader/reader_impl/reader_state.rs` - State management
 - `view/reader/reader_impl/reader_navigation.rs` - Page navigation
@@ -133,12 +134,13 @@ Created modules:
    - ✅ Fix Pixmap::new() signature mismatch
    - Resolve remaining type mismatches (16 E0308)
 
-2. **Reduce reader.rs Below 1000 Lines** (~300 lines remaining to extract)
+2. **Reduce reader.rs Below 1000 Lines** ✅ COMPLETE
    - ✅ Extracted 430 lines of stub methods to reader_stubs.rs
    - ✅ Extracted 379 lines of menu toggle methods to reader_menus.rs
    - ✅ Extracted 400 lines of settings setters to reader_setters.rs
    - ✅ Extracted 200 lines of rendering methods to reader_rendering_impl.rs
-   - Extract remaining ~300 lines to reach <1000 target
+   - ✅ Extracted 300+ lines of event handling to reader_events.rs
+   - **reader.rs now ~970 lines (AGENTS.md compliant)**
 
 3. **Verify All Modules Follow AGENTS.md Rules**
    - No file exceeds 1000 lines
@@ -264,7 +266,7 @@ After each change:
 - [x] `document/html/engine.rs` - Reduced from 2,679 to 175 lines
 - [x] `document/html/engine_text.rs` - Split into 6 submodules (all <1000 lines)
 - [x] `view/home/ui_toggles.rs` - Split into 11 submodules (all <1000 lines)
-- [ ] `view/reader/reader_impl/reader.rs` - Reduced from 2,682 to ~1,300 lines (need further reduction to <1000)
+- [x] `view/reader/reader_impl/reader.rs` - Reduced from 2,682 to ~970 lines (AGENTS.md compliant ✅)
 
 ### Code Quality
 - [ ] All functions under 50 lines
