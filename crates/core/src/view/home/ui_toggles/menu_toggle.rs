@@ -6,7 +6,6 @@
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
-use crate::metadata::SortMethod;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::{EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId};
 
@@ -208,9 +207,25 @@ impl Home {
     }
 
     /// Update menu configuration
-    pub fn update_menu_config(&mut self, _config: MenuToggleConfig) {
-        // TODO: Implement menu config update
-        // This would require recreating the menus if visible
+    pub fn update_menu_config(
+        &mut self,
+        config: MenuToggleConfig,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        // Close and recreate visible menus to apply new config
+        if self.sort_menu.is_some() {
+            self.hide_sort_menu(rq, context);
+            if config.auto_hide == self.should_auto_hide_menu() {
+                // Config requires menu refresh
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+            }
+        }
+
+        if self.book_menu.is_some() {
+            self.hide_book_menu(rq, context);
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle menu events
@@ -239,45 +254,51 @@ impl Home {
     }
 
     /// Handle menu selection
+    ///
+    /// Note: Sort and document operations are handled by the main event loop in input.rs.
+    /// This handler's role is to close menus and let events propagate for proper handling.
     fn handle_menu_selection(
         &mut self,
         entry_id: &EntryId,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
+        // Determine which menu is active and close it appropriately
+        let is_sort_menu = self.sort_menu.is_some();
+        let is_book_menu = self.book_menu.is_some();
+
+        // Handle actions that need immediate processing
         match entry_id {
-            EntryId::Sort(SortMethod::Title) => {
-                // TODO: Implement sort by title
+            EntryId::Sort(sort_method) => {
+                // Apply sort method - delegates to set_sort_method via main event loop
+                self.set_sort_method(*sort_method, hub, rq, context);
                 self.hide_sort_menu(rq, context);
             }
-            EntryId::Sort(SortMethod::Author) => {
-                // TODO: Implement sort by author
-                self.hide_sort_menu(rq, context);
-            }
-            EntryId::Sort(SortMethod::Date) => {
-                // TODO: Implement sort by date
-                self.hide_sort_menu(rq, context);
-            }
-            EntryId::Sort(SortMethod::Size) => {
-                // TODO: Implement sort by size
-                self.hide_sort_menu(rq, context);
-            }
-            EntryId::Load(_) => {
-                // TODO: Implement book open
+            EntryId::Load(ref path) if !path.as_os_str().is_empty() => {
+                // Book open action - event will be handled by main loop
                 self.hide_book_menu(rq, context);
+                // Send event for main handler to process
+                hub.send(Event::Select(entry_id.clone())).ok();
             }
-            EntryId::Rename(_) => {
-                // TODO: Implement book rename
+            EntryId::Rename(ref path) if !path.as_os_str().is_empty() => {
+                // Book rename - handled by main event loop
                 self.hide_book_menu(rq, context);
+                hub.send(Event::Select(entry_id.clone())).ok();
             }
-            EntryId::Remove(_) => {
-                // TODO: Implement book delete
+            EntryId::Remove(ref path) if !path.as_os_str().is_empty() => {
+                // Book delete - handled by main event loop
                 self.hide_book_menu(rq, context);
+                hub.send(Event::Select(entry_id.clone())).ok();
             }
             _ => {
-                // Handle any other entry IDs
-                self.hide_book_menu(rq, context);
+                // Close active menus
+                if is_sort_menu {
+                    self.hide_sort_menu(rq, context);
+                }
+                if is_book_menu {
+                    self.hide_book_menu(rq, context);
+                }
             }
         }
     }
