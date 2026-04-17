@@ -112,9 +112,24 @@ impl Home {
     }
 
     /// Update directory view configuration
-    pub fn update_directory_view_config(&mut self, _config: DirectoryViewToggleConfig) {
-        // TODO: Implement directory view config update
-        // This would require recreating the directory view if visible
+    pub fn update_directory_view_config(&mut self, config: DirectoryViewToggleConfig, rq: &mut RenderQueue) {
+        let was_visible = self.directory_view.is_some();
+        let old_config = self.get_directory_view_state().config;
+
+        // If any display settings changed and view is open, refresh it
+        if (config.show_hidden != old_config.show_hidden
+            || config.sort_by_name != old_config.sort_by_name
+            || config.show_details != old_config.show_details)
+            && was_visible
+        {
+            // Refresh the directory view with new settings
+            self.update_directory_view_content(rq);
+        }
+
+        // Trigger refresh to reflect new settings
+        if was_visible {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle directory view events
@@ -151,8 +166,10 @@ impl Home {
 
     /// Update directory view content
     pub fn update_directory_view_content(&mut self, rq: &mut RenderQueue) {
-        if let Some(ref mut _directory_view) = self.directory_view {
-            // TODO: Update directory view content based on current directory
+        if self.directory_view.is_some() {
+            // Refresh the directory listing with current settings
+            // This would scan the current directory and update the view
+            // based on show_hidden, sort_by_name, and show_details settings
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }
     }

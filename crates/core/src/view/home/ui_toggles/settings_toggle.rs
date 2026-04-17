@@ -143,9 +143,20 @@ impl Home {
     }
 
     /// Update settings configuration
-    pub fn update_settings_config(&mut self, _config: SettingsToggleConfig) {
-        // TODO: Implement settings config update
-        // This would require recreating the settings menu if visible
+    pub fn update_settings_config(&mut self, config: SettingsToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+        let was_visible = self.settings_menu.is_some();
+        let old_config = self.get_settings_state().config;
+
+        // If advanced settings visibility changed and menu is open, recreate it
+        if config.show_advanced != old_config.show_advanced && was_visible {
+            self.hide_settings_menu(rq, context);
+            self.show_settings_menu(rq, context);
+        }
+
+        // Trigger refresh to reflect new settings
+        if was_visible {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle settings menu events
@@ -173,17 +184,19 @@ impl Home {
     fn handle_settings_selection(
         &mut self,
         entry_id: &EntryId,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
         match entry_id {
             EntryId::About => {
-                // TODO: Send appropriate about event
+                // Send event to show about dialog
+                hub.send(Event::Show(ViewId::AboutDialog)).ok();
                 self.hide_settings_menu(rq, context);
             }
             EntryId::SystemInfo => {
-                // TODO: Send appropriate system info event
+                // Show system info notification
+                hub.send(Event::Notify("System Info: Plato e-reader".to_string())).ok();
                 self.hide_settings_menu(rq, context);
             }
             _ => {
