@@ -120,12 +120,43 @@ impl TextLayoutEngine {
         word.len() as f32 * self.config.font_size * 0.6
     }
 
-    /// Create a text line from words
+    /// Create a text line from words with TextElement instances
     fn create_line(&self, words: &[String], line_width: f32, y: f32) -> TextLine {
         let text = words.join(" ");
         let x = self.calculate_line_x(line_width);
         let height = self.config.line_height * self.config.font_size;
         let baseline = height * 0.8;
+
+        // Create TextElement instances for each word
+        let mut elements = Vec::with_capacity(words.len());
+        let mut current_offset = 0;
+
+        for word in words.iter() {
+            // Calculate width of this word
+            let _word_width = self.measure_word(word);
+
+            // Create TextElement for this word
+            let element = TextElement {
+                offset: current_offset,
+                language: None, // Language detection would require additional context
+                text: word.clone(),
+                plan: crate::font::RenderPlan::default(),
+                font_features: None,
+                font_kind: self.config.font_kind.clone(),
+                font_style: crate::document::html::layout::FontStyle::Normal,
+                font_weight: crate::document::html::layout::FontWeight::Normal,
+                font_size: self.config.font_size as u32,
+                letter_spacing: self.config.letter_spacing as i32,
+                vertical_align: 0,
+                color: crate::color::BLACK,
+                uri: None,
+            };
+
+            elements.push(element);
+
+            // Update offset for next element (word length + space)
+            current_offset += word.len() + 1; // +1 for space
+        }
 
         TextLine {
             text,
@@ -134,7 +165,7 @@ impl TextLayoutEngine {
             width: line_width,
             height,
             baseline,
-            elements: Vec::new(), // TODO: Create TextElement instances
+            elements,
         }
     }
 
