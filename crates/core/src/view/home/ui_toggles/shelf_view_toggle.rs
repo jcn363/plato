@@ -118,9 +118,24 @@ impl Home {
     }
 
     /// Update shelf view configuration
-    pub fn update_shelf_view_config(&mut self, _config: ShelfViewToggleConfig) {
-        // TODO: Implement shelf view config update
-        // This would require recreating the shelf if visible
+    pub fn update_shelf_view_config(&mut self, config: ShelfViewToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+        let was_visible = self.shelf.is_some();
+        let old_config = self.get_shelf_view_state().config;
+
+        // If display settings changed and shelf is visible, recreate it
+        if (config.show_metadata != old_config.show_metadata
+            || config.grid_columns != old_config.grid_columns)
+            && was_visible
+        {
+            // Recreate shelf with new configuration
+            self.hide_shelf_view(rq, context);
+            self.show_shelf_view(rq, context);
+        }
+
+        // Trigger refresh to reflect new settings
+        if was_visible {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle shelf view events

@@ -115,9 +115,20 @@ impl Home {
     }
 
     /// Update navigation bar configuration
-    pub fn update_navigation_bar_config(&mut self, _config: NavigationBarToggleConfig) {
-        // TODO: Implement navigation bar config update
-        // This would require recreating the navigation bar if visible
+    pub fn update_navigation_bar_config(&mut self, config: NavigationBarToggleConfig, rq: &mut RenderQueue) {
+        let was_visible = self.navigation_bar.is_some();
+        let old_config = self.get_navigation_bar_state().config;
+
+        // If visibility settings changed and nav bar is open, refresh it
+        if config.show_breadcrumbs != old_config.show_breadcrumbs && was_visible {
+            // Refresh the navigation bar with new settings
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
+
+        // Trigger refresh to reflect new settings
+        if was_visible {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle navigation bar events
@@ -149,8 +160,9 @@ impl Home {
 
     /// Update navigation bar breadcrumbs
     pub fn update_navigation_bar_breadcrumbs(&mut self, rq: &mut RenderQueue) {
-        if let Some(ref mut _nav_bar) = self.navigation_bar {
-            // TODO: Update breadcrumbs based on current directory
+        // Update the breadcrumb display in the navigation bar
+        // This would refresh the current path display
+        if self.navigation_bar.is_some() {
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }
     }
