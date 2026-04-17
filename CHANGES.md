@@ -163,6 +163,23 @@ Date: April 18, 2026
 - Pre-allocate elements Vec with `Vec::with_capacity(words.len())`
 - Removed TODO comment for TextElement creation
 
+### 8. Thumbnail Manager (`thumbnail/manager.rs`)
+
+**Changes:**
+
+- Implemented async thumbnail generation in `request_thumbnail()`:
+  - Create response channel (Sender/Receiver pair)
+  - Submit request to worker pool via channel
+  - Wait for result with 30-second timeout using `recv_timeout()`
+  - Handle success, error, and timeout cases appropriately
+  - Clean up pending requests on completion or error
+- Added `library_home` field to ThumbnailManager struct
+- Added `with_library()` constructor for library-aware thumbnail manager
+- Added `set_library_home()` method for runtime configuration
+- Updated `compute_thumbnail_path()` to use library home directory when available
+- Falls back to file's parent directory if no library home configured
+- Removed TODO comments for async generation and library integration
+
 ## Commits
 
 1. `afe53bd` - Implement library menu actions in library_toggle.rs
@@ -175,6 +192,7 @@ Date: April 18, 2026
 8. `f348de1` - Implement text renderer cache hit rate tracking
 9. `eecb58d` - Implement BookView and DirectoryView with proper View trait implementations
 10. `e7259ba` - Implement TextElement creation in text_layout.rs
+11. `1ef3c61` - Implement thumbnail manager async generation and library path integration
 
 ## Build Status
 
@@ -204,6 +222,7 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - `crates/core/src/view/home/ui_toggles/keyboard_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/search_bar_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/go_to_page_toggle.rs`
+- `crates/core/src/thumbnail/manager.rs`
 
 ## Lines Changed
 
@@ -216,6 +235,7 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - font_cache.rs: ~35 insertions, ~8 deletions
 - text_renderer.rs: ~40 insertions, ~15 deletions
 - text_layout.rs: ~33 insertions, ~2 deletions
+- thumbnail/manager.rs: ~60 insertions, ~5 deletions
 - book_view_toggle.rs: ~140 insertions, ~15 deletions
 - directory_view_toggle.rs: ~130 insertions, ~15 deletions
 - settings_toggle.rs: ~30 insertions, ~8 deletions
@@ -226,7 +246,7 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - search_bar_toggle.rs: ~15 insertions, ~3 deletions
 - go_to_page_toggle.rs: ~12 insertions, ~2 deletions
 - utils.rs: ~12 insertions, ~11 deletions
-- Total: ~1,019 lines changed
+- Total: ~1,079 lines changed
 
 ## Remaining Work
 
@@ -246,15 +266,7 @@ The following TODOs remain for future implementation:
    - Full TOC menu display requires UI component creation
    - Search result highlighting needs pixmap rendering integration
 
-4. **Thumbnail Generation** (thumbnail/manager.rs)
-   - Async thumbnail generation is stubbed
-   - Requires channel-based async infrastructure
-
-5. **Text Layout** (engine_text/text_layout.rs)
-   - TextElement creation in TextLine is stubbed
-   - Requires additional text layout data structures
-
-6. **Home Module Refactoring** (view/home/mod.rs)
+4. **Home Module Refactoring** (view/home/mod.rs)
    - Module is 2,690 lines - consider splitting per AGENTS.md rules
    - Proposed: home_core.rs, home_library.rs, home_ui.rs
 

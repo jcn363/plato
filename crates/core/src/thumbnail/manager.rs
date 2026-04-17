@@ -3,8 +3,9 @@ use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
 use crate::thumbnail::request::ThumbnailRequest;
 use dashmap::DashMap;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{self, Sender};
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 /// Configuration for thumbnail generation
 #[derive(Debug, Clone)]
@@ -95,6 +96,8 @@ pub struct ThumbnailManager {
     cache: Arc<Mutex<ThumbnailCache>>,
     pending_requests: Arc<DashMap<PathBuf, ()>>,
     request_sender: Sender<ThumbnailRequest>,
+    /// Library home directory for proper thumbnail path computation
+    library_home: Option<PathBuf>,
 }
 
 impl ThumbnailManager {
@@ -128,7 +131,20 @@ impl ThumbnailManager {
             cache,
             request_sender,
             pending_requests: Arc::new(DashMap::new()),
+            library_home: None,
         })
+    }
+
+    /// Creates a new thumbnail manager with library home directory
+    pub fn with_library(config: ThumbnailConfig, library_home: PathBuf) -> ThumbnailResult<Self> {
+        let mut manager = Self::new(config)?;
+        manager.library_home = Some(library_home);
+        Ok(manager)
+    }
+
+    /// Sets the library home directory for proper thumbnail path computation
+    pub fn set_library_home(&mut self, library_home: PathBuf) {
+        self.library_home = Some(library_home);
     }
 
     /// Requests a thumbnail for the given file path
@@ -164,8 +180,9 @@ impl ThumbnailManager {
         // Add to pending requests
         self.pending_requests.insert(file_path.clone(), ());
 
-        // Create and submit request
-        let (response_tx, _response_rx) = mpsc::channel::<ThumbnailResult<PathBuf>>();
+        // Create and submit request with response channel
+        let (response_tx, response_rx): (Sender<ThumbnailResult<PathBuf>>, Receiver<ThumbnailResult<PathBuf>>) =
+            mpsc::channel();
         let request = ThumbnailRequest::new(
             file_path.clone(),
             thumbnail_path.clone(),
@@ -179,24 +196,51 @@ impl ThumbnailManager {
             return Err(ThumbnailError::Channel);
         }
 
-        // TODO: wait for the result or use async
-        Ok(None)
+        // Wait for the result with a timeout to avoid blocking indefinitely
+        const THUMBNAIL_GENERATION_TIMEOUT: Duration = Duration::from_secs(30);
+        match response_rx.recv_timeout(THUMBNAIL_GENERATION_TIMEOUT) {
+            Ok(Ok(path)) => {
+                // Thumbnail generated successfully, remove from pending
+                self.pending_requests.remove(&file_path);
+                Ok(Some(path))
+            }
+            Ok(Err(e)) => {
+                // Thumbnail generation failed, remove from pending
+                self.pending_requests.remove(&file_path);
+                Err(e)
+            }
+            Err(_) => {
+                // Timeout or channel closed, keep in pending for async completion
+                Ok(None)
+            }
+        }
     }
 
     /// Computes the thumbnail path for a given file path
+    ///
+    /// Uses library home directory if configured, otherwise computes path
+    /// relative to the file's parent directory.
     fn compute_thumbnail_path(&self, file_path: &Path) -> ThumbnailResult<PathBuf> {
-        // TODO: Use library.thumbnail_preview_path() when integrated
-        // For now, create a simple path
+        const THUMBNAIL_PREVIEWS_DIRNAME: &str = ".thumbnail-previews";
+
         let file_name = file_path
             .file_stem()
             .ok_or_else(|| ThumbnailError::invalid_path("invalid file name"))?;
-
         let thumbnail_name = format!("{}.png", file_name.to_string_lossy());
-        Ok(file_path
-            .parent()
-            .unwrap_or_else(|| Path::new("."))
-            .join(".thumbnail-previews")
-            .join(thumbnail_name))
+
+        // Use library home directory if available (similar to library.thumbnail_preview_path())
+        if let Some(ref home) = self.library_home {
+            Ok(home
+                .join(THUMBNAIL_PREVIEWS_DIRNAME)
+                .join(thumbnail_name))
+        } else {
+            // Fallback: compute path relative to file's parent directory
+            Ok(file_path
+                .parent()
+                .unwrap_or_else(|| Path::new("."))
+                .join(THUMBNAIL_PREVIEWS_DIRNAME)
+                .join(thumbnail_name))
+        }
     }
 
     /// Gets cache statistics for monitoring
