@@ -69,6 +69,8 @@ pub fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
     let frontlight = Box::new(LightLevels::default()) as Box<dyn Frontlight>;
     let lightsensor = Box::new(0u16) as Box<dyn LightSensor>;
     let fonts = Fonts::load()?;
+    let plugin_settings = settings.plugin_settings.clone();
+    let background_sync = settings.background_sync.clone();
 
     Ok(Context::new(
         fb,
@@ -79,8 +81,8 @@ pub fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
         battery,
         frontlight,
         lightsensor,
-        PluginSystem::new(),
-        BackgroundSync::new(&settings.background_sync),
+        PluginSystem::new(&plugin_settings),
+        BackgroundSync::new(&background_sync),
     ))
 }
 
