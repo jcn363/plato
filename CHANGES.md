@@ -70,12 +70,29 @@ Date: April 17, 2026
 - Page navigation includes bounds checking
 - All methods follow AGENTS.md error handling patterns
 
+### 5. UI Toggle Implementations (Additional)
+
+**Book View Toggle (`book_view_toggle.rs`):**
+- Implemented `update_book_view_config()` - Recreate view on config changes
+- Implemented `open_book_in_view()` - Open book with library lookup
+- Implemented `generate_book_preview()` - File validation and format check
+
+**Directory View Toggle (`directory_view_toggle.rs`):**
+- Implemented `update_directory_view_config()` - Refresh on settings change
+- Implemented `update_directory_view_content()` - Content refresh with settings
+
+**Settings Toggle (`settings_toggle.rs`):**
+- Implemented `update_settings_config()` - Recreate menu on advanced settings toggle
+- Implemented About handler - Show AboutDialog via event
+- Implemented SystemInfo handler - Show notification with system info
+
 ## Commits
 
 1. `afe53bd` - Implement library menu actions in library_toggle.rs
 2. `19286a4` - Implement menu toggle actions in menu_toggle.rs
 3. `ab32689` - Implement HTML engine TODOs in engine.rs
 4. `0ae4f54` - Implement reader stub methods with actual functionality
+5. `3516fe2` - Implement remaining UI toggle TODOs
 
 ## Build Status
 
@@ -90,6 +107,9 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - `crates/core/src/view/home/ui_toggles/menu_toggle.rs`
 - `crates/core/src/document/html/engine.rs`
 - `crates/core/src/view/reader/reader_impl/reader_stubs.rs`
+- `crates/core/src/view/home/ui_toggles/book_view_toggle.rs`
+- `crates/core/src/view/home/ui_toggles/directory_view_toggle.rs`
+- `crates/core/src/view/home/ui_toggles/settings_toggle.rs`
 
 ## Lines Changed
 
@@ -97,7 +117,10 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - menu_toggle.rs: ~48 insertions, ~27 deletions
 - engine.rs: ~118 insertions, ~15 deletions
 - reader_stubs.rs: ~177 insertions, ~39 deletions
-- Total: ~388 lines changed
+- book_view_toggle.rs: ~40 insertions, ~10 deletions
+- directory_view_toggle.rs: ~20 insertions, ~5 deletions
+- settings_toggle.rs: ~30 insertions, ~8 deletions
+- Total: ~478 lines changed
 
 ## Remaining Work
 
