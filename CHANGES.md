@@ -1,6 +1,6 @@
 # UI Features Implementation Summary
 
-Date: April 17, 2026
+Date: April 18, 2026
 
 ## Implemented Features
 
@@ -82,14 +82,22 @@ Date: April 17, 2026
 
 **Book View Toggle (`book_view_toggle.rs`):**
 
+- Implemented `BookView` struct with full View trait implementation
 - Implemented `update_book_view_config()` - Recreate view on config changes
 - Implemented `open_book_in_view()` - Open book with library lookup
 - Implemented `generate_book_preview()` - File validation and format check
+- Uses `impl_view_boilerplate!` macro for standard View trait methods
+- Proper event handling with close on tap outside
+- Rendering with `draw_rounded_rectangle_with_border`
 
 **Directory View Toggle (`directory_view_toggle.rs`):**
 
+- Implemented `DirectoryView` struct with full View trait implementation
 - Implemented `update_directory_view_config()` - Refresh on settings change
 - Implemented `update_directory_view_content()` - Content refresh with settings
+- Uses `impl_view_boilerplate!` macro for standard View trait methods
+- Proper event handling with close on tap outside
+- Rendering with `draw_rounded_rectangle_with_border`
 
 **Settings Toggle (`settings_toggle.rs`):**
 
@@ -111,13 +119,46 @@ Date: April 17, 2026
 - Implemented `toggle_rename_document()` - Send Show event for rename dialog
 - Implemented `toggle_select_directory()` - Send Select event for directory toggle
 
+### 6. Performance Tracking Implementations
+
+**Reader Rendering Extension (`reader_rendering_ext.rs`):**
+
+- Added `cache_hits`, `cache_misses`, `eviction_count` to `ReaderRenderCache`
+- Added `render_times: Vec<f32>` and `max_render_times` to `ReaderRenderEngine`
+- Implemented `add_render_time()` for tracking render performance
+- Implemented `calculate_cache_hit_rate()` with actual hit/miss calculation
+- Updated `get_performance_metrics()` to return tracked data
+- Fixed borrow checker issue by cloning pixmap before render
+
+**Font Cache (`font_cache.rs`):**
+
+- Added `cache_hits`, `cache_misses`, `eviction_count` tracking fields
+- Updated `get()` to increment hit/miss counters
+- Updated `cleanup()` to count evicted entries
+- Updated `clear()` to track evictions before clearing
+- Updated `stats()` to calculate hit_rate from tracked data
+- Fixed `clear()` to increment eviction_count before clearing cache
+
+**Text Renderer (`text_renderer.rs`):**
+
+- Added `cache_hits`, `cache_misses` fields to `TextRenderer`
+- Updated `get_or_create_glyph_data()` to track hits/misses
+- Updated `cache_stats()` to return `(size, memory, hit_rate)` tuple
+- Updated `clear_cache()` to reset counters
+- Updated `calculate_rendering_quality()` to use tracked hit_rate
+- Removed TODO comment for cache hit rate tracking
+
 ## Commits
 
 1. `afe53bd` - Implement library menu actions in library_toggle.rs
 2. `19286a4` - Implement menu toggle actions in menu_toggle.rs
 3. `ab32689` - Implement HTML engine TODOs in engine.rs
 4. `0ae4f54` - Implement reader stub methods with actual functionality
-5. `3516fe2` - Implement remaining UI toggle TODOs
+5. `1b7faab` - Implement additional UI toggle config updates and reader dialog manager
+6. `894f3ee` - Implement reader rendering extension performance tracking
+7. `bda74c2` - Implement font cache performance tracking
+8. `f348de1` - Implement text renderer cache hit rate tracking
+9. `eecb58d` - Implement BookView and DirectoryView with proper View trait implementations
 
 ## Build Status
 
@@ -132,12 +173,20 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - `crates/core/src/view/home/ui_toggles/menu_toggle.rs`
 - `crates/core/src/document/html/engine.rs`
 - `crates/core/src/view/reader/reader_impl/reader_stubs.rs`
+- `crates/core/src/view/reader/reader_impl/reader_dialog_manager.rs`
+- `crates/core/src/view/reader/reader_impl/reader_rendering_ext.rs`
+- `crates/core/src/document/html/engine_text/font_cache.rs`
+- `crates/core/src/document/html/engine_text/text_renderer.rs`
 - `crates/core/src/view/home/ui_toggles/book_view_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/directory_view_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/settings_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/navigation_bar_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/shelf_view_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/utils.rs`
+- `crates/core/src/view/home/ui_toggles/address_bar_toggle.rs`
+- `crates/core/src/view/home/ui_toggles/keyboard_toggle.rs`
+- `crates/core/src/view/home/ui_toggles/search_bar_toggle.rs`
+- `crates/core/src/view/home/ui_toggles/go_to_page_toggle.rs`
 
 ## Lines Changed
 
@@ -145,13 +194,21 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - menu_toggle.rs: ~48 insertions, ~27 deletions
 - engine.rs: ~118 insertions, ~15 deletions
 - reader_stubs.rs: ~177 insertions, ~39 deletions
-- book_view_toggle.rs: ~40 insertions, ~10 deletions
-- directory_view_toggle.rs: ~20 insertions, ~5 deletions
+- reader_dialog_manager.rs: ~25 insertions, ~20 deletions
+- reader_rendering_ext.rs: ~50 insertions, ~10 deletions
+- font_cache.rs: ~35 insertions, ~8 deletions
+- text_renderer.rs: ~40 insertions, ~15 deletions
+- book_view_toggle.rs: ~140 insertions, ~15 deletions
+- directory_view_toggle.rs: ~130 insertions, ~15 deletions
 - settings_toggle.rs: ~30 insertions, ~8 deletions
 - navigation_bar_toggle.rs: ~20 insertions, ~5 deletions
 - shelf_view_toggle.rs: ~15 insertions, ~3 deletions
-- utils.rs: ~11 insertions, ~11 deletions
-- Total: ~512 lines changed
+- address_bar_toggle.rs: ~18 insertions, ~3 deletions
+- keyboard_toggle.rs: ~16 insertions, ~3 deletions
+- search_bar_toggle.rs: ~15 insertions, ~3 deletions
+- go_to_page_toggle.rs: ~12 insertions, ~2 deletions
+- utils.rs: ~12 insertions, ~11 deletions
+- Total: ~986 lines changed
 
 ## Remaining Work
 
@@ -170,6 +227,18 @@ The following TODOs remain for future implementation:
    - Annotation navigation requires annotation metadata integration
    - Full TOC menu display requires UI component creation
    - Search result highlighting needs pixmap rendering integration
+
+4. **Thumbnail Generation** (thumbnail/manager.rs)
+   - Async thumbnail generation is stubbed
+   - Requires channel-based async infrastructure
+
+5. **Text Layout** (engine_text/text_layout.rs)
+   - TextElement creation in TextLine is stubbed
+   - Requires additional text layout data structures
+
+6. **Home Module Refactoring** (view/home/mod.rs)
+   - Module is 2,690 lines - consider splitting per AGENTS.md rules
+   - Proposed: home_core.rs, home_library.rs, home_ui.rs
 
 ## Compliance Verification
 
