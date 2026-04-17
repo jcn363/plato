@@ -86,6 +86,17 @@ Date: April 17, 2026
 - Implemented About handler - Show AboutDialog via event
 - Implemented SystemInfo handler - Show notification with system info
 
+**Navigation Bar Toggle (`navigation_bar_toggle.rs`):**
+- Implemented `update_navigation_bar_config()` - Refresh on breadcrumbs setting change
+- Implemented `update_navigation_bar_breadcrumbs()` - Trigger UI refresh for breadcrumb display
+
+**Shelf View Toggle (`shelf_view_toggle.rs`):**
+- Implemented `update_shelf_view_config()` - Recreate shelf when display settings change
+
+**UI Toggle Utils (`utils.rs`):**
+- Implemented `toggle_rename_document()` - Send Show event for rename dialog
+- Implemented `toggle_select_directory()` - Send Select event for directory toggle
+
 ## Commits
 
 1. `afe53bd` - Implement library menu actions in library_toggle.rs
@@ -110,6 +121,9 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - `crates/core/src/view/home/ui_toggles/book_view_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/directory_view_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/settings_toggle.rs`
+- `crates/core/src/view/home/ui_toggles/navigation_bar_toggle.rs`
+- `crates/core/src/view/home/ui_toggles/shelf_view_toggle.rs`
+- `crates/core/src/view/home/ui_toggles/utils.rs`
 
 ## Lines Changed
 
@@ -120,7 +134,10 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - book_view_toggle.rs: ~40 insertions, ~10 deletions
 - directory_view_toggle.rs: ~20 insertions, ~5 deletions
 - settings_toggle.rs: ~30 insertions, ~8 deletions
-- Total: ~478 lines changed
+- navigation_bar_toggle.rs: ~20 insertions, ~5 deletions
+- shelf_view_toggle.rs: ~15 insertions, ~3 deletions
+- utils.rs: ~11 insertions, ~11 deletions
+- Total: ~512 lines changed
 
 ## Remaining Work
 
