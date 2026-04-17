@@ -51,11 +51,31 @@ Date: April 17, 2026
 - `execute_draw_command()` matches correct DrawCommand variants (Text, ExtraText, Image, Marker, ExtraRect)
 - All methods include proper rustdoc documentation
 
+### 4. Reader Stub Methods (`crates/core/src/view/reader/reader_impl/reader_stubs.rs`)
+
+**Changes:**
+- Implemented `go_to_chapter()` - Navigate using TOC manager with chapter lookup
+- Implemented `go_to_bookmark()` - Navigate to next/previous bookmark
+- Implemented `go_to_last_page()` - Jump to final page of document
+- Implemented `handle_save()` - Save reading position and metadata
+- Implemented `search()` - Initialize search state with all fields
+- Implemented `handle_search_submit()` - Submit search query and close search bar
+- Implemented `handle_go_to_page_submit()` - Navigate to specific page with validation
+- Implemented `handle_show_table_of_contents()` - Show TOC menu when available
+
+**Technical Details:**
+- Uses `ReaderTocManager` for chapter navigation
+- Bookmarks use sorted lookup from metadata
+- Search properly initializes all Search struct fields (AtomicBool, FxHashMap)
+- Page navigation includes bounds checking
+- All methods follow AGENTS.md error handling patterns
+
 ## Commits
 
 1. `afe53bd` - Implement library menu actions in library_toggle.rs
 2. `19286a4` - Implement menu toggle actions in menu_toggle.rs
 3. `ab32689` - Implement HTML engine TODOs in engine.rs
+4. `0ae4f54` - Implement reader stub methods with actual functionality
 
 ## Build Status
 
@@ -69,31 +89,33 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - `crates/core/src/view/home/ui_toggles/library_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/menu_toggle.rs`
 - `crates/core/src/document/html/engine.rs`
+- `crates/core/src/view/reader/reader_impl/reader_stubs.rs`
 
 ## Lines Changed
 
 - library_toggle.rs: ~45 insertions, ~20 deletions
 - menu_toggle.rs: ~48 insertions, ~27 deletions
 - engine.rs: ~118 insertions, ~15 deletions
-- Total: ~211 lines changed
+- reader_stubs.rs: ~177 insertions, ~39 deletions
+- Total: ~388 lines changed
 
 ## Remaining Work
 
-The following TODOs were identified but not addressed in this pass:
+The following TODOs remain for future implementation:
 
-1. **Reader Stub Methods** (`reader_impl/reader_stubs.rs`)
-   - Many stub methods intentionally minimal (queue updates only)
-   - Full implementations would require significant reader refactoring
-   - These stubs are adequate for current functionality
-
-2. **Filter Features** (library_toggle.rs)
+1. **Filter Features** (library_toggle.rs)
    - Filter by format: "Coming soon" notification shown
    - Filter by category: "Coming soon" notification shown
    - Full implementation requires additional UI components
 
-3. **HTML Engine Display List** (engine.rs)
+2. **HTML Engine Display List** (engine.rs)
    - `build_display_list_recursive()` is a placeholder
    - Full implementation requires complex layout engine work
+
+3. **Reader Advanced Features** (reader_stubs.rs)
+   - Annotation navigation requires annotation metadata integration
+   - Full TOC menu display requires UI component creation
+   - Search result highlighting needs pixmap rendering integration
 
 ## Compliance Verification
 
