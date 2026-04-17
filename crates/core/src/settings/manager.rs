@@ -171,7 +171,7 @@ mod tests {
         // When file doesn't exist, should return defaults
         let settings = manager.load().unwrap();
         // Basic sanity check that defaults are reasonable
-        assert!(settings.font_size > 0.0);
+        assert!(settings.reader.font_size > 0.0);
     }
 
     #[test]
@@ -183,17 +183,17 @@ mod tests {
         manager.save(&settings).unwrap();
 
         let loaded = manager.load().unwrap();
-        assert_eq!(loaded.font_size, settings.font_size);
+        assert_eq!(loaded.reader.font_size, settings.reader.font_size);
     }
 
     #[test]
     fn test_config_manager_invalid_settings() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        // Write invalid TOML directly
-        writeln!(temp_file, "font_size = \"invalid\"").unwrap();
+        // Write invalid TOML directly - use a field that exists but with wrong type
+        writeln!(temp_file, "frontlight = \"not_a_bool\"").unwrap();
 
         let manager = ConfigManager::with_path(temp_file.path());
-        // Should fail to parse invalid TOML
+        // Should fail to parse invalid TOML (wrong type for boolean field)
         assert!(manager.load().is_err());
     }
 }

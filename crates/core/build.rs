@@ -29,8 +29,11 @@ fn main() {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
         match target_os.as_ref() {
             "linux" => {
+                // For x86_64 Linux, link against system libraries from /lib/x86_64-linux-gnu
+                // The libs_host directory contains ARM libraries for cross-compilation
+                let system_lib_path = "/lib/x86_64-linux-gnu";
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/Linux");
-                println!("cargo:rustc-link-search={}", lib_dir);
+                println!("cargo:rustc-link-search={}", system_lib_path);
                 println!("cargo:rustc-link-lib=dylib=stdc++");
                 println!("cargo:rustc-link-lib=mupdf");
                 println!("cargo:rustc-link-lib=mujs");

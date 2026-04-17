@@ -353,12 +353,13 @@ impl Document for MockDocument {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::color::BLACK;
 
     #[test]
     fn test_mock_framebuffer() {
         let mut fb = MockFramebuffer::new(100, 100);
-        fb.set_pixel(50, 50, Color::BLACK);
-        assert_eq!(fb.pixel(50, 50), Some(Color::BLACK));
+        fb.set_pixel(50, 50, BLACK);
+        assert_eq!(fb.pixel(50, 50), Some(BLACK));
     }
 
     #[test]

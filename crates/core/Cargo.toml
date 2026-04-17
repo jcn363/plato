@@ -47,3 +47,6 @@ epub_edit = { path = "../epub_edit" }
 crossbeam-channel = "0.5.15"
 lru = "0.17.0"
 dashmap = "6.1.0"
+
+[dev-dependencies]
+tempfile = "3.15"

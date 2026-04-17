@@ -536,6 +536,78 @@ The Kobo Elipsa can benefit from parallel programming for workloads that are CPU
 
 Parallel programming can improve throughput for rendering, decoding, layout, and background processing on the Kobo Elipsa, but benefits are bounded by eink refresh latency, limited RAM, power constraints, and threading overhead. Focus on coarse-grained parallel tasks, buffer reuse, and SIMD acceleration, and always validate on the actual device.
 
+## Known Build Issues and Solutions
+
+This section documents common build problems and their fixes.
+
+### Host (x86_64) Build Fails with "incompatible with elf64-x86-64"
+
+**Problem:** When building for host (`x86_64-unknown-linux-gnu`), linking fails with errors like:
+```
+rust-lld: error: libs_host/libopenjp2.so is incompatible with elf64-x86-64
+rust-lld: error: libs_host/libjbig2dec.so is incompatible with elf64-x86-64
+```
+
+**Root Cause:** The `libs_host/` directory in this repository incorrectly contains ARM libraries instead of x86_64 libraries. This is a historical artifact from the project's setup.
+
+**Solution:** The build script has been updated in `crates/core/build.rs` to use system library paths (`/lib/x86_64-linux-gnu`) when building for x86_64 Linux. You should not need to modify `libs_host/`.
+
+### mupdf_wrapper Not Found
+
+**Problem:** Build fails with:
+```
+error: could not find native static library `mupdf_wrapper`, perhaps an -L flag is missing?
+```
+
+**Solution:** Build the mupdf_wrapper library before building the project:
+```bash
+cd mupdf_wrapper
+TARGET_OS=Linux ./build.sh  # for host
+TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh  # for ARM
+```
+
+### Tests Fail to Compile - Missing tempfile
+
+**Problem:** Test compilation fails with:
+```
+error: unresolved import `tempfile::NamedTempFile`
+```
+
+**Solution:** Ensure `tempfile` is in `[dev-dependencies]` in `Cargo.toml`:
+```toml
+[dev-dependencies]
+tempfile = "3.15"
+```
+
+### Tests Fail - Color::BLACK Not Found
+
+**Problem:** Test fails with:
+```
+error: no variant or associated item named `BLACK` found for enum `color::Color`
+```
+
+**Root Cause:** `BLACK` and `WHITE` are defined as constants (`pub const BLACK: Color = GRAY00;`), not enum variants. Code using `Color::BLACK` (with the `Color::` prefix) will fail.
+
+**Solution:** Import and use the constant directly:
+```rust
+use crate::color::BLACK;  // not Color::BLACK
+fb.set_pixel(50, 50, BLACK);
+```
+
+### Settings Tests Fail - Wrong Field Path
+
+**Problem:** Test fails with:
+```
+error: no field `font_size` on type `settings::Settings`
+```
+
+**Root Cause:** Settings fields are nested (e.g., `settings.reader.font_size`), not at the top level.
+
+**Solution:** Use the correct nested path in tests:
+```rust
+assert_eq!(loaded.reader.font_size, settings.reader.font_size);
+```
+
 ---
 
 ## Communication
