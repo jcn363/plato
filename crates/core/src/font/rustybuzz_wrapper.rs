@@ -46,6 +46,8 @@ impl Default for Buffer {
 }
 
 /// OpenType feature specification wrapper.
+/// Reserved for future use with rustybuzz feature shaping.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub struct FeatureWrapper {
     pub tag: u32,
@@ -53,6 +55,8 @@ pub struct FeatureWrapper {
 }
 
 /// Create a feature from a string specification.
+/// Reserved for future use with rustybuzz feature shaping.
+#[allow(dead_code)]
 pub fn feature_from_string(s: &str) -> Option<FeatureWrapper> {
     let (tag_str, value_str) = if let Some(eq_pos) = s.find('=') {
         (&s[..eq_pos], &s[eq_pos + 1..])
