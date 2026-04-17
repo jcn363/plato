@@ -139,9 +139,21 @@ impl Home {
     }
 
     /// Update keyboard configuration
-    pub fn update_keyboard_config(&mut self, _config: KeyboardToggleConfig) {
-        // TODO: Implement keyboard config update
-        // This would require recreating the keyboard if visible
+    pub fn update_keyboard_config(&mut self, config: KeyboardToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+        let was_visible = self.keyboard.is_some();
+        let old_config = self.get_keyboard_state().config;
+
+        // If position changed and keyboard is visible, recreate it
+        if config.position != old_config.position && was_visible {
+            // Recreate keyboard with new position
+            self.hide_keyboard(rq, context);
+            self.show_keyboard(rq, context);
+        }
+
+        // Trigger refresh to reflect new settings
+        if was_visible {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle keyboard events

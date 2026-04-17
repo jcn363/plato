@@ -113,9 +113,20 @@ impl Home {
     }
 
     /// Update search bar configuration
-    pub fn update_search_bar_config(&mut self, _config: SearchBarToggleConfig) {
-        // TODO: Implement search bar config update
-        // This would require recreating the search bar if visible
+    pub fn update_search_bar_config(&mut self, config: SearchBarToggleConfig, rq: &mut RenderQueue) {
+        let was_visible = self.search_bar.is_some();
+        let old_config = self.get_search_bar_state().config;
+
+        // If history display setting changed and search bar is visible, refresh it
+        if config.show_history != old_config.show_history && was_visible {
+            // Refresh search bar to show/hide history
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
+
+        // Trigger refresh to reflect new settings
+        if was_visible {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle search bar events

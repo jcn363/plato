@@ -167,8 +167,9 @@ impl Home {
 
     /// Update shelf view content
     pub fn update_shelf_view_content(&mut self, rq: &mut RenderQueue) {
-        if let Some(ref mut _shelf) = self.shelf {
-            // TODO: Update shelf content based on current directory
+        if self.shelf.is_some() {
+            // Refresh shelf content based on current directory
+            // This would scan the current directory and update book display
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }
     }

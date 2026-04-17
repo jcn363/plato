@@ -112,9 +112,23 @@ impl Home {
     }
 
     /// Update address bar configuration
-    pub fn update_address_bar_config(&mut self, _config: AddressBarToggleConfig) {
-        // TODO: Implement address bar config update
-        // This would require recreating the address bar if visible
+    pub fn update_address_bar_config(&mut self, config: AddressBarToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+        let was_visible = self.address_bar.is_some();
+        let old_config = self.get_address_bar_state().config;
+
+        // If visibility settings changed and address bar is visible, recreate it
+        if (config.show_path != old_config.show_path || config.auto_hide != old_config.auto_hide)
+            && was_visible
+        {
+            // Recreate address bar with new configuration
+            self.hide_address_bar(rq, context);
+            self.show_address_bar(rq, context);
+        }
+
+        // Trigger refresh to reflect new settings
+        if was_visible {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle address bar events

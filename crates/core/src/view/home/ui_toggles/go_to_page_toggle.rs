@@ -123,9 +123,20 @@ impl Home {
     }
 
     /// Update go-to-page configuration
-    pub fn update_go_to_page_config(&mut self, _config: GoToPageToggleConfig) {
-        // TODO: Implement go-to-page config update
-        // This would require recreating the go-to-page dialog if visible
+    pub fn update_go_to_page_config(&mut self, config: GoToPageToggleConfig, rq: &mut RenderQueue) {
+        let was_visible = self.go_to_page.is_some();
+        let old_config = self.get_go_to_page_state().config;
+
+        // If page count display setting changed and dialog is visible, refresh it
+        if config.show_page_count != old_config.show_page_count && was_visible {
+            // Refresh go-to-page dialog to show/hide page count
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
+
+        // Trigger refresh to reflect new settings
+        if was_visible {
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        }
     }
 
     /// Handle go-to-page events

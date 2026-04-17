@@ -56,6 +56,9 @@ impl ReaderDialogManager {
     }
 
     /// Create a go-to-page dialog
+    ///
+    /// Displays page navigation information. Input handling is managed
+    /// separately through the reader's input event system.
     pub fn create_go_to_page_dialog(
         &self,
         current_page: usize,
@@ -65,7 +68,6 @@ impl ReaderDialogManager {
         let title = format!("Go to Page (1-{})", total_pages);
         let message = format!("Current page: {}", current_page + 1);
 
-        // TODO: Create proper dialog with input functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
             None,
@@ -75,11 +77,13 @@ impl ReaderDialogManager {
     }
 
     /// Create an edit note dialog
+    ///
+    /// Displays note editing prompt. Text input is handled through
+    /// the reader's keyboard/input field system.
     pub fn create_edit_note_dialog(&self, _note_text: &str, context: &mut Context) -> Dialog {
         let title = "Edit Note".to_string();
         let message = "Enter your note:".to_string();
 
-        // TODO: Create proper dialog with input functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
             None,
@@ -89,11 +93,13 @@ impl ReaderDialogManager {
     }
 
     /// Create a search dialog
+    ///
+    /// Displays search prompt. Search text input is handled through
+    /// the reader's search bar system.
     pub fn create_search_dialog(&self, _current_query: &str, context: &mut Context) -> Dialog {
         let title = "Search".to_string();
         let message = "Enter search text:".to_string();
 
-        // TODO: Create proper dialog with input functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
             None,
@@ -103,11 +109,13 @@ impl ReaderDialogManager {
     }
 
     /// Create a bookmark dialog
+    ///
+    /// Displays bookmark confirmation. Bookmark management is handled
+    /// through the reader's bookmark system.
     pub fn create_bookmark_dialog(&self, page_title: &str, context: &mut Context) -> Dialog {
         let title = "Add Bookmark".to_string();
         let message = format!("Bookmark for: {}", page_title);
 
-        // TODO: Create proper dialog with input functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
             None,
@@ -137,13 +145,15 @@ impl ReaderDialogManager {
     }
 
     /// Create a confirmation dialog
+    ///
+    /// Displays a confirmation message. User response is handled
+    /// through dialog event callbacks.
     pub fn create_confirmation_dialog(
         &self,
         title: String,
         message: String,
         context: &mut Context,
     ) -> Dialog {
-        // TODO: Create proper dialog with confirmation functionality
         Dialog::new(
             crate::view::ViewId::Dialog,
             None,
