@@ -1,6 +1,6 @@
 use crate::color::Color;
 use crate::font::skrifa_wrapper::{self, Face as SkrifaFace};
-use crate::font::types::RenderPlan;
+use crate::font::types::{GlyphPlan, RenderPlan};
 use crate::framebuffer::Framebuffer;
 use crate::geom::Point;
 use crate::log_error;
@@ -166,12 +166,47 @@ impl Font {
 
     pub fn plan<S: AsRef<str>>(
         &mut self,
-        _text: S,
+        text: S,
         max_width: Option<i32>,
         _features: Option<&[String]>,
     ) -> RenderPlan {
-        // Stub implementation - real shaping would use rustybuzz::shape
+        let text = text.as_ref();
         let mut render_plan = RenderPlan::default();
+
+        // Calculate width based on character advances
+        let mut width = 0i32;
+        for c in text.chars() {
+            let glyph_id = self.face.get_char_index(c as u32);
+            if glyph_id > 0 {
+                if let Ok(metrics) = self.face.get_glyph_metrics(glyph_id as u16) {
+                    width += metrics.advance_width;
+                }
+            }
+        }
+        render_plan.width = width;
+
+        // Calculate glyph positions
+        let mut x = 0i32;
+        for c in text.chars() {
+            let glyph_id = self.face.get_char_index(c as u32);
+            let advance = if glyph_id > 0 {
+                if let Ok(metrics) = self.face.get_glyph_metrics(glyph_id as u16) {
+                    metrics.advance_width
+                } else {
+                    0
+                }
+            } else {
+                0
+            };
+
+            render_plan.glyphs.push(GlyphPlan {
+                codepoint: c as u32,
+                cluster: render_plan.glyphs.len(),
+                offset: Point::new(x, 0),
+                advance: Point::new(advance, 0),
+            });
+            x += advance;
+        }
 
         if let Some(mw) = max_width {
             self.crop_right(&mut render_plan, mw);
