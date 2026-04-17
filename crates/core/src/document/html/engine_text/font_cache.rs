@@ -44,6 +44,9 @@ pub struct FontCache {
     config: FontCacheConfig,
     current_memory: usize,
     access_order: Vec<u32>,
+    cache_hits: u64,
+    cache_misses: u64,
+    eviction_count: u64,
 }
 
 impl FontCache {
@@ -54,18 +57,25 @@ impl FontCache {
             config,
             current_memory: 0,
             access_order: Vec::new(),
+            cache_hits: 0,
+            cache_misses: 0,
+            eviction_count: 0,
         }
     }
 
     /// Get a cached glyph
+    ///
+    /// Updates hit/miss counters for performance tracking.
     pub fn get(&mut self, glyph_id: u32) -> Option<&FontCacheEntry> {
         if self.cache.contains_key(&glyph_id) {
+            self.cache_hits += 1;
             self.update_access_order(glyph_id);
             self.cache.get_mut(&glyph_id).map(|entry| {
                 entry.last_accessed = std::time::Instant::now();
                 &*entry
             })
         } else {
+            self.cache_misses += 1;
             None
         }
     }
@@ -102,6 +112,7 @@ impl FontCache {
 
     /// Clear the cache
     pub fn clear(&mut self) {
+        self.eviction_count += self.cache.len() as u64;
         self.cache.clear();
         self.current_memory = 0;
         self.access_order.clear();
@@ -109,11 +120,18 @@ impl FontCache {
 
     /// Get cache statistics
     pub fn stats(&self) -> CacheStats {
+        let total_lookups = self.cache_hits + self.cache_misses;
+        let hit_rate = if total_lookups > 0 {
+            self.cache_hits as f32 / total_lookups as f32
+        } else {
+            0.0
+        };
+
         CacheStats {
             entries: self.cache.len(),
             memory_mb: self.current_memory / (1024 * 1024),
-            hit_rate: 0.0,     // TODO: Track hit rate
-            eviction_count: 0, // TODO: Track evictions
+            hit_rate,
+            eviction_count: self.eviction_count as usize,
         }
     }
 
@@ -148,12 +166,14 @@ impl FontCache {
         }
 
         // Actually remove the entries
+        let removed_count = to_remove.len() as u64;
         for glyph_id in to_remove {
             if let Some(entry) = self.cache.remove(&glyph_id) {
                 self.current_memory -= self.calculate_memory_size(&entry);
                 self.remove_from_access_order(glyph_id);
             }
         }
+        self.eviction_count += removed_count;
     }
 
     /// Calculate memory size of an entry
