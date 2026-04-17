@@ -1,7 +1,6 @@
 use super::{Line, LineOrigin};
 use crate::color::text_normal;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CycleDir, Dir, Rectangle};

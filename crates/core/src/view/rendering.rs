@@ -1,5 +1,5 @@
 use std::ops::{Deref, DerefMut};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use rustc_hash::FxHashMap;
 
@@ -49,7 +49,7 @@ pub struct UpdateData {
     pub rect: Rectangle,
 }
 
-pub const MAX_UPDATE_DELAY: Duration = Duration::from_millis(600);
+// MAX_UPDATE_DELAY re-exported from consts::ui
 
 impl UpdateData {
     pub fn has_completed(&self) -> bool {
@@ -100,19 +100,10 @@ impl DerefMut for RenderQueue {
     }
 }
 
-// Border thicknesses in pixels, at 300 DPI.
-pub const THICKNESS_SMALL: f32 = 1.5;
-pub const THICKNESS_MEDIUM: f32 = 2.0;
-pub const THICKNESS_LARGE: f32 = 3.0;
-
-// Border radii in pixels, at 300 DPI.
-pub const BORDER_RADIUS_SMALL: f32 = 6.0;
-pub const BORDER_RADIUS_MEDIUM: f32 = 9.0;
-pub const BORDER_RADIUS_LARGE: f32 = 12.0;
-
-// Big and small bar heights in pixels, at 300 DPI.
-// On the *Aura ONE*, the height is exactly `2 * sb + 10 * bb`.
-pub const SMALL_BAR_HEIGHT: f32 = 121.0;
-pub const BIG_BAR_HEIGHT: f32 = 163.0;
-
-pub const CLOSE_IGNITION_DELAY: Duration = Duration::from_millis(150);
+// Re-export UI rendering constants from canonical source in consts::ui
+// per Single Source of Truth rule. These are defined at 300 DPI base.
+pub use crate::consts::ui::{
+    BIG_BAR_HEIGHT, BORDER_RADIUS_LARGE, BORDER_RADIUS_MEDIUM, BORDER_RADIUS_SMALL,
+    CLOSE_IGNITION_DELAY, MAX_UPDATE_DELAY, SMALL_BAR_HEIGHT, THICKNESS_LARGE, THICKNESS_MEDIUM,
+    THICKNESS_SMALL,
+};

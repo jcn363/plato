@@ -1,13 +1,68 @@
+//! Settings and Configuration Module
+//!
+//! This module provides centralized configuration management for Plato,
+//! including settings loading, validation, and saving.
+//!
+//! ## Architecture
+//!
+//! The settings module is organized by functional domain:
+//!
+//! - **defaults.rs**: Default values and constants
+//! - **manager.rs**: Centralized configuration loading/saving with validation
+//! - **reading.rs**: Reader view settings (font, margins, layout)
+//! - **library.rs**: Library configuration (paths, modes, hooks)
+//! - **interface.rs**: UI settings (home view, navigation, intermissions)
+//! - **display.rs**: Display settings (battery, night light)
+//! - **features.rs**: Feature toggles (external storage, plugins, sync)
+//! - **preset.rs**: Frontlight presets
+//! - **theme.rs**: Theme and color settings
+//! - **thumbnail.rs**: Thumbnail generation settings
+//! - **tools.rs**: PDF tool settings
+//!
+//! ## Module Hierarchy
+//!
+//! ```text
+//! settings/
+//! ├── mod.rs          (main Settings struct and validation)
+//! ├── manager.rs      (ConfigManager for load/save)
+//! ├── defaults.rs     (constants and defaults)
+//! ├── reading.rs      (reader settings)
+//! ├── library.rs      (library settings)
+//! ├── interface.rs    (UI settings)
+//! ├── display.rs      (display settings)
+//! ├── features.rs     (feature settings)
+//! ├── preset.rs       (frontlight presets)
+//! ├── theme.rs        (theme settings)
+//! ├── thumbnail.rs    (thumbnail settings)
+//! └── tools.rs        (PDF tool settings)
+//! ```
+//!
+//! ## Usage
+//!
+//! ```rust,ignore
+//! use plato_core::settings::{Settings, ConfigManager};
+//!
+//! // Load with validation
+//! let settings = ConfigManager::new().load()?;
+//!
+//! // Or use defaults if file missing
+//! let settings = ConfigManager::new().load_or_default();
+//! ```
+
 mod defaults;
 mod display;
 mod features;
 mod interface;
 mod library;
+mod manager;
 mod preset;
 mod reading;
 mod theme;
 mod thumbnail;
 mod tools;
+
+use crate::validation::{validate_finite_f32, validate_range, validate_string_length};
+use anyhow::{bail, Context, Error};
 
 use crate::frontlight::LightLevels;
 use crate::metadata::{SortMethod, TextAlign};
@@ -23,6 +78,7 @@ pub use display::*;
 pub use features::*;
 pub use interface::*;
 pub use library::*;
+pub use manager::{load_settings, save_settings, ConfigManager};
 pub use reading::*;
 pub use thumbnail::*;
 pub use tools::*;
@@ -102,6 +158,42 @@ pub struct ReaderPreset {
     pub manga_mode: Option<bool>,
 }
 
+impl ReaderPreset {
+    /// Validates reader preset values are within acceptable ranges
+    ///
+    /// # Validation Rules
+    /// - name: 1 to 100 characters (required)
+    /// - font_size: 4.0 to 72.0 points (if specified)
+    /// - margin_width: 0 to 100 (if specified)
+    /// - line_height: 0.5 to 3.0 (if specified)
+    pub fn validate(&self) -> Result<(), Error> {
+        // Name is required and must be reasonable length
+        validate_string_length(&self.name, "reader_preset.name", 1, 100)?;
+
+        // Validate optional font_size
+        if let Some(size) = self.font_size {
+            validate_finite_f32(size, "reader_preset.font_size", 4.0, 72.0)?;
+        }
+
+        // Validate optional margin_width
+        if let Some(margin) = self.margin_width {
+            validate_range(margin, 0, 100, "reader_preset.margin_width")?;
+        }
+
+        // Validate optional line_height
+        if let Some(height) = self.line_height {
+            validate_finite_f32(height, "reader_preset.line_height", 0.5, 3.0)?;
+        }
+
+        // Validate optional font_family length
+        if let Some(ref family) = self.font_family {
+            validate_string_length(family, "reader_preset.font_family", 1, 100)?;
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct DictionarySettings {
@@ -118,6 +210,19 @@ impl Default for DictionarySettings {
             margin_width: 4,
             languages: BTreeMap::new(),
         }
+    }
+}
+
+impl DictionarySettings {
+    /// Validates dictionary settings are within acceptable ranges
+    pub fn validate(&self) -> Result<(), Error> {
+        // Font size must be reasonable (4 to 72 points)
+        validate_finite_f32(self.font_size, "dictionary.font_size", 4.0, 72.0)?;
+
+        // Margin width must be reasonable (0 to 50)
+        validate_range(self.margin_width, 0, 50, "dictionary.margin_width")?;
+
+        Ok(())
     }
 }
 
@@ -179,6 +284,17 @@ impl Default for GestureSettings {
     }
 }
 
+impl GestureSettings {
+    /// Validates gesture settings
+    ///
+    /// Currently ensures gesture action values are valid (they're enums so always valid)
+    pub fn validate(&self) -> Result<(), Error> {
+        // GestureAction is an enum, so values are always valid
+        // This method exists for consistency and future validation
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct SearchSettings {
@@ -196,6 +312,16 @@ impl Default for SearchSettings {
             save_history: true,
             history_size: 50,
         }
+    }
+}
+
+impl SearchSettings {
+    /// Validates search settings are within acceptable ranges
+    pub fn validate(&self) -> Result<(), Error> {
+        // History size must be reasonable (0 to 1000 entries)
+        validate_range(self.history_size, 0, 1000, "search.history_size")?;
+
+        Ok(())
     }
 }
 
@@ -295,5 +421,106 @@ impl Default for Settings {
             cloud_sync: CloudSyncSettings::default(),
             thumbnail: ThumbnailSettings::default(),
         }
+    }
+}
+
+impl Settings {
+    /// Validates all settings values are within acceptable ranges
+    ///
+    /// # Errors
+    /// Returns detailed error if any setting is invalid
+    ///
+    /// # Validation Rules
+    /// - font_size: 4.0 to 72.0 points
+    /// - auto_suspend: 1.0 to 300.0 minutes (5 hours)
+    /// - auto_power_off: 0.5 to 24.0 hours
+    /// - selected_library: must be within bounds of libraries vector
+    /// - language/locale: non-empty strings with reasonable length
+    pub fn validate(&self) -> Result<(), Error> {
+        // Validate selected library index
+        if self.selected_library >= self.libraries.len() && !self.libraries.is_empty() {
+            bail!(
+                "selected_library ({}) exceeds number of libraries ({})",
+                self.selected_library,
+                self.libraries.len()
+            );
+        }
+
+        // Validate font size bounds
+        validate_finite_f32(self.reader.font_size, "font_size", 4.0, 72.0)?;
+
+        // Validate auto_suspend (1 minute to 5 hours)
+        validate_finite_f32(self.auto_suspend, "auto_suspend", 1.0, 300.0)?;
+
+        // Validate auto_power_off (0.5 hours to 24 hours)
+        validate_finite_f32(self.auto_power_off, "auto_power_off", 0.5, 24.0)?;
+
+        // Validate language string
+        validate_string_length(&self.language, "language", 1, 10)?;
+
+        // Validate locale string
+        validate_string_length(&self.locale, "locale", 1, 20)?;
+
+        // Validate time_format is not empty
+        if self.time_format.is_empty() {
+            bail!("time_format cannot be empty");
+        }
+        validate_string_length(&self.time_format, "time_format", 1, 50)?;
+
+        // Validate date_format is not empty
+        if self.date_format.is_empty() {
+            bail!("date_format cannot be empty");
+        }
+        validate_string_length(&self.date_format, "date_format", 1, 100)?;
+
+        // Validate keyboard_layout is not empty
+        if self.keyboard_layout.is_empty() {
+            bail!("keyboard_layout cannot be empty");
+        }
+        validate_string_length(&self.keyboard_layout, "keyboard_layout", 1, 50)?;
+
+        // Validate sub-settings
+        self.reader
+            .validate()
+            .context("reader settings validation failed")?;
+        self.dictionary
+            .validate()
+            .context("dictionary settings validation failed")?;
+        self.gestures
+            .validate()
+            .context("gesture settings validation failed")?;
+        self.search
+            .validate()
+            .context("search settings validation failed")?;
+        self.home
+            .validate()
+            .context("home settings validation failed")?;
+        self.battery
+            .validate()
+            .context("battery settings validation failed")?;
+        self.night_light_schedule
+            .validate()
+            .context("night light schedule validation failed")?;
+        self.cover_editor
+            .validate()
+            .context("cover editor settings validation failed")?;
+        self.thumbnail
+            .validate()
+            .context("thumbnail settings validation failed")?;
+
+        // Validate all library settings
+        for (i, lib) in self.libraries.iter().enumerate() {
+            lib.validate()
+                .with_context(|| format!("library[{}] validation failed", i))?;
+        }
+
+        // Validate all reader presets
+        for (i, preset) in self.reader_presets.iter().enumerate() {
+            preset
+                .validate()
+                .with_context(|| format!("reader_preset[{}] validation failed", i))?;
+        }
+
+        Ok(())
     }
 }

@@ -61,22 +61,27 @@ impl OPDSCatalog {
         parser
     }
 
-    fn parse_atom_loop(parser: quick_xml::Reader<&[u8]>, title: &mut String, entries: &mut Vec<OPDSEntry>, state: &mut AtomParserState) {
+    fn parse_atom_loop(
+        parser: quick_xml::Reader<&[u8]>,
+        title: &mut String,
+        entries: &mut Vec<OPDSEntry>,
+        state: &mut AtomParserState,
+    ) {
         let mut parser = parser;
         let mut buf = Vec::with_capacity(1024);
 
         loop {
             match parser.read_event_into(&mut buf) {
                 Ok(quick_xml::events::Event::Start(e)) => {
-                    state.handle_start_event(e);
+                    state.handle_start_event(quick_xml::events::Event::Start(e));
                 }
                 Ok(quick_xml::events::Event::Text(e)) => {
                     if let Ok(text) = e.decode() {
-                        state.handle_text_event(title, text);
+                        state.handle_text_event(title, &text);
                     }
                 }
                 Ok(quick_xml::events::Event::End(e)) => {
-                    state.handle_end_event(entries, e);
+                    state.handle_end_event(entries, quick_xml::events::Event::End(e));
                 }
                 Ok(quick_xml::events::Event::Eof) => break,
                 _ => {}
@@ -106,15 +111,15 @@ impl OPDSCatalog {
         loop {
             match parser.read_event_into(&mut buf) {
                 Ok(quick_xml::events::Event::Start(e)) => {
-                    state.handle_start_event(e);
+                    state.handle_start_event(quick_xml::events::Event::Start(e));
                 }
                 Ok(quick_xml::events::Event::Text(e)) => {
                     if let Ok(text) = e.decode() {
-                        state.handle_text_event(text);
+                        state.handle_text_event(&text);
                     }
                 }
                 Ok(quick_xml::events::Event::End(e)) => {
-                    state.handle_end_event(e);
+                    state.handle_end_event(quick_xml::events::Event::End(e));
                 }
                 Ok(quick_xml::events::Event::Eof) => break,
                 _ => {}
@@ -141,7 +146,7 @@ impl NavParserState {
         }
     }
 
-    fn handle_start_event(&mut self, e: quick_xml::events::Event<&[u8]>) {
+    fn handle_start_event(&mut self, e: quick_xml::events::Event) {
         if let quick_xml::events::Event::Start(elem) = e {
             let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
             if name == "nav" {
@@ -167,7 +172,7 @@ impl NavParserState {
         }
     }
 
-    fn handle_end_event(&mut self, e: quick_xml::events::Event<&[u8]>) {
+    fn handle_end_event(&mut self, e: quick_xml::events::Event) {
         if let quick_xml::events::Event::End(elem) = e {
             let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
             if name == "nav" {
@@ -194,7 +199,7 @@ impl AtomParserState {
         }
     }
 
-    fn handle_start_event(&mut self, e: quick_xml::events::Event<&[u8]>) {
+    fn handle_start_event(&mut self, e: quick_xml::events::Event) {
         if let quick_xml::events::Event::Start(elem) = e {
             let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
             if name == "title" && !self.in_entry {
@@ -220,7 +225,7 @@ impl AtomParserState {
         }
     }
 
-    fn handle_end_event(&mut self, entries: &mut Vec<OPDSEntry>, e: quick_xml::events::Event<&[u8]>) {
+    fn handle_end_event(&mut self, entries: &mut Vec<OPDSEntry>, e: quick_xml::events::Event) {
         if let quick_xml::events::Event::End(elem) = e {
             let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
             if name == "title" && !self.in_entry {

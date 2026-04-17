@@ -10,7 +10,6 @@
 //! - update_bottom_bar()
 
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::unit::scale_by_dpi;
 use crate::view::home::home_utils;
 use crate::view::home::BottomBar;

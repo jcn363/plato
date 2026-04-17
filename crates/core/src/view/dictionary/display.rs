@@ -1,6 +1,5 @@
 use crate::color::foreground;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{halves, Rectangle};
 use crate::theme;

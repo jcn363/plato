@@ -1,7 +1,6 @@
 use super::book::Book;
 use crate::color::{background as bg, separator as sep};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::divide;
@@ -10,11 +9,12 @@ use crate::gesture::GestureEvent;
 use crate::metadata::Info;
 use crate::settings::{FirstColumn, SecondColumn};
 use crate::theme;
+use crate::thumbnail::ThumbnailManager;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use crate::view::{BIG_BAR_HEIGHT, THICKNESS_MEDIUM};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct Shelf {
     id: Id,
@@ -68,18 +68,48 @@ impl Shelf {
         context: &Context,
     ) {
         self.children.clear();
-        let (max_lines, book_heights, thickness, big_thickness) = Self::calculate_layout_metrics(&self.rect);
+        let (max_lines, book_heights, thickness, big_thickness) =
+            Self::calculate_layout_metrics(&self.rect);
         let mut y_pos = self.rect.min.y;
 
         for (index, info) in metadata.iter().enumerate() {
-            let (y_min, y_max) = Self::calculate_book_rect(y_pos, index, &book_heights, max_lines, thickness, big_thickness);
+            let (y_min, y_max) = Self::calculate_book_rect(
+                y_pos,
+                index,
+                &book_heights,
+                max_lines,
+                thickness,
+                big_thickness,
+            );
             let preview_path = Self::get_preview_path(info, context);
-            Self::add_book(&mut self.children, &self.rect, y_min, y_max, info, index, preview_path);
-            Self::add_separator_if_needed(&mut self.children, &self.rect, index, max_lines, y_max, thickness);
+            Self::add_book(
+                &mut self.children,
+                &self.rect,
+                y_min,
+                y_max,
+                info,
+                index,
+                preview_path,
+            );
+            Self::add_separator_if_needed(
+                &mut self.children,
+                &self.rect,
+                index,
+                max_lines,
+                y_max,
+                thickness,
+            );
             y_pos += book_heights[index];
         }
 
-        Self::add_filler_if_needed(&mut self.children, &self.rect, metadata.len(), max_lines, y_pos, thickness);
+        Self::add_filler_if_needed(
+            &mut self.children,
+            &self.rect,
+            metadata.len(),
+            max_lines,
+            y_pos,
+            thickness,
+        );
         self.max_lines = max_lines;
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
     }
@@ -94,7 +124,14 @@ impl Shelf {
         (max_lines, book_heights, thickness, big_thickness)
     }
 
-    fn calculate_book_rect(y_pos: i32, index: usize, book_heights: &[i32], max_lines: usize, thickness: i32, big_thickness: i32) -> (i32, i32) {
+    fn calculate_book_rect(
+        y_pos: i32,
+        index: usize,
+        book_heights: &[i32],
+        max_lines: usize,
+        thickness: i32,
+        big_thickness: i32,
+    ) -> (i32, i32) {
         let y_min = y_pos + if index > 0 { big_thickness } else { 0 };
         let y_max = y_pos + book_heights[index]
             - if index < max_lines - 1 {
@@ -106,7 +143,13 @@ impl Shelf {
     }
 
     fn get_preview_path(info: &Info, context: &Context) -> Option<PathBuf> {
-        if !context.thumbnail_previews() {
+        if !context
+            .settings
+            .libraries
+            .get(context.settings.selected_library)
+            .and_then(|l| Some(l.thumbnail_previews))
+            .unwrap_or(false)
+        {
             return None;
         }
         if let Some(thumbnail_manager) = context.thumbnail_manager() {
@@ -116,7 +159,10 @@ impl Shelf {
         }
     }
 
-    fn request_thumbnail_from_manager(thumbnail_manager: &dyn ThumbnailManager, path: &Path) -> Option<PathBuf> {
+    fn request_thumbnail_from_manager(
+        thumbnail_manager: &ThumbnailManager,
+        path: &Path,
+    ) -> Option<PathBuf> {
         match thumbnail_manager.request_thumbnail(path) {
             Ok(Some(path)) => Some(path),
             Ok(None) => Some(PathBuf::default()),
@@ -136,7 +182,15 @@ impl Shelf {
         }
     }
 
-    fn add_book(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, y_min: i32, y_max: i32, info: &Info, index: usize, preview_path: Option<PathBuf>) {
+    fn add_book(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        y_min: i32,
+        y_max: i32,
+        info: &Info,
+        index: usize,
+        preview_path: Option<PathBuf>,
+    ) {
         let book = Book::new(
             rect![rect.min.x, y_min, rect.max.x, y_max],
             info.clone(),
@@ -148,7 +202,14 @@ impl Shelf {
         children.push(Box::new(book) as Box<dyn View>);
     }
 
-    fn add_separator_if_needed(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, index: usize, max_lines: usize, y_max: i32, thickness: i32) {
+    fn add_separator_if_needed(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        index: usize,
+        max_lines: usize,
+        y_max: i32,
+        thickness: i32,
+    ) {
         if index < max_lines - 1 {
             let separator = Filler::new(
                 rect![rect.min.x, y_max, rect.max.x, y_max + thickness],
@@ -158,7 +219,14 @@ impl Shelf {
         }
     }
 
-    fn add_filler_if_needed(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, metadata_len: usize, max_lines: usize, y_pos: i32, thickness: i32) {
+    fn add_filler_if_needed(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        metadata_len: usize,
+        max_lines: usize,
+        y_pos: i32,
+        thickness: i32,
+    ) {
         if metadata_len < max_lines {
             let y_start = y_pos + if metadata_len == 0 { 0 } else { thickness };
             let filler = Filler::new(

@@ -1,6 +1,5 @@
 use crate::color::{BLACK, WHITE};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, Rectangle};
@@ -24,15 +23,54 @@ pub struct StatisticsView {
 impl StatisticsView {
     pub fn new(rect: Rectangle, rq: &mut RenderQueue, context: &mut Context) -> StatisticsView {
         let id = ID_FEEDER.next();
-        let dpi = crate::unit::get_device_dpi();
-        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-        let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
-        let (small_thickness, big_thickness) = halves(thickness);
-
+        let (small_height, thickness, small_thickness, big_thickness) =
+            Self::calculate_layout_params();
         let statistics = context.library.compute_statistics();
 
         let mut children = Vec::new();
 
+        Self::add_top_bar(&mut children, rect, small_height, small_thickness, context);
+        Self::add_separator(
+            &mut children,
+            rect,
+            small_height,
+            small_thickness,
+            big_thickness,
+        );
+        Self::add_stats_label(
+            &mut children,
+            rect,
+            thickness,
+            small_height,
+            big_thickness,
+            &statistics,
+        );
+
+        rq.add(RenderData::new(id, rect, UpdateMode::Full));
+
+        StatisticsView {
+            id,
+            rect,
+            children,
+            _statistics: statistics,
+        }
+    }
+
+    fn calculate_layout_params() -> (i32, i32, i32, i32) {
+        let dpi = crate::unit::get_device_dpi();
+        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
+        let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
+        let (small_thickness, big_thickness) = halves(thickness);
+        (small_height, thickness, small_thickness, big_thickness)
+    }
+
+    fn add_top_bar(
+        children: &mut Vec<Box<dyn View>>,
+        rect: Rectangle,
+        small_height: i32,
+        small_thickness: i32,
+        context: &mut Context,
+    ) {
         let top_bar = TopBar::new(
             rect![
                 rect.min.x,
@@ -45,7 +83,15 @@ impl StatisticsView {
             context,
         );
         children.push(Box::new(top_bar) as Box<dyn View>);
+    }
 
+    fn add_separator(
+        children: &mut Vec<Box<dyn View>>,
+        rect: Rectangle,
+        small_height: i32,
+        small_thickness: i32,
+        big_thickness: i32,
+    ) {
         let separator = Filler::new(
             rect![
                 rect.min.x,
@@ -56,11 +102,18 @@ impl StatisticsView {
             BLACK,
         );
         children.push(Box::new(separator) as Box<dyn View>);
+    }
 
+    fn add_stats_label(
+        children: &mut Vec<Box<dyn View>>,
+        rect: Rectangle,
+        thickness: i32,
+        small_height: i32,
+        big_thickness: i32,
+        statistics: &LibraryStatistics,
+    ) {
         let content_start = rect.min.y + small_height + big_thickness + thickness;
-        let _content_height = rect.max.y - content_start;
-
-        let stats_text = Self::format_statistics(&statistics);
+        let stats_text = Self::format_statistics(statistics);
         let stats_label = Label::new(
             rect![
                 rect.min.x + thickness,
@@ -72,15 +125,6 @@ impl StatisticsView {
             Align::Center,
         );
         children.push(Box::new(stats_label) as Box<dyn View>);
-
-        rq.add(RenderData::new(id, rect, UpdateMode::Full));
-
-        StatisticsView {
-            id,
-            rect,
-            children,
-            _statistics: statistics,
-        }
     }
 
     fn format_statistics(stats: &LibraryStatistics) -> String {

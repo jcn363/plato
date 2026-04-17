@@ -66,7 +66,9 @@ pub fn update_from_light_sensor(light_level: u16) {
 
 #[inline]
 pub fn update_from_schedule(schedule: &ThemeSchedule, current_time: &DateTime<Local>) {
-    if *THEME_MODE.lock().expect("THEME_MODE lock poisoned") != ThemeMode::Scheduled || !schedule.enabled {
+    if *THEME_MODE.lock().expect("THEME_MODE lock poisoned") != ThemeMode::Scheduled
+        || !schedule.enabled
+    {
         return;
     }
 

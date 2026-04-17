@@ -46,15 +46,18 @@ pub fn guess_frontlight(
     };
 
     let (dmin, index) = if light_presets[0].lightsensor_level.is_some() {
-        Self::find_nearest_by_lightsensor(&cur, light_presets)
+        find_nearest_by_lightsensor(&cur, light_presets)
     } else {
-        Self::find_nearest_by_timestamp(&cur, light_presets)
+        find_nearest_by_timestamp(&cur, light_presets)
     };
 
-    Self::interpolate_frontlight_levels(dmin, index, light_presets)
+    interpolate_frontlight_levels(dmin, index, light_presets)
 }
 
-fn find_nearest_by_lightsensor(cur: &LightPreset, light_presets: &[LightPreset]) -> ([u16; 2], [usize; 2]) {
+fn find_nearest_by_lightsensor(
+    cur: &LightPreset,
+    light_presets: &[LightPreset],
+) -> ([u16; 2], [usize; 2]) {
     let s = cur.lightsensor_level.unwrap_or_default();
     let mut dmin = [u16::MAX; 2];
     let mut index = [usize::MAX; 2];
@@ -77,7 +80,10 @@ fn find_nearest_by_lightsensor(cur: &LightPreset, light_presets: &[LightPreset])
     (dmin, index)
 }
 
-fn find_nearest_by_timestamp(cur: &LightPreset, light_presets: &[LightPreset]) -> ([u16; 2], [usize; 2]) {
+fn find_nearest_by_timestamp(
+    cur: &LightPreset,
+    light_presets: &[LightPreset],
+) -> ([u16; 2], [usize; 2]) {
     let mut dmin = [u16::MAX; 2];
     let mut index = [usize::MAX; 2];
 
@@ -98,7 +104,11 @@ fn find_nearest_by_timestamp(cur: &LightPreset, light_presets: &[LightPreset]) -
     (dmin, index)
 }
 
-fn interpolate_frontlight_levels(dmin: [u16; 2], index: [usize; 2], light_presets: &[LightPreset]) -> Option<LightLevels> {
+fn interpolate_frontlight_levels(
+    dmin: [u16; 2],
+    index: [usize; 2],
+    light_presets: &[LightPreset],
+) -> Option<LightLevels> {
     if dmin[0] == 0 || dmin[1] == u16::MAX {
         return Some(light_presets[index[0]].frontlight_levels);
     }

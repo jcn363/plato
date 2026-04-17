@@ -1,6 +1,7 @@
 use crate::helpers::{load_json, Fingerprint, Fp};
 use crate::metadata::{Info, ReaderInfo, SortMethod};
 use crate::settings::{ImportSettings, LibraryMode};
+use crate::validation::validate_library_path;
 use crate::{log_error, log_warn};
 use anyhow::{bail, Error};
 use indexmap::IndexMap;
@@ -11,10 +12,11 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::time::{Duration, SystemTime};
 
-pub const METADATA_FILENAME: &str = ".metadata.json";
-pub const FAT32_EPOCH_FILENAME: &str = ".fat32-epoch";
-pub const READING_STATES_DIRNAME: &str = ".reading-states";
-pub const THUMBNAIL_PREVIEWS_DIRNAME: &str = ".thumbnail-previews";
+// Re-export library constants from canonical source in consts::library
+// per Single Source of Truth rule.
+pub use crate::consts::library::{
+    FAT32_EPOCH_FILENAME, METADATA_FILENAME, READING_STATES_DIRNAME, THUMBNAIL_PREVIEWS_DIRNAME,
+};
 
 pub struct Library {
     pub home: PathBuf,
@@ -33,29 +35,74 @@ pub struct Library {
 
 impl Library {
     pub fn new<P: AsRef<Path>>(home: P, mode: LibraryMode) -> Result<Self, Error> {
+        // Validate home path before any operations
+        validate_library_path(&home)?;
+
+        Self::create_home_dir(&home)?;
+
+        let mut db = Self::load_database(&home, mode)?;
+        let reading_states = Self::load_reading_states(&home, mode, &mut db)?;
+        Self::create_thumbnail_previews_dir(&home);
+        let paths = Self::build_paths_map(&db, mode);
+        let fat32_epoch = Self::ensure_fat32_epoch_file(&home)?;
+
+        Ok(Library {
+            home: home.as_ref().to_path_buf(),
+            mode,
+            db,
+            paths,
+            reading_states,
+            modified_reading_states: FxHashSet::default(),
+            has_db_changed: false,
+            fat32_epoch,
+            sort_method: SortMethod::Opened,
+            reverse_order: false,
+            show_hidden: false,
+            import_settings: ImportSettings::default(),
+        })
+    }
+
+    fn create_home_dir<P: AsRef<Path>>(home: P) -> Result<(), Error> {
         if let Err(e) = fs::create_dir(&home) {
             if e.kind() != ErrorKind::AlreadyExists {
                 bail!(e);
             }
         }
+        Ok(())
+    }
 
+    fn load_database<P: AsRef<Path>>(
+        home: P,
+        mode: LibraryMode,
+    ) -> Result<IndexMap<Fp, Info, FxBuildHasher>, Error> {
         let path = home.as_ref().join(METADATA_FILENAME);
-        let mut db;
         if mode == LibraryMode::Database {
             match load_json::<IndexMap<Fp, Info, FxBuildHasher>, _>(&path) {
                 Err(e) => {
                     if e.downcast_ref::<IoError>().map(|e| e.kind()) != Some(ErrorKind::NotFound) {
                         bail!(e);
                     } else {
-                        db = IndexMap::with_capacity_and_hasher(0, FxBuildHasher::default());
+                        Ok(IndexMap::with_capacity_and_hasher(
+                            0,
+                            FxBuildHasher::default(),
+                        ))
                     }
                 }
-                Ok(v) => db = v,
+                Ok(v) => Ok(v),
             }
         } else {
-            db = IndexMap::with_capacity_and_hasher(0, FxBuildHasher::default());
+            Ok(IndexMap::with_capacity_and_hasher(
+                0,
+                FxBuildHasher::default(),
+            ))
         }
+    }
 
+    fn load_reading_states<P: AsRef<Path>>(
+        home: P,
+        mode: LibraryMode,
+        db: &mut IndexMap<Fp, Info, FxBuildHasher>,
+    ) -> Result<FxHashMap<Fp, ReaderInfo>, Error> {
         let mut reading_states = FxHashMap::default();
 
         let path = home.as_ref().join(READING_STATES_DIRNAME);
@@ -89,43 +136,36 @@ impl Library {
             }
         }
 
+        Ok(reading_states)
+    }
+
+    fn create_thumbnail_previews_dir<P: AsRef<Path>>(home: P) {
         let path = home.as_ref().join(THUMBNAIL_PREVIEWS_DIRNAME);
         if !path.exists() {
             fs::create_dir(&path).ok();
         }
+    }
 
-        let paths = if mode == LibraryMode::Database {
+    fn build_paths_map(
+        db: &IndexMap<Fp, Info, FxBuildHasher>,
+        mode: LibraryMode,
+    ) -> FxHashMap<PathBuf, Fp> {
+        if mode == LibraryMode::Database {
             db.iter()
                 .map(|(fp, info)| (info.file.path.clone(), *fp))
                 .collect()
         } else {
             FxHashMap::default()
-        };
+        }
+    }
 
+    fn ensure_fat32_epoch_file<P: AsRef<Path>>(home: P) -> Result<SystemTime, Error> {
         let path = home.as_ref().join(FAT32_EPOCH_FILENAME);
         if !path.exists() {
             let file = File::create(&path)?;
             file.set_modified(std::time::UNIX_EPOCH + Duration::from_secs(315_532_800))?;
         }
-
-        let fat32_epoch = path.metadata()?.modified()?;
-
-        let sort_method = SortMethod::Opened;
-
-        Ok(Library {
-            home: home.as_ref().to_path_buf(),
-            mode,
-            db,
-            paths,
-            reading_states,
-            modified_reading_states: FxHashSet::default(),
-            has_db_changed: false,
-            fat32_epoch,
-            sort_method,
-            reverse_order: sort_method.reverse_order(),
-            show_hidden: false,
-            import_settings: ImportSettings::default(),
-        })
+        Ok(path.metadata()?.modified()?)
     }
 
     pub fn with_import_settings<P: AsRef<Path>>(
@@ -133,6 +173,9 @@ impl Library {
         mode: LibraryMode,
         import_settings: ImportSettings,
     ) -> Result<Self, Error> {
+        // Validate home path before creating library
+        validate_library_path(&home)?;
+
         let mut library = Self::new(home, mode)?;
         library.import_settings = import_settings;
         Ok(library)

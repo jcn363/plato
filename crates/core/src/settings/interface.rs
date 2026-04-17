@@ -1,3 +1,5 @@
+use crate::validation::validate_range;
+use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -88,6 +90,23 @@ impl Default for HomeSettings {
     }
 }
 
+impl HomeSettings {
+    /// Validates home settings are within acceptable ranges
+    ///
+    /// # Validation Rules
+    /// - max_levels: 1 to 10 (reasonable depth for navigation)
+    /// - max_trash_size: 1 MB to 1 GB (reasonable trash size limits)
+    pub fn validate(&self) -> Result<(), Error> {
+        // Max levels must be reasonable (1 to 10)
+        validate_range(self.max_levels, 1, 10, "home.max_levels")?;
+
+        // Max trash size must be reasonable (1 MB to 1 GB)
+        validate_range(self.max_trash_size, 1 << 20, 1 << 30, "home.max_trash_size")?;
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum FirstColumn {
@@ -95,9 +114,21 @@ pub enum FirstColumn {
     FileName,
 }
 
+impl Default for FirstColumn {
+    fn default() -> Self {
+        Self::TitleAndAuthor
+    }
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SecondColumn {
     Progress,
     Year,
+}
+
+impl Default for SecondColumn {
+    fn default() -> Self {
+        Self::Progress
+    }
 }

@@ -60,8 +60,12 @@ pub struct HtmlDocument {
 
 impl ResourceFetcher for PathBuf {
     fn fetch(&mut self, name: &str) -> Result<Vec<u8>, Error> {
-        let mut file = File::open(self.join(name))
-            .with_context(|| format!("can't open HTML resource file {}", self.join(name).display()))?;
+        let mut file = File::open(self.join(name)).with_context(|| {
+            format!(
+                "can't open HTML resource file {}",
+                self.join(name).display()
+            )
+        })?;
         let size = file.metadata()?.len() as usize;
         let mut buf = Vec::with_capacity(size);
         file.read_to_end(&mut buf)?;
@@ -187,7 +191,7 @@ impl HtmlDocument {
     }
 
     fn build_pages(&mut self) -> Vec<Page> {
-        let mut stylesheet = self.load_stylesheets();
+        let stylesheet = self.load_stylesheets();
         let mut pages = Vec::new();
 
         let mut rect = self.engine.rect();
@@ -222,7 +226,7 @@ impl HtmlDocument {
         self.finalize_pages(pages)
     }
 
-    fn load_stylesheets(&self) -> StyleSheet {
+    fn load_stylesheets(&mut self) -> StyleSheet {
         let mut stylesheet = StyleSheet::new();
 
         if let Ok(text) = fs::read_to_string(&self.viewer_stylesheet) {
@@ -249,8 +253,7 @@ impl HtmlDocument {
 
         if let Some(head) = self.content.root().find("head") {
             for child in head.children() {
-                if child.tag_name() == Some("link")
-                    && child.attribute("rel") == Some("stylesheet")
+                if child.tag_name() == Some("link") && child.attribute("rel") == Some("stylesheet")
                 {
                     if let Some(href) = child.attribute("href") {
                         if let Some(name) = spine_dir

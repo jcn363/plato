@@ -314,7 +314,9 @@ mod tests {
         let config = ThumbnailConfig::default();
         let manager = ThumbnailManager::new(config).expect("Failed to create manager");
         let file_path = Path::new("/home/user/book.pdf");
-        let thumbnail_path = manager.compute_thumbnail_path(file_path).expect("Failed to compute thumbnail path");
+        let thumbnail_path = manager
+            .compute_thumbnail_path(file_path)
+            .expect("Failed to compute thumbnail path");
         assert!(thumbnail_path.ends_with(".thumbnail-previews/book.png"));
     }
 

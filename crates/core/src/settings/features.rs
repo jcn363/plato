@@ -1,3 +1,5 @@
+use crate::validation::validate_range;
+use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -99,6 +101,25 @@ impl Default for CoverEditorSettings {
             allow_custom_sizes: true,
             jpeg_quality: 85,
         }
+    }
+}
+
+impl CoverEditorSettings {
+    /// Validates cover editor settings are within acceptable ranges
+    pub fn validate(&self) -> Result<(), Error> {
+        // Validate dimensions (must be reasonable cover sizes)
+        validate_range(self.default_width, 100, 2000, "cover_editor.default_width")?;
+        validate_range(
+            self.default_height,
+            100,
+            2000,
+            "cover_editor.default_height",
+        )?;
+
+        // Validate JPEG quality (must be 1-100)
+        validate_range(self.jpeg_quality, 1, 100, "cover_editor.jpeg_quality")?;
+
+        Ok(())
     }
 }
 

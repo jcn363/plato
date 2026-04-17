@@ -11,10 +11,11 @@ use crate::settings::{
     DEFAULT_FONT_SIZE, DEFAULT_LINE_HEIGHT, DEFAULT_MARGIN_WIDTH, DEFAULT_TEXT_ALIGN,
 };
 use crate::settings::{HYPHEN_PENALTY, STRETCH_TOLERANCE};
-use crate::unit::mm_to_px;
+use crate::unit::{mm_to_px, DEFAULT_DPI};
 use anyhow::Error;
 
-const DEFAULT_DPI: u16 = 300;
+// Canonical default dimensions for the HTML rendering engine.
+// These are specific to this module and not shared across the codebase.
 const DEFAULT_WIDTH: u32 = 1404;
 const DEFAULT_HEIGHT: u32 = 1872;
 

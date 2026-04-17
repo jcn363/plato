@@ -2,7 +2,6 @@ use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDE
 use super::{BORDER_RADIUS_MEDIUM, SMALL_BAR_HEIGHT, THICKNESS_LARGE};
 use crate::color::{text_normal, BLACK, WHITE};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};
@@ -65,38 +64,21 @@ impl Notification {
         let max_message_width = width as i32 - 5 * padding;
         let plan = font.plan(&text, Some(max_message_width), None);
 
-        let dialog_width = plan.width + 3 * padding;
-        let dialog_height = 7 * x_height;
-
-        let side = (index / 3) % 2;
-        let dx = if side == 0 {
-            width as i32 - dialog_width - padding
-        } else {
-            padding
-        };
-        let dy = small_height + padding + (index % 3) as i32 * (dialog_height + padding);
-
-        let rect = rect![dx, dy, dx + dialog_width, dy + dialog_height];
+        let (dialog_width, dialog_height) =
+            Self::calculate_dialog_dimensions(&plan, x_height, padding);
+        let rect = Self::calculate_dialog_position(
+            width,
+            small_height,
+            dialog_width,
+            dialog_height,
+            index,
+            padding,
+        );
 
         rq.add(RenderData::new(id, rect, UpdateMode::Full));
         context.notification_index = index.wrapping_add(1);
 
-        // Create timer cancellation flag
-        let timer_cancelled = Arc::new(AtomicBool::new(false));
-
-        // Schedule automatic close after NOTIFICATION_CLOSE_DELAY
-        let hub_clone = hub.clone();
-        let timer_cancelled_clone = timer_cancelled.clone();
-        let notification_id = id;
-
-        thread::spawn(move || {
-            thread::sleep(NOTIFICATION_CLOSE_DELAY);
-
-            // Check if timer was cancelled before sending close event
-            if !timer_cancelled_clone.load(std::sync::atomic::Ordering::Relaxed) {
-                let _ = hub_clone.send(Event::Close(ViewId::MessageNotif(notification_id)));
-            }
-        });
+        let timer_cancelled = Self::schedule_auto_close_timer(hub, id);
 
         Notification {
             id,
@@ -108,6 +90,50 @@ impl Notification {
             view_id,
             timer_cancelled,
         }
+    }
+
+    fn calculate_dialog_dimensions(
+        plan: &crate::font::RenderPlan,
+        x_height: i32,
+        padding: i32,
+    ) -> (i32, i32) {
+        let dialog_width = plan.width + 3 * padding;
+        let dialog_height = 7 * x_height;
+        (dialog_width, dialog_height)
+    }
+
+    fn calculate_dialog_position(
+        width: u32,
+        small_height: i32,
+        dialog_width: i32,
+        dialog_height: i32,
+        index: u8,
+        padding: i32,
+    ) -> Rectangle {
+        let side = (index / 3) % 2;
+        let dx = if side == 0 {
+            width as i32 - dialog_width - padding
+        } else {
+            padding
+        };
+        let dy = small_height + padding + (index % 3) as i32 * (dialog_height + padding);
+        rect![dx, dy, dx + dialog_width, dy + dialog_height]
+    }
+
+    fn schedule_auto_close_timer(hub: &Hub, id: Id) -> Arc<AtomicBool> {
+        let timer_cancelled = Arc::new(AtomicBool::new(false));
+        let hub_clone = hub.clone();
+        let timer_cancelled_clone = timer_cancelled.clone();
+        let notification_id = id;
+
+        thread::spawn(move || {
+            thread::sleep(NOTIFICATION_CLOSE_DELAY);
+            if !timer_cancelled_clone.load(std::sync::atomic::Ordering::Relaxed) {
+                let _ = hub_clone.send(Event::Close(ViewId::MessageNotif(notification_id)));
+            }
+        });
+
+        timer_cancelled
     }
 }
 

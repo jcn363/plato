@@ -9,17 +9,11 @@ pub use error::{ThumbnailError, ThumbnailResult};
 pub use manager::ThumbnailManager;
 pub use request::ThumbnailRequest;
 
-/// Default number of worker threads for thumbnail generation
-pub const DEFAULT_WORKER_COUNT: usize = 2;
-
-/// Default maximum number of thumbnails to cache in memory
-pub const DEFAULT_CACHE_SIZE: usize = 20;
-
-/// Default thumbnail width in pixels
-pub const THUMBNAIL_WIDTH: u32 = 240;
-
-/// Default thumbnail height in pixels
-pub const THUMBNAIL_HEIGHT: u32 = 320;
+// Re-export thumbnail constants from canonical source in consts::thumbnail
+// per Single Source of Truth rule.
+pub use crate::consts::thumbnail::{
+    DEFAULT_CACHE_SIZE, DEFAULT_WORKER_COUNT, THUMBNAIL_HEIGHT, THUMBNAIL_WIDTH,
+};
 
 /// Maximum allowed worker threads for Kobo devices
 pub const MAX_WORKER_COUNT: usize = 4;

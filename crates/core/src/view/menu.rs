@@ -4,9 +4,8 @@ use super::menu_entry::MenuEntry;
 use super::{Bus, Event, Hub, RenderData, RenderQueue, View};
 use super::{EntryKind, Id, ViewId, CLOSE_IGNITION_DELAY, ID_FEEDER};
 use super::{BORDER_RADIUS_MEDIUM, SMALL_BAR_HEIGHT, THICKNESS_LARGE, THICKNESS_MEDIUM};
-use crate::color::{separator, separator_strong};
+use crate::color::{separator, separator_strong, Color};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{big_half, small_half, BorderSpec, CornerSpec, Point, Rectangle};
@@ -49,7 +48,6 @@ impl Menu {
         context: &mut Context,
     ) -> Menu {
         let id = ID_FEEDER.next();
-        let mut children = Vec::new();
         let dpi = crate::unit::get_device_dpi();
         let (width, height) = context.display.dims;
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
@@ -68,9 +66,102 @@ impl Menu {
         let entry_height = font.x_heights.0 as i32 * 6;
         let padding = 4 * font.em() as i32;
 
+        let center = target.center();
+
+        let (dir, y_start, border_space) = Self::calculate_layout_params(
+            kind,
+            target,
+            height,
+            small_height,
+            thickness,
+            border_thickness,
+        );
+
+        let max_entries = Self::calculate_max_entries(
+            dir,
+            y_start,
+            height,
+            small_height,
+            thickness,
+            border_space,
+            entry_height,
+        );
+
+        entries = Self::handle_entry_overflow(entries, max_entries);
+
+        let mut y_pos = y_start + dir * (border_space - border_thickness);
+
+        let entry_width = Self::calculate_entry_width(
+            kind,
+            target,
+            width,
+            padding,
+            border_thickness,
+            &entries,
+            font,
+        );
+
+        let (x_min, x_max) = Self::calculate_x_position(kind, target, width, entry_width, center);
+
+        let children = Self::build_menu_children(
+            &entries,
+            x_min,
+            x_max,
+            y_pos,
+            dir,
+            entry_height,
+            thickness,
+            border_thickness,
+            border_radius,
+            kind,
+            sep_color,
+        );
+
+        let triangle_space = if kind == MenuKind::Contextual {
+            font.x_heights.1 as i32
+        } else {
+            0
+        };
+
+        let total_entries = entries.iter().filter(|e| !e.is_separator()).count();
+        let menu_height = total_entries as i32 * entry_height + border_space;
+
+        let (y_min, y_max) = if dir.is_positive() {
+            (y_start - triangle_space, y_start + menu_height)
+        } else {
+            (y_start - menu_height, y_start + triangle_space)
+        };
+
+        let rect = rect![x_min, y_min, x_max, y_max];
+
+        Menu {
+            id,
+            rect,
+            children,
+            view_id,
+            kind,
+            center,
+            root: true,
+            sub_id: 0,
+            dir,
+        }
+    }
+
+    pub fn root(mut self, root: bool) -> Menu {
+        self.root = root;
+        self
+    }
+
+    fn calculate_layout_params(
+        kind: MenuKind,
+        target: Rectangle,
+        height: u32,
+        small_height: i32,
+        thickness: i32,
+        border_thickness: i32,
+    ) -> (i32, i32, i32) {
         let north_space = target.min.y;
         let south_space = height as i32 - target.max.y;
-        let center = target.center();
 
         let (dir, y_start): (i32, i32) = if kind == MenuKind::SubMenu {
             if north_space < south_space {
@@ -86,6 +177,24 @@ impl Menu {
             }
         };
 
+        let border_space = if kind == MenuKind::DropDown {
+            border_thickness
+        } else {
+            2 * border_thickness
+        };
+
+        (dir, y_start, border_space)
+    }
+
+    fn calculate_max_entries(
+        dir: i32,
+        y_start: i32,
+        height: u32,
+        small_height: i32,
+        thickness: i32,
+        border_space: i32,
+        entry_height: i32,
+    ) -> usize {
         let top_min = small_height + big_half(thickness);
         let bottom_max = height as i32 - small_height - small_half(thickness);
 
@@ -95,13 +204,10 @@ impl Menu {
             y_start - top_min
         };
 
-        let border_space = if kind == MenuKind::DropDown {
-            border_thickness
-        } else {
-            2 * border_thickness
-        };
+        ((usable_space - border_space) / entry_height) as usize
+    }
 
-        let max_entries = ((usable_space - border_space) / entry_height) as usize;
+    fn handle_entry_overflow(mut entries: Vec<EntryKind>, max_entries: usize) -> Vec<EntryKind> {
         let total_entries = entries.iter().filter(|e| !e.is_separator()).count();
 
         if total_entries > max_entries {
@@ -117,8 +223,18 @@ impl Menu {
             entries.push(EntryKind::More(more));
         }
 
-        let mut y_pos = y_start + dir * (border_space - border_thickness);
+        entries
+    }
 
+    fn calculate_entry_width(
+        kind: MenuKind,
+        target: Rectangle,
+        width: u32,
+        padding: i32,
+        border_thickness: i32,
+        entries: &[EntryKind],
+        font: &mut crate::font::Font,
+    ) -> i32 {
         let max_width = 2 * width as i32 / 3;
         let free_width = padding
             + 2 * border_thickness
@@ -128,8 +244,16 @@ impl Menu {
                 .max()
                 .unwrap_or(0);
 
-        let entry_width = free_width.min(max_width);
+        free_width.min(max_width)
+    }
 
+    fn calculate_x_position(
+        kind: MenuKind,
+        target: Rectangle,
+        width: u32,
+        entry_width: i32,
+        center: Point,
+    ) -> (i32, i32) {
         let (mut x_min, mut x_max) = if kind == MenuKind::SubMenu {
             let west_space = target.min.x;
             let east_space = width as i32 - target.max.x;
@@ -155,6 +279,23 @@ impl Menu {
             x_max = width as i32;
         }
 
+        (x_min, x_max)
+    }
+
+    fn build_menu_children(
+        entries: &[EntryKind],
+        x_min: i32,
+        x_max: i32,
+        mut y_pos: i32,
+        dir: i32,
+        entry_height: i32,
+        thickness: i32,
+        border_thickness: i32,
+        border_radius: i32,
+        kind: MenuKind,
+        sep_color: Color,
+    ) -> Vec<Box<dyn View>> {
+        let mut children = Vec::new();
         let entries_count = entries.len();
 
         for i in 0..entries_count {
@@ -199,65 +340,212 @@ impl Menu {
                     }
                 }
 
-                let corner_spec = if kind != MenuKind::DropDown && entries_count == 1 {
-                    Some(CornerSpec::Uniform(border_radius))
-                } else if i == entries_count - 1 {
-                    if dir.is_positive() {
-                        Some(CornerSpec::South(border_radius))
-                    } else {
-                        Some(CornerSpec::North(border_radius))
-                    }
-                } else if kind != MenuKind::DropDown && i == 0 {
-                    if dir.is_positive() {
-                        Some(CornerSpec::North(border_radius))
-                    } else {
-                        Some(CornerSpec::South(border_radius))
-                    }
-                } else {
-                    None
-                };
+                let corner_spec =
+                    Self::calculate_corner_spec(kind, i, entries_count, dir, border_radius);
 
                 let menu_entry = MenuEntry::new(rect, entries[i].clone(), anchor, corner_spec);
-
                 children.push(Box::new(menu_entry) as Box<dyn View>);
 
                 y_pos += dir * entry_height;
             }
         }
 
-        let triangle_space = if kind == MenuKind::Contextual {
-            font.x_heights.1 as i32
+        children
+    }
+
+    fn calculate_corner_spec(
+        kind: MenuKind,
+        index: usize,
+        entries_count: usize,
+        dir: i32,
+        border_radius: i32,
+    ) -> Option<CornerSpec> {
+        if kind != MenuKind::DropDown && entries_count == 1 {
+            Some(CornerSpec::Uniform(border_radius))
+        } else if index == entries_count - 1 {
+            if dir.is_positive() {
+                Some(CornerSpec::South(border_radius))
+            } else {
+                Some(CornerSpec::North(border_radius))
+            }
+        } else if kind != MenuKind::DropDown && index == 0 {
+            if dir.is_positive() {
+                Some(CornerSpec::North(border_radius))
+            } else {
+                Some(CornerSpec::South(border_radius))
+            }
         } else {
-            0
-        };
-
-        let total_entries = entries.iter().filter(|e| !e.is_separator()).count();
-        let menu_height = total_entries as i32 * entry_height + border_space;
-
-        let (y_min, y_max) = if dir.is_positive() {
-            (y_start - triangle_space, y_start + menu_height)
-        } else {
-            (y_start - menu_height, y_start + triangle_space)
-        };
-
-        let rect = rect![x_min, y_min, x_max, y_max];
-
-        Menu {
-            id,
-            rect,
-            children,
-            view_id,
-            kind,
-            center,
-            root: true,
-            sub_id: 0,
-            dir,
+            None
         }
     }
 
-    pub fn root(mut self, root: bool) -> Menu {
-        self.root = root;
-        self
+    fn handle_select_event(
+        &mut self,
+        entry_id: crate::view::entries::EntryId,
+        hub: &Hub,
+        bus: &mut Bus,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        self.handle_event(&Event::PropagateSelect(entry_id), hub, bus, rq, context);
+    }
+
+    fn handle_propagate_select(
+        &mut self,
+        evt: &Event,
+        hub: &Hub,
+        bus: &mut Bus,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        for c in &mut self.children {
+            if c.handle_event(evt, hub, bus, rq, context) {
+                break;
+            }
+        }
+    }
+
+    fn handle_validate_event(&mut self, hub: &Hub) {
+        let hub2 = hub.clone();
+        let view_id = self.view_id;
+        thread::spawn(move || {
+            thread::sleep(CLOSE_IGNITION_DELAY);
+            hub2.send(Event::Close(view_id)).ok();
+        });
+    }
+
+    fn handle_tap_outside(&mut self, center: Point, bus: &mut Bus) {
+        if self.root {
+            bus.push_back(Event::Close(self.view_id));
+        } else {
+            bus.push_back(Event::CloseSub(self.view_id));
+        }
+    }
+
+    fn handle_submenu_event(
+        &mut self,
+        rect: Rectangle,
+        entries: &[EntryKind],
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        let menu = Menu::new(
+            rect,
+            ViewId::SubMenu(self.sub_id),
+            MenuKind::SubMenu,
+            entries.to_vec(),
+            context,
+        )
+        .root(false);
+        rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
+        self.children.push(Box::new(menu) as Box<dyn View>);
+        self.sub_id = self.sub_id.wrapping_add(1);
+    }
+
+    fn handle_close_sub_event(&mut self, id: ViewId, rq: &mut RenderQueue) {
+        if let Some(index) = locate_by_id(self, id) {
+            rq.add(RenderData::expose(
+                *self.children[index].rect(),
+                UpdateMode::Gui,
+            ));
+            self.children.remove(index);
+        }
+    }
+
+    fn calculate_render_corners(&self, border_radius: i32) -> CornerSpec {
+        if self.kind == MenuKind::DropDown {
+            if self.dir.is_positive() {
+                CornerSpec::South(border_radius)
+            } else {
+                CornerSpec::North(border_radius)
+            }
+        } else {
+            CornerSpec::Uniform(border_radius)
+        }
+    }
+
+    fn render_contextual_menu(
+        &self,
+        fb: &mut dyn Framebuffer,
+        fonts: &mut Fonts,
+        dpi: u16,
+        border_radius: i32,
+        border_thickness: u16,
+        corners: CornerSpec,
+    ) {
+        let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
+        let triangle_space = font.x_heights.1 as i32;
+        let mut rect = self.rect;
+
+        if self.dir.is_positive() {
+            rect.min.y += triangle_space
+        } else {
+            rect.max.y -= triangle_space
+        }
+
+        fb.draw_rounded_rectangle_with_border(
+            &rect,
+            &corners,
+            &BorderSpec {
+                thickness: border_thickness,
+                color: foreground(theme::is_dark_mode()),
+            },
+            &background(theme::is_dark_mode()),
+        );
+
+        self.draw_triangle_indicator(fb, rect, triangle_space, border_thickness);
+    }
+
+    fn render_standard_menu(
+        &self,
+        fb: &mut dyn Framebuffer,
+        border_radius: i32,
+        border_thickness: u16,
+        corners: CornerSpec,
+    ) {
+        fb.draw_rounded_rectangle_with_border(
+            &self.rect,
+            &corners,
+            &BorderSpec {
+                thickness: border_thickness,
+                color: foreground(theme::is_dark_mode()),
+            },
+            &background(theme::is_dark_mode()),
+        );
+    }
+
+    fn draw_triangle_indicator(
+        &self,
+        fb: &mut dyn Framebuffer,
+        rect: Rectangle,
+        triangle_space: i32,
+        border_thickness: u16,
+    ) {
+        let y_b = if self.dir.is_positive() {
+            self.rect.min.y
+        } else {
+            self.rect.max.y - 1
+        };
+
+        let side = triangle_space + border_thickness as i32;
+        let x_b = self
+            .center
+            .x
+            .max(rect.min.x + 2 * side)
+            .min(rect.max.x - 2 * side);
+
+        let mut b = pt!(x_b, y_b);
+        let mut a = b + pt!(-side, self.dir * side);
+        let mut c = a + pt!(2 * side, 0);
+
+        fb.draw_triangle(&[a, b, c], foreground(theme::is_dark_mode()));
+        let drift = (border_thickness as f32 * ::std::f32::consts::SQRT_2) as i32;
+
+        b += pt!(0, self.dir * drift);
+        a += pt!(drift, 0);
+        c -= pt!(drift, 0);
+
+        fb.draw_triangle(&[a, b, c], background(theme::is_dark_mode()));
     }
 }
 
@@ -272,38 +560,19 @@ impl View for Menu {
     ) -> bool {
         match *evt {
             Event::Select(ref entry_id) if self.root => {
-                self.handle_event(
-                    &Event::PropagateSelect(entry_id.clone()),
-                    hub,
-                    bus,
-                    rq,
-                    context,
-                );
+                self.handle_select_event(entry_id.clone(), hub, bus, rq, context);
                 false
             }
             Event::PropagateSelect(..) => {
-                for c in &mut self.children {
-                    if c.handle_event(evt, hub, bus, rq, context) {
-                        break;
-                    }
-                }
+                self.handle_propagate_select(evt, hub, bus, rq, context);
                 true
             }
             Event::Validate if self.root => {
-                let hub2 = hub.clone();
-                let view_id = self.view_id;
-                thread::spawn(move || {
-                    thread::sleep(CLOSE_IGNITION_DELAY);
-                    hub2.send(Event::Close(view_id)).ok();
-                });
+                self.handle_validate_event(hub);
                 true
             }
             Event::Gesture(GestureEvent::Tap(center)) if !self.rect.includes(center) => {
-                if self.root {
-                    bus.push_back(Event::Close(self.view_id));
-                } else {
-                    bus.push_back(Event::CloseSub(self.view_id));
-                }
+                self.handle_tap_outside(center, bus);
                 self.root
             }
             Event::Gesture(GestureEvent::HoldFingerShort(center, ..))
@@ -312,27 +581,11 @@ impl View for Menu {
                 self.root
             }
             Event::SubMenu(rect, ref entries) => {
-                let menu = Menu::new(
-                    rect,
-                    ViewId::SubMenu(self.sub_id),
-                    MenuKind::SubMenu,
-                    entries.clone(),
-                    context,
-                )
-                .root(false);
-                rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
-                self.children.push(Box::new(menu) as Box<dyn View>);
-                self.sub_id = self.sub_id.wrapping_add(1);
+                self.handle_submenu_event(rect, entries, rq, context);
                 true
             }
             Event::CloseSub(id) => {
-                if let Some(index) = locate_by_id(self, id) {
-                    rq.add(RenderData::expose(
-                        *self.children[index].rect(),
-                        UpdateMode::Gui,
-                    ));
-                    self.children.remove(index);
-                }
+                self.handle_close_sub_event(id, rq);
                 true
             }
             Event::Gesture(..) => true,
@@ -345,72 +598,12 @@ impl View for Menu {
         let border_radius = scale_by_dpi(BORDER_RADIUS_MEDIUM, dpi) as i32;
         let border_thickness = scale_by_dpi(THICKNESS_LARGE, dpi) as u16;
 
-        let corners = if self.kind == MenuKind::DropDown {
-            if self.dir.is_positive() {
-                CornerSpec::South(border_radius)
-            } else {
-                CornerSpec::North(border_radius)
-            }
-        } else {
-            CornerSpec::Uniform(border_radius)
-        };
+        let corners = self.calculate_render_corners(border_radius);
 
         if self.kind == MenuKind::Contextual {
-            let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
-            let triangle_space = font.x_heights.1 as i32;
-            let mut rect = self.rect;
-
-            if self.dir.is_positive() {
-                rect.min.y += triangle_space
-            } else {
-                rect.max.y -= triangle_space
-            }
-
-            fb.draw_rounded_rectangle_with_border(
-                &rect,
-                &corners,
-                &BorderSpec {
-                    thickness: border_thickness,
-                    color: foreground(theme::is_dark_mode()),
-                },
-                &background(theme::is_dark_mode()),
-            );
-
-            let y_b = if self.dir.is_positive() {
-                self.rect.min.y
-            } else {
-                self.rect.max.y - 1
-            };
-
-            let side = triangle_space + border_thickness as i32;
-            let x_b = self
-                .center
-                .x
-                .max(rect.min.x + 2 * side)
-                .min(rect.max.x - 2 * side);
-
-            let mut b = pt!(x_b, y_b);
-            let mut a = b + pt!(-side, self.dir * side);
-            let mut c = a + pt!(2 * side, 0);
-
-            fb.draw_triangle(&[a, b, c], foreground(theme::is_dark_mode()));
-            let drift = (border_thickness as f32 * ::std::f32::consts::SQRT_2) as i32;
-
-            b += pt!(0, self.dir * drift);
-            a += pt!(drift, 0);
-            c -= pt!(drift, 0);
-
-            fb.draw_triangle(&[a, b, c], background(theme::is_dark_mode()));
+            self.render_contextual_menu(fb, fonts, dpi, border_radius, border_thickness, corners);
         } else {
-            fb.draw_rounded_rectangle_with_border(
-                &self.rect,
-                &corners,
-                &BorderSpec {
-                    thickness: border_thickness,
-                    color: foreground(theme::is_dark_mode()),
-                },
-                &background(theme::is_dark_mode()),
-            );
+            self.render_standard_menu(fb, border_radius, border_thickness, corners);
         }
     }
 

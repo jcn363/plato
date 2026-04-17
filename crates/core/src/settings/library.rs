@@ -1,4 +1,6 @@
 use crate::metadata::SortMethod;
+use crate::validation::{validate_path, validate_string_length};
+use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::path::PathBuf;
@@ -61,6 +63,23 @@ impl Default for LibrarySettings {
             thumbnail_previews: true,
             hooks: Vec::new(),
         }
+    }
+}
+
+impl LibrarySettings {
+    /// Validates library settings are within acceptable ranges
+    ///
+    /// # Validation Rules
+    /// - name: 1 to 100 characters
+    /// - path: non-empty, valid path format
+    pub fn validate(&self) -> Result<(), Error> {
+        // Validate library name
+        validate_string_length(&self.name, "library.name", 1, 100)?;
+
+        // Validate library path
+        validate_path(&self.path, "library.path")?;
+
+        Ok(())
     }
 }
 

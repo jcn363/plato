@@ -1,13 +1,102 @@
-//! Views are organized as a tree. A view might receive / send events and render itself.
+//! View System Module
 //!
-//! The z-level of the n-th child of a view is less or equal to the z-level of its n+1-th child.
+//! This module provides the UI view system for Plato, organizing views as a tree structure
+//! with event propagation and rendering capabilities.
 //!
-//! Events travel from the root to the leaves, only the leaf views will handle the root events, but
-//! any view can send events to its parent. From the events it receives from its children, a view
-//! resends the ones it doesn't handle to its own parent. Hence an event sent from a child might
-//! bubble up to the root. If it reaches the root without being captured by any view, then it will
-//! be written to the main event channel and will be sent to every leaf in one of the next loop
-//! iterations.
+//! ## Architecture
+//!
+//! Views are organized as a tree with the following properties:
+//! - The z-level of the n-th child is <= the z-level of its (n+1)-th sibling
+//! - Events travel from root to leaves, with only leaf views handling root events
+//! - Events bubble up from children to parents if not handled
+//! - Unhandled events reaching the root are broadcast to all leaves
+//!
+//! ## Module Organization
+//!
+//! Views are grouped by functional domain:
+//!
+//! ### Core UI Components
+//! - **button.rs, rounded_button.rs**: Clickable buttons
+//! - **label.rs**: Text display
+//! - **input_field.rs, named_input.rs**: Text input
+//! - **icon.rs**: Icon display
+//! - **menu.rs**: Context menus
+//! - **dialog.rs**: Modal dialogs
+//! - **slider.rs**: Value sliders
+//!
+//! ### Reader View (`reader/`)
+//! - **reader_impl/**: Reader implementation split into focused modules
+//!   - Core rendering, navigation, annotations, search, settings
+//! - **tool_bar/**: Reader toolbar with layout sub-module
+//! - **margin_cropper.rs**: Interactive margin cropping
+//! - **chapter_label.rs, results_label.rs, bottom_bar.rs**: Reader UI elements
+//!
+//! ### Home View (`home/`)
+//! - **mod.rs**: Home view main implementation
+//! - **shelf.rs**: Book shelf display
+//! - **book.rs**: Book item rendering
+//! - **directories_bar.rs**: Directory navigation
+//! - **navigation_bar.rs, address_bar.rs**: Navigation controls
+//! - **ui_toggles/**: Settings toggle components
+//!
+//! ### Specialized Views
+//! - **dictionary/**: Dictionary lookup UI
+//! - **sketch/**: Sketch/drawing view
+//! - **calculator/**: Calculator widget
+//! - **keyboard.rs**: On-screen keyboard
+//! - **epub_editor/**: EPUB editing interface
+//! - **cover_editor.rs**: Book cover editing
+//! - **pdf_manipulator.rs**: PDF tools UI
+//!
+//! ### System Views
+//! - **intermission.rs**: Sleep/power-off screens
+//! - **notification.rs**: Notification display
+//! - **battery.rs, clock.rs**: Status indicators
+//! - **frontlight.rs**: Frontlight controls
+//! - **search_bar.rs, search_replace.rs**: Search interface
+//!
+//! ## Module Hierarchy
+//!
+//! ```text
+//! view/
+//! ├── mod.rs              (view system core)
+//! ├── common.rs           (shared view utilities)
+//! ├── identifiers.rs      (ViewId definitions)
+//! ├── rendering.rs        (render queue and constants)
+//! ├── menu_helpers.rs     (menu utility functions)
+//! │
+//! ├── reader/             (reader view subtree)
+//! │   ├── mod.rs
+//! │   ├── reader_impl/    (implementation modules)
+//! │   ├── tool_bar/
+//! │   └── ... (UI elements)
+//! │
+//! ├── home/               (home view subtree)
+//! │   ├── mod.rs
+//! │   ├── shelf.rs
+//! │   ├── book.rs
+//! │   └── ... (sub-components)
+//! │
+//! ├── dictionary/         (dictionary subtree)
+//! ├── sketch/             (sketch subtree)
+//! ├── calculator/         (calculator subtree)
+//! └── epub_editor/        (EPUB editor subtree)
+//! ```
+//!
+//! ## Event Flow
+//!
+//! 1. Events enter at root, travel down to leaves
+//! 2. Leaf views handle events they recognize
+//! 3. Unhandled events bubble up to parent
+//! 4. Events reaching root are queued for broadcast
+//!
+//! ## Dependencies
+//!
+//! Views depend on:
+//! - `geom` - Geometry and positioning
+//! - `framebuffer` - Rendering output
+//! - `font` - Text rendering
+//! - `input` - Event definitions
 
 pub mod battery;
 pub mod button;

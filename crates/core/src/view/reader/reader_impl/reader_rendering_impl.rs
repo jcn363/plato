@@ -9,7 +9,7 @@
 //! - `render_rect`: Calculates visible rectangles for rendering operations
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
-use crate::document::{Document, Location};
+use crate::document::Location;
 use crate::framebuffer::UpdateMode;
 use crate::geom::halves;
 use crate::geom::Rectangle;
@@ -24,7 +24,6 @@ use crate::view::reader::tool_bar::ToolBar;
 use crate::view::search_bar::SearchBar;
 use crate::view::top_bar::TopBar;
 use crate::view::{Hub, RenderQueue, BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use std::sync::MutexGuard;
 
 use super::reader::Reader;
 
@@ -199,14 +198,14 @@ impl Reader {
                 .as_ref()
                 .and_then(|r| r.font_size)
                 .unwrap_or(context.settings.reader.font_size);
-            let mut doc = self._doc.lock().unwrap_or_else(
-                |poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| {
-                    poisoned.into_inner()
-                },
-            );
-            doc.layout(rect.width(), rect.height(), font_size, CURRENT_DEVICE.dpi);
-            let current_page = self.current_page.min(doc.pages_count() - 1);
-            if let Some(location) = doc.resolve_location(Location::Exact(current_page)) {
+            let current_page = self.current_page;
+            let location = {
+                let mut doc = self._doc.lock().expect("Document lock poisoned");
+                doc.layout(rect.width(), rect.height(), font_size, CURRENT_DEVICE.dpi);
+                let current_page = current_page.min(doc.pages_count() - 1);
+                doc.resolve_location(Location::Exact(current_page))
+            };
+            if let Some(location) = location {
                 self.current_page = location;
             }
             self.text.clear();

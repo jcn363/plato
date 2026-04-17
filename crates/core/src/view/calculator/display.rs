@@ -1,6 +1,5 @@
 use super::state::Calculator;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{halves, Rectangle};
 use crate::unit::scale_by_dpi;

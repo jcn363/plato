@@ -4,7 +4,6 @@ use super::label::Label;
 use super::{Align, Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
 use super::{BORDER_RADIUS_MEDIUM, THICKNESS_LARGE};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::Framebuffer;
 use crate::geom::{big_half, halves, BorderSpec, CornerSpec, Rectangle};

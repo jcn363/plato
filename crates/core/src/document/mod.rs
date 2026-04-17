@@ -1,3 +1,78 @@
+//! Document Handling Module
+//!
+//! This module provides document loading, rendering, and manipulation for multiple
+//! document formats including PDF, EPUB, HTML, and various image formats.
+//!
+//! ## Architecture
+//!
+//! The document module is organized by format and function:
+//!
+//! ### Format-Specific Modules
+//! - **pdf/**: PDF document support via MuPDF
+//!   - `PdfOpener`, `PdfDocument`, `PdfPage` for PDF handling
+//!   - Table of contents, links, annotations
+//! - **epub/**: EPUB e-book support
+//!   - `EpubDocument` for EPUB rendering
+//!   - NCX/Navigation parsing
+//! - **html/**: HTML document support
+//!   - Custom HTML/CSS rendering engine optimized for e-ink
+//!   - DOM, layout, text shaping, line breaking
+//! - **mupdf/**: MuPDF integration layer
+//!   - Safe wrappers for MuPDF FFI
+//!   - Context management, document abstraction
+//!
+//! ### Support Modules
+//! - **pdf_manipulator.rs**: PDF manipulation tools (merge, split, redact)
+//! - **progressive_loader.rs**: Progressive document loading with caching
+//! - **mupdf_sys.rs**: Low-level MuPDF FFI bindings
+//!
+//! ## Module Hierarchy
+//!
+//! ```text
+//! document/
+//! ├── mod.rs              (core Document trait and shared types)
+//! ├── pdf/                (PDF format support)
+//! │   ├── mod.rs          (PdfOpener, PdfDocument, PdfPage)
+//! │   └── text.rs         (PDF text extraction)
+//! ├── epub/               (EPUB format support)
+//! │   ├── mod.rs          (EpubDocument)
+//! │   └── opener.rs       (EPUB opening utilities)
+//! ├── html/               (HTML format support)
+//! │   ├── mod.rs          (HtmlDocument, Engine)
+//! │   ├── css.rs          (CSS parsing)
+//! │   ├── dom.rs          (DOM structure)
+//! │   ├── engine.rs       (Layout engine)
+//! │   ├── engine_*.rs     (Engine components)
+//! │   ├── layout.rs       (Text layout)
+//! │   ├── parse.rs        (HTML parsing)
+//! │   └── engine_text/    (Text processing)
+//! ├── mupdf/              (MuPDF integration)
+//! │   ├── mod.rs          (Safe wrappers)
+//! │   ├── context.rs      (Context management)
+//! │   ├── document.rs     (Document abstraction)
+//! │   ├── page.rs         (Page abstraction)
+//! │   ├── pixmap.rs       (Pixmap handling)
+//! │   └── text.rs         (Text extraction)
+//! ├── mupdf_sys.rs        (FFI bindings)
+//! ├── pdf_manipulator.rs  (PDF tools)
+//! └── progressive_loader.rs (Progressive loading)
+//! ```
+//!
+//! ## Core Trait
+//!
+//! The `Document` trait defines the interface all document types implement:
+//! - Page access and rendering
+//! - Table of contents/navigation
+//! - Text extraction and search
+//! - Annotation support
+//!
+//! ## Dependencies
+//!
+//! - `mupdf` - PDF rendering via MuPDF
+//! - `html` - HTML/CSS engine
+//! - `framebuffer` - Output rendering
+//! - `metadata` - Document metadata
+
 pub mod epub;
 pub mod html;
 pub mod mupdf;

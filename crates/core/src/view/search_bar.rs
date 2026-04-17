@@ -4,7 +4,6 @@ use super::input_field::InputField;
 use super::{Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER, THICKNESS_MEDIUM};
 use crate::color::{separator, text_bump_small};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::Framebuffer;
 use crate::geom::Rectangle;
@@ -33,7 +32,16 @@ impl SearchBar {
 
         Self::add_search_icon(&mut children, &rect, side);
         Self::add_left_separator(&mut children, &rect, thickness, side);
-        Self::add_input_field(&mut children, &rect, thickness, side, input_id, text, placeholder, context);
+        Self::add_input_field(
+            &mut children,
+            &rect,
+            thickness,
+            side,
+            input_id,
+            text,
+            placeholder,
+            context,
+        );
         Self::add_right_separator(&mut children, &rect, thickness, side);
         Self::add_close_icon(&mut children, &rect, side);
 
@@ -58,7 +66,12 @@ impl SearchBar {
         children.push(Box::new(search_icon) as Box<dyn View>);
     }
 
-    fn add_left_separator(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, thickness: i32, side: i32) {
+    fn add_left_separator(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        thickness: i32,
+        side: i32,
+    ) {
         let sep = Filler::new(
             rect![
                 pt!(rect.min.x + side, rect.min.y),
@@ -69,7 +82,16 @@ impl SearchBar {
         children.push(Box::new(sep) as Box<dyn View>);
     }
 
-    fn add_input_field(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, thickness: i32, side: i32, input_id: ViewId, text: &str, placeholder: &str, context: &mut Context) {
+    fn add_input_field(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        thickness: i32,
+        side: i32,
+        input_id: ViewId,
+        text: &str,
+        placeholder: &str,
+        context: &mut Context,
+    ) {
         let input_field = InputField::new(
             rect![
                 pt!(rect.min.x + side + thickness, rect.min.y),
@@ -83,7 +105,12 @@ impl SearchBar {
         children.push(Box::new(input_field) as Box<dyn View>);
     }
 
-    fn add_right_separator(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, thickness: i32, side: i32) {
+    fn add_right_separator(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        thickness: i32,
+        side: i32,
+    ) {
         let sep = Filler::new(
             rect![
                 pt!(rect.max.x - side - thickness, rect.min.y),

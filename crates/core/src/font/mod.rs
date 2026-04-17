@@ -44,12 +44,11 @@ use crate::{log_error, log_warn};
 use anyhow::{format_err, Error};
 use bitflags::bitflags;
 use globset::Glob;
-use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
 use std::collections::BTreeSet;
 use std::path::Path;
-use std::sync::LazyLock;
 use std::str;
+use std::sync::LazyLock;
 use walkdir::WalkDir;
 
 // Font sizes in 1/64th of a point
@@ -92,10 +91,8 @@ pub const DISPLAY_STYLE: Style = Style {
 pub static MD_TITLE: LazyLock<Style> = LazyLock::new(|| {
     // Compute the ratio between the physical width of the
     // current device and that of the Aura ONE.
-    let ratio = (CURRENT_DEVICE.dims.0 as f32 * 300.0) /
-                (CURRENT_DEVICE.dpi as f32 * 1404.0);
-    let size = ((FONT_SIZES[2] as f32 * ratio) as u32).clamp(FONT_SIZES[1],
-                                                             FONT_SIZES[2]);
+    let ratio = (CURRENT_DEVICE.dims.0 as f32 * 300.0) / (CURRENT_DEVICE.dpi as f32 * 1404.0);
+    let size = ((FONT_SIZES[2] as f32 * ratio) as u32).clamp(FONT_SIZES[1], FONT_SIZES[2]);
     Style {
         family: Family::Serif,
         variant: Variant::ITALIC,

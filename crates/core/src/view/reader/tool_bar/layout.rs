@@ -1,5 +1,4 @@
 use crate::color::separator as sep;
-use crate::device::CURRENT_DEVICE;
 use crate::geom::Rectangle;
 use crate::metadata::ReaderInfo;
 use crate::metadata::{DEFAULT_CONTRAST_EXPONENT, DEFAULT_CONTRAST_GRAY};

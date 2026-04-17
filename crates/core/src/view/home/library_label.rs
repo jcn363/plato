@@ -1,5 +1,4 @@
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;

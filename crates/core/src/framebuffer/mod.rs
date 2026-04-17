@@ -1,3 +1,34 @@
+//! Framebuffer Module - Display Output Abstraction
+//!
+//! This module provides hardware abstraction for display output via the
+//! [`Framebuffer`] trait. This allows the application to work with any display
+//! hardware (Kobo e-ink, SDL emulator, etc.) through a common interface.
+//!
+//! ## Architecture
+//!
+//! The module uses a trait-based abstraction:
+//!
+//! - **[`Framebuffer`] trait**: Core abstraction for display operations
+//! - **Hardware implementations**: `KoboFramebuffer1`, `KoboFramebuffer2` for Kobo devices
+//! - **Mock implementations**: [`MockFramebuffer`](crate::test_mocks::MockFramebuffer) for testing
+//!
+//! ## Trait-Based Design
+//!
+//! The [`Framebuffer`] trait enables:
+//! - **Hardware independence**: Application code doesn't depend on specific hardware
+//! - **Testability**: Mock implementations allow headless testing
+//! - **Multiple backends**: Support for Kobo devices, emulator, and test mocks
+//!
+//! ## Usage
+//!
+//! ```rust,ignore
+//! use plato_core::framebuffer::Framebuffer;
+//! use plato_core::framebuffer::KoboFramebuffer1;
+//!
+//! let fb = Box::new(KoboFramebuffer1::new()?);
+//! fb.update(&rect, UpdateMode::Partial)?;
+//! ```
+
 mod image;
 mod ion_sys;
 mod kobo1;

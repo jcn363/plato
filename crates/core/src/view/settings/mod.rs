@@ -12,7 +12,6 @@ use super::{Align, Bus, EntryId, Event, Hub, Id, RenderQueue, View, ViewId, ID_F
 use super::{BORDER_RADIUS_MEDIUM, SMALL_BAR_HEIGHT, THICKNESS_LARGE};
 use crate::color::{background, foreground};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::Framebuffer;
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};

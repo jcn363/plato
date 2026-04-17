@@ -1,7 +1,6 @@
 use super::preset::{Preset, PresetKind};
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CycleDir, Dir, Rectangle};
@@ -28,8 +27,10 @@ impl PresetsList {
     }
 
     pub fn update(&mut self, presets: &[LightPreset], rq: &mut RenderQueue, fonts: &mut Fonts) {
-        let (preset_width, preset_height, max_per_line) = Self::calculate_preset_dimensions(&self.rect, fonts, presets);
-        let dx = Self::calculate_start_offset(&self.rect, preset_width, max_per_line, presets.len());
+        let (preset_width, preset_height, max_per_line) =
+            Self::calculate_preset_dimensions(&self.rect, fonts, presets);
+        let dx =
+            Self::calculate_start_offset(&self.rect, preset_width, max_per_line, presets.len());
 
         self.pages.clear();
         self.build_pages(presets, preset_width, preset_height, max_per_line, dx);
@@ -38,7 +39,11 @@ impl PresetsList {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    fn calculate_preset_dimensions(rect: &Rectangle, fonts: &mut Fonts, presets: &[LightPreset]) -> (i32, i32, i32) {
+    fn calculate_preset_dimensions(
+        rect: &Rectangle,
+        fonts: &mut Fonts,
+        presets: &[LightPreset],
+    ) -> (i32, i32, i32) {
         let dpi = crate::unit::get_device_dpi();
         let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let x_height = font.x_heights.0 as i32;
@@ -49,14 +54,27 @@ impl PresetsList {
         (preset_width, preset_height, max_per_line)
     }
 
-    fn calculate_start_offset(rect: &Rectangle, preset_width: i32, max_per_line: i32, presets_count: usize) -> i32 {
+    fn calculate_start_offset(
+        rect: &Rectangle,
+        preset_width: i32,
+        max_per_line: i32,
+        presets_count: usize,
+    ) -> i32 {
         let padding = preset_width / 4;
         let presets_count = presets_count as i32;
         let first_line_count = max_per_line.min(presets_count);
-        (rect.width() as i32 - (first_line_count * preset_width + (first_line_count - 1) * padding)) / 2
+        (rect.width() as i32 - (first_line_count * preset_width + (first_line_count - 1) * padding))
+            / 2
     }
 
-    fn build_pages(&mut self, presets: &[LightPreset], preset_width: i32, preset_height: i32, max_per_line: i32, dx: i32) {
+    fn build_pages(
+        &mut self,
+        presets: &[LightPreset],
+        preset_width: i32,
+        preset_height: i32,
+        max_per_line: i32,
+        dx: i32,
+    ) {
         let presets_count = presets.len() as i32;
         let mut children = Vec::with_capacity(max_per_line as usize);
         let mut item_index = 0;
@@ -71,7 +89,8 @@ impl PresetsList {
                 x + preset_width,
                 self.rect.max.y
             ];
-            let kind = Self::determine_preset_kind(position, max_per_line, index, presets_count, presets);
+            let kind =
+                Self::determine_preset_kind(position, max_per_line, index, presets_count, presets);
             let preset = Preset::new(preset_rect, kind);
             children.push(Box::new(preset) as Box<dyn View>);
             item_index += 1;
@@ -83,9 +102,21 @@ impl PresetsList {
         }
     }
 
-    fn determine_preset_kind(position: i32, max_per_line: i32, index: i32, presets_count: i32, presets: &[LightPreset]) -> PresetKind {
-        if (position == 0 && index > 0) || (position == max_per_line - 1 && index < presets_count - 1) {
-            let dir = if position == 0 { CycleDir::Previous } else { CycleDir::Next };
+    fn determine_preset_kind(
+        position: i32,
+        max_per_line: i32,
+        index: i32,
+        presets_count: i32,
+        presets: &[LightPreset],
+    ) -> PresetKind {
+        if (position == 0 && index > 0)
+            || (position == max_per_line - 1 && index < presets_count - 1)
+        {
+            let dir = if position == 0 {
+                CycleDir::Previous
+            } else {
+                CycleDir::Next
+            };
             PresetKind::Page(dir)
         } else {
             let name = presets[index as usize].name();

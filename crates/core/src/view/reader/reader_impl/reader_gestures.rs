@@ -24,7 +24,7 @@ use crate::view::{Event, Hub, RenderData, RenderQueue};
 const RECT_DIST_JITTER: f32 = 15.0;
 
 /// Update selection rectangles in forward direction (for handle_selection_motion)
-#[allow(dead_code)]
+#[allow(dead_code)] // Selection rectangle updates for gesture handling
 fn update_selection_rects_forward(
     rects: &[(Rectangle, Point)],
     boundary_low: Point,

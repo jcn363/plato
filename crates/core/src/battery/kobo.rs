@@ -55,18 +55,38 @@ impl KoboBattery {
                 .find(|bi| Path::new(bi).exists())
                 .ok_or_else(|| format_err!("battery path missing"))?,
         );
-        let capacity = File::open(base.join(BATTERY_CAPACITY))
-            .with_context(|| format!("can't open battery capacity file {}", base.join(BATTERY_CAPACITY).display()))?;
-        let status = File::open(base.join(BATTERY_STATUS))
-            .with_context(|| format!("can't open battery status file {}", base.join(BATTERY_STATUS).display()))?;
+        let capacity = File::open(base.join(BATTERY_CAPACITY)).with_context(|| {
+            format!(
+                "can't open battery capacity file {}",
+                base.join(BATTERY_CAPACITY).display()
+            )
+        })?;
+        let status = File::open(base.join(BATTERY_STATUS)).with_context(|| {
+            format!(
+                "can't open battery status file {}",
+                base.join(BATTERY_STATUS).display()
+            )
+        })?;
         let power_cover = if CURRENT_DEVICE.has_power_cover() {
             let base = Path::new(POWER_COVER_INTERFACE);
-            let capacity = File::open(base.join(POWER_COVER_CAPACITY))
-                .with_context(|| format!("can't open power cover capacity file {}", base.join(POWER_COVER_CAPACITY).display()))?;
-            let status = File::open(base.join(POWER_COVER_STATUS))
-                .with_context(|| format!("can't open power cover status file {}", base.join(POWER_COVER_STATUS).display()))?;
-            let connected = File::open(base.join(POWER_COVER_CONNECTED))
-                .with_context(|| format!("can't open power cover connected file {}", base.join(POWER_COVER_CONNECTED).display()))?;
+            let capacity = File::open(base.join(POWER_COVER_CAPACITY)).with_context(|| {
+                format!(
+                    "can't open power cover capacity file {}",
+                    base.join(POWER_COVER_CAPACITY).display()
+                )
+            })?;
+            let status = File::open(base.join(POWER_COVER_STATUS)).with_context(|| {
+                format!(
+                    "can't open power cover status file {}",
+                    base.join(POWER_COVER_STATUS).display()
+                )
+            })?;
+            let connected = File::open(base.join(POWER_COVER_CONNECTED)).with_context(|| {
+                format!(
+                    "can't open power cover connected file {}",
+                    base.join(POWER_COVER_CONNECTED).display()
+                )
+            })?;
             Some(PowerCover {
                 capacity,
                 status,

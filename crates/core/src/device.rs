@@ -94,164 +94,108 @@ pub enum FrontlightKind {
 impl Device {
     pub fn new(product: &str, model_number: &str) -> Device {
         match product {
-            "kraken" => Device {
-                model: Model::Glo,
-                proto: TouchProto::Single,
-                dims: (758, 1024),
-                dpi: 212,
-            },
-            "pixie" => Device {
-                model: Model::Mini,
-                proto: TouchProto::Single,
-                dims: (600, 800),
-                dpi: 200,
-            },
-            "dragon" => Device {
-                model: Model::AuraHD,
-                proto: TouchProto::Single,
-                dims: (1080, 1440),
-                dpi: 265,
-            },
-            "phoenix" => Device {
-                model: Model::Aura,
-                proto: TouchProto::MultiA,
-                dims: (758, 1024),
-                dpi: 212,
-            },
-            "dahlia" => Device {
-                model: Model::AuraH2O,
-                proto: TouchProto::MultiA,
-                dims: (1080, 1440),
-                dpi: 265,
-            },
-            "alyssum" => Device {
-                model: Model::GloHD,
-                proto: TouchProto::MultiA,
-                dims: (1072, 1448),
-                dpi: 300,
-            },
-            "pika" => Device {
-                model: Model::Touch2,
-                proto: TouchProto::MultiA,
-                dims: (600, 800),
-                dpi: 167,
-            },
-            "daylight" => Device {
-                model: if model_number == "381" {
-                    Model::AuraONELimEd
-                } else {
-                    Model::AuraONE
-                },
-                proto: TouchProto::MultiA,
-                dims: (1404, 1872),
-                dpi: 300,
-            },
-            "star" => Device {
-                model: if model_number == "379" {
-                    Model::AuraEd2V2
-                } else {
-                    Model::AuraEd2V1
-                },
-                proto: TouchProto::MultiA,
-                dims: (758, 1024),
-                dpi: 212,
-            },
-            "snow" => Device {
-                model: if model_number == "378" {
-                    Model::AuraH2OEd2V2
-                } else {
-                    Model::AuraH2OEd2V1
-                },
-                proto: TouchProto::MultiB,
-                dims: (1080, 1440),
-                dpi: 265,
-            },
-            "nova" => Device {
-                model: Model::ClaraHD,
-                proto: TouchProto::MultiB,
-                dims: (1072, 1448),
-                dpi: 300,
-            },
-            "frost" => Device {
-                model: if model_number == "380" {
-                    Model::Forma32GB
-                } else {
-                    Model::Forma
-                },
-                proto: TouchProto::MultiB,
-                dims: (1440, 1920),
-                dpi: 300,
-            },
-            "storm" => Device {
-                model: Model::LibraH2O,
-                proto: TouchProto::MultiB,
-                dims: (1264, 1680),
-                dpi: 300,
-            },
-            "luna" => Device {
-                model: Model::Nia,
-                proto: TouchProto::MultiA,
-                dims: (758, 1024),
-                dpi: 212,
-            },
-            "europa" => Device {
-                model: Model::Elipsa,
-                proto: TouchProto::MultiC,
-                dims: (1404, 1872),
-                dpi: 227,
-            },
-            "cadmus" => Device {
-                model: Model::Sage,
-                proto: TouchProto::MultiC,
-                dims: (1440, 1920),
-                dpi: 300,
-            },
-            "io" => Device {
-                model: Model::Libra2,
-                proto: TouchProto::MultiC,
-                dims: (1264, 1680),
-                dpi: 300,
-            },
-            "goldfinch" => Device {
-                model: Model::Clara2E,
-                proto: TouchProto::MultiB,
-                dims: (1072, 1448),
-                dpi: 300,
-            },
-            "condor" => Device {
-                model: Model::Elipsa2E,
-                proto: TouchProto::MultiC,
-                dims: (1404, 1872),
-                dpi: 227,
-            },
-            "spaBW" | "spaBWTPV" => Device {
-                model: Model::ClaraBW,
-                proto: TouchProto::MultiB,
-                dims: (1072, 1448),
-                dpi: 300,
-            },
-            "spaColour" => Device {
-                model: Model::ClaraColour,
-                proto: TouchProto::MultiB,
-                dims: (1072, 1448),
-                dpi: 300,
-            },
-            "monza" => Device {
-                model: Model::LibraColour,
-                proto: TouchProto::MultiB,
-                dims: (1264, 1680),
-                dpi: 300,
-            },
-            _ => Device {
-                model: if model_number == "320" {
-                    Model::TouchC
-                } else {
-                    Model::TouchAB
-                },
-                proto: TouchProto::Single,
-                dims: (600, 800),
-                dpi: 167,
-            },
+            "kraken" => Self::create_device(Model::Glo, TouchProto::Single, (758, 1024), 212),
+            "pixie" => Self::create_device(Model::Mini, TouchProto::Single, (600, 800), 200),
+            "dragon" => Self::create_device(Model::AuraHD, TouchProto::Single, (1080, 1440), 265),
+            "phoenix" => Self::create_device(Model::Aura, TouchProto::MultiA, (758, 1024), 212),
+            "dahlia" => Self::create_device(Model::AuraH2O, TouchProto::MultiA, (1080, 1440), 265),
+            "alyssum" => Self::create_device(Model::GloHD, TouchProto::MultiA, (1072, 1448), 300),
+            "pika" => Self::create_device(Model::Touch2, TouchProto::MultiA, (600, 800), 167),
+            "daylight" => Self::create_device_with_model_check(
+                model_number,
+                "381",
+                Model::AuraONELimEd,
+                Model::AuraONE,
+                TouchProto::MultiA,
+                (1404, 1872),
+                300,
+            ),
+            "star" => Self::create_device_with_model_check(
+                model_number,
+                "379",
+                Model::AuraEd2V2,
+                Model::AuraEd2V1,
+                TouchProto::MultiA,
+                (758, 1024),
+                212,
+            ),
+            "snow" => Self::create_device_with_model_check(
+                model_number,
+                "378",
+                Model::AuraH2OEd2V2,
+                Model::AuraH2OEd2V1,
+                TouchProto::MultiB,
+                (1080, 1440),
+                265,
+            ),
+            "nova" => Self::create_device(Model::ClaraHD, TouchProto::MultiB, (1072, 1448), 300),
+            "frost" => Self::create_device_with_model_check(
+                model_number,
+                "380",
+                Model::Forma32GB,
+                Model::Forma,
+                TouchProto::MultiB,
+                (1440, 1920),
+                300,
+            ),
+            "storm" => Self::create_device(Model::LibraH2O, TouchProto::MultiB, (1264, 1680), 300),
+            "luna" => Self::create_device(Model::Nia, TouchProto::MultiA, (758, 1024), 212),
+            "europa" => Self::create_device(Model::Elipsa, TouchProto::MultiC, (1404, 1872), 227),
+            "cadmus" => Self::create_device(Model::Sage, TouchProto::MultiC, (1440, 1920), 300),
+            "io" => Self::create_device(Model::Libra2, TouchProto::MultiC, (1264, 1680), 300),
+            "goldfinch" => {
+                Self::create_device(Model::Clara2E, TouchProto::MultiB, (1072, 1448), 300)
+            }
+            "condor" => Self::create_device(Model::Elipsa2E, TouchProto::MultiC, (1404, 1872), 227),
+            "spaBW" | "spaBWTPV" => {
+                Self::create_device(Model::ClaraBW, TouchProto::MultiB, (1072, 1448), 300)
+            }
+            "spaColour" => {
+                Self::create_device(Model::ClaraColour, TouchProto::MultiB, (1072, 1448), 300)
+            }
+            "monza" => {
+                Self::create_device(Model::LibraColour, TouchProto::MultiB, (1264, 1680), 300)
+            }
+            _ => Self::create_device_with_model_check(
+                model_number,
+                "320",
+                Model::TouchC,
+                Model::TouchAB,
+                TouchProto::Single,
+                (600, 800),
+                167,
+            ),
+        }
+    }
+
+    fn create_device(model: Model, proto: TouchProto, dims: (u32, u32), dpi: u16) -> Device {
+        Device {
+            model,
+            proto,
+            dims,
+            dpi,
+        }
+    }
+
+    fn create_device_with_model_check(
+        model_number: &str,
+        check_value: &str,
+        model_if_match: Model,
+        model_if_not_match: Model,
+        proto: TouchProto,
+        dims: (u32, u32),
+        dpi: u16,
+    ) -> Device {
+        let model = if model_number == check_value {
+            model_if_match
+        } else {
+            model_if_not_match
+        };
+        Device {
+            model,
+            proto,
+            dims,
+            dpi,
         }
     }
 

@@ -13,7 +13,8 @@ use crate::metadata::{Info, Status};
 use crate::settings::{FirstColumn, SecondColumn};
 use crate::theme;
 use crate::unit::scale_by_dpi;
-use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER, THICKNESS_SMALL};
+use crate::view::rendering::THICKNESS_SMALL;
+use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use std::path::PathBuf;
 
 const PROGRESS_HEIGHT: f32 = 16.0;
@@ -121,7 +122,7 @@ impl View for Book {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
-        let dpi = crate::unit::get_device_dpi();
+        let dpi = CURRENT_DEVICE.dpi;
 
         let scheme = if self.active {
             text_inverted_hard(theme::is_dark_mode())

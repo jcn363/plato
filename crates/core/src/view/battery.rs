@@ -3,7 +3,6 @@ use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDE
 use super::{BORDER_RADIUS_SMALL, THICKNESS_LARGE, THICKNESS_MEDIUM};
 use crate::battery::Status;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};

@@ -1,6 +1,5 @@
 use crate::color::text_bump_small;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::Framebuffer;
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};

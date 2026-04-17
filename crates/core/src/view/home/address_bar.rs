@@ -1,6 +1,5 @@
 use crate::color::{separator as sep, text_bump_small as tbs};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::Framebuffer;
 use crate::geom::Rectangle;

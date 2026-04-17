@@ -1,5 +1,5 @@
 use crate::document::file_kind;
-use crate::helpers::{Fingerprint, IsHidden};
+use crate::helpers::{Fingerprint, Fp, IsHidden};
 use crate::log_info;
 use crate::metadata::BookQuery;
 use crate::metadata::{extract_metadata_from_document, sort, FileInfo, Info};
@@ -167,7 +167,14 @@ impl Library {
         self.cleanup_removed_entries();
     }
 
-    fn import_entry(&mut self, path: &Path, relat: &Path, md: &Metadata, fp: Fingerprint, settings: &ImportSettings) {
+    fn import_entry(
+        &mut self,
+        path: &Path,
+        relat: &Path,
+        md: &Metadata,
+        fp: Fp,
+        settings: &ImportSettings,
+    ) {
         let nfp = self.paths.get(relat).cloned();
 
         if let Some(nfp) = nfp {
@@ -177,7 +184,14 @@ impl Library {
         }
     }
 
-    fn update_existing_fingerprint(&mut self, relat: &Path, fp: Fingerprint, nfp: Fingerprint, path: &Path, md: &Metadata) {
+    fn update_existing_fingerprint(
+        &mut self,
+        relat: &Path,
+        fp: Fp,
+        nfp: Fp,
+        path: &Path,
+        md: &Metadata,
+    ) {
         log_info!(
             "Update fingerprint for {}: {} → {}.",
             self.db[&nfp].file.path.display(),
@@ -208,7 +222,14 @@ impl Library {
         self.has_db_changed = true;
     }
 
-    fn add_new_entry(&mut self, path: &Path, relat: &Path, md: &Metadata, fp: Fingerprint, settings: &ImportSettings) {
+    fn add_new_entry(
+        &mut self,
+        path: &Path,
+        relat: &Path,
+        md: &Metadata,
+        fp: Fp,
+        settings: &ImportSettings,
+    ) {
         let kind = file_kind(path).unwrap_or_default();
         if !settings.allowed_kinds.contains(&kind) {
             return;

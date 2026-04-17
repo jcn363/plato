@@ -169,12 +169,16 @@ impl ReaderTocManager {
         if children.is_empty() {
             0
         } else {
-            1 + children.iter().map(|c| match c {
-                SimpleTocEntry::Leaf(_, _) => 0,
-                SimpleTocEntry::Container(_, _, grandchildren) => {
-                    Self::calculate_level(grandchildren)
-                }
-            }).max().unwrap_or(0)
+            1 + children
+                .iter()
+                .map(|c| match c {
+                    SimpleTocEntry::Leaf(_, _) => 0,
+                    SimpleTocEntry::Container(_, _, grandchildren) => {
+                        Self::calculate_level(grandchildren)
+                    }
+                })
+                .max()
+                .unwrap_or(0)
         }
     }
 

@@ -1,7 +1,6 @@
 use crate::color::Color;
 use crate::color::{background, foreground};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::{CornerSpec, Point, Rectangle};
@@ -208,7 +207,8 @@ impl Sketch {
 
     fn load(&mut self, filename: &PathBuf) -> Result<(), Error> {
         let path = self.save_path.join(filename);
-        let file = File::open(&path).with_context(|| format!("can't open sketch file {}", path.display()))?;
+        let file = File::open(&path)
+            .with_context(|| format!("can't open sketch file {}", path.display()))?;
         let decoder = png::Decoder::new(BufReader::new(file));
         let mut reader = decoder.read_info()?;
         reader.next_frame(self.pixmap.data_mut())?;

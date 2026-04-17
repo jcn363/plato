@@ -58,7 +58,13 @@ impl RotationValues {
         }
     }
 
-    fn process_tap(&mut self, mut pt: Point, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+    fn process_tap(
+        &mut self,
+        mut pt: Point,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         pt = self.adjust_point(pt);
         log_info!("Tap {} {:?}", pt, context.fb.dims());
 
@@ -87,6 +93,86 @@ impl RotationValues {
             mem::swap(&mut pt.x, &mut pt.y);
         }
         pt
+    }
+
+    fn render_step_counter(
+        &self,
+        fb: &mut dyn Framebuffer,
+        width: i32,
+        height: i32,
+        fonts: &mut Fonts,
+        dpi: u16,
+    ) -> i32 {
+        let step = 1 + (self.taps.len() % CORNERS_COUNT);
+        let msg = format!("{} / {}", step, CORNERS_COUNT);
+        let font = font_from_style(fonts, &DISPLAY_STYLE, dpi);
+        let plan = font.plan(msg, None, Some(&["lnum".to_string()]));
+        let dx = (width - plan.width as i32) / 2;
+        let dy = (height - font.x_heights.1 as i32) / 3;
+
+        font.render(fb, BLACK, &plan, self.rect.min + pt!(dx, dy));
+        dy + 4 * (font.x_heights.1 as i32) / 3
+    }
+
+    fn render_instruction_message(
+        &self,
+        fb: &mut dyn Framebuffer,
+        width: i32,
+        fonts: &mut Fonts,
+        dpi: u16,
+        dy: &mut i32,
+    ) {
+        let msg = if self.taps.len() < CORNERS_COUNT {
+            MESSAGE_1
+        } else {
+            MESSAGE_2
+        };
+        let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
+
+        for line in msg.lines() {
+            let plan = font.plan(line, None, None);
+            let dx = (width - plan.width as i32) / 2;
+            font.render(fb, BLACK, &plan, self.rect.min + pt!(dx, *dy));
+            *dy += 3 * font.x_heights.0 as i32;
+        }
+    }
+
+    fn render_corner_triangles(
+        &self,
+        fb: &mut dyn Framebuffer,
+        width: i32,
+        height: i32,
+        side: i32,
+    ) {
+        if self.taps.len() < CORNERS_COUNT {
+            fb.draw_triangle(&[pt!(0, 0), pt!(side, 0), pt!(0, side)], GRAY07);
+            fb.draw_triangle(
+                &[
+                    pt!(width - 1, 0),
+                    pt!(width - 1, side),
+                    pt!(width - 1 - side, 0),
+                ],
+                GRAY07,
+            );
+            fb.draw_triangle(
+                &[
+                    pt!(width - 1, height - 1),
+                    pt!(width - 1 - side, height - 1),
+                    pt!(width - 1, height - 1 - side),
+                ],
+                GRAY07,
+            );
+            fb.draw_triangle(
+                &[
+                    pt!(0, height - 1),
+                    pt!(0, height - 1 - side),
+                    pt!(side, height - 1),
+                ],
+                GRAY07,
+            );
+        } else {
+            fb.draw_triangle(&[pt!(0, 0), pt!(side, 0), pt!(0, side)], BLACK);
+        }
     }
 
     fn update_rotation(&mut self, context: &mut Context) {
@@ -157,59 +243,9 @@ impl View for RotationValues {
 
         fb.draw_rectangle(&self.rect, WHITE);
 
-        let step = 1 + (self.taps.len() % CORNERS_COUNT);
-        let msg = format!("{} / {}", step, CORNERS_COUNT);
-        let font = font_from_style(fonts, &DISPLAY_STYLE, dpi);
-        let plan = font.plan(msg, None, Some(&["lnum".to_string()]));
-        let dx = (width - plan.width as i32) / 2;
-        let mut dy = (height - font.x_heights.1 as i32) / 3;
-
-        font.render(fb, BLACK, &plan, self.rect.min + pt!(dx, dy));
-
-        dy += 4 * (font.x_heights.1 as i32) / 3;
-        let msg = if self.taps.len() < CORNERS_COUNT {
-            MESSAGE_1
-        } else {
-            MESSAGE_2
-        };
-        let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
-
-        for line in msg.lines() {
-            let plan = font.plan(line, None, None);
-            let dx = (width - plan.width as i32) / 2;
-            font.render(fb, BLACK, &plan, self.rect.min + pt!(dx, dy));
-            dy += 3 * font.x_heights.0 as i32;
-        }
-
-        if self.taps.len() < CORNERS_COUNT {
-            fb.draw_triangle(&[pt!(0, 0), pt!(side, 0), pt!(0, side)], GRAY07);
-            fb.draw_triangle(
-                &[
-                    pt!(width - 1, 0),
-                    pt!(width - 1, side),
-                    pt!(width - 1 - side, 0),
-                ],
-                GRAY07,
-            );
-            fb.draw_triangle(
-                &[
-                    pt!(width - 1, height - 1),
-                    pt!(width - 1 - side, height - 1),
-                    pt!(width - 1, height - 1 - side),
-                ],
-                GRAY07,
-            );
-            fb.draw_triangle(
-                &[
-                    pt!(0, height - 1),
-                    pt!(0, height - 1 - side),
-                    pt!(side, height - 1),
-                ],
-                GRAY07,
-            );
-        } else {
-            fb.draw_triangle(&[pt!(0, 0), pt!(side, 0), pt!(0, side)], BLACK);
-        }
+        let mut dy = self.render_step_counter(fb, width, height, fonts, dpi);
+        self.render_instruction_message(fb, width, fonts, dpi, &mut dy);
+        self.render_corner_triangles(fb, width, height, side);
     }
 
     fn might_rotate(&self) -> bool {

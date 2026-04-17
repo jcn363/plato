@@ -14,5 +14,5 @@ pub use font_cache::{FontCache, FontCacheEntry};
 pub use hyphenation::{HyphenationConfig, SimpleHyphenator};
 pub use line_breaker::LineBreaker;
 pub use text_layout::{TextLayoutConfig, TextLayoutEngine, TextLayoutResult};
-pub use text_renderer::{TextRenderer, TextRenderConfig};
+pub use text_renderer::{TextRenderConfig, TextRenderer};
 pub use text_shaping::{TextDirection, TextShaper, TextShapingConfig};

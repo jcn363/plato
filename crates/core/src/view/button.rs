@@ -2,7 +2,6 @@ use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use super::{BORDER_RADIUS_LARGE, THICKNESS_MEDIUM};
 use crate::color::text_normal;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};

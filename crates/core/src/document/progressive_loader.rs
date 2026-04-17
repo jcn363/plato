@@ -7,9 +7,8 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-const PAGE_CACHE_SIZE_MB: usize = 20;
-const PRELOAD_AHEAD_PAGES: usize = 2;
-const PRELOAD_BEHIND_PAGES: usize = 1;
+// Re-export from canonical source in consts::system per Single Source of Truth rule.
+use crate::consts::system::{PAGE_CACHE_SIZE_MB, PRELOAD_AHEAD_PAGES, PRELOAD_BEHIND_PAGES};
 
 #[derive(Debug, Clone)]
 pub struct PageInfo {

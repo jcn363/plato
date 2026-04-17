@@ -1,6 +1,5 @@
 use crate::color::{background, battery_fill, foreground};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::{BorderSpec, CornerSpec, Point, Rectangle};

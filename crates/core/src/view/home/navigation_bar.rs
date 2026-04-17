@@ -1,7 +1,6 @@
 use super::directories_bar::DirectoriesBar;
 use crate::color::separator as sep;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{Dir, Point, Rectangle};

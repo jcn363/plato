@@ -102,12 +102,28 @@ impl<B: Read + Seek> DictReader for DictReaderRaw<B> {
 /// the GZ compressed file is invalid.
 pub fn load_dict<P: AsRef<Path>>(path: P) -> Result<Box<dyn DictReader>, DictError> {
     if path.as_ref().extension() == Some(OsStr::new("dz")) {
-        let file = File::open(path.as_ref())
-            .map_err(|e| DictError::IoError(io::Error::new(io::ErrorKind::Other, format!("can't open dictionary file {}: {}", path.as_ref().display(), e))))?;
+        let file = File::open(path.as_ref()).map_err(|e| {
+            DictError::IoError(io::Error::new(
+                io::ErrorKind::Other,
+                format!(
+                    "can't open dictionary file {}: {}",
+                    path.as_ref().display(),
+                    e
+                ),
+            ))
+        })?;
         Ok(Box::new(DictReaderDz::new(file)?))
     } else {
-        let file = File::open(path.as_ref())
-            .map_err(|e| DictError::IoError(io::Error::new(io::ErrorKind::Other, format!("can't open dictionary file {}: {}", path.as_ref().display(), e))))?;
+        let file = File::open(path.as_ref()).map_err(|e| {
+            DictError::IoError(io::Error::new(
+                io::ErrorKind::Other,
+                format!(
+                    "can't open dictionary file {}: {}",
+                    path.as_ref().display(),
+                    e
+                ),
+            ))
+        })?;
         let reader = BufReader::new(file);
         Ok(Box::new(DictReaderRaw::new(reader)?))
     }
@@ -144,127 +160,24 @@ impl<B: Read + Seek> DictReaderDz<B> {
         let mut buffered_dzdict = BufReader::new(dzdict);
         let mut header = vec![0u8; 12];
         buffered_dzdict.read_exact(&mut header)?;
-        if header[0..2] != [0x1F, 0x8B] {
-            return Err(DictError::InvalidFileFormat(
-                "Not in gzip format".into(),
-                None,
-            ));
-        }
+        Self::validate_gzip_header(&header)?;
 
-        let flags = &header[3]; // Bitmap of gzip attributes.
-        if (flags & GZ_FEXTRA) == 0 {
-            // Check whether FLG.FEXTRA is set.
-            return Err(DictError::InvalidFileFormat(
-                "Extra flag (FLG.FEXTRA) \
-                       not set, not in gzip + dzip format"
-                    .into(),
-                None,
-            ));
-        }
-
-        // Read XLEN, length of extra FEXTRA field.
+        let flags = &header[3];
         let xlen = LittleEndian::read_u16(&header[10..12]);
 
-        // Read FEXTRA data.
         let mut fextra = vec![0u8; xlen as usize];
         buffered_dzdict.read_exact(&mut fextra)?;
+        Self::validate_fextra_field(&fextra)?;
 
-        if fextra[0..2] != [b'R', b'A'] {
-            return Err(DictError::InvalidFileFormat(
-                "No dictzip info found in FEXTRA \
-                    header (behind XLEN, in SI1SI2 fields)"
-                    .into(),
-                None,
-            ));
-        }
+        let (uchunk_length, chunk_count) = Self::parse_fextra_header(&fextra)?;
+        Self::validate_chunk_count(&fextra, chunk_count)?;
 
-        let length_subfield = LittleEndian::read_u16(&fextra[2..4]);
-        assert_eq!(
-            length_subfield,
-            xlen - 4,
-            "the length of the subfield \
-                   should be the same as the fextra field, ignoring the \
-                   additional length information and the file format identification"
-        );
-        let subf_version = LittleEndian::read_u16(&fextra[4..6]);
-        if subf_version != 1 {
-            return Err(DictError::InvalidFileFormat(
-                "Unimplemented dictzip \
-                     version, only ver 1 supported"
-                    .into(),
-                None,
-            ));
-        }
+        Self::skip_optional_fields(&mut buffered_dzdict, flags)?;
 
-        // Before compression, the file is split into evenly-sized chunks and the size information
-        // is put right after the version information:
-        let uchunk_length = LittleEndian::read_u16(&fextra[6..8]);
-        // Number of chunks in the file.
-        let chunk_count = LittleEndian::read_u16(&fextra[8..10]);
-        if chunk_count == 0 {
-            return Err(DictError::InvalidFileFormat(
-                "No compressed chunks in \
-                    file or broken header information"
-                    .into(),
-                None,
-            ));
-        }
-
-        // Compute number of possible chunks which would fit into the FEXTRA field; used for
-        // validity check. The first 10 bytes of FEXTRA are header information, the rest are 2-byte,
-        // little-endian numbers.
-        let numbers_chunks_which_would_fit = ((fextra.len() - 10) / 2) as u16; // each chunk represented by u16 == 2 bytes
-                                                                               // Check that number of claimed chunks fits within given size for subfield.
-        if numbers_chunks_which_would_fit != chunk_count {
-            return Err(DictError::InvalidFileFormat(
-                format!(
-                    "Expected {} chunks \
-                      according to dictzip header, but the FEXTRA field can \
-                      accomodate {}; possibly broken file",
-                    chunk_count, numbers_chunks_which_would_fit
-                ),
-                None,
-            ));
-        }
-
-        // If file name bit set, seek beyond the 0-terminated file name, we don't care.
-        if (flags & GZ_FNAME) != 0 {
-            let mut tmp = Vec::new();
-            buffered_dzdict.read_until(b'\0', &mut tmp)?;
-        }
-
-        // Seek past comment, if any.
-        if (flags & GZ_COMMENT) != 0 {
-            let mut tmp = Vec::new();
-            buffered_dzdict.read_until(b'\0', &mut tmp)?;
-        }
-
-        // Skip CRC stuff, 2 bytes.
-        if (flags & GZ_FHCRC) != 0 {
-            buffered_dzdict.seek(SeekFrom::Current(2))?;
-        }
-
-        // Save length of each compressed chunk.
-        let mut chunk_offsets = Vec::with_capacity(chunk_count as usize);
-        // Save position of last compressed byte (this is NOT EOF, could be followed by CRC checksum).
-        let mut end_compressed_data = buffered_dzdict.seek(SeekFrom::Current(0))? as usize;
-        // After the various header bytes parsed above, the list of chunk lengths can be found (slice for easier indexing).
-        let chunks_from_header = &fextra[10usize..(10 + chunk_count * 2) as usize];
-
-        // Iterate over each 2nd byte, parse u16.
-        for index in (0..chunks_from_header.len()).filter(|i| (i % 2) == 0) {
-            let index = index as usize;
-            let compressed_len =
-                LittleEndian::read_u16(&chunks_from_header[index..(index + 2)]) as usize;
-            chunk_offsets.push(end_compressed_data);
-            end_compressed_data += compressed_len;
-        }
-        assert_eq!(chunk_offsets.len() as u16, chunk_count, "The read number of compressed chunks in \
-                the .dz file must be equivalent to the number of chunks actually found in the file.\n");
-
-        // Read uncompressed file length.
-        buffered_dzdict.seek(SeekFrom::Start(end_compressed_data as u64))?;
-        let uncompressed = buffered_dzdict.read_i32::<LittleEndian>()?;
+        let (chunk_offsets, end_compressed_data) =
+            Self::parse_chunk_offsets(&fextra, chunk_count, &mut buffered_dzdict)?;
+        let uncompressed =
+            Self::read_uncompressed_length(end_compressed_data, &mut buffered_dzdict)?;
 
         Ok(DictReaderDz {
             dzdict: buffered_dzdict.into_inner(),
@@ -273,6 +186,129 @@ impl<B: Read + Seek> DictReaderDz<B> {
             uchunk_length: uchunk_length as usize,
             ufile_length: uncompressed as u64,
         })
+    }
+
+    fn validate_gzip_header(header: &[u8]) -> Result<(), DictError> {
+        if header[0..2] != [0x1F, 0x8B] {
+            return Err(DictError::InvalidFileFormat(
+                "Not in gzip format".into(),
+                None,
+            ));
+        }
+
+        let flags = &header[3];
+        if (flags & GZ_FEXTRA) == 0 {
+            return Err(DictError::InvalidFileFormat(
+                "Extra flag (FLG.FEXTRA) not set, not in gzip + dzip format".into(),
+                None,
+            ));
+        }
+        Ok(())
+    }
+
+    fn validate_fextra_field(fextra: &[u8]) -> Result<(), DictError> {
+        if fextra[0..2] != [b'R', b'A'] {
+            return Err(DictError::InvalidFileFormat(
+                "No dictzip info found in FEXTRA header".into(),
+                None,
+            ));
+        }
+
+        let xlen = fextra.len() as u16;
+        let length_subfield = LittleEndian::read_u16(&fextra[2..4]);
+        assert_eq!(
+            length_subfield,
+            xlen - 4,
+            "the length of the subfield should be the same as the fextra field"
+        );
+
+        let subf_version = LittleEndian::read_u16(&fextra[4..6]);
+        if subf_version != 1 {
+            return Err(DictError::InvalidFileFormat(
+                "Unimplemented dictzip version, only ver 1 supported".into(),
+                None,
+            ));
+        }
+        Ok(())
+    }
+
+    fn parse_fextra_header(fextra: &[u8]) -> Result<(u16, u16), DictError> {
+        let uchunk_length = LittleEndian::read_u16(&fextra[6..8]);
+        let chunk_count = LittleEndian::read_u16(&fextra[8..10]);
+        if chunk_count == 0 {
+            return Err(DictError::InvalidFileFormat(
+                "No compressed chunks in file or broken header information".into(),
+                None,
+            ));
+        }
+        Ok((uchunk_length, chunk_count))
+    }
+
+    fn validate_chunk_count(fextra: &[u8], chunk_count: u16) -> Result<(), DictError> {
+        let numbers_chunks_which_would_fit = ((fextra.len() - 10) / 2) as u16;
+        if numbers_chunks_which_would_fit != chunk_count {
+            return Err(DictError::InvalidFileFormat(
+                format!(
+                    "Expected {} chunks according to dictzip header, but the FEXTRA field can accomodate {}",
+                    chunk_count, numbers_chunks_which_would_fit
+                ),
+                None,
+            ));
+        }
+        Ok(())
+    }
+
+    fn skip_optional_fields(
+        buffered_dzdict: &mut BufReader<B>,
+        flags: &u8,
+    ) -> Result<(), DictError> {
+        if (flags & GZ_FNAME) != 0 {
+            let mut tmp = Vec::new();
+            buffered_dzdict.read_until(b'\0', &mut tmp)?;
+        }
+
+        if (flags & GZ_COMMENT) != 0 {
+            let mut tmp = Vec::new();
+            buffered_dzdict.read_until(b'\0', &mut tmp)?;
+        }
+
+        if (flags & GZ_FHCRC) != 0 {
+            buffered_dzdict.seek(SeekFrom::Current(2))?;
+        }
+        Ok(())
+    }
+
+    fn parse_chunk_offsets(
+        fextra: &[u8],
+        chunk_count: u16,
+        buffered_dzdict: &mut BufReader<B>,
+    ) -> Result<(Vec<usize>, usize), DictError> {
+        let mut chunk_offsets = Vec::with_capacity(chunk_count as usize);
+        let mut end_compressed_data = buffered_dzdict.seek(SeekFrom::Current(0))? as usize;
+        let chunks_from_header = &fextra[10usize..(10 + chunk_count * 2) as usize];
+
+        for index in (0..chunks_from_header.len()).filter(|i| (i % 2) == 0) {
+            let index = index as usize;
+            let compressed_len =
+                LittleEndian::read_u16(&chunks_from_header[index..(index + 2)]) as usize;
+            chunk_offsets.push(end_compressed_data);
+            end_compressed_data += compressed_len;
+        }
+        assert_eq!(
+            chunk_offsets.len() as u16,
+            chunk_count,
+            "Chunk count mismatch"
+        );
+
+        Ok((chunk_offsets, end_compressed_data))
+    }
+
+    fn read_uncompressed_length(
+        end_compressed_data: usize,
+        buffered_dzdict: &mut BufReader<B>,
+    ) -> Result<i32, DictError> {
+        buffered_dzdict.seek(SeekFrom::Start(end_compressed_data as u64))?;
+        Ok(buffered_dzdict.read_i32::<LittleEndian>()?)
     }
 
     fn get_chunks_for(&self, start_offset: u64, length: u64) -> Vec<Chunk> {

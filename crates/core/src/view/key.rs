@@ -5,7 +5,6 @@ use super::{
 };
 use crate::color::{keyboard_bg, text_inverted_hard, text_normal, Color};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, KBD_CHAR, KBD_LABEL};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CornerSpec, LinearDir, Rectangle};

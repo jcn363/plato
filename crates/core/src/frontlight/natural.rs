@@ -9,23 +9,13 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
-const FRONTLIGHT_INTERFACE: &str = "/sys/class/backlight";
-
-// Aura ONE
-const FRONTLIGHT_WHITE_A: &str = "lm3630a_led1b";
-const FRONTLIGHT_RED_A: &str = "lm3630a_led1a";
-const FRONTLIGHT_GREEN_A: &str = "lm3630a_ledb";
-
-// Aura H₂O Edition 2
-const FRONTLIGHT_WHITE_B: &str = "lm3630a_ledb";
-const FRONTLIGHT_ORANGE_B: &str = "lm3630a_leda";
-
-const FRONTLIGHT_VALUE: &str = "brightness";
-const FRONTLIGHT_MAX_VALUE: &str = "max_brightness";
-const FRONTLIGHT_POWER: &str = "bl_power";
-
-const FRONTLIGHT_POWER_ON: i16 = 31;
-const FRONTLIGHT_POWER_OFF: i16 = 0;
+// Re-export frontlight constants from canonical source in consts::frontlight
+// per Single Source of Truth rule.
+use crate::consts::frontlight::{
+    FRONTLIGHT_GREEN_A, FRONTLIGHT_INTERFACE, FRONTLIGHT_MAX_VALUE, FRONTLIGHT_ORANGE_B,
+    FRONTLIGHT_POWER, FRONTLIGHT_POWER_OFF, FRONTLIGHT_POWER_ON, FRONTLIGHT_RED_A,
+    FRONTLIGHT_VALUE, FRONTLIGHT_WHITE_A, FRONTLIGHT_WHITE_B,
+};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum LightColor {
@@ -35,29 +25,24 @@ pub enum LightColor {
     Orange,
 }
 
-pub static FRONTLIGHT_DIRS: LazyLock<FxHashMap<LightColor, &'static str>> = LazyLock::new(|| {
-    match CURRENT_DEVICE.model {
-        Model::AuraONE | Model::AuraONELimEd => {
-            [
-                (LightColor::White, FRONTLIGHT_WHITE_A),
-                (LightColor::Red, FRONTLIGHT_RED_A),
-                (LightColor::Green, FRONTLIGHT_GREEN_A),
-            ]
-            .iter()
-            .cloned()
-            .collect()
-        }
-        _ => {
-            [
-                (LightColor::White, FRONTLIGHT_WHITE_B),
-                (LightColor::Orange, FRONTLIGHT_ORANGE_B),
-            ]
-            .iter()
-            .cloned()
-            .collect()
-        }
-    }
-});
+pub static FRONTLIGHT_DIRS: LazyLock<FxHashMap<LightColor, &'static str>> =
+    LazyLock::new(|| match CURRENT_DEVICE.model {
+        Model::AuraONE | Model::AuraONELimEd => [
+            (LightColor::White, FRONTLIGHT_WHITE_A),
+            (LightColor::Red, FRONTLIGHT_RED_A),
+            (LightColor::Green, FRONTLIGHT_GREEN_A),
+        ]
+        .iter()
+        .cloned()
+        .collect(),
+        _ => [
+            (LightColor::White, FRONTLIGHT_WHITE_B),
+            (LightColor::Orange, FRONTLIGHT_ORANGE_B),
+        ]
+        .iter()
+        .cloned()
+        .collect(),
+    });
 
 pub struct NaturalFrontlight {
     intensity: f32,
@@ -79,8 +64,12 @@ impl NaturalFrontlight {
         for (light, name) in FRONTLIGHT_DIRS.iter() {
             let dir = base.join(name);
             let mut buf = String::with_capacity(16);
-            let mut file = File::open(dir.join(FRONTLIGHT_MAX_VALUE))
-                .with_context(|| format!("can't open frontlight max value file {}", dir.join(FRONTLIGHT_MAX_VALUE).display()))?;
+            let mut file = File::open(dir.join(FRONTLIGHT_MAX_VALUE)).with_context(|| {
+                format!(
+                    "can't open frontlight max value file {}",
+                    dir.join(FRONTLIGHT_MAX_VALUE).display()
+                )
+            })?;
             file.read_to_string(&mut buf)?;
             maxima.insert(*light, buf.trim_end().parse()?);
             let file = OpenOptions::new()

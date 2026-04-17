@@ -5,12 +5,12 @@ use anyhow::{format_err, Error};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const MAX_FILE_SIZE_MB: u64 = 50;
-const WARNING_FILE_SIZE_MB: u64 = 30;
-const MAX_PAGES_WARNING: usize = 300;
-const MAX_PAGES_HARD_LIMIT: usize = 500;
-const CHUNK_SIZE: usize = 10;
-const KOBO_MEMORY_LIMIT_MB: u64 = 256;
+// Re-export PDF constants from canonical source in consts::pdf
+// per Single Source of Truth rule.
+use crate::consts::pdf::{
+    CHUNK_SIZE, KOBO_MEMORY_LIMIT_MB, MAX_FILE_SIZE_MB, MAX_PAGES_HARD_LIMIT, MAX_PAGES_WARNING,
+    WARNING_FILE_SIZE_MB,
+};
 
 pub struct PdfManipulator {
     ctx: mupdf::MuPdfContext,
@@ -353,7 +353,7 @@ impl PdfManipulator {
         let total_mb = self.calculate_total_size(inputs)?;
         self.validate_merge_size(total_mb)?;
         self.check_memory_available(total_mb + 30)?;
-        
+
         if total_mb > WARNING_FILE_SIZE_MB {
             log_warn!(
                 "WARNING: Merging {}MB of PDFs. This may be slow. \
@@ -395,7 +395,11 @@ impl PdfManipulator {
         Ok(())
     }
 
-    fn merge_documents(&mut self, inputs: &[&Path], new_doc: &mupdf::Document) -> Result<(), Error> {
+    fn merge_documents(
+        &mut self,
+        inputs: &[&Path],
+        new_doc: &mupdf::Document,
+    ) -> Result<(), Error> {
         let total_inputs = inputs.len();
 
         for (file_idx, input_path) in inputs.iter().enumerate() {
@@ -424,7 +428,12 @@ impl PdfManipulator {
         }
     }
 
-    fn save_merged_document(&mut self, new_doc: &mupdf::Document, output_path: &Path, total: usize) -> Result<(), Error> {
+    fn save_merged_document(
+        &mut self,
+        new_doc: &mupdf::Document,
+        output_path: &Path,
+        total: usize,
+    ) -> Result<(), Error> {
         let opts = mupdf::FzWriteOptions::default();
         self.report_progress(total, total, "Saving merged PDF...");
         new_doc.save(output_path, &opts, "pdf");

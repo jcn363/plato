@@ -1,3 +1,5 @@
+use crate::validation::validate_range;
+use anyhow::Error;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,5 +21,28 @@ impl Default for ThumbnailSettings {
             thumbnail_width: crate::thumbnail::THUMBNAIL_WIDTH,
             thumbnail_height: crate::thumbnail::THUMBNAIL_HEIGHT,
         }
+    }
+}
+
+impl ThumbnailSettings {
+    /// Validates thumbnail settings are within acceptable ranges
+    ///
+    /// # Validation Rules
+    /// - worker_count: 1 to 8 (reasonable thread count)
+    /// - cache_size: 10 to 10000 (reasonable cache size)
+    /// - thumbnail_width: 50 to 800 pixels
+    /// - thumbnail_height: 50 to 800 pixels
+    pub fn validate(&self) -> Result<(), Error> {
+        // Worker count must be reasonable
+        validate_range(self.worker_count, 1, 8, "thumbnail.worker_count")?;
+
+        // Cache size must be reasonable (10 to 10000 entries)
+        validate_range(self.cache_size, 10, 10000, "thumbnail.cache_size")?;
+
+        // Thumbnail dimensions must be reasonable
+        validate_range(self.thumbnail_width, 50, 800, "thumbnail.thumbnail_width")?;
+        validate_range(self.thumbnail_height, 50, 800, "thumbnail.thumbnail_height")?;
+
+        Ok(())
     }
 }

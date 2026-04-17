@@ -1,4 +1,4 @@
-use crate::helpers::{load_json, save_json, Fingerprint};
+use crate::helpers::{load_json, save_json, Fingerprint, Fp};
 use crate::settings::LibraryMode;
 use crate::{log_error, log_warn};
 use std::fs;
@@ -20,7 +20,7 @@ impl Library {
         self.cleanup_orphaned_files(&fps);
     }
 
-    fn collect_valid_fingerprints(&self) -> rustc_hash::FxHashSet<Fingerprint> {
+    fn collect_valid_fingerprints(&self) -> rustc_hash::FxHashSet<Fp> {
         walkdir::WalkDir::new(&self.home)
             .min_depth(1)
             .into_iter()
@@ -38,7 +38,7 @@ impl Library {
             .collect()
     }
 
-    fn cleanup_reading_states(&mut self, fps: &rustc_hash::FxHashSet<Fingerprint>) {
+    fn cleanup_reading_states(&mut self, fps: &rustc_hash::FxHashSet<Fp>) {
         self.reading_states.retain(|fp, _| {
             if fps.contains(fp) {
                 true
@@ -50,7 +50,7 @@ impl Library {
         self.modified_reading_states.retain(|fp| fps.contains(fp));
     }
 
-    fn cleanup_orphaned_files(&self, fps: &rustc_hash::FxHashSet<Fingerprint>) {
+    fn cleanup_orphaned_files(&self, fps: &rustc_hash::FxHashSet<Fp>) {
         let reading_states_dir = self.home.join(READING_STATES_DIRNAME);
         let thumbnail_previews_dir = self.home.join(THUMBNAIL_PREVIEWS_DIRNAME);
         let reading_entries = fs::read_dir(&reading_states_dir).ok().into_iter().flatten();
@@ -124,7 +124,7 @@ impl Library {
         }
     }
 
-    fn load_reading_state(&mut self, path: PathBuf, fp: Fingerprint) {
+    fn load_reading_state(&mut self, path: PathBuf, fp: Fp) {
         if let Ok(reader_info) =
             load_json(path).map_err(|e| log_error!("Can't load reading state: {:#}.", e))
         {

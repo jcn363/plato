@@ -116,7 +116,9 @@ impl TextRenderer {
             self.glyph_cache.insert(glyph_id, glyph_data);
         }
 
-        self.glyph_cache.get(&glyph_id).expect("glyph_id should be in cache after insertion")
+        self.glyph_cache
+            .get(&glyph_id)
+            .expect("glyph_id should be in cache after insertion")
     }
 
     /// Create glyph data

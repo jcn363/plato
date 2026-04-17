@@ -133,9 +133,9 @@ use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{BoundedText, Document, SimpleTocEntry, TextLocation, TocEntry};
 use crate::font::Fonts;
-use crate::framebuffer::{Framebuffer, UpdateMode};
-use crate::geom::{BorderSpec, Boundary, CornerSpec, Point, Rectangle, Vec2};
+use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::LinearDir;
+use crate::geom::{BorderSpec, Boundary, CornerSpec, Point, Rectangle, Vec2};
 use crate::input::{ButtonCode, ButtonStatus, DeviceEvent};
 use crate::log_error;
 use crate::metadata::{Annotation, Info, ZoomMode};
@@ -152,14 +152,13 @@ use crate::view::common::locate;
 use crate::view::top_bar::TopBar;
 use crate::view::{
     Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER, SMALL_BAR_HEIGHT,
-    THICKNESS_MEDIUM,
 };
 
 use crate::view::reader::tool_bar::ToolBar;
 
 use super::reader_core::{
-    Contrast, PageAnimKind, PageAnimation, RenderChunk, Resource, Search, Selection, State,
-    ViewPort,
+    AnimState, Contrast, PageAnimKind, PageAnimation, RenderChunk, Resource, Search, Selection,
+    State, ViewPort,
 };
 use super::reader_rendering;
 use super::reader_search;
@@ -229,10 +228,18 @@ impl Reader {
         let (doc, pages_count, reflowable) = Self::open_document(&info)?;
         let children = Self::create_toolbar(rect, reflowable, &info, context);
 
-        Some(Self::create_reader(id, rect, children, doc, pages_count, reflowable, info))
+        Some(Self::create_reader(
+            id,
+            rect,
+            children,
+            doc,
+            pages_count,
+            reflowable,
+            info,
+        ))
     }
 
-    fn open_document(info: &Info) -> Option<(Arc<Mutex<dyn Document>>, usize, bool)> {
+    fn open_document(info: &Info) -> Option<(Arc<Mutex<Box<dyn Document>>>, usize, bool)> {
         let doc = match crate::document::open(&info.file.path) {
             Some(d) => d,
             None => {
@@ -241,12 +248,17 @@ impl Reader {
             }
         };
         let doc = Arc::new(Mutex::new(doc));
-        let pages_count = doc.lock().expect("doc lock").pages_count();
-        let reflowable = doc.lock().expect("doc lock").is_reflowable();
+        let pages_count = (*doc.lock().expect("doc lock")).pages_count();
+        let reflowable = (*doc.lock().expect("doc lock")).is_reflowable();
         Some((doc, pages_count, reflowable))
     }
 
-    fn create_toolbar(rect: Rectangle, reflowable: bool, info: &Info, context: &mut Context) -> Vec<Box<dyn View>> {
+    fn create_toolbar(
+        rect: Rectangle,
+        reflowable: bool,
+        info: &Info,
+        context: &mut Context,
+    ) -> Vec<Box<dyn View>> {
         let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
 
@@ -265,7 +277,15 @@ impl Reader {
         vec![Box::new(tool_bar) as Box<dyn View>]
     }
 
-    fn create_reader(id: Id, rect: Rectangle, children: Vec<Box<dyn View>>, doc: Arc<Mutex<dyn Document>>, pages_count: usize, reflowable: bool, info: Info) -> Reader {
+    fn create_reader(
+        id: Id,
+        rect: Rectangle,
+        children: Vec<Box<dyn View>>,
+        doc: Arc<Mutex<Box<dyn Document>>>,
+        pages_count: usize,
+        reflowable: bool,
+        info: Info,
+    ) -> Reader {
         Reader {
             id,
             rect,
@@ -311,14 +331,24 @@ impl Reader {
         let children = Self::create_toolbar(rect, reflowable, &Info::default(), context);
         let info = Self::create_html_info(html);
 
-        Ok(Self::create_reader(id, rect, children, doc, pages_count, reflowable, info))
+        Ok(Self::create_reader(
+            id,
+            rect,
+            children,
+            doc,
+            pages_count,
+            reflowable,
+            info,
+        ))
     }
 
-    fn open_html_document(html: &str) -> Result<(Arc<Mutex<dyn Document>>, usize, bool), Error> {
+    fn open_html_document(
+        html: &str,
+    ) -> Result<(Arc<Mutex<Box<dyn Document>>>, usize, bool), Error> {
         let doc = crate::document::open_html(html).context("Failed to open HTML document")?;
         let doc = Arc::new(Mutex::new(doc));
-        let pages_count = doc.lock().expect("doc lock").pages_count();
-        let reflowable = doc.lock().expect("doc lock").is_reflowable();
+        let pages_count = (*doc.lock().expect("doc lock")).pages_count();
+        let reflowable = (*doc.lock().expect("doc lock")).is_reflowable();
         Ok((doc, pages_count, reflowable))
     }
 
@@ -343,7 +373,13 @@ impl Reader {
         }
     }
 
-    fn render_chunk_animation(&self, fb: &mut dyn Framebuffer, rect: Rectangle, chunk: &RenderChunk, anim: &PageAnimation) {
+    fn render_chunk_animation(
+        &self,
+        fb: &mut dyn Framebuffer,
+        rect: Rectangle,
+        chunk: &RenderChunk,
+        anim: &PageAnimation,
+    ) {
         if let Some(resource) = self.cache.get(&chunk.location) {
             let chunk_rect = chunk.frame - chunk.frame.min + chunk.position;
 
@@ -357,15 +393,35 @@ impl Reader {
         }
     }
 
-    fn render_animation_kind(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, anim: &PageAnimation, rect: Rectangle) {
+    fn render_animation_kind(
+        &self,
+        fb: &mut dyn Framebuffer,
+        pixmap: &Pixmap,
+        chunk_frame: &Rectangle,
+        chunk_position: Point,
+        anim: &PageAnimation,
+        rect: Rectangle,
+    ) {
         match anim {
             PageAnimation::None => {}
-            PageAnimation::Slide(kind) => self.render_slide_animation(fb, pixmap, chunk_frame, chunk_position, kind, rect),
-            PageAnimation::Peel(state) => self.render_peel_animation(fb, pixmap, chunk_frame, chunk_position, state, rect),
+            PageAnimation::Slide(kind) => {
+                self.render_slide_animation(fb, pixmap, chunk_frame, chunk_position, kind, rect)
+            }
+            PageAnimation::Peel(state) => {
+                self.render_peel_animation(fb, pixmap, chunk_frame, chunk_position, state, rect)
+            }
         }
     }
 
-    fn render_slide_animation(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, kind: &PageSlideKind, rect: Rectangle) {
+    fn render_slide_animation(
+        &self,
+        fb: &mut dyn Framebuffer,
+        pixmap: &Pixmap,
+        chunk_frame: &Rectangle,
+        chunk_position: Point,
+        kind: &AnimState,
+        rect: Rectangle,
+    ) {
         let offset = (kind.progress * rect.width() as f32) as i32;
         let adjusted_position = if matches!(kind.direction, LinearDir::Forward) {
             pt!(chunk_position.x - offset, chunk_position.y)
@@ -383,15 +439,34 @@ impl Reader {
         );
     }
 
-    fn render_peel_animation(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, state: &PagePeelState, rect: Rectangle) {
+    fn render_peel_animation(
+        &self,
+        fb: &mut dyn Framebuffer,
+        pixmap: &Pixmap,
+        chunk_frame: &Rectangle,
+        chunk_position: Point,
+        state: &AnimState,
+        rect: Rectangle,
+    ) {
         match state.kind {
-            PageAnimKind::Fade => self.render_fade_animation(fb, pixmap, chunk_frame, chunk_position, state),
-            PageAnimKind::Flip => self.render_flip_animation(fb, pixmap, chunk_frame, chunk_position, state, rect),
+            PageAnimKind::Fade => {
+                self.render_fade_animation(fb, pixmap, chunk_frame, chunk_position, state)
+            }
+            PageAnimKind::Flip => {
+                self.render_flip_animation(fb, pixmap, chunk_frame, chunk_position, state, rect)
+            }
             _ => {}
         }
     }
 
-    fn render_fade_animation(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, state: &PagePeelState) {
+    fn render_fade_animation(
+        &self,
+        fb: &mut dyn Framebuffer,
+        pixmap: &Pixmap,
+        chunk_frame: &Rectangle,
+        chunk_position: Point,
+        state: &AnimState,
+    ) {
         let alpha = ((1.0 - state.progress) * 255.0) as u8;
         fb.draw_framed_pixmap_contrast_alpha(
             pixmap,
@@ -403,7 +478,15 @@ impl Reader {
         );
     }
 
-    fn render_flip_animation(&self, fb: &mut dyn Framebuffer, pixmap: &Pixmap, chunk_frame: &geom::Rectangle, chunk_position: pt::Pt, state: &PagePeelState, rect: Rectangle) {
+    fn render_flip_animation(
+        &self,
+        fb: &mut dyn Framebuffer,
+        pixmap: &Pixmap,
+        chunk_frame: &Rectangle,
+        chunk_position: Point,
+        state: &AnimState,
+        rect: Rectangle,
+    ) {
         let offset = (state.progress * rect.width() as f32) as i32;
         let adjusted_position = if matches!(state.direction, LinearDir::Forward) {
             pt!(chunk_position.x - offset, chunk_position.y)

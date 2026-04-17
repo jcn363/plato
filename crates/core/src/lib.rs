@@ -5,6 +5,7 @@ pub mod geom;
 
 pub mod battery;
 pub mod color;
+pub mod consts;
 pub mod context;
 pub mod cover_editor;
 pub mod device;
@@ -29,7 +30,14 @@ pub mod theme;
 pub mod thumbnail;
 mod unit;
 pub mod update;
+pub mod validation;
 pub mod view;
+
+/// Mock implementations for testing
+///
+/// Provides mock implementations of core traits (Framebuffer, Battery,
+/// Frontlight, LightSensor, Document) for unit testing without hardware.
+pub mod test_mocks;
 
 pub use anyhow;
 pub use chrono;

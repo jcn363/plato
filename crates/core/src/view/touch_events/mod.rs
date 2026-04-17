@@ -1,6 +1,5 @@
 use crate::color::Color;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{CornerSpec, Dir, Rectangle, Region};

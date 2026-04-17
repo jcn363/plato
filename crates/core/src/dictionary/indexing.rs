@@ -18,7 +18,7 @@
 //! The sum makes up the index.
 
 use std::fs::File;
-use std::io::{self, BufRead, BufReader, Read, Seek, SeekFrom};
+use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 
 use levenshtein::levenshtein;
@@ -235,8 +235,16 @@ pub fn parse_index_from_file<P: AsRef<Path>>(
     path: P,
     lazy: bool,
 ) -> Result<Index<BufReader<File>>, DictError> {
-    let file = File::open(path.as_ref())
-        .map_err(|e| DictError::IoError(io::Error::new(io::ErrorKind::Other, format!("can't open dictionary index file {}: {}", path.as_ref().display(), e))))?;
+    let file = File::open(path.as_ref()).map_err(|e| {
+        DictError::IoError(io::Error::new(
+            io::ErrorKind::Other,
+            format!(
+                "can't open dictionary index file {}: {}",
+                path.as_ref().display(),
+                e
+            ),
+        ))
+    })?;
     let reader = BufReader::new(file);
     parse_index(reader, lazy)
 }

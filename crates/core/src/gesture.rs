@@ -37,12 +37,12 @@ use std::fmt;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
 
-pub const TAP_JITTER_MM: f32 = 6.0;
-pub const HOLD_JITTER_MM: f32 = 1.5;
-pub const HOLD_DELAY_SHORT: Duration = Duration::from_millis(666);
-pub const HOLD_DELAY_LONG: Duration = Duration::from_millis(1333);
+// Re-export gesture constants from canonical source in consts::gesture
+// per Single Source of Truth rule.
+pub use crate::consts::gesture::{
+    HOLD_DELAY_LONG, HOLD_DELAY_SHORT, HOLD_JITTER_MM, TAP_JITTER_MM,
+};
 
 #[derive(Debug, Copy, Clone)]
 pub enum GestureEvent {
@@ -180,67 +180,15 @@ pub fn parse_gesture_events(rx: &Receiver<DeviceEvent>, ty: &Sender<Event>) {
                 id,
                 time,
             } => {
-                let mut ct = contacts.lock().expect("contacts lock poisoned");
-                ct.insert(
+                handle_finger_down(
+                    &contacts,
+                    &segments,
+                    ty.clone(),
                     id,
-                    TouchState {
-                        time,
-                        held: false,
-                        positions: vec![position],
-                    },
+                    position,
+                    time,
+                    hold_jitter,
                 );
-                let ty = ty.clone();
-                let contacts = contacts.clone();
-                let segments = segments.clone();
-                thread::spawn(move || {
-                    let mut held = false;
-                    thread::sleep(HOLD_DELAY_SHORT);
-                    {
-                        let mut ct = contacts.lock().expect("contacts lock poisoned");
-                        let sg = segments.lock().expect("segments lock poisoned");
-                        if ct.len() > 1 || !sg.is_empty() {
-                            return;
-                        }
-                        if let Some(ts) = ct.get(&id) {
-                            let tp = &ts.positions;
-                            if (ts.time - time).abs() < f64::EPSILON
-                                && (tp[tp.len() - 1] - position).length() < hold_jitter
-                                && (tp[tp.len() / 2] - position).length() < hold_jitter
-                            {
-                                held = true;
-                                ty.send(Event::Gesture(GestureEvent::HoldFingerShort(
-                                    position, id,
-                                )))
-                                .ok();
-                            }
-                        }
-                        if held {
-                            if let Some(ts) = ct.get_mut(&id) {
-                                ts.held = true;
-                            }
-                        } else {
-                            return;
-                        }
-                    }
-                    thread::sleep(HOLD_DELAY_LONG - HOLD_DELAY_SHORT);
-                    {
-                        let mut ct = contacts.lock().expect("contacts lock poisoned");
-                        let sg = segments.lock().expect("segments lock poisoned");
-                        if ct.len() > 1 || !sg.is_empty() {
-                            return;
-                        }
-                        if let Some(ts) = ct.get_mut(&id) {
-                            let tp = &ts.positions;
-                            if (ts.time - time).abs() < f64::EPSILON
-                                && (tp[tp.len() - 1] - position).length() < hold_jitter
-                                && (tp[tp.len() / 2] - position).length() < hold_jitter
-                            {
-                                ty.send(Event::Gesture(GestureEvent::HoldFingerLong(position, id)))
-                                    .ok();
-                            }
-                        }
-                    }
-                });
             }
             DeviceEvent::Finger {
                 status: FingerStatus::Motion,
@@ -248,10 +196,7 @@ pub fn parse_gesture_events(rx: &Receiver<DeviceEvent>, ty: &Sender<Event>) {
                 id,
                 ..
             } => {
-                let mut ct = contacts.lock().expect("contacts lock poisoned");
-                if let Some(ref mut ts) = ct.get_mut(&id) {
-                    ts.positions.push(position);
-                }
+                handle_finger_motion(&contacts, id, position);
             }
             DeviceEvent::Finger {
                 status: FingerStatus::Up,
@@ -259,311 +204,445 @@ pub fn parse_gesture_events(rx: &Receiver<DeviceEvent>, ty: &Sender<Event>) {
                 id,
                 ..
             } => {
-                let mut ct = contacts.lock().expect("contacts lock poisoned");
-                let mut sg = segments.lock().expect("segments lock poisoned");
-                if let Some(mut ts) = ct.remove(&id) {
-                    if !ts.held {
-                        ts.positions.push(position);
-                        sg.push(ts.positions);
-                    }
-                }
-                if ct.is_empty() && !sg.is_empty() {
-                    let len = sg.len();
-                    if len == 1 {
-                        if let Some(seg) = sg.pop() {
-                            ty.send(Event::Gesture(interpret_segment(&seg, tap_jitter)))
-                                .ok();
-                        }
-                    } else if len == 2 {
-                        let ge1 = sg.pop().map(|seg| interpret_segment(&seg, tap_jitter));
-                        let ge2 = sg.pop().map(|seg| interpret_segment(&seg, tap_jitter));
-                        if let (Some(ge1), Some(ge2)) = (ge1, ge2) {
-                            match (ge1, ge2) {
-                                (GestureEvent::Tap(c1), GestureEvent::Tap(c2)) => {
-                                    ty.send(Event::Gesture(GestureEvent::MultiTap([c1, c2])))
-                                        .ok();
-                                }
-                                (
-                                    GestureEvent::Swipe {
-                                        dir: d1,
-                                        start: s1,
-                                        end: e1,
-                                        ..
-                                    },
-                                    GestureEvent::Swipe {
-                                        dir: d2,
-                                        start: s2,
-                                        end: e2,
-                                        ..
-                                    },
-                                ) if d1 == d2 => {
-                                    ty.send(Event::Gesture(GestureEvent::MultiSwipe {
-                                        dir: d1,
-                                        starts: [s1, s2],
-                                        ends: [e1, e2],
-                                    }))
-                                    .ok();
-                                }
-                                (
-                                    GestureEvent::Swipe {
-                                        dir: d1,
-                                        start: s1,
-                                        end: e1,
-                                        ..
-                                    },
-                                    GestureEvent::Swipe {
-                                        dir: d2,
-                                        start: s2,
-                                        end: e2,
-                                        ..
-                                    },
-                                ) if d1 == d2.opposite() => {
-                                    let center = (s1 + s2) / 2;
-                                    let ds = (s2 - s1).length();
-                                    let de = (e2 - e1).length();
-                                    let factor = de / ds;
-                                    if factor < 1.0 {
-                                        ty.send(Event::Gesture(GestureEvent::Pinch {
-                                            axis: d1.axis(),
-                                            center,
-                                            factor,
-                                        }))
-                                        .ok();
-                                    } else {
-                                        ty.send(Event::Gesture(GestureEvent::Spread {
-                                            axis: d1.axis(),
-                                            center,
-                                            factor,
-                                        }))
-                                        .ok();
-                                    }
-                                }
-                                (
-                                    GestureEvent::SlantedSwipe {
-                                        dir: d1,
-                                        start: s1,
-                                        end: e1,
-                                        ..
-                                    },
-                                    GestureEvent::SlantedSwipe {
-                                        dir: d2,
-                                        start: s2,
-                                        end: e2,
-                                        ..
-                                    },
-                                ) if d1 == d2.opposite() => {
-                                    let center = (s1 + s2) / 2;
-                                    let ds = (s2 - s1).length();
-                                    let de = (e2 - e1).length();
-                                    let factor = de / ds;
-                                    if factor < 1.0 {
-                                        ty.send(Event::Gesture(GestureEvent::Pinch {
-                                            axis: Axis::Diagonal,
-                                            center,
-                                            factor,
-                                        }))
-                                        .ok();
-                                    } else {
-                                        ty.send(Event::Gesture(GestureEvent::Spread {
-                                            axis: Axis::Diagonal,
-                                            center,
-                                            factor,
-                                        }))
-                                        .ok();
-                                    }
-                                }
-                                (
-                                    GestureEvent::Arrow {
-                                        dir: Dir::East,
-                                        start: s1,
-                                        end: e1,
-                                    },
-                                    GestureEvent::Arrow {
-                                        dir: Dir::West,
-                                        start: s2,
-                                        end: e2,
-                                    },
-                                )
-                                | (
-                                    GestureEvent::Arrow {
-                                        dir: Dir::West,
-                                        start: s2,
-                                        end: e2,
-                                    },
-                                    GestureEvent::Arrow {
-                                        dir: Dir::East,
-                                        start: s1,
-                                        end: e1,
-                                    },
-                                ) if s1.x < s2.x => {
-                                    ty.send(Event::Gesture(GestureEvent::Cross(
-                                        (s1 + e1 + s2 + e2) / 4,
-                                    )))
-                                    .ok();
-                                }
-                                (
-                                    GestureEvent::Arrow {
-                                        dir: Dir::West,
-                                        start: s1,
-                                        end: e1,
-                                    },
-                                    GestureEvent::Arrow {
-                                        dir: Dir::East,
-                                        start: s2,
-                                        end: e2,
-                                    },
-                                )
-                                | (
-                                    GestureEvent::Arrow {
-                                        dir: Dir::East,
-                                        start: s2,
-                                        end: e2,
-                                    },
-                                    GestureEvent::Arrow {
-                                        dir: Dir::West,
-                                        start: s1,
-                                        end: e1,
-                                    },
-                                ) if s1.x < s2.x => {
-                                    ty.send(Event::Gesture(GestureEvent::Diamond(
-                                        (s1 + e1 + s2 + e2) / 4,
-                                    )))
-                                    .ok();
-                                }
-                                (
-                                    GestureEvent::Arrow {
-                                        dir: d1,
-                                        start: s1,
-                                        end: e1,
-                                    },
-                                    GestureEvent::Arrow {
-                                        dir: d2,
-                                        start: s2,
-                                        end: e2,
-                                    },
-                                ) if d1 == d2 => {
-                                    ty.send(Event::Gesture(GestureEvent::MultiArrow {
-                                        dir: d1,
-                                        starts: [s1, s2],
-                                        ends: [e1, e2],
-                                    }))
-                                    .ok();
-                                }
-                                (
-                                    GestureEvent::Corner {
-                                        dir: d1,
-                                        start: s1,
-                                        end: e1,
-                                    },
-                                    GestureEvent::Corner {
-                                        dir: d2,
-                                        start: s2,
-                                        end: e2,
-                                    },
-                                ) if d1 == d2 => {
-                                    ty.send(Event::Gesture(GestureEvent::MultiCorner {
-                                        dir: d1,
-                                        starts: [s1, s2],
-                                        ends: [e1, e2],
-                                    }))
-                                    .ok();
-                                }
-                                (
-                                    GestureEvent::Tap(c),
-                                    GestureEvent::Swipe {
-                                        start: s, end: e, ..
-                                    },
-                                )
-                                | (
-                                    GestureEvent::Swipe {
-                                        start: s, end: e, ..
-                                    },
-                                    GestureEvent::Tap(c),
-                                )
-                                | (
-                                    GestureEvent::Tap(c),
-                                    GestureEvent::Arrow {
-                                        start: s, end: e, ..
-                                    },
-                                )
-                                | (
-                                    GestureEvent::Arrow {
-                                        start: s, end: e, ..
-                                    },
-                                    GestureEvent::Tap(c),
-                                )
-                                | (
-                                    GestureEvent::Tap(c),
-                                    GestureEvent::Corner {
-                                        start: s, end: e, ..
-                                    },
-                                )
-                                | (
-                                    GestureEvent::Corner {
-                                        start: s, end: e, ..
-                                    },
-                                    GestureEvent::Tap(c),
-                                ) => {
-                                    // Angle are positive in the counter clockwise direction.
-                                    let angle = ((e - c).angle() - (s - c).angle()).to_degrees();
-                                    let quarter_turns = (angle / 90.0).round() as i8;
-                                    ty.send(Event::Gesture(GestureEvent::Rotate {
-                                        angle,
-                                        quarter_turns,
-                                        center: c,
-                                    }))
-                                    .ok();
-                                }
-                                _ => (),
-                            }
-                        }
-                    } else {
-                        sg.clear();
-                    }
-                }
+                handle_finger_up(&contacts, &segments, ty.clone(), id, position, tap_jitter);
             }
             DeviceEvent::Button {
                 status: ButtonStatus::Pressed,
                 code,
                 time,
             } => {
-                let mut bt = buttons.lock().expect("buttons lock poisoned");
-                bt.insert(code, time);
-                let ty = ty.clone();
-                let buttons = buttons.clone();
-                thread::spawn(move || {
-                    thread::sleep(HOLD_DELAY_SHORT);
-                    {
-                        let bt = buttons.lock().expect("buttons lock poisoned");
-                        if let Some(&initial_time) = bt.get(&code) {
-                            if (initial_time - time).abs() < f64::EPSILON {
-                                ty.send(Event::Gesture(GestureEvent::HoldButtonShort(code)))
-                                    .ok();
-                            }
-                        }
-                    }
-                    thread::sleep(HOLD_DELAY_LONG - HOLD_DELAY_SHORT);
-                    {
-                        let bt = buttons.lock().expect("buttons lock poisoned");
-                        if let Some(&initial_time) = bt.get(&code) {
-                            if (initial_time - time).abs() < f64::EPSILON {
-                                ty.send(Event::Gesture(GestureEvent::HoldButtonLong(code)))
-                                    .ok();
-                            }
-                        }
-                    }
-                });
+                handle_button_pressed(&buttons, ty.clone(), code, time);
             }
             DeviceEvent::Button {
                 status: ButtonStatus::Released,
                 code,
                 ..
             } => {
-                let mut bt = buttons.lock().expect("buttons lock poisoned");
-                bt.remove(&code);
+                handle_button_released(&buttons, code);
             }
             _ => (),
         }
+    }
+}
+
+fn handle_finger_down(
+    contacts: &Arc<Mutex<FxHashMap<i32, TouchState>>>,
+    segments: &Arc<Mutex<Vec<Vec<Point>>>>,
+    ty: Sender<Event>,
+    id: i32,
+    position: Point,
+    time: f64,
+    hold_jitter: f32,
+) {
+    let mut ct = contacts.lock().expect("contacts lock poisoned");
+    ct.insert(
+        id,
+        TouchState {
+            time,
+            held: false,
+            positions: vec![position],
+        },
+    );
+    spawn_finger_hold_detector(
+        contacts.clone(),
+        segments.clone(),
+        ty,
+        id,
+        position,
+        time,
+        hold_jitter,
+    );
+}
+
+fn handle_finger_motion(
+    contacts: &Arc<Mutex<FxHashMap<i32, TouchState>>>,
+    id: i32,
+    position: Point,
+) {
+    let mut ct = contacts.lock().expect("contacts lock poisoned");
+    if let Some(ref mut ts) = ct.get_mut(&id) {
+        ts.positions.push(position);
+    }
+}
+
+fn handle_finger_up(
+    contacts: &Arc<Mutex<FxHashMap<i32, TouchState>>>,
+    segments: &Arc<Mutex<Vec<Vec<Point>>>>,
+    ty: Sender<Event>,
+    id: i32,
+    position: Point,
+    tap_jitter: f32,
+) {
+    let mut ct = contacts.lock().expect("contacts lock poisoned");
+    let mut sg = segments.lock().expect("segments lock poisoned");
+    if let Some(mut ts) = ct.remove(&id) {
+        if !ts.held {
+            ts.positions.push(position);
+            sg.push(ts.positions);
+        }
+    }
+    if ct.is_empty() && !sg.is_empty() {
+        process_segments(&mut sg, ty, tap_jitter);
+    }
+}
+
+fn handle_button_pressed(
+    buttons: &Arc<Mutex<FxHashMap<ButtonCode, f64>>>,
+    ty: Sender<Event>,
+    code: ButtonCode,
+    time: f64,
+) {
+    let mut bt = buttons.lock().expect("buttons lock poisoned");
+    bt.insert(code, time);
+    spawn_button_hold_detector(buttons.clone(), ty, code, time);
+}
+
+fn handle_button_released(buttons: &Arc<Mutex<FxHashMap<ButtonCode, f64>>>, code: ButtonCode) {
+    let mut bt = buttons.lock().expect("buttons lock poisoned");
+    bt.remove(&code);
+}
+
+fn spawn_finger_hold_detector(
+    contacts: Arc<Mutex<FxHashMap<i32, TouchState>>>,
+    segments: Arc<Mutex<Vec<Vec<Point>>>>,
+    ty: Sender<Event>,
+    id: i32,
+    position: Point,
+    time: f64,
+    hold_jitter: f32,
+) {
+    thread::spawn(move || {
+        let mut held = false;
+        thread::sleep(HOLD_DELAY_SHORT);
+        {
+            let mut ct = contacts.lock().expect("contacts lock poisoned");
+            let sg = segments.lock().expect("segments lock poisoned");
+            if ct.len() > 1 || !sg.is_empty() {
+                return;
+            }
+            if let Some(ts) = ct.get(&id) {
+                let tp = &ts.positions;
+                if (ts.time - time).abs() < f64::EPSILON
+                    && (tp[tp.len() - 1] - position).length() < hold_jitter
+                    && (tp[tp.len() / 2] - position).length() < hold_jitter
+                {
+                    held = true;
+                    ty.send(Event::Gesture(GestureEvent::HoldFingerShort(position, id)))
+                        .ok();
+                }
+            }
+            if held {
+                if let Some(ts) = ct.get_mut(&id) {
+                    ts.held = true;
+                }
+            } else {
+                return;
+            }
+        }
+        thread::sleep(HOLD_DELAY_LONG - HOLD_DELAY_SHORT);
+        {
+            let mut ct = contacts.lock().expect("contacts lock poisoned");
+            let sg = segments.lock().expect("segments lock poisoned");
+            if ct.len() > 1 || !sg.is_empty() {
+                return;
+            }
+            if let Some(ts) = ct.get_mut(&id) {
+                let tp = &ts.positions;
+                if (ts.time - time).abs() < f64::EPSILON
+                    && (tp[tp.len() - 1] - position).length() < hold_jitter
+                    && (tp[tp.len() / 2] - position).length() < hold_jitter
+                {
+                    ty.send(Event::Gesture(GestureEvent::HoldFingerLong(position, id)))
+                        .ok();
+                }
+            }
+        }
+    });
+}
+
+fn spawn_button_hold_detector(
+    buttons: Arc<Mutex<FxHashMap<ButtonCode, f64>>>,
+    ty: Sender<Event>,
+    code: ButtonCode,
+    time: f64,
+) {
+    thread::spawn(move || {
+        thread::sleep(HOLD_DELAY_SHORT);
+        {
+            let bt = buttons.lock().expect("buttons lock poisoned");
+            if let Some(&initial_time) = bt.get(&code) {
+                if (initial_time - time).abs() < f64::EPSILON {
+                    ty.send(Event::Gesture(GestureEvent::HoldButtonShort(code)))
+                        .ok();
+                }
+            }
+        }
+        thread::sleep(HOLD_DELAY_LONG - HOLD_DELAY_SHORT);
+        {
+            let bt = buttons.lock().expect("buttons lock poisoned");
+            if let Some(&initial_time) = bt.get(&code) {
+                if (initial_time - time).abs() < f64::EPSILON {
+                    ty.send(Event::Gesture(GestureEvent::HoldButtonLong(code)))
+                        .ok();
+                }
+            }
+        }
+    });
+}
+
+fn process_segments(sg: &mut Vec<Vec<Point>>, ty: Sender<Event>, tap_jitter: f32) {
+    let len = sg.len();
+    if len == 1 {
+        if let Some(seg) = sg.pop() {
+            ty.send(Event::Gesture(interpret_segment(&seg, tap_jitter)))
+                .ok();
+        }
+    } else if len == 2 {
+        let ge1 = sg.pop().map(|seg| interpret_segment(&seg, tap_jitter));
+        let ge2 = sg.pop().map(|seg| interpret_segment(&seg, tap_jitter));
+        if let (Some(ge1), Some(ge2)) = (ge1, ge2) {
+            process_gesture_pair(ge1, ge2, &ty);
+        }
+    } else {
+        sg.clear();
+    }
+}
+
+fn process_gesture_pair(ge1: GestureEvent, ge2: GestureEvent, ty: &Sender<Event>) {
+    match (ge1, ge2) {
+        (GestureEvent::Tap(c1), GestureEvent::Tap(c2)) => {
+            ty.send(Event::Gesture(GestureEvent::MultiTap([c1, c2])))
+                .ok();
+        }
+        (
+            GestureEvent::Swipe {
+                dir: d1,
+                start: s1,
+                end: e1,
+                ..
+            },
+            GestureEvent::Swipe {
+                dir: d2,
+                start: s2,
+                end: e2,
+                ..
+            },
+        ) if d1 == d2 => {
+            ty.send(Event::Gesture(GestureEvent::MultiSwipe {
+                dir: d1,
+                starts: [s1, s2],
+                ends: [e1, e2],
+            }))
+            .ok();
+        }
+        (
+            GestureEvent::Swipe {
+                dir: d1,
+                start: s1,
+                end: e1,
+                ..
+            },
+            GestureEvent::Swipe {
+                dir: d2,
+                start: s2,
+                end: e2,
+                ..
+            },
+        ) if d1 == d2.opposite() => {
+            let center = (s1 + s2) / 2;
+            let ds = (s2 - s1).length();
+            let de = (e2 - e1).length();
+            let factor = de / ds;
+            if factor < 1.0 {
+                ty.send(Event::Gesture(GestureEvent::Pinch {
+                    axis: d1.axis(),
+                    center,
+                    factor,
+                }))
+                .ok();
+            } else {
+                ty.send(Event::Gesture(GestureEvent::Spread {
+                    axis: d1.axis(),
+                    center,
+                    factor,
+                }))
+                .ok();
+            }
+        }
+        (
+            GestureEvent::SlantedSwipe {
+                dir: d1,
+                start: s1,
+                end: e1,
+                ..
+            },
+            GestureEvent::SlantedSwipe {
+                dir: d2,
+                start: s2,
+                end: e2,
+                ..
+            },
+        ) if d1 == d2.opposite() => {
+            let center = (s1 + s2) / 2;
+            let ds = (s2 - s1).length();
+            let de = (e2 - e1).length();
+            let factor = de / ds;
+            if factor < 1.0 {
+                ty.send(Event::Gesture(GestureEvent::Pinch {
+                    axis: Axis::Diagonal,
+                    center,
+                    factor,
+                }))
+                .ok();
+            } else {
+                ty.send(Event::Gesture(GestureEvent::Spread {
+                    axis: Axis::Diagonal,
+                    center,
+                    factor,
+                }))
+                .ok();
+            }
+        }
+        (
+            GestureEvent::Arrow {
+                dir: Dir::East,
+                start: s1,
+                end: e1,
+            },
+            GestureEvent::Arrow {
+                dir: Dir::West,
+                start: s2,
+                end: e2,
+            },
+        )
+        | (
+            GestureEvent::Arrow {
+                dir: Dir::West,
+                start: s2,
+                end: e2,
+            },
+            GestureEvent::Arrow {
+                dir: Dir::East,
+                start: s1,
+                end: e1,
+            },
+        ) if s1.x < s2.x => {
+            ty.send(Event::Gesture(GestureEvent::Cross((s1 + e1 + s2 + e2) / 4)))
+                .ok();
+        }
+        (
+            GestureEvent::Arrow {
+                dir: Dir::West,
+                start: s1,
+                end: e1,
+            },
+            GestureEvent::Arrow {
+                dir: Dir::East,
+                start: s2,
+                end: e2,
+            },
+        )
+        | (
+            GestureEvent::Arrow {
+                dir: Dir::East,
+                start: s2,
+                end: e2,
+            },
+            GestureEvent::Arrow {
+                dir: Dir::West,
+                start: s1,
+                end: e1,
+            },
+        ) if s1.x < s2.x => {
+            ty.send(Event::Gesture(GestureEvent::Diamond(
+                (s1 + e1 + s2 + e2) / 4,
+            )))
+            .ok();
+        }
+        (
+            GestureEvent::Arrow {
+                dir: d1,
+                start: s1,
+                end: e1,
+            },
+            GestureEvent::Arrow {
+                dir: d2,
+                start: s2,
+                end: e2,
+            },
+        ) if d1 == d2 => {
+            ty.send(Event::Gesture(GestureEvent::MultiArrow {
+                dir: d1,
+                starts: [s1, s2],
+                ends: [e1, e2],
+            }))
+            .ok();
+        }
+        (
+            GestureEvent::Corner {
+                dir: d1,
+                start: s1,
+                end: e1,
+            },
+            GestureEvent::Corner {
+                dir: d2,
+                start: s2,
+                end: e2,
+            },
+        ) if d1 == d2 => {
+            ty.send(Event::Gesture(GestureEvent::MultiCorner {
+                dir: d1,
+                starts: [s1, s2],
+                ends: [e1, e2],
+            }))
+            .ok();
+        }
+        (
+            GestureEvent::Tap(c),
+            GestureEvent::Swipe {
+                start: s, end: e, ..
+            },
+        )
+        | (
+            GestureEvent::Swipe {
+                start: s, end: e, ..
+            },
+            GestureEvent::Tap(c),
+        )
+        | (
+            GestureEvent::Tap(c),
+            GestureEvent::Arrow {
+                start: s, end: e, ..
+            },
+        )
+        | (
+            GestureEvent::Arrow {
+                start: s, end: e, ..
+            },
+            GestureEvent::Tap(c),
+        )
+        | (
+            GestureEvent::Tap(c),
+            GestureEvent::Corner {
+                start: s, end: e, ..
+            },
+        )
+        | (
+            GestureEvent::Corner {
+                start: s, end: e, ..
+            },
+            GestureEvent::Tap(c),
+        ) => {
+            let angle = ((e - c).angle() - (s - c).angle()).to_degrees();
+            let quarter_turns = (angle / 90.0).round() as i8;
+            ty.send(Event::Gesture(GestureEvent::Rotate {
+                angle,
+                quarter_turns,
+                center: c,
+            }))
+            .ok();
+        }
+        _ => (),
     }
 }
 

@@ -1,3 +1,34 @@
+//! Frontlight Module - Frontlight Control Abstraction
+//!
+//! This module provides hardware abstraction for frontlight control via the
+//! [`Frontlight`] trait. This allows the application to work with different
+//! frontlight hardware implementations through a common interface.
+//!
+//! ## Architecture
+//!
+//! The module uses a trait-based abstraction:
+//!
+//! - **[`Frontlight`] trait**: Core abstraction for frontlight operations
+//! - **Hardware implementations**: `NaturalFrontlight`, `StandardFrontlight`, `PremixedFrontlight`
+//! - **Mock implementations**: [`MockFrontlight`](crate::test_mocks::MockFrontlight) for testing
+//!
+//! ## Trait-Based Design
+//!
+//! The [`Frontlight`] trait enables:
+//! - **Hardware independence**: UI code doesn't depend on specific frontlight hardware
+//! - **Testability**: Mock implementations allow testing without real hardware
+//! - **Feature variants**: Different frontlight types (natural, standard, premixed)
+//!
+//! ## Usage
+//!
+//! ```rust,ignore
+//! use plato_core::frontlight::{Frontlight, NaturalFrontlight};
+//!
+//! let mut light = NaturalFrontlight::new();
+//! light.set_intensity(50.0);
+//! light.set_warmth(30.0);
+//! ```
+
 mod natural;
 mod premixed;
 mod standard;

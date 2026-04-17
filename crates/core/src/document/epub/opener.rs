@@ -107,7 +107,7 @@ impl EpubDocument {
                                         e
                                     );
                                 })
-                                .map(|zf: zip::read::ZipFile| (zf.size() as usize, path.to_string()))
+                                .map(|zf| (zf.size() as usize, path.to_string()))
                                 .ok()
                         })
                     });

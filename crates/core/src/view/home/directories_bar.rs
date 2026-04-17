@@ -1,14 +1,13 @@
 use super::directory::Directory;
 use crate::color::text_bump_small;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Font, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{big_half, divide, small_half, CycleDir, Dir, Point, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::log_warn;
 use crate::theme;
-use crate::unit::scale_by_dpi;
+use crate::unit::{get_device_dpi, scale_by_dpi};
 use crate::view::filler::Filler;
 use crate::view::icon::{Icon, ICONS_PIXMAPS};
 use crate::view::{Align, Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
@@ -161,7 +160,7 @@ impl DirectoriesBar {
     }
 
     fn create_layout(&self, fonts: &mut Fonts) -> Layout {
-        let dpi = crate::unit::get_device_dpi();
+        let dpi = get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let min_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32 - thickness;
         let mut font = font_from_style(fonts, &NORMAL_STYLE, dpi);
@@ -190,7 +189,7 @@ impl DirectoriesBar {
         self.pages.clear();
         self.selection_page = None;
         let mut start_index = 0;
-        let mut font = font_from_style(fonts, &NORMAL_STYLE, crate::unit::get_device_dpi());
+        let mut font = font_from_style(fonts, &NORMAL_STYLE, get_device_dpi());
 
         loop {
             let mut has_selection = false;
@@ -231,7 +230,7 @@ impl DirectoriesBar {
     }
 
     fn make_page<'a>(
-        &self,
+        &'a self,
         start_index: usize,
         layout: &Layout,
         directories: &'a BTreeSet<PathBuf>,
@@ -245,7 +244,7 @@ impl DirectoriesBar {
         } = *layout;
         let mut end_index = start_index;
         let mut line = self.create_start_line(start_index, padding);
-        let mut page = Page::default();
+        let mut page: Page<'a> = Page::default();
 
         self.build_lines_from_directories(
             start_index,

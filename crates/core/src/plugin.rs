@@ -1,10 +1,10 @@
 use crate::settings::{Plugin, PluginSettings, PluginTrigger};
 use crate::{log_error, log_warn};
-use anyhow::{format_err, Error};
+use anyhow::{bail, format_err, Error};
 use rustc_hash::{FxBuildHasher, FxHashMap};
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub struct PluginSystem {
@@ -36,9 +36,7 @@ impl PluginSystem {
             return Ok(());
         }
 
-        let canonical_plugins_dir = plugins_dir
-            .canonicalize()
-            .map_err(|e| format_err!("Failed to canonicalize plugins directory: {}", e))?;
+        let canonical_plugins_dir = Self::canonicalize_plugins_dir(plugins_dir)?;
 
         for entry in fs::read_dir(plugins_dir)? {
             let entry = entry?;
@@ -48,41 +46,59 @@ impl PluginSystem {
                 continue;
             }
 
-            // Validate plugin path stays within the plugins directory
-            let canonical_path = path
-                .canonicalize()
-                .map_err(|e| format_err!("Failed to canonicalize plugin path: {}", e))?;
-            if !canonical_path.starts_with(&canonical_plugins_dir) {
-                log_warn!(
-                    "Skipping plugin outside plugins directory: {}",
-                    path.display()
-                );
-                continue;
+            if let Some(plugin) = self.load_plugin(&path, &canonical_plugins_dir)? {
+                let name = plugin.name.clone();
+                self.plugins.insert(name, plugin);
             }
-
-            let Some(filename) = path.file_name() else {
-                continue;
-            };
-
-            let name = filename.to_string_lossy().to_string();
-
-            if name.starts_with('.') || name.starts_with('_') {
-                continue;
-            }
-
-            let triggers = self.detect_triggers(&path)?;
-
-            let plugin = Plugin {
-                name: name.clone(),
-                path: canonical_path,
-                triggers,
-                enabled: true,
-            };
-
-            self.plugins.insert(name, plugin);
         }
 
         Ok(())
+    }
+
+    fn canonicalize_plugins_dir(plugins_dir: &Path) -> Result<PathBuf, Error> {
+        plugins_dir
+            .canonicalize()
+            .map_err(|e| format_err!("Failed to canonicalize plugins directory: {}", e))
+    }
+
+    fn load_plugin(
+        &self,
+        path: &Path,
+        canonical_plugins_dir: &Path,
+    ) -> Result<Option<Plugin>, Error> {
+        let canonical_path = Self::validate_plugin_path(path, canonical_plugins_dir)?;
+        let Some(filename) = path.file_name() else {
+            return Ok(None);
+        };
+
+        let name = filename.to_string_lossy().to_string();
+
+        if name.starts_with('.') || name.starts_with('_') {
+            return Ok(None);
+        }
+
+        let triggers = self.detect_triggers(path)?;
+
+        Ok(Some(Plugin {
+            name: name.clone(),
+            path: canonical_path,
+            triggers,
+            enabled: true,
+        }))
+    }
+
+    fn validate_plugin_path(path: &Path, canonical_plugins_dir: &Path) -> Result<PathBuf, Error> {
+        let canonical_path = path
+            .canonicalize()
+            .map_err(|e| format_err!("Failed to canonicalize plugin path: {}", e))?;
+        if !canonical_path.starts_with(canonical_plugins_dir) {
+            log_warn!(
+                "Skipping plugin outside plugins directory: {}",
+                path.display()
+            );
+            bail!("Plugin path is outside plugins directory");
+        }
+        Ok(canonical_path)
     }
 
     fn detect_triggers(&self, path: &Path) -> Result<Vec<PluginTrigger>, Error> {

@@ -3,7 +3,6 @@ use super::{
 };
 use crate::color::{progress_empty, progress_full, progress_value};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, SLIDER_VALUE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, BorderSpec, CornerSpec, Rectangle};

@@ -1,4 +1,3 @@
-use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::Point;
 use crate::geom::{LinearDir, Rectangle};
@@ -57,51 +56,82 @@ impl PageAnimation {
 
             match self.kind {
                 PageAnimKind::Slide => {
-                    let offset = (self.progress * screen_rect.width() as f32) as i32;
-                    let adjusted_position = if matches!(self.direction, LinearDir::Forward) {
-                        Point::new(position.x - offset, position.y)
-                    } else {
-                        Point::new(position.x + offset, position.y)
-                    };
-                    let alpha = (1.0 - self.progress) as u8;
-                    fb.draw_framed_pixmap_contrast_transparent(
-                        pixmap,
-                        &chunk_frame,
-                        adjusted_position,
-                        1.0,
-                        0.5,
-                        alpha,
-                    );
+                    self.render_slide_animation(fb, pixmap, &chunk_frame, position, screen_rect)
                 }
                 PageAnimKind::Fade => {
-                    let alpha = ((1.0 - self.progress) * 255.0) as u8;
-                    fb.draw_framed_pixmap_contrast_transparent(
-                        pixmap,
-                        &chunk_frame,
-                        chunk_position,
-                        1.0,
-                        0.5,
-                        alpha,
-                    );
+                    self.render_fade_animation(fb, pixmap, &chunk_frame, chunk_position)
                 }
                 PageAnimKind::Flip => {
-                    let offset = (self.progress * screen_rect.width() as f32) as i32;
-                    let adjusted_position = if matches!(self.direction, LinearDir::Forward) {
-                        Point::new(position.x - offset, position.y)
-                    } else {
-                        Point::new(position.x + offset, position.y)
-                    };
-                    let alpha = ((1.0 - self.progress * 0.5) * 255.0) as u8;
-                    fb.draw_framed_pixmap_contrast_transparent(
-                        pixmap,
-                        &chunk_frame,
-                        adjusted_position,
-                        1.0,
-                        0.5,
-                        alpha,
-                    );
+                    self.render_flip_animation(fb, pixmap, &chunk_frame, position, screen_rect)
                 }
             }
+        }
+    }
+
+    fn render_slide_animation(
+        &self,
+        fb: &mut dyn Framebuffer,
+        pixmap: &Pixmap,
+        chunk_frame: &Rectangle,
+        position: Point,
+        screen_rect: Rectangle,
+    ) {
+        let adjusted_position = self.calculate_adjusted_position(position, screen_rect.width());
+        let alpha = (1.0 - self.progress) as u8;
+        fb.draw_framed_pixmap_contrast_transparent(
+            pixmap,
+            chunk_frame,
+            adjusted_position,
+            1.0,
+            0.5,
+            alpha,
+        );
+    }
+
+    fn render_fade_animation(
+        &self,
+        fb: &mut dyn Framebuffer,
+        pixmap: &Pixmap,
+        chunk_frame: &Rectangle,
+        chunk_position: Point,
+    ) {
+        let alpha = ((1.0 - self.progress) * 255.0) as u8;
+        fb.draw_framed_pixmap_contrast_transparent(
+            pixmap,
+            chunk_frame,
+            chunk_position,
+            1.0,
+            0.5,
+            alpha,
+        );
+    }
+
+    fn render_flip_animation(
+        &self,
+        fb: &mut dyn Framebuffer,
+        pixmap: &Pixmap,
+        chunk_frame: &Rectangle,
+        position: Point,
+        screen_rect: Rectangle,
+    ) {
+        let adjusted_position = self.calculate_adjusted_position(position, screen_rect.width());
+        let alpha = ((1.0 - self.progress * 0.5) * 255.0) as u8;
+        fb.draw_framed_pixmap_contrast_transparent(
+            pixmap,
+            chunk_frame,
+            adjusted_position,
+            1.0,
+            0.5,
+            alpha,
+        );
+    }
+
+    fn calculate_adjusted_position(&self, position: Point, width: u32) -> Point {
+        let offset = (self.progress * width as f32) as i32;
+        if matches!(self.direction, LinearDir::Forward) {
+            Point::new(position.x - offset, position.y)
+        } else {
+            Point::new(position.x + offset, position.y)
         }
     }
 }

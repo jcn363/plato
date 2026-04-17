@@ -6,7 +6,6 @@
 
 use crate::color;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{halves, Rectangle};
 use crate::impl_view_boilerplate;

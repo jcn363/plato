@@ -1,7 +1,6 @@
 use crate::color::WHITE;
 use crate::context::Context as PlatoContext;
 use crate::cover_editor::{self, CoverEditor as CoverEditorLib};
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::{BorderSpec, Rectangle};
@@ -166,8 +165,10 @@ impl CoverEditorView {
                 .max(1)
                 .min(img_h.saturating_sub(y));
             if w > 0 && h > 0 {
-                *img = self.cover_editor.crop(img, x, y, w, h);
-                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                if let Ok(cropped) = self.cover_editor.crop(img, x, y, w, h) {
+                    *img = cropped;
+                    rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                }
             }
         }
         self.mode = EditorMode::EditCover;

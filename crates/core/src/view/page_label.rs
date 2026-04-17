@@ -1,6 +1,5 @@
 use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::document::BYTES_PER_PAGE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};

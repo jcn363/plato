@@ -31,25 +31,58 @@ impl std::fmt::Debug for TopBar {
 impl TopBar {
     pub fn new(rect: Rectangle, root_event: Event, title: String, context: &mut Context) -> TopBar {
         let id = ID_FEEDER.next();
+        let side = rect.height() as i32;
         let mut children = Vec::new();
 
-        let side = rect.height() as i32;
+        children.push(Self::create_root_icon(rect, side, root_event));
+        Self::add_clock_and_title(&mut children, rect, side, title, context);
+        Self::add_battery_widget(&mut children, rect, side, context);
+        children.push(Self::create_frontlight_icon(rect, side, context));
+        let theme_indicator = Self::create_theme_indicator(rect, side, context);
+        children.push(Self::create_menu_icon(rect, side));
+
+        TopBar {
+            id,
+            rect,
+            children,
+            theme_indicator,
+        }
+    }
+
+    fn create_root_icon(rect: Rectangle, side: i32, root_event: Event) -> Box<dyn View> {
         let icon_name = match root_event {
             Event::Back => "back",
             _ => "search",
         };
+        Box::new(Icon::new(
+            icon_name,
+            rect![rect.min, rect.min + side],
+            root_event,
+        ))
+    }
 
-        let root_icon = Icon::new(icon_name, rect![rect.min, rect.min + side], root_event);
-        children.push(Box::new(root_icon) as Box<dyn View>);
-
+    fn add_clock_and_title(
+        children: &mut Vec<Box<dyn View>>,
+        rect: Rectangle,
+        side: i32,
+        title: String,
+        context: &mut Context,
+    ) {
         let mut clock_rect = rect![rect.max - pt!(4 * side, side), rect.max - pt!(3 * side, 0)];
         let clock_label = Clock::new(&mut clock_rect, context);
         let title_rect = rect![rect.min.x + side, rect.min.y, clock_rect.min.x, rect.max.y];
         let title_label = Label::new(title_rect, title, Align::Center)
             .event(Some(Event::ToggleNear(ViewId::TitleMenu, title_rect)));
-        children.push(Box::new(title_label) as Box<dyn View>);
-        children.push(Box::new(clock_label) as Box<dyn View>);
+        children.push(Box::new(title_label));
+        children.push(Box::new(clock_label));
+    }
 
+    fn add_battery_widget(
+        children: &mut Vec<Box<dyn View>>,
+        rect: Rectangle,
+        side: i32,
+        context: &mut Context,
+    ) {
         let capacity = context.battery.capacity().map_or(0.0, |v| v[0]);
         let status = context
             .battery
@@ -60,20 +93,23 @@ impl TopBar {
             capacity,
             status,
         );
-        children.push(Box::new(battery_widget) as Box<dyn View>);
+        children.push(Box::new(battery_widget));
+    }
 
+    fn create_frontlight_icon(rect: Rectangle, side: i32, context: &mut Context) -> Box<dyn View> {
         let name = if context.settings.frontlight {
             "frontlight"
         } else {
             "frontlight-disabled"
         };
-        let frontlight_icon = Icon::new(
+        Box::new(Icon::new(
             name,
             rect![rect.max - pt!(2 * side, side), rect.max - pt!(side, 0)],
             Event::Show(ViewId::Frontlight),
-        );
-        children.push(Box::new(frontlight_icon) as Box<dyn View>);
+        ))
+    }
 
+    fn create_theme_indicator(rect: Rectangle, side: i32, context: &mut Context) -> Icon {
         let theme_icon_name = match context.settings.theme_settings.mode {
             ThemeMode::Light => "theme-light",
             ThemeMode::Dark => "theme-dark",
@@ -81,26 +117,20 @@ impl TopBar {
             ThemeMode::Auto => "theme-auto",
             ThemeMode::Scheduled => "theme-scheduled",
         };
-        let theme_indicator = Icon::new(
+        Icon::new(
             theme_icon_name,
             rect![rect.max - pt!(side, side), rect.max],
             Event::Select(crate::view::EntryId::ToggleDarkMode),
-        );
+        )
+    }
 
+    fn create_menu_icon(rect: Rectangle, side: i32) -> Box<dyn View> {
         let menu_rect = rect![rect.max - side, rect.max];
-        let menu_icon = Icon::new(
+        Box::new(Icon::new(
             "menu",
             menu_rect,
             Event::ToggleNear(ViewId::MainMenu, menu_rect),
-        );
-        children.push(Box::new(menu_icon) as Box<dyn View>);
-
-        TopBar {
-            id,
-            rect,
-            children,
-            theme_indicator,
-        }
+        ))
     }
 
     pub fn update_root_icon(&mut self, name: &str, rq: &mut RenderQueue) {

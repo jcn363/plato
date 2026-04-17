@@ -1,4 +1,6 @@
 use crate::metadata::TextAlign;
+use crate::validation::{validate_finite_f32, validate_range};
+use anyhow::{bail, Error};
 use rustc_hash::FxHashSet;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -143,6 +145,43 @@ pub struct CssOverrides {
     pub image_contrast: Option<f32>,
 }
 
+impl CssOverrides {
+    /// Validates CSS override values are within acceptable ranges
+    pub fn validate(&self) -> Result<(), Error> {
+        // Validate font size if set (must be positive and reasonable)
+        if let Some(size) = self.font_size {
+            validate_finite_f32(size, "css_overrides.font_size", 4.0, 72.0)?;
+        }
+
+        // Validate line height if set (0.5 to 3.0 is reasonable)
+        if let Some(height) = self.line_height {
+            validate_finite_f32(height, "css_overrides.line_height", 0.5, 3.0)?;
+        }
+
+        // Validate margins if set (0 to 100 pixels is reasonable)
+        for (margin, name) in [
+            (self.margin_top, "margin_top"),
+            (self.margin_bottom, "margin_bottom"),
+            (self.margin_left, "margin_left"),
+            (self.margin_right, "margin_right"),
+        ] {
+            if let Some(m) = margin {
+                validate_range(m, 0, 100, &format!("css_overrides.{}", name))?;
+            }
+        }
+
+        // Validate image adjustments if set (-1.0 to 1.0 is reasonable range)
+        if let Some(brightness) = self.image_brightness {
+            validate_finite_f32(brightness, "css_overrides.image_brightness", -1.0, 1.0)?;
+        }
+        if let Some(contrast) = self.image_contrast {
+            validate_finite_f32(contrast, "css_overrides.image_contrast", -1.0, 1.0)?;
+        }
+
+        Ok(())
+    }
+}
+
 impl Default for RefreshRateSettings {
     fn default() -> Self {
         RefreshRateSettings {
@@ -152,6 +191,33 @@ impl Default for RefreshRateSettings {
             },
             by_kind: HashMap::new(),
         }
+    }
+}
+
+impl RefreshRateSettings {
+    /// Validates refresh rate settings are within acceptable ranges
+    pub fn validate(&self) -> Result<(), Error> {
+        // Refresh rates must be reasonable (0-255 for u8, but realistically < 100)
+        validate_range(self.global.regular, 0, 100, "refresh_rate.global.regular")?;
+        validate_range(self.global.inverted, 0, 100, "refresh_rate.global.inverted")?;
+
+        // Validate per-kind refresh rates
+        for (kind, pair) in &self.by_kind {
+            validate_range(
+                pair.regular,
+                0,
+                100,
+                &format!("refresh_rate.by_kind.{}.regular", kind),
+            )?;
+            validate_range(
+                pair.inverted,
+                0,
+                100,
+                &format!("refresh_rate.by_kind.{}.inverted", kind),
+            )?;
+        }
+
+        Ok(())
     }
 }
 
@@ -205,5 +271,58 @@ impl Default for ReaderSettings {
             page_turn_animation: PageTurnAnimation::None,
             fast_page_turn: false,
         }
+    }
+}
+
+impl ReaderSettings {
+    /// Validates all settings values are within acceptable ranges
+    ///
+    /// # Errors
+    /// Returns an error if any setting is outside its valid range
+    pub fn validate(&self) -> Result<(), Error> {
+        // Validate font size bounds
+        if self.min_font_size >= self.max_font_size {
+            bail!(
+                "font_size: min_font_size ({}) must be less than max_font_size ({})",
+                self.min_font_size,
+                self.max_font_size
+            );
+        }
+        validate_finite_f32(
+            self.font_size,
+            "font_size",
+            self.min_font_size,
+            self.max_font_size,
+        )?;
+
+        // Validate margin bounds
+        if self.min_margin_width >= self.max_margin_width {
+            bail!(
+                "margin_width: min_margin_width ({}) must be less than max_margin_width ({})",
+                self.min_margin_width,
+                self.max_margin_width
+            );
+        }
+        validate_range(
+            self.margin_width,
+            self.min_margin_width,
+            self.max_margin_width,
+            "margin_width",
+        )?;
+
+        // Validate line height (must be positive and reasonable)
+        validate_finite_f32(self.line_height, "line_height", 0.5, 3.0)?;
+
+        // Validate strip widths (must be between 0 and 1 as they're ratios)
+        validate_finite_f32(self.strip_width, "strip_width", 0.0, 1.0)?;
+        validate_finite_f32(self.corner_width, "corner_width", 0.0, 1.0)?;
+
+        // Validate refresh rate settings
+        self.refresh_rate.validate()?;
+
+        // Validate CSS overrides
+        self.css_overrides.validate()?;
+
+        Ok(())
     }
 }

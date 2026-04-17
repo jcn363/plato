@@ -5,7 +5,6 @@ use super::{
 };
 use crate::color::{text_normal, BLACK};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, FONT_SIZES, NORMAL_STYLE};
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, BorderSpec, LinearDir, Point, Rectangle};

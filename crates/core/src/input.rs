@@ -402,8 +402,8 @@ pub fn parse_device_events(
     let mut packets: FxHashMap<i32, TouchState> = FxHashMap::default();
     let proto = CURRENT_DEVICE.proto;
 
-    let mut tc = Self::initialize_touch_codes(proto);
-    Self::initialize_single_touch_packet(proto, id, &mut packets);
+    let mut tc = initialize_touch_codes(proto);
+    initialize_single_touch_packet(proto, id, &mut packets);
 
     let (mut mirror_x, mut mirror_y) = CURRENT_DEVICE.should_mirror_axes(rotation);
     if CURRENT_DEVICE.should_swap_axes(rotation) {
@@ -414,13 +414,38 @@ pub fn parse_device_events(
 
     while let Ok(evt) = rx.recv() {
         if evt.kind == EV_ABS {
-            Self::handle_abs_event(evt, &mut id, &mut packets, tc, mirror_x, mirror_y, dims, proto);
+            handle_abs_event(
+                evt,
+                &mut id,
+                &mut packets,
+                &tc,
+                mirror_x,
+                mirror_y,
+                dims,
+                proto,
+            );
         } else if evt.kind == EV_SYN && evt.code == SYN_REPORT {
-            Self::handle_syn_event(evt, &mut last_activity, &mut fingers, &mut packets, proto, ty);
+            handle_syn_event(
+                evt,
+                &mut last_activity,
+                &mut fingers,
+                &mut packets,
+                proto,
+                ty,
+            );
         } else if evt.kind == EV_KEY {
-            Self::handle_key_event(evt, &mut button_scheme, &mut rotation, &mut tc, &mut dims, &mut mirror_x, &mut mirror_y, ty);
+            handle_key_event(
+                evt,
+                &mut button_scheme,
+                &mut rotation,
+                &mut tc,
+                &mut dims,
+                &mut mirror_x,
+                &mut mirror_y,
+                ty,
+            );
         } else if evt.kind == EV_MSC && evt.code == MSC_RAW {
-            Self::handle_msc_event(evt, ty);
+            handle_msc_event(evt, ty);
         }
     }
 }
@@ -434,7 +459,11 @@ fn initialize_touch_codes(proto: TouchProto) -> TouchCodes {
     }
 }
 
-fn initialize_single_touch_packet(proto: TouchProto, id: i32, packets: &mut FxHashMap<i32, TouchState>) {
+fn initialize_single_touch_packet(
+    proto: TouchProto,
+    id: i32,
+    packets: &mut FxHashMap<i32, TouchState>,
+) {
     if proto == TouchProto::Single {
         packets.insert(id, TouchState::default());
     }
@@ -444,7 +473,7 @@ fn handle_abs_event(
     evt: InputEvent,
     id: &mut i32,
     packets: &mut FxHashMap<i32, TouchState>,
-    tc: TouchCodes,
+    tc: &TouchCodes,
     mirror_x: bool,
     mirror_y: bool,
     dims: (u32, u32),
@@ -474,10 +503,7 @@ fn handle_abs_event(
     } else if evt.code == tc.pressure {
         if let Some(state) = packets.get_mut(id) {
             state.pressure = evt.value;
-            if proto == TouchProto::Single
-                && CURRENT_DEVICE.mark() == 3
-                && state.pressure == 0
-            {
+            if proto == TouchProto::Single && CURRENT_DEVICE.mark() == 3 && state.pressure == 0 {
                 state.position.x = dims.0 as i32 - 1 - state.position.x;
                 mem::swap(&mut state.position.x, &mut state.position.y);
             }
@@ -512,7 +538,7 @@ fn handle_syn_event(
         });
     }
 
-    for (&id, state) in &packets {
+    for (&id, state) in packets.iter() {
         if let Some(&pos) = fingers.get(&id) {
             if state.pressure > 0 {
                 if state.position != pos {
@@ -602,9 +628,7 @@ fn handle_key_event(
 }
 
 fn handle_msc_event(evt: InputEvent, ty: &Sender<DeviceEvent>) {
-    if evt.value >= MSC_RAW_GSENSOR_PORTRAIT_DOWN
-        && evt.value <= MSC_RAW_GSENSOR_LANDSCAPE_LEFT
-    {
+    if evt.value >= MSC_RAW_GSENSOR_PORTRAIT_DOWN && evt.value <= MSC_RAW_GSENSOR_LANDSCAPE_LEFT {
         let next_rotation = GYROSCOPE_ROTATIONS
             .iter()
             .position(|&v| v == evt.value)

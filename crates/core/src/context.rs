@@ -29,7 +29,9 @@ use walkdir::WalkDir;
 
 const KEYBOARD_LAYOUTS_DIRNAME: &str = "keyboard-layouts";
 const DICTIONARIES_DIRNAME: &str = "dictionaries";
-const INPUT_HISTORY_SIZE: usize = 32;
+
+// Use canonical input history size constant from consts::input
+use crate::consts::input::INPUT_HISTORY_SIZE;
 
 bitflags! {
     /// Device state flags

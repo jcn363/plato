@@ -41,8 +41,24 @@ impl BottomBar {
         let (small_half_width, big_half_width) = halves(rect.width() as i32 - 2 * side);
 
         Self::add_prev_icon(&mut children, &rect, side, neighbors);
-        Self::add_chapter_label(&mut children, &rect, side, small_half_width, doc, toc, current_page);
-        Self::add_page_label(&mut children, &rect, side, big_half_width, current_page, pages_count, synthetic);
+        Self::add_chapter_label(
+            &mut children,
+            &rect,
+            side,
+            small_half_width,
+            doc,
+            toc,
+            current_page,
+        );
+        Self::add_page_label(
+            &mut children,
+            &rect,
+            side,
+            big_half_width,
+            current_page,
+            pages_count,
+            synthetic,
+        );
         Self::add_next_icon(&mut children, &rect, side, neighbors);
 
         BottomBar {
@@ -54,7 +70,12 @@ impl BottomBar {
         }
     }
 
-    fn add_prev_icon(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, side: i32, neighbors: &Neighbors) {
+    fn add_prev_icon(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        side: i32,
+        neighbors: &Neighbors,
+    ) {
         let prev_rect = rect![rect.min, rect.min + side];
         let is_prev_disabled = neighbors.previous_page.is_none();
 
@@ -67,7 +88,15 @@ impl BottomBar {
         }
     }
 
-    fn add_chapter_label(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, side: i32, small_half_width: i32, doc: &mut dyn Document, toc: Option<Vec<TocEntry>>, current_page: usize) {
+    fn add_chapter_label(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        side: i32,
+        small_half_width: i32,
+        doc: &mut dyn Document,
+        toc: Option<Vec<TocEntry>>,
+        current_page: usize,
+    ) {
         let chapter_rect = rect![
             pt!(rect.min.x + side, rect.min.y),
             pt!(rect.min.x + side + small_half_width, rect.max.y)
@@ -81,7 +110,15 @@ impl BottomBar {
         children.push(Box::new(chapter_label) as Box<dyn View>);
     }
 
-    fn add_page_label(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, side: i32, big_half_width: i32, current_page: usize, pages_count: usize, synthetic: bool) {
+    fn add_page_label(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        side: i32,
+        big_half_width: i32,
+        current_page: usize,
+        pages_count: usize,
+        synthetic: bool,
+    ) {
         let page_label = PageLabel::new(
             rect![
                 pt!(rect.max.x - side - big_half_width, rect.min.y),
@@ -94,7 +131,12 @@ impl BottomBar {
         children.push(Box::new(page_label) as Box<dyn View>);
     }
 
-    fn add_next_icon(children: &mut Vec<Box<dyn View>>, rect: &Rectangle, side: i32, neighbors: &Neighbors) {
+    fn add_next_icon(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        side: i32,
+        neighbors: &Neighbors,
+    ) {
         let next_rect = rect![rect.max - side, rect.max];
         let is_next_disabled = neighbors.next_page.is_none();
 

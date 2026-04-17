@@ -1,6 +1,5 @@
 use crate::color;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::document::pdf_manipulator::{PdfManipulator, RedactionRegion};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};

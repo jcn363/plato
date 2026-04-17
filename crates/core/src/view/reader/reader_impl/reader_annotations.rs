@@ -17,7 +17,6 @@
 //! ## Dependencies
 //! Depends on Reader's info and selection state.
 
-use crate::device::CURRENT_DEVICE;
 use crate::document::TextLocation;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{Point, Rectangle};

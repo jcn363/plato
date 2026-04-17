@@ -31,7 +31,9 @@ impl ThumbnailCache {
         }
 
         Ok(Self {
-            cache: lru::LruCache::new(std::num::NonZeroUsize::new(max_size).expect("max_size > 0 validated above")),
+            cache: lru::LruCache::new(
+                std::num::NonZeroUsize::new(max_size).expect("max_size > 0 validated above"),
+            ),
             max_size,
         })
     }

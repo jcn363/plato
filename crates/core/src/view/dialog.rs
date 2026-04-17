@@ -4,7 +4,6 @@ use super::{Align, Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
 use super::{BORDER_RADIUS_MEDIUM, CLOSE_IGNITION_DELAY, THICKNESS_LARGE};
 use crate::color::{background, foreground};
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
 use crate::framebuffer::Framebuffer;
 use crate::geom::{BorderSpec, CornerSpec, Rectangle};
@@ -55,45 +54,18 @@ impl Dialog {
         let dy = (height as i32 - dialog_height) / 2;
         let rect = rect![dx, dy, dx + dialog_width, dy + dialog_height];
 
-        let rect_label = rect![
-            rect.min.x + padding,
-            rect.min.y + padding,
-            rect.max.x - padding,
-            rect.min.y + padding + button_height
-        ];
-
-        let label = Label::new(rect_label, text, Align::Center);
-
-        children.push(Box::new(label) as Box<dyn View>);
-
-        let plan_cancel = event
-            .as_ref()
-            .map(|_| font.plan(LABEL_CANCEL, Some(max_button_width), None));
-        let plan_validate = font.plan(LABEL_VALIDATE, Some(max_button_width), None);
-
+        Self::add_label(&mut children, rect, padding, button_height, text);
         let button_width =
-            plan_validate.width.max(plan_cancel.map_or(0, |p| p.width)) as i32 + padding;
-
-        if event.is_some() {
-            let rect_cancel = rect![
-                rect.min.x + padding,
-                rect.max.y - button_height - padding,
-                rect.min.x + button_width + 2 * padding,
-                rect.max.y - padding
-            ];
-            let button_cancel = Button::new(rect_cancel, Event::Cancel, LABEL_CANCEL.to_string());
-            children.push(Box::new(button_cancel) as Box<dyn View>);
-        }
-
-        let rect_validate = rect![
-            rect.max.x - button_width - 2 * padding,
-            rect.max.y - button_height - padding,
-            rect.max.x - padding,
-            rect.max.y - padding
-        ];
-        let button_validate =
-            Button::new(rect_validate, Event::Validate, LABEL_VALIDATE.to_string());
-        children.push(Box::new(button_validate) as Box<dyn View>);
+            Self::calculate_button_width(&mut context.fonts, &event, max_button_width, padding);
+        Self::add_cancel_button(
+            &mut children,
+            rect,
+            padding,
+            button_height,
+            button_width,
+            &event,
+        );
+        Self::add_validate_button(&mut children, rect, padding, button_height, button_width);
 
         Dialog {
             id,
@@ -103,6 +75,81 @@ impl Dialog {
             event,
             will_close: false,
         }
+    }
+
+    fn add_label(
+        children: &mut Vec<Box<dyn View>>,
+        rect: Rectangle,
+        padding: i32,
+        button_height: i32,
+        text: String,
+    ) {
+        let rect_label = rect![
+            rect.min.x + padding,
+            rect.min.y + padding,
+            rect.max.x - padding,
+            rect.min.y + padding + button_height
+        ];
+        let label = Label::new(rect_label, text, Align::Center);
+        children.push(Box::new(label));
+    }
+
+    fn calculate_button_width(
+        fonts: &mut Fonts,
+        event: &Option<Event>,
+        max_button_width: i32,
+        padding: i32,
+    ) -> i32 {
+        let plan_cancel = event.as_ref().map(|_| {
+            fonts
+                .sans_serif
+                .regular
+                .plan(LABEL_CANCEL, Some(max_button_width), None)
+        });
+        let plan_validate =
+            fonts
+                .sans_serif
+                .regular
+                .plan(LABEL_VALIDATE, Some(max_button_width), None);
+        plan_validate.width.max(plan_cancel.map_or(0, |p| p.width)) as i32 + padding
+    }
+
+    fn add_cancel_button(
+        children: &mut Vec<Box<dyn View>>,
+        rect: Rectangle,
+        padding: i32,
+        button_height: i32,
+        button_width: i32,
+        event: &Option<Event>,
+    ) {
+        if event.is_some() {
+            let rect_cancel = rect![
+                rect.min.x + padding,
+                rect.max.y - button_height - padding,
+                rect.min.x + button_width + 2 * padding,
+                rect.max.y - padding
+            ];
+            let button_cancel = Button::new(rect_cancel, Event::Cancel, LABEL_CANCEL.to_string());
+            children.push(Box::new(button_cancel));
+        }
+    }
+
+    fn add_validate_button(
+        children: &mut Vec<Box<dyn View>>,
+        rect: Rectangle,
+        padding: i32,
+        button_height: i32,
+        button_width: i32,
+    ) {
+        let rect_validate = rect![
+            rect.max.x - button_width - 2 * padding,
+            rect.max.y - button_height - padding,
+            rect.max.x - padding,
+            rect.max.y - padding
+        ];
+        let button_validate =
+            Button::new(rect_validate, Event::Validate, LABEL_VALIDATE.to_string());
+        children.push(Box::new(button_validate));
     }
 }
 

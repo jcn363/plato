@@ -1,19 +1,24 @@
 use crate::document::file_kind;
-use crate::helpers::Fingerprint;
+use crate::helpers::{Fingerprint, Fp};
 use crate::metadata::{FileInfo, Info};
 use crate::settings::LibraryMode;
+use crate::validation::{validate_filename, validate_path};
 use anyhow::format_err;
 use anyhow::Context;
 use anyhow::Error;
 use chrono::Local;
 use std::fs;
-use std::fs::{File, Metadata};
+use std::fs::{File, Metadata as FsMetadata};
 use std::path::{Path, PathBuf};
 
 use super::types::Library;
 
 impl Library {
     pub fn rename<P: AsRef<Path>>(&mut self, path: P, file_name: &str) -> Result<(), Error> {
+        // Validate inputs before any operations
+        validate_path(&path, "rename source path")?;
+        validate_filename(file_name, "rename destination name")?;
+
         let src = self.home.join(path.as_ref());
 
         let fp = self
@@ -43,6 +48,9 @@ impl Library {
     }
 
     pub fn remove<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
+        // Validate path before any operations
+        validate_path(&path, "remove path")?;
+
         let full_path = self.home.join(path.as_ref());
 
         let fp = self
@@ -84,18 +92,21 @@ impl Library {
     }
 
     pub fn copy_to<P: AsRef<Path>>(&mut self, path: P, other: &mut Library) -> Result<(), Error> {
+        // Validate path before any operations
+        validate_path(&path, "copy source path")?;
+
         let src = self.home.join(path.as_ref());
         self.validate_source_exists(&src, path.as_ref())?;
-        
+
         let md = src.metadata()?;
-        let fp = self.get_fingerprint(path.as_ref(), &src, &md)?;
-        
+        let fp = self.get_fingerprint(path.as_ref());
+
         let dest = self.prepare_destination(path.as_ref(), other)?;
-        
+
         self.copy_file(&src, &dest, &md)?;
         self.copy_metadata(&fp, other)?;
         self.copy_reader_info(&fp, &dest, &md, other)?;
-        
+
         other.modified_reading_states.insert(fp);
         Ok(())
     }
@@ -110,15 +121,11 @@ impl Library {
         Ok(())
     }
 
-    fn get_fingerprint<P: AsRef<Path>>(&self, path: P, src: &Path, md: &Metadata) -> Result<Fingerprint, Error> {
-        self.paths
-            .get(path.as_ref())
-            .cloned()
-            .or_else(|| md.fingerprint(self.fat32_epoch).ok())
-            .ok_or_else(|| format_err!("can't get fingerprint of {}", path.as_ref().display()))
-    }
-
-    fn prepare_destination<P: AsRef<Path>>(&self, path: P, other: &Library) -> Result<PathBuf, Error> {
+    fn prepare_destination<P: AsRef<Path>>(
+        &self,
+        path: P,
+        other: &Library,
+    ) -> Result<PathBuf, Error> {
         let mut dest = other.home.join(path.as_ref());
         if let Some(parent) = dest.parent() {
             fs::create_dir_all(parent)?;
@@ -136,14 +143,15 @@ impl Library {
         Ok(dest)
     }
 
-    fn copy_file(&self, src: &Path, dest: &Path, md: &Metadata) -> Result<(), Error> {
+    fn copy_file(&self, src: &Path, dest: &Path, md: &FsMetadata) -> Result<(), Error> {
         fs::copy(src, dest)?;
-        let fdest = File::open(dest).with_context(|| format!("can't open destination file {}", dest.display()))?;
+        let fdest = File::open(dest)
+            .with_context(|| format!("can't open destination file {}", dest.display()))?;
         fdest.set_modified(md.modified()?)?;
         Ok(())
     }
 
-    fn copy_metadata(&self, fp: &Fingerprint, other: &Library) -> Result<(), Error> {
+    fn copy_metadata(&self, fp: &Fp, other: &Library) -> Result<(), Error> {
         let rsp_src = self.reading_state_path(*fp);
         fs::copy(&rsp_src, &other.reading_state_path(*fp)).ok();
 
@@ -152,7 +160,13 @@ impl Library {
         Ok(())
     }
 
-    fn copy_reader_info(&self, fp: &Fingerprint, dest: &Path, md: &Metadata, other: &mut Library) -> Result<(), Error> {
+    fn copy_reader_info(
+        &self,
+        fp: &Fp,
+        dest: &Path,
+        md: &FsMetadata,
+        other: &mut Library,
+    ) -> Result<(), Error> {
         if other.mode == LibraryMode::Database {
             self.copy_to_database(fp, dest, md, other)?;
         } else {
@@ -161,7 +175,13 @@ impl Library {
         Ok(())
     }
 
-    fn copy_to_database(&self, fp: &Fingerprint, dest: &Path, md: &Metadata, other: &mut Library) -> Result<(), Error> {
+    fn copy_to_database(
+        &self,
+        fp: &Fp,
+        dest: &Path,
+        md: &FsMetadata,
+        other: &mut Library,
+    ) -> Result<(), Error> {
         let info = self.db.get(fp).cloned().or_else(|| {
             self.reading_states
                 .get(fp)
@@ -186,7 +206,7 @@ impl Library {
         Ok(())
     }
 
-    fn copy_to_filesystem(&self, fp: &Fingerprint, other: &mut Library) -> Result<(), Error> {
+    fn copy_to_filesystem(&self, fp: &Fp, other: &mut Library) -> Result<(), Error> {
         let reader_info = self
             .reading_states
             .get(fp)
@@ -199,19 +219,22 @@ impl Library {
     }
 
     pub fn move_to<P: AsRef<Path>>(&mut self, path: P, other: &mut Library) -> Result<(), Error> {
+        // Validate path before any operations
+        validate_path(&path, "move source path")?;
+
         let src = self.home.join(path.as_ref());
         self.validate_source_exists(&src, path.as_ref())?;
-        
+
         let md = src.metadata()?;
-        let fp = self.get_fingerprint(path.as_ref(), &src, &md)?;
-        
+        let fp = self.get_fingerprint(path.as_ref());
+
         let dest = self.prepare_destination(path.as_ref(), other)?;
-        
+
         self.move_file(&src, &dest)?;
         self.move_metadata(&fp, other)?;
         self.move_reader_info(path.as_ref(), &fp, &dest, &md, other)?;
         self.move_modified_state(&fp, other)?;
-        
+
         Ok(())
     }
 
@@ -220,7 +243,7 @@ impl Library {
         Ok(())
     }
 
-    fn move_metadata(&self, fp: &Fingerprint, other: &Library) -> Result<(), Error> {
+    fn move_metadata(&self, fp: &Fp, other: &Library) -> Result<(), Error> {
         let rsp_src = self.reading_state_path(*fp);
         fs::rename(&rsp_src, &other.reading_state_path(*fp)).ok();
 
@@ -229,7 +252,14 @@ impl Library {
         Ok(())
     }
 
-    fn move_reader_info<P: AsRef<Path>>(&mut self, path: P, fp: &Fingerprint, dest: &Path, md: &Metadata, other: &mut Library) -> Result<(), Error> {
+    fn move_reader_info<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        fp: &Fp,
+        dest: &Path,
+        md: &FsMetadata,
+        other: &mut Library,
+    ) -> Result<(), Error> {
         if other.mode == LibraryMode::Database {
             self.move_to_database(path, fp, dest, md, other)?;
         } else {
@@ -238,7 +268,14 @@ impl Library {
         Ok(())
     }
 
-    fn move_to_database<P: AsRef<Path>>(&mut self, path: P, fp: &Fingerprint, dest: &Path, md: &Metadata, other: &mut Library) -> Result<(), Error> {
+    fn move_to_database<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        fp: &Fp,
+        dest: &Path,
+        md: &FsMetadata,
+        other: &mut Library,
+    ) -> Result<(), Error> {
         let info = self.db.shift_remove(fp).or_else(|| {
             self.reading_states.remove(fp).map(|reader_info| Info {
                 file: FileInfo {
@@ -262,7 +299,7 @@ impl Library {
         Ok(())
     }
 
-    fn move_to_filesystem(&mut self, fp: &Fingerprint, other: &mut Library) -> Result<(), Error> {
+    fn move_to_filesystem(&mut self, fp: &Fp, other: &mut Library) -> Result<(), Error> {
         let reader_info = self
             .reading_states
             .remove(fp)
@@ -273,7 +310,7 @@ impl Library {
         Ok(())
     }
 
-    fn move_modified_state(&mut self, fp: &Fingerprint, other: &mut Library) -> Result<(), Error> {
+    fn move_modified_state(&mut self, fp: &Fp, other: &mut Library) -> Result<(), Error> {
         if self.modified_reading_states.remove(fp) {
             other.modified_reading_states.insert(*fp);
         }

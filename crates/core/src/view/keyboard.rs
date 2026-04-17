@@ -5,7 +5,6 @@ use super::{
 };
 use crate::color::KEYBOARD_BG;
 use crate::context::Context;
-use crate::device::CURRENT_DEVICE;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;

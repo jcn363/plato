@@ -1,4 +1,5 @@
 use crate::settings::CoverEditorSettings;
+use crate::validation::{validate_path, validate_range};
 use anyhow::{format_err, Context, Error};
 use image::{DynamicImage, GenericImageView, ImageFormat};
 use std::io::Write;
@@ -16,6 +17,9 @@ impl CoverEditor {
     }
 
     pub fn load_cover<P: AsRef<Path>>(&self, path: P) -> Result<DynamicImage, Error> {
+        // Validate path before attempting to load
+        validate_path(&path, "cover image path")?;
+
         let img =
             image::open(path.as_ref()).map_err(|e| format_err!("Failed to open image: {}", e))?;
         Ok(img)
@@ -28,8 +32,38 @@ impl CoverEditor {
         y: u32,
         width: u32,
         height: u32,
-    ) -> DynamicImage {
-        img.crop_imm(x, y, width, height)
+    ) -> Result<DynamicImage, Error> {
+        // Validate crop parameters
+        let (img_width, img_height) = img.dimensions();
+
+        validate_range(x, 0, img_width, "crop x")?;
+        validate_range(y, 0, img_height, "crop y")?;
+
+        if width == 0 {
+            return Err(format_err!("crop width must be greater than 0"));
+        }
+        if height == 0 {
+            return Err(format_err!("crop height must be greater than 0"));
+        }
+
+        if x + width > img_width {
+            return Err(format_err!(
+                "crop region extends beyond image width: x({}) + width({}) > img_width({})",
+                x,
+                width,
+                img_width
+            ));
+        }
+        if y + height > img_height {
+            return Err(format_err!(
+                "crop region extends beyond image height: y({}) + height({}) > img_height({})",
+                y,
+                height,
+                img_height
+            ));
+        }
+
+        Ok(img.crop_imm(x, y, width, height))
     }
 
     pub fn resize(&self, img: &DynamicImage, width: u32, height: u32) -> DynamicImage {
@@ -87,6 +121,18 @@ impl CoverEditor {
     }
 
     pub fn save_as_cover<P: AsRef<Path>>(&self, img: &DynamicImage, path: P) -> Result<(), Error> {
+        // Validate path before attempting to save
+        validate_path(&path, "cover save path")?;
+
+        // Validate image dimensions
+        let (width, height) = img.dimensions();
+        if width == 0 || height == 0 {
+            return Err(format_err!("cannot save cover with zero dimensions"));
+        }
+
+        // Validate settings
+        self.settings.validate()?;
+
         let rgb_img = img.to_rgb8();
         let (width, height) = rgb_img.dimensions();
 
