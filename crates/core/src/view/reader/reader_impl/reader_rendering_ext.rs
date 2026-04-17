@@ -148,7 +148,8 @@ impl ReaderRenderEngine {
     ) -> Result<(), Error> {
         // Check if page is already cached
         if let Some(pixmap) = self.cache.get(page) {
-            self.render_cached_page(pixmap, rect, framebuffer);
+            let pixmap = pixmap.clone();
+            self.render_cached_page(&pixmap, rect, framebuffer);
             return Ok(());
         }
 

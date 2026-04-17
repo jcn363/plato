@@ -7,6 +7,7 @@ Date: April 17, 2026
 ### 1. Library Menu Actions (`crates/core/src/view/home/ui_toggles/library_toggle.rs`)
 
 **Changes:**
+
 - Implemented `update_library_config()` - properly recreates menu when config changes
 - Implemented `handle_library_selection()`:
   - `import_books`: Calls `import()` and shows notification
@@ -16,6 +17,7 @@ Date: April 17, 2026
 - Implemented `update_library_statistics()` - shows notification with current library stats
 
 **AGENTS.md Compliance:**
+
 - Proper error handling with meaningful context
 - Input validation for file paths
 - No backward compatibility concerns (internal refactoring)
@@ -24,6 +26,7 @@ Date: April 17, 2026
 ### 2. Menu Toggle Actions (`crates/core/src/view/home/ui_toggles/menu_toggle.rs`)
 
 **Changes:**
+
 - Implemented `update_menu_config()` - closes/recreates menus on config changes
 - Implemented `handle_menu_selection()`:
   - `EntryId::Sort(*)`: Calls `set_sort_method()` directly, hides menu
@@ -32,6 +35,7 @@ Date: April 17, 2026
   - `EntryId::Remove(*)`: Hides menu, sends event for main handler
 
 **Design Decision:**
+
 - Sort methods are applied directly (synchronous)
 - Book operations (open/rename/delete) send events for proper handling by main loop
 - This maintains separation of concerns while ensuring UI responsiveness
@@ -39,6 +43,7 @@ Date: April 17, 2026
 ### 3. HTML Engine TODOs (`crates/core/src/document/html/engine.rs`)
 
 **Changes:**
+
 - Implemented `load_fonts()` - initializes font infrastructure with documentation
 - Implemented `set_font_family()` - parses font family preference (serif/sans/mono)
 - Implemented `build_display_list()` - full structure with recursive helper
@@ -47,6 +52,7 @@ Date: April 17, 2026
 - Implemented `execute_draw_command()` - handles all DrawCommand variants correctly
 
 **Technical Details:**
+
 - `render_page()` properly handles `Pixmap::new()` Result type
 - `execute_draw_command()` matches correct DrawCommand variants (Text, ExtraText, Image, Marker, ExtraRect)
 - All methods include proper rustdoc documentation
@@ -54,6 +60,7 @@ Date: April 17, 2026
 ### 4. Reader Stub Methods (`crates/core/src/view/reader/reader_impl/reader_stubs.rs`)
 
 **Changes:**
+
 - Implemented `go_to_chapter()` - Navigate using TOC manager with chapter lookup
 - Implemented `go_to_bookmark()` - Navigate to next/previous bookmark
 - Implemented `go_to_last_page()` - Jump to final page of document
@@ -64,6 +71,7 @@ Date: April 17, 2026
 - Implemented `handle_show_table_of_contents()` - Show TOC menu when available
 
 **Technical Details:**
+
 - Uses `ReaderTocManager` for chapter navigation
 - Bookmarks use sorted lookup from metadata
 - Search properly initializes all Search struct fields (AtomicBool, FxHashMap)
@@ -73,27 +81,33 @@ Date: April 17, 2026
 ### 5. UI Toggle Implementations (Additional)
 
 **Book View Toggle (`book_view_toggle.rs`):**
+
 - Implemented `update_book_view_config()` - Recreate view on config changes
 - Implemented `open_book_in_view()` - Open book with library lookup
 - Implemented `generate_book_preview()` - File validation and format check
 
 **Directory View Toggle (`directory_view_toggle.rs`):**
+
 - Implemented `update_directory_view_config()` - Refresh on settings change
 - Implemented `update_directory_view_content()` - Content refresh with settings
 
 **Settings Toggle (`settings_toggle.rs`):**
+
 - Implemented `update_settings_config()` - Recreate menu on advanced settings toggle
 - Implemented About handler - Show AboutDialog via event
 - Implemented SystemInfo handler - Show notification with system info
 
 **Navigation Bar Toggle (`navigation_bar_toggle.rs`):**
+
 - Implemented `update_navigation_bar_config()` - Refresh on breadcrumbs setting change
 - Implemented `update_navigation_bar_breadcrumbs()` - Trigger UI refresh for breadcrumb display
 
 **Shelf View Toggle (`shelf_view_toggle.rs`):**
+
 - Implemented `update_shelf_view_config()` - Recreate shelf when display settings change
 
 **UI Toggle Utils (`utils.rs`):**
+
 - Implemented `toggle_rename_document()` - Send Show event for rename dialog
 - Implemented `toggle_select_directory()` - Send Select event for directory toggle
 

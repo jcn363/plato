@@ -55,7 +55,7 @@ impl Home {
         enable: Option<bool>,
         hub: &Hub,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        _context: &mut Context,
     ) {
         // Check if rename dialog should be shown
         let should_enable = enable.unwrap_or(false);

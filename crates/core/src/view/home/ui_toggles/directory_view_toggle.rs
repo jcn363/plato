@@ -3,11 +3,125 @@
 //! This module handles directory view visibility and interaction for the Home view.
 
 use crate::context::Context;
-use crate::framebuffer::UpdateMode;
+use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
-use crate::view::{Event, Hub, RenderData, RenderQueue, ViewId};
+use crate::impl_view_boilerplate;
+use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 
 use super::super::Home;
+
+/// Directory view display component
+///
+/// Shows directory contents and navigation in a dedicated view panel.
+pub struct DirectoryView {
+    id: Id,
+    rect: Rectangle,
+    children: Vec<Box<dyn View>>,
+    current_path: Option<std::path::PathBuf>,
+    parent_id: Id,
+    show_hidden: bool,
+}
+
+impl DirectoryView {
+    /// Create a new directory view
+    pub fn new(rect: Rectangle, parent_id: Id, _context: &mut Context) -> Self {
+        Self {
+            id: ID_FEEDER.next(),
+            rect,
+            children: Vec::new(),
+            current_path: None,
+            parent_id,
+            show_hidden: false,
+        }
+    }
+
+    /// Set the directory to display
+    pub fn set_directory(&mut self, path: std::path::PathBuf, rq: &mut RenderQueue) {
+        self.current_path = Some(path);
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    }
+
+    /// Get the current directory path
+    pub fn current_path(&self) -> Option<&std::path::PathBuf> {
+        self.current_path.as_ref()
+    }
+
+    /// Set whether to show hidden files
+    pub fn set_show_hidden(&mut self, show: bool, rq: &mut RenderQueue) {
+        self.show_hidden = show;
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    }
+}
+
+impl View for DirectoryView {
+    fn handle_event(
+        &mut self,
+        evt: &Event,
+        hub: &Hub,
+        _bus: &mut Bus,
+        _rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) -> bool {
+        match evt {
+            Event::Close(ViewId::DirectoryView) => {
+                hub.send(Event::Close(ViewId::DirectoryView)).ok();
+                true
+            }
+            Event::Gesture(crate::gesture::GestureEvent::Tap(center))
+                if !self.rect.includes(*center) =>
+            {
+                // Close when tapping outside
+                hub.send(Event::Close(ViewId::DirectoryView)).ok();
+                true
+            }
+            _ => false,
+        }
+    }
+
+    fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut crate::font::Fonts) {
+        use crate::color::{background, text_normal};
+        use crate::geom::{BorderSpec, CornerSpec};
+        use crate::view::rendering::THICKNESS_MEDIUM;
+        use crate::unit::scale_by_dpi;
+
+        let dpi = crate::unit::get_device_dpi();
+        let dark = crate::theme::is_dark_mode();
+        let bg_color = background(dark);
+        let fg_color = text_normal(dark);
+
+        // Draw background with border
+        let border_thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as u16;
+        fb.draw_rounded_rectangle_with_border(
+            &self.rect,
+            &CornerSpec::Uniform(0),
+            &BorderSpec {
+                thickness: border_thickness,
+                color: fg_color[0],
+            },
+            &bg_color,
+        );
+
+        // Draw placeholder text if no directory is set
+        if self.current_path.is_none() {
+            let text = "No directory selected";
+            let font = crate::font::font_from_style(
+                fonts,
+                &crate::font::NORMAL_STYLE,
+                dpi,
+            );
+            let plan = font.plan(text, None, None);
+            let x = self.rect.min.x + (self.rect.width() as i32 - plan.width) / 2;
+            let y = self.rect.min.y + (self.rect.height() as i32) / 2;
+            font.render(fb, fg_color[1], &plan, crate::geom::Point::new(x, y));
+        }
+    }
+
+    impl_view_boilerplate!();
+
+    fn view_id(&self) -> Option<ViewId> {
+        Some(ViewId::DirectoryView)
+    }
+}
 
 /// Directory view toggle configuration
 #[derive(Debug, Clone)]
@@ -69,11 +183,10 @@ impl Home {
             return;
         }
 
-        let _rect = self.calculate_directory_view_rect(context);
-        // TODO: Create actual directory view
-        // let directory_view = DirectoryView::new(rect, self.id, context);
+        let rect = self.calculate_directory_view_rect(context);
+        let directory_view = DirectoryView::new(rect, self.id, context);
 
-        // self.directory_view = Some(Box::new(directory_view) as Box<dyn View>);
+        self.directory_view = Some(Box::new(directory_view) as Box<dyn View>);
 
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
@@ -114,14 +227,19 @@ impl Home {
     /// Update directory view configuration
     pub fn update_directory_view_config(&mut self, config: DirectoryViewToggleConfig, rq: &mut RenderQueue) {
         let was_visible = self.directory_view.is_some();
-        let old_config = self.get_directory_view_state().config;
+
+        // Check if settings changed before any mutable borrows
+        let should_refresh = if was_visible {
+            let old_config = &self.get_directory_view_state().config;
+            config.show_hidden != old_config.show_hidden
+                || config.sort_by_name != old_config.sort_by_name
+                || config.show_details != old_config.show_details
+        } else {
+            false
+        };
 
         // If any display settings changed and view is open, refresh it
-        if (config.show_hidden != old_config.show_hidden
-            || config.sort_by_name != old_config.sort_by_name
-            || config.show_details != old_config.show_details)
-            && was_visible
-        {
+        if should_refresh {
             // Refresh the directory view with new settings
             self.update_directory_view_content(rq);
         }
