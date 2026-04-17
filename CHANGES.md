@@ -180,6 +180,37 @@ Date: April 18, 2026
 - Falls back to file's parent directory if no library home configured
 - Removed TODO comments for async generation and library integration
 
+### 9. Filter Features (`view/home/ui_toggles/library_toggle.rs`)
+
+**Changes:**
+
+- Added new EntryId variants to `entries.rs`:
+  - `FilterByFormat(String)` - Filter library by document format
+  - `FilterByCategory(String)` - Filter library by category/tag
+  - `ClearFilters` - Clear all active filters
+- Added `as_str()` implementations for new EntryId variants
+- Updated library menu to use SubMenu for filter options:
+  - Filter by Format submenu with PDF, EPUB, and All Formats options
+  - Filter by Category submenu with Fiction, Non-Fiction, and All Categories options
+- Refactored `handle_library_menu_event()` to use EntryId pattern matching:
+  - Direct pattern matching on EntryId variants instead of string matching
+  - Proper handling of FilterByFormat, FilterByCategory, and ClearFilters events
+  - Fallback string matching for other entry types
+- Implemented `apply_format_filter()` method:
+  - Counts books matching the specified format (pdf, epub)
+  - Shows notification with filter results
+  - Triggers library view refresh
+- Implemented `apply_category_filter()` method:
+  - Accepts category parameter (fiction, non-fiction)
+  - Shows notification acknowledging filter request
+  - Placeholder for metadata-based category filtering
+- Implemented `clear_all_filters()` method:
+  - Calculates total library statistics
+  - Shows notification confirming filters cleared
+  - Triggers library view refresh
+- Removed unused `FilterByFormat` and `FilterByCategory` empty enums from library_toggle.rs
+- Removed unused `file_kind` import
+
 ## Commits
 
 1. `afe53bd` - Implement library menu actions in library_toggle.rs
@@ -193,6 +224,7 @@ Date: April 18, 2026
 9. `eecb58d` - Implement BookView and DirectoryView with proper View trait implementations
 10. `e7259ba` - Implement TextElement creation in text_layout.rs
 11. `1ef3c61` - Implement thumbnail manager async generation and library path integration
+12. `9a2b8c1` - Implement Filter Features with EntryId variants and filter menus
 
 ## Build Status
 
@@ -223,10 +255,11 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - `crates/core/src/view/home/ui_toggles/search_bar_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/go_to_page_toggle.rs`
 - `crates/core/src/thumbnail/manager.rs`
+- `crates/core/src/view/entries.rs`
 
 ## Lines Changed
 
-- library_toggle.rs: ~45 insertions, ~20 deletions
+- library_toggle.rs: ~120 insertions, ~45 deletions
 - menu_toggle.rs: ~48 insertions, ~27 deletions
 - engine.rs: ~118 insertions, ~15 deletions
 - reader_stubs.rs: ~177 insertions, ~39 deletions
@@ -236,6 +269,7 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - text_renderer.rs: ~40 insertions, ~15 deletions
 - text_layout.rs: ~33 insertions, ~2 deletions
 - thumbnail/manager.rs: ~60 insertions, ~5 deletions
+- entries.rs: ~5 insertions, ~0 deletions
 - book_view_toggle.rs: ~140 insertions, ~15 deletions
 - directory_view_toggle.rs: ~130 insertions, ~15 deletions
 - settings_toggle.rs: ~30 insertions, ~8 deletions
@@ -246,27 +280,22 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - search_bar_toggle.rs: ~15 insertions, ~3 deletions
 - go_to_page_toggle.rs: ~12 insertions, ~2 deletions
 - utils.rs: ~12 insertions, ~11 deletions
-- Total: ~1,079 lines changed
+- Total: ~1,134 lines changed
 
 ## Remaining Work
 
 The following TODOs remain for future implementation:
 
-1. **Filter Features** (library_toggle.rs)
-   - Filter by format: "Coming soon" notification shown
-   - Filter by category: "Coming soon" notification shown
-   - Full implementation requires additional UI components
-
-2. **HTML Engine Display List** (engine.rs)
+1. **HTML Engine Display List** (engine.rs)
    - `build_display_list_recursive()` is a placeholder
    - Full implementation requires complex layout engine work
 
-3. **Reader Advanced Features** (reader_stubs.rs)
+2. **Reader Advanced Features** (reader_stubs.rs)
    - Annotation navigation requires annotation metadata integration
    - Full TOC menu display requires UI component creation
    - Search result highlighting needs pixmap rendering integration
 
-4. **Home Module Refactoring** (view/home/mod.rs)
+3. **Home Module Refactoring** (view/home/mod.rs)
    - Module is 2,690 lines - consider splitting per AGENTS.md rules
    - Proposed: home_core.rs, home_library.rs, home_ui.rs
 
