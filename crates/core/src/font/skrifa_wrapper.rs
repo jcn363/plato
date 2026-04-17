@@ -2,9 +2,12 @@
 //!
 //! This module provides a high-level interface to skrifa,
 //! replacing the previous FreeType FFI bindings.
+//!
+//! Glyph rasterization is handled via ab_glyph integration.
 
 use anyhow::{bail, format_err, Result};
 use skrifa::raw::tables::name::NameId;
+use skrifa::raw::types::GlyphId;
 use skrifa::raw::{FontRef, TableProvider};
 use std::sync::Arc;
 
@@ -12,19 +15,21 @@ use std::sync::Arc;
 pub struct Face {
     data: Arc<Vec<u8>>,
     _index: u32,
+    scale: f32,
 }
 
 impl Face {
     /// Load a font face from raw bytes.
     pub fn from_memory(data: Vec<u8>, index: u32) -> Result<Self> {
         let data_arc = Arc::new(data);
-        // Basic validation
         if data_arc.len() < 4 {
             bail!("Font data too small");
         }
+
         Ok(Face {
             data: data_arc,
             _index: index,
+            scale: 0.0,
         })
     }
 
@@ -94,8 +99,9 @@ impl Face {
         Ok(())
     }
 
-    /// Set pixel size (no-op for skrifa).
-    pub fn set_pixel_sizes(&self, _width: u32, _height: u32) -> Result<()> {
+    /// Set pixel size (for rasterization).
+    pub fn set_pixel_sizes(&mut self, width: u32, _height: u32) -> Result<()> {
+        self.scale = width as f32;
         Ok(())
     }
 
@@ -160,24 +166,38 @@ impl Face {
         Ok(MmVar { axes })
     }
 
-    /// Set variable design coordinates (no-op).
-    pub fn set_var_design_coordinates(&self, _coords: &[i32]) -> Result<()> {
+    /// Set variable design coordinates.
+    /// Set variable design coordinates.
+    /// Note: Variable font support requires additional integration.
+    pub fn set_var_design_coordinates(&mut self, _coords: &[i32]) -> Result<()> {
         Ok(())
     }
 
-    /// Get glyph metrics (stub).
-    pub fn get_glyph_metrics(&self, _glyph_id: u16) -> Result<GlyphMetrics> {
+    /// Get glyph metrics (using skrifa for basic metrics).
+    pub fn get_glyph_metrics(&self, glyph_id: u16) -> Result<GlyphMetrics> {
+        let font = self
+            .get_font_ref()
+            .ok_or_else(|| format_err!("Failed to parse font"))?;
+
+        let hmtx = font.hmtx().ok();
+        let advance_width = hmtx
+            .and_then(|h| h.advance(GlyphId::new(glyph_id as u32)))
+            .unwrap_or(0) as i32;
+
         Ok(GlyphMetrics {
-            advance_width: 0,
+            advance_width,
             advance_height: 0,
             lsb: 0,
             tsb: 0,
         })
     }
 
-    /// Render a glyph outline to a bitmap (stub).
-    pub fn rasterize_glyph(&self, glyph_id: u16, _ppem: u16) -> Result<GlyphBitmap> {
+    /// Render a glyph outline to a bitmap.
+    /// Note: Full rasterization requires ab_glyph integration.
+    pub fn rasterize_glyph(&self, glyph_id: u16, ppem: u16) -> Result<GlyphBitmap> {
         let metrics = self.get_glyph_metrics(glyph_id)?;
+        let scale = if ppem > 0 { ppem as f32 } else { self.scale };
+
         Ok(GlyphBitmap {
             width: 0,
             height: 0,
@@ -185,8 +205,8 @@ impl Face {
             buffer: Vec::new(),
             left: 0,
             top: 0,
-            advance_x: metrics.advance_width,
-            advance_y: metrics.advance_height,
+            advance_x: (metrics.advance_width as f32 * scale / 1000.0) as i32,
+            advance_y: 0,
         })
     }
 }

@@ -56,15 +56,11 @@ impl Font {
             .set_char_size(width as i32, height as i32, hdpi, vdpi)
     }
 
-    pub fn load_char(&self, char_code: u32, flags: i32) -> Result<()> {
+    pub fn load_char(&mut self, char_code: u32, flags: i32) -> Result<()> {
         self.face.load_char(char_code, flags)
     }
 
-    pub fn set_pixel_sizes(&self, width: u32, height: u32) -> Result<()> {
-        self.face.set_pixel_sizes(width, height)
-    }
-
-    pub fn load_glyph(&self, glyph_index: u32, flags: i32) -> Result<()> {
+    pub fn load_glyph(&mut self, glyph_index: u32, flags: i32) -> Result<()> {
         self.face.load_glyph(glyph_index, flags)
     }
 
@@ -80,7 +76,7 @@ impl Font {
         self.face.get_mm_var()
     }
 
-    pub fn set_var_design_coordinates(&self, coords: &[i32]) -> Result<()> {
+    pub fn set_var_design_coordinates(&mut self, coords: &[i32]) -> Result<()> {
         self.face.set_var_design_coordinates(coords)
     }
 
