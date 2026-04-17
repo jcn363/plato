@@ -44,6 +44,8 @@ pub struct TextRenderResult {
 pub struct TextRenderer {
     config: TextRenderConfig,
     glyph_cache: HashMap<u32, GlyphRenderData>,
+    cache_hits: u64,
+    cache_misses: u64,
 }
 
 /// Glyph rendering data
@@ -64,6 +66,8 @@ impl TextRenderer {
         Self {
             config,
             glyph_cache: HashMap::new(),
+            cache_hits: 0,
+            cache_misses: 0,
         }
     }
 
@@ -110,10 +114,15 @@ impl TextRenderer {
     }
 
     /// Get or create glyph data
+    ///
+    /// Tracks cache hits and misses for performance monitoring.
     fn get_or_create_glyph_data(&mut self, glyph_id: u32) -> &GlyphRenderData {
         if !self.glyph_cache.contains_key(&glyph_id) {
+            self.cache_misses += 1;
             let glyph_data = self.create_glyph_data(glyph_id);
             self.glyph_cache.insert(glyph_id, glyph_data);
+        } else {
+            self.cache_hits += 1;
         }
 
         self.glyph_cache
@@ -196,20 +205,31 @@ impl TextRenderer {
         &self.config
     }
 
-    /// Clear glyph cache
+    /// Clear cache
     pub fn clear_cache(&mut self) {
+        self.cache_hits = 0;
+        self.cache_misses = 0;
         self.glyph_cache.clear();
     }
 
     /// Get cache statistics
-    pub fn cache_stats(&self) -> (usize, usize) {
-        (
-            self.glyph_cache.len(),
-            self.glyph_cache
-                .values()
-                .map(|g| g.bitmap.as_ref().map_or(0, |b| b.len()))
-                .sum(),
-        )
+    ///
+    /// Returns (cache_size, cache_memory_bytes, hit_rate).
+    pub fn cache_stats(&self) -> (usize, usize, f32) {
+        let memory: usize = self
+            .glyph_cache
+            .values()
+            .map(|g| g.bitmap.as_ref().map_or(0, |b| b.len()))
+            .sum();
+
+        let total_lookups = self.cache_hits + self.cache_misses;
+        let hit_rate = if total_lookups > 0 {
+            self.cache_hits as f32 / total_lookups as f32
+        } else {
+            0.0
+        };
+
+        (self.glyph_cache.len(), memory, hit_rate)
     }
 }
 
@@ -254,10 +274,10 @@ pub mod utils {
 
     /// Calculate text rendering quality metrics
     pub fn calculate_rendering_quality(renderer: &TextRenderer) -> RenderingQuality {
-        let (cache_size, cache_memory) = renderer.cache_stats();
+        let (cache_size, cache_memory, hit_rate) = renderer.cache_stats();
 
         RenderingQuality {
-            cache_hit_rate: 0.0, // TODO: Track hit rate
+            cache_hit_rate: hit_rate,
             cache_size,
             cache_memory_mb: cache_memory / (1024 * 1024),
             anti_aliasing_enabled: renderer.config().anti_aliasing,
