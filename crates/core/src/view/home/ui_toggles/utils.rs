@@ -9,7 +9,7 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::halves;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
-use crate::view::{Hub, RenderData, RenderQueue, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use crate::view::{EntryId, Event, Hub, RenderData, RenderQueue, ViewId, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 
 use super::super::Home;
 
@@ -53,19 +53,19 @@ impl Home {
     pub fn toggle_rename_document(
         &mut self,
         enable: Option<bool>,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        // TODO: Implement rename document dialog toggle
-        // This is a placeholder to fix compilation errors
+        // Check if rename dialog should be shown
         let should_enable = enable.unwrap_or(false);
 
         if should_enable {
-            // Show rename dialog
+            // Send event to show rename dialog
+            hub.send(Event::Show(ViewId::RenameDocument)).ok();
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         } else {
-            // Hide rename dialog
+            // Close rename dialog
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }
     }
@@ -73,13 +73,13 @@ impl Home {
     /// Toggle select directory dialog
     pub fn toggle_select_directory(
         &mut self,
-        _path: &PathBuf,
-        _hub: &Hub,
+        path: &PathBuf,
+        hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        // TODO: Implement select directory dialog toggle
-        // This is a placeholder to fix compilation errors
+        // Send event to toggle select directory
+        hub.send(Event::Select(EntryId::ToggleSelectDirectory(path.clone()))).ok();
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 }
