@@ -20,7 +20,6 @@
 
 pub mod face;
 pub mod library;
-pub mod rasterizer;
 mod rustybuzz_wrapper;
 pub mod shaper;
 mod skrifa_wrapper;

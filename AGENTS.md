@@ -404,16 +404,14 @@ Each crate should have a single responsibility, explicit documentation in its `C
 - Device-specific code uses `CURRENT_DEVICE` lazy static with environment variables `PRODUCT` and `MODEL_NUMBER`
 - MuPDF bindings live in `crates/core/src/document/mupdf_sys.rs` with a C wrapper in `mupdf_wrapper/`
 - Safe MuPDF wrappers are in `crates/core/src/document/mupdf.rs` — use these instead of direct FFI calls
-- Safe FreeType wrappers are in `crates/core/src/font/freetype.rs` — use these instead of direct FFI calls
-- Safe HarfBuzz wrappers are in `crates/core/src/font/harfbuzz.rs` — use these instead of direct FFI calls
-- **NEW code must use safe wrappers** — all user code should import from `crate::document::mupdf`, `crate::font::freetype`, `crate::font::harfbuzz` instead of `mupdf_sys`, `freetype_sys`, `harfbuzz_sys`
-- Legacy code in `font/mod.rs` still uses direct FFI — all FFI calls are covered by safe wrappers, migration requires architectural restructuring (replacing `FontLibrary`/`FontOpener`/`Font` with composed safe wrapper types)
-- `pdf.rs` and `pdf_manipulator.rs` have been migrated to use safe wrappers
+- **Font subsystem now uses pure Rust**: skrifa for font parsing/metrics, rustybuzz for text shaping, ab_glyph for rasterization
+- **Legacy font FFI removed**: No more frereetype_sys.rs, freetype.rs, harfbuzz_sys.rs, harfbuzz.rs
+- **NEW code must use**: `crate::font::skrifa_wrapper::Face`, `crate::font::rustybuzz_wrapper::Buffer`
 - All safe wrappers include `#[inline]` for hot-path optimization and `Drop` implementations for RAII resource cleanup
 - `MuPdfContext` uses `Rc` internally for shared ownership across multiple documents
 - `Outline`, `Link`, `Annotation` wrappers return owned values from `next()`/`down()` with proper RAII cleanup
 - Text iteration uses `Iterator` trait: `TextPage::blocks()` → `TextBlockIter`, `TextBlock::lines()` → `TextLineIter`, `TextLine::chars()` → `TextCharIter`
-- `Face::face_ptr()` returns raw `*mut FtFace` for HarfBuzz integration
+- `Face::face_ptr()` returns raw `*mut FtFace` for HarfBuzz integration — **DEPRECATED**, use rustybuzz instead
 - The pre-compiled `libs/libmupdf.so` is incomplete — it lacks many PDF manipulation, annotation, and redaction symbols
 - `mupdf_wrapper/mupdf_wrapper.c` provides 20+ custom FFI functions (e.g., `fz_pdf_count_pages`, `fz_save_document`, `fz_first_annot`, `fz_apply_redactions`) that bridge the gap
 - The wrapper is built as `libmupdf_wrapper.a` and linked via `crates/core/build.rs` for ARM/ARM64 targets
