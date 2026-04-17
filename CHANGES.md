@@ -148,6 +148,21 @@ Date: April 18, 2026
 - Updated `calculate_rendering_quality()` to use tracked hit_rate
 - Removed TODO comment for cache hit rate tracking
 
+### 7. Text Layout (`engine_text/text_layout.rs`)
+
+**Changes:**
+
+- Implemented TextElement creation in `create_line()` method
+- Create a TextElement for each word with proper properties:
+  - `offset`: Byte offset tracking for positioning
+  - `text`: The actual word content
+  - `font_kind`, `font_style`, `font_weight`: From layout config
+  - `font_size`, `letter_spacing`: From layout config
+  - `color`: Using crate::color::BLACK
+  - `plan`: Using RenderPlan::default()
+- Pre-allocate elements Vec with `Vec::with_capacity(words.len())`
+- Removed TODO comment for TextElement creation
+
 ## Commits
 
 1. `afe53bd` - Implement library menu actions in library_toggle.rs
@@ -159,6 +174,7 @@ Date: April 18, 2026
 7. `bda74c2` - Implement font cache performance tracking
 8. `f348de1` - Implement text renderer cache hit rate tracking
 9. `eecb58d` - Implement BookView and DirectoryView with proper View trait implementations
+10. `e7259ba` - Implement TextElement creation in text_layout.rs
 
 ## Build Status
 
@@ -177,6 +193,7 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - `crates/core/src/view/reader/reader_impl/reader_rendering_ext.rs`
 - `crates/core/src/document/html/engine_text/font_cache.rs`
 - `crates/core/src/document/html/engine_text/text_renderer.rs`
+- `crates/core/src/document/html/engine_text/text_layout.rs`
 - `crates/core/src/view/home/ui_toggles/book_view_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/directory_view_toggle.rs`
 - `crates/core/src/view/home/ui_toggles/settings_toggle.rs`
@@ -198,6 +215,7 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - reader_rendering_ext.rs: ~50 insertions, ~10 deletions
 - font_cache.rs: ~35 insertions, ~8 deletions
 - text_renderer.rs: ~40 insertions, ~15 deletions
+- text_layout.rs: ~33 insertions, ~2 deletions
 - book_view_toggle.rs: ~140 insertions, ~15 deletions
 - directory_view_toggle.rs: ~130 insertions, ~15 deletions
 - settings_toggle.rs: ~30 insertions, ~8 deletions
@@ -208,7 +226,7 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 - search_bar_toggle.rs: ~15 insertions, ~3 deletions
 - go_to_page_toggle.rs: ~12 insertions, ~2 deletions
 - utils.rs: ~12 insertions, ~11 deletions
-- Total: ~986 lines changed
+- Total: ~1,019 lines changed
 
 ## Remaining Work
 
