@@ -9,7 +9,7 @@ pub struct GlyphPlan {
 #[derive(Debug, Clone)]
 pub struct RenderPlan {
     pub width: i32,
-    pub scripts: rustc_hash::FxHashMap<usize, crate::font::harfbuzz_sys::HbScript>,
+    pub scripts: rustc_hash::FxHashMap<usize, rustybuzz::Script>,
     pub glyphs: Vec<GlyphPlan>,
 }
 

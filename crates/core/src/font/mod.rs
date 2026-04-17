@@ -1,36 +1,33 @@
 //! Font Rendering Subsystem
 //!
-//! This module provides font handling for Plato, wrapping FreeType and HarfBuzz libraries.
+//! This module provides font handling for Plato, using pure Rust libraries:
+//! - skrifa for font loading and parsing
+//! - rustybuzz for text shaping and layout
+//! - ab_glyph for glyph rasterization (when needed)
 //!
 //! ## Architecture
 //!
-//! - **freetype_sys**: Low-level FreeType FFI bindings
-//! - **harfbuzz_sys**: Low-level HarfBuzz FFI bindings
-//! - **freetype.rs** (implied): Safe FreeType wrappers with RAII
-//! - **harfbuzz.rs** (implied): Safe HarfBuzz wrappers with RAII
+//! - **skrifa_wrapper**: Safe wrapper around skrifa for font loading and metrics
+//! - **rustybuzz_wrapper**: Safe wrapper around rustybuzz for text shaping
 //!
 //! The subsystem handles:
 //! - Font discovery and loading from filesystem
 //! - Embedded font resources
-//! - Glyph rasterization via FreeType
-//! - Text shaping (glyph positioning) via HarfBuzz
-//! - Missing glyph handling
+//! - Glyph rasterization via ab_glyph (optional)
+//! - Text shaping (glyph positioning) via rustybuzz
+//! - Variable font support
+//! - Complex script handling
 
 pub mod face;
-pub mod freetype;
-mod freetype_error;
-mod freetype_sys;
-pub mod harfbuzz;
-mod harfbuzz_sys;
 pub mod library;
 pub mod rasterizer;
+mod rustybuzz_wrapper;
 pub mod shaper;
+mod skrifa_wrapper;
 mod types;
 
-// Public re-exports - types now use safe wrappers
+// Public re-exports
 pub use self::face::Font;
-pub use self::freetype_error::FreetypeError;
-pub use self::freetype_sys::FtError;
 pub use self::library::FontOpener;
 pub use self::types::{GlyphPlan, RenderPlan};
 

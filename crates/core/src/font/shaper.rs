@@ -1,4 +1,5 @@
-use crate::font::harfbuzz::{Buffer, Font};
+use crate::font::rustybuzz_wrapper::Buffer;
+use rustybuzz::Direction;
 
 pub struct Shaper(Buffer);
 
@@ -7,19 +8,15 @@ impl Shaper {
         Shaper(Buffer::new())
     }
 
-    pub fn shape(&mut self, font: &Font, features: &[crate::font::harfbuzz_sys::HbFeature]) {
-        self.0.shape(font, features);
-    }
-
     pub fn create_buffer() -> Buffer {
         Buffer::new()
     }
 
-    pub fn destroy_buffer(buffer: Buffer) {
-        drop(buffer);
+    pub fn destroy_buffer(_buffer: Buffer) {
+        // Buffer is dropped automatically
     }
 
-    pub fn set_direction(&mut self, direction: crate::font::harfbuzz_sys::HbDirection) {
+    pub fn set_direction(&mut self, direction: Direction) {
         self.0.set_direction(direction);
     }
 
@@ -27,7 +24,7 @@ impl Shaper {
         self.0.guess_segment_properties();
     }
 
-    pub fn script(&self) -> crate::font::harfbuzz_sys::HbScript {
+    pub fn script(&self) -> rustybuzz::Script {
         self.0.script()
     }
 
@@ -35,19 +32,13 @@ impl Shaper {
         self.0.add_utf8(text, offset, len);
     }
 
-    pub fn length(&self) -> u32 {
-        self.0.length()
-    }
-
-    pub fn glyph_infos(&self) -> Vec<crate::font::harfbuzz_sys::HbGlyphInfo> {
-        self.0.glyph_infos()
-    }
-
-    pub fn glyph_positions(&self) -> Vec<crate::font::harfbuzz_sys::HbGlyphPosition> {
-        self.0.glyph_positions()
-    }
-
     pub fn buffer(&self) -> &Buffer {
         &self.0
+    }
+}
+
+impl Default for Shaper {
+    fn default() -> Self {
+        Self::new()
     }
 }

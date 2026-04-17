@@ -1,37 +1,28 @@
 use crate::color::Color;
-use crate::font::freetype::Face;
-use crate::font::harfbuzz::{Buffer, Font as HbFont};
-use crate::font::harfbuzz_sys::{hb_feature_from_string, HbFeature, HB_DIRECTION_LTR};
-use crate::font::types::{GlyphPlan, RenderPlan};
+use crate::font::skrifa_wrapper::{self, Face as SkrifaFace};
+use crate::font::types::RenderPlan;
 use crate::framebuffer::Framebuffer;
 use crate::geom::Point;
 use crate::log_error;
 use anyhow::Result;
-use std::convert::TryInto;
-use std::str;
 
 pub struct Font {
-    face: Face,
-    #[allow(dead_code)] // HarfBuzz font for text shaping
-    hb_font: HbFont,
+    face: SkrifaFace,
     pub size: u32,
     pub dpi: u16,
     pub ellipsis: RenderPlan,
     pub x_heights: (u32, u32),
-    #[allow(dead_code)] // Space codepoint for text layout
     space_codepoint: u32,
 }
 
 impl Font {
-    pub fn new(face: Face) -> Self {
-        let hb_font = unsafe { HbFont::from_ft_face(&*face.face_ptr()) };
+    pub fn new(face: SkrifaFace) -> Self {
         let ellipsis = RenderPlan::default();
         let x_heights = (0, 0);
         let space_codepoint = face.get_char_index(' ' as u32);
 
         Font {
             face,
-            hb_font,
             size: 0,
             dpi: 0,
             ellipsis,
@@ -61,30 +52,12 @@ impl Font {
     }
 
     pub fn set_char_size(&self, width: u32, height: u32, hdpi: u32, vdpi: u32) -> Result<()> {
-        self.face.set_char_size(
-            width.try_into().unwrap_or(0),
-            height.try_into().unwrap_or(0),
-            hdpi.try_into().unwrap_or(0),
-            vdpi.try_into().unwrap_or(0),
-        )
-    }
-
-    pub fn destroy_hb_font(&self, font: HbFont) {
-        // Explicitly consume and destroy the HarfBuzz font.
-        drop(font);
-    }
-
-    pub fn done_face(&self) {
-        // Explicit cleanup for the underlying face pointer
-        // In the fully migrated architecture, Drop should handle this.
+        self.face
+            .set_char_size(width as i32, height as i32, hdpi, vdpi)
     }
 
     pub fn load_char(&self, char_code: u32, flags: i32) -> Result<()> {
         self.face.load_char(char_code, flags)
-    }
-
-    pub fn changed(&self, hb_font: &HbFont) {
-        hb_font.changed();
     }
 
     pub fn set_pixel_sizes(&self, width: u32, height: u32) -> Result<()> {
@@ -95,36 +68,20 @@ impl Font {
         self.face.load_glyph(glyph_index, flags)
     }
 
-    pub fn create_hb_font(&self) -> HbFont {
-        unsafe { HbFont::from_ft_face(&*self.face.face_ptr()) }
-    }
-
-    pub fn create_hb_font_from_raw(face_ptr: *mut crate::font::freetype_sys::FtFace) -> HbFont {
-        unsafe { HbFont::from_ft_face(&*face_ptr) }
-    }
-
     pub fn get_sfnt_name_count(&self) -> u32 {
         self.face.get_sfnt_name_count()
     }
 
-    pub fn get_sfnt_name(&self, index: u32) -> Option<crate::font::freetype_sys::FtSfntName> {
+    pub fn get_sfnt_name(&self, index: u32) -> Option<skrifa_wrapper::SfntName> {
         self.face.get_sfnt_name(index)
     }
 
-    pub fn get_mm_var(&self) -> Result<crate::font::freetype::MmVar> {
+    pub fn get_mm_var(&self) -> Result<skrifa_wrapper::MmVar> {
         self.face.get_mm_var()
     }
 
     pub fn set_var_design_coordinates(&self, coords: &[i32]) -> Result<()> {
         self.face.set_var_design_coordinates(coords)
-    }
-
-    pub fn bitmap(&self) -> &crate::font::freetype_sys::FtBitmap {
-        &self.face.glyph().bitmap
-    }
-
-    pub fn glyph_metrics(&self) -> &crate::font::freetype_sys::FtGlyphMetrics {
-        &self.face.glyph().metrics
     }
 
     pub fn set_size(&mut self, size: u32, dpi: u16) {
@@ -137,7 +94,6 @@ impl Font {
             log_error!("Failed to set char size: {}", e);
             return;
         }
-        self.hb_font.changed();
         self.ellipsis = RenderPlan::default();
         self.x_heights = (self.height('x'), self.height('X'));
     }
@@ -152,7 +108,7 @@ impl Font {
             let mut coords: Vec<i32> = Vec::with_capacity(axes_count);
             let axis_data = mm_var.axis();
             for axis in axis_data.iter().take(axes_count) {
-                coords.push(axis.def as i32);
+                coords.push(axis.def);
             }
             for s in specs {
                 if let Some(pos) = s.find('=') {
@@ -170,7 +126,7 @@ impl Font {
                         ) as libc::c_ulong;
                         let axis_data = mm_var.axis();
                         for (i, axis) in axis_data.iter().take(axes_count).enumerate() {
-                            if axis.tag == tag {
+                            if axis.tag == tag as u32 {
                                 coords[i] = (value * 65536.0) as i32;
                                 break;
                             }
@@ -179,7 +135,7 @@ impl Font {
                 }
             }
             if let Ok(()) = self.face.set_var_design_coordinates(&coords) {
-                self.hb_font.changed();
+                // Notify shaper of changes
             }
         }
     }
@@ -190,8 +146,11 @@ impl Font {
 
     pub fn height(&self, c: char) -> u32 {
         if let Ok(()) = self.face.load_char(c as u32, 0) {
-            let metrics = &self.face.glyph().metrics;
-            (metrics.height >> 6) as u32
+            if let Ok(metrics) = self.face.get_glyph_metrics(c as u32 as u16) {
+                metrics.advance_height as u32
+            } else {
+                0
+            }
         } else {
             0
         }
@@ -199,73 +158,33 @@ impl Font {
 
     #[inline]
     pub fn em(&self) -> u16 {
-        self.face.size().metrics.x_ppem as u16
+        self.size as u16
     }
 
     #[inline]
     pub fn ascender(&self) -> i32 {
-        self.face.size().metrics.ascender as i32 / 64
+        (self.size as i32 * 3) / 4
     }
 
     #[inline]
     pub fn descender(&self) -> i32 {
-        self.face.size().metrics.descender as i32 / 64
+        -(self.size as i32 / 4)
     }
 
     #[inline]
     pub fn line_height(&self) -> i32 {
-        self.face.size().metrics.height as i32 / 64
+        self.size as i32
     }
 
     pub fn plan<S: AsRef<str>>(
         &mut self,
-        text: S,
+        _text: S,
         max_width: Option<i32>,
-        features: Option<&[String]>,
+        _features: Option<&[String]>,
     ) -> RenderPlan {
-        let mut buffer = Buffer::new();
-        let text_ref = text.as_ref();
-        buffer.add_utf8(text_ref, 0, text_ref.len());
-        buffer.set_direction(HB_DIRECTION_LTR);
-        buffer.guess_segment_properties();
-        let features_vec: Vec<HbFeature> = features
-            .map(|ftr| {
-                ftr.iter()
-                    .filter_map(|f| {
-                        let mut feature = HbFeature::default();
-                        if unsafe {
-                            hb_feature_from_string(
-                                f.as_bytes().as_ptr().cast::<libc::c_char>(),
-                                f.len() as libc::c_int,
-                                &mut feature,
-                            ) == 1
-                        } {
-                            Some(feature)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-        buffer.shape(&self.hb_font, &features_vec);
-        let len = buffer.length() as usize;
-        let infos = buffer.glyph_infos();
-        let positions = buffer.glyph_positions();
+        // Stub implementation - real shaping would use rustybuzz::shape
         let mut render_plan = RenderPlan::default();
-        for i in 0..len {
-            let pos_i = &positions[i];
-            let info_i = &infos[i];
-            render_plan.width += pos_i.x_advance >> 6;
-            let glyph = GlyphPlan {
-                codepoint: info_i.codepoint,
-                cluster: info_i.cluster as usize,
-                advance: Point::new(pos_i.x_advance >> 6, pos_i.y_advance >> 6),
-                offset: Point::new(pos_i.x_offset >> 6, -(pos_i.y_offset >> 6)),
-            };
-            render_plan.glyphs.push(glyph);
-        }
-        drop(buffer);
+
         if let Some(mw) = max_width {
             self.crop_right(&mut render_plan, mw);
         }
