@@ -51,17 +51,9 @@ impl Font {
         self.face.get_char_index(char_code)
     }
 
-    pub fn set_char_size(&self, width: u32, height: u32, hdpi: u32, vdpi: u32) -> Result<()> {
+    pub fn set_char_size(&mut self, width: u32, height: u32, hdpi: u32, vdpi: u32) -> Result<()> {
         self.face
             .set_char_size(width as i32, height as i32, hdpi, vdpi)
-    }
-
-    pub fn load_char(&mut self, char_code: u32, flags: i32) -> Result<()> {
-        self.face.load_char(char_code, flags)
-    }
-
-    pub fn load_glyph(&mut self, glyph_index: u32, flags: i32) -> Result<()> {
-        self.face.load_glyph(glyph_index, flags)
     }
 
     pub fn get_sfnt_name_count(&self) -> u32 {
@@ -141,12 +133,12 @@ impl Font {
     }
 
     pub fn height(&self, c: char) -> u32 {
-        if let Ok(()) = self.face.load_char(c as u32, 0) {
-            if let Ok(metrics) = self.face.get_glyph_metrics(c as u32 as u16) {
-                metrics.advance_height as u32
-            } else {
-                0
-            }
+        let glyph_id = self.face.get_char_index(c as u32);
+        if glyph_id == 0 {
+            return 0;
+        }
+        if let Ok(metrics) = self.face.get_glyph_metrics(glyph_id as u16) {
+            metrics.advance_width as u32
         } else {
             0
         }

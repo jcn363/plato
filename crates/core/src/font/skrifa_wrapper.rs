@@ -91,27 +91,19 @@ impl Face {
             .unwrap_or(0)
     }
 
-    /// Set character size (no-op for skrifa).
-    pub fn set_char_size(&self, width: i32, _height: i32, _hdpi: u32, _vdpi: u32) -> Result<()> {
+    /// Set character size (stores for metrics calculations).
+    pub fn set_char_size(&mut self, width: i32, _height: i32, hdpi: u32, _vdpi: u32) -> Result<()> {
         if width < 0 {
             bail!("Invalid character size parameters");
         }
+        // Store the size - will be used for scaling in get_glyph_metrics
+        self.scale = (width as f32 * hdpi as f32) / 72.0;
         Ok(())
     }
 
     /// Set pixel size (for rasterization).
     pub fn set_pixel_sizes(&mut self, width: u32, _height: u32) -> Result<()> {
         self.scale = width as f32;
-        Ok(())
-    }
-
-    /// Load a character (no-op).
-    pub fn load_char(&self, _char_code: u32, _flags: i32) -> Result<()> {
-        Ok(())
-    }
-
-    /// Load a glyph (no-op).
-    pub fn load_glyph(&self, _glyph_index: u32, _flags: i32) -> Result<()> {
         Ok(())
     }
 
