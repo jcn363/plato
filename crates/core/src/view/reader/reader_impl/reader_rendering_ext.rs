@@ -17,6 +17,9 @@ pub struct ReaderRenderCache {
     pub chunks: Vec<RenderChunk>,
     pub max_cache_size: usize,
     pub current_memory_usage: usize,
+    pub cache_hits: u64,
+    pub cache_misses: u64,
+    pub eviction_count: u64,
 }
 
 #[allow(dead_code)] // Reserved for future rendering cache optimization
@@ -28,12 +31,23 @@ impl ReaderRenderCache {
             chunks: Vec::new(),
             max_cache_size,
             current_memory_usage: 0,
+            cache_hits: 0,
+            cache_misses: 0,
+            eviction_count: 0,
         }
     }
 
     /// Get a cached pixmap
-    pub fn get(&self, page: usize) -> Option<&Pixmap> {
-        self.cache.get(&page)
+    ///
+    /// Updates hit/miss counters for performance tracking.
+    pub fn get(&mut self, page: usize) -> Option<&Pixmap> {
+        let result = self.cache.get(&page);
+        if result.is_some() {
+            self.cache_hits += 1;
+        } else {
+            self.cache_misses += 1;
+        }
+        result
     }
 
     /// Insert a pixmap into the cache
@@ -55,6 +69,7 @@ impl ReaderRenderCache {
                 if let Some(removed_pixmap) = self.cache.remove(&oldest_page) {
                     self.current_memory_usage -=
                         removed_pixmap.width() as usize * removed_pixmap.height() as usize * 4;
+                    self.eviction_count += 1;
                 }
             }
         }
@@ -72,10 +87,19 @@ impl ReaderRenderCache {
 
     /// Get cache statistics
     pub fn stats(&self) -> CacheStats {
+        let total_lookups = self.cache_hits + self.cache_misses;
+        let hit_rate = if total_lookups > 0 {
+            self.cache_hits as f32 / total_lookups as f32
+        } else {
+            0.0
+        };
+
         CacheStats {
             entries: self.cache.len(),
             memory_usage_mb: self.current_memory_usage / (1024 * 1024),
             max_memory_usage_mb: self.max_cache_size / (1024 * 1024),
+            hit_rate,
+            eviction_count: self.eviction_count,
         }
     }
 }
@@ -87,6 +111,8 @@ pub struct CacheStats {
     pub entries: usize,
     pub memory_usage_mb: usize,
     pub max_memory_usage_mb: usize,
+    pub hit_rate: f32,
+    pub eviction_count: u64,
 }
 
 /// Rendering engine for the Reader view
@@ -95,6 +121,8 @@ pub struct ReaderRenderEngine {
     pub cache: ReaderRenderCache,
     pub viewport: ViewPort,
     pub state: State,
+    pub render_times: Vec<f32>,
+    pub max_render_times: usize,
 }
 
 #[allow(dead_code)] // Reserved for future rendering engine optimization
@@ -105,6 +133,8 @@ impl ReaderRenderEngine {
             cache: ReaderRenderCache::new(max_cache_size),
             viewport: ViewPort::default(),
             state: State::default(),
+            render_times: Vec::with_capacity(100),
+            max_render_times: 100,
         }
     }
 
@@ -122,8 +152,16 @@ impl ReaderRenderEngine {
             return Ok(());
         }
 
+        // Record render start time for performance tracking
+        let render_start = std::time::Instant::now();
+
         // Render the page
         let pixmap = self.render_page_to_pixmap(page, rect, context)?;
+
+        // Calculate render time and track for metrics
+        let render_time = render_start.elapsed().as_secs_f32();
+        self.add_render_time(render_time);
+
         self.cache.insert(page, pixmap.clone());
         self.render_cached_page(&pixmap, rect, framebuffer);
 
@@ -146,14 +184,17 @@ impl ReaderRenderEngine {
     }
 
     /// Render page to pixmap
+    ///
+    /// Placeholder implementation that creates an empty pixmap.
+    /// Actual document rendering is handled by the main Reader view
+    /// which has access to the document. This module is reserved for
+    /// future optimized rendering engine implementation.
     fn render_page_to_pixmap(
         &self,
         _page: usize,
         rect: Rectangle,
         _context: &mut Context,
     ) -> Result<Pixmap, Error> {
-        // TODO: Implement actual page rendering
-        // This would involve calling the document's render method
         let width = rect.width() as u32;
         let height = rect.height() as u32;
 
@@ -238,9 +279,11 @@ impl ReaderRenderEngine {
 
     /// Get rendering performance metrics
     pub fn get_performance_metrics(&self) -> RenderingMetrics {
+        let stats = self.cache.stats();
+
         RenderingMetrics {
-            cache_hit_rate: self.calculate_cache_hit_rate(),
-            average_render_time: 0.0, // TODO: Track render times
+            cache_hit_rate: stats.hit_rate,
+            average_render_time: self.average_render_time(),
             memory_usage_mb: self.cache.current_memory_usage / (1024 * 1024),
             cached_pages: self.cache.cache.len(),
         }
@@ -248,8 +291,30 @@ impl ReaderRenderEngine {
 
     /// Calculate cache hit rate
     fn calculate_cache_hit_rate(&self) -> f32 {
-        // TODO: Track cache hits and misses
-        0.0
+        let total_lookups = self.cache.cache_hits + self.cache.cache_misses;
+        if total_lookups > 0 {
+            self.cache.cache_hits as f32 / total_lookups as f32
+        } else {
+            0.0
+        }
+    }
+
+    /// Add a render time sample for performance tracking
+    fn add_render_time(&mut self, render_time: f32) {
+        if self.render_times.len() >= self.max_render_times {
+            self.render_times.remove(0);
+        }
+        self.render_times.push(render_time);
+    }
+
+    /// Calculate average render time from tracked samples
+    fn average_render_time(&self) -> f32 {
+        if self.render_times.is_empty() {
+            0.0
+        } else {
+            let sum: f32 = self.render_times.iter().sum();
+            sum / self.render_times.len() as f32
+        }
     }
 }
 
