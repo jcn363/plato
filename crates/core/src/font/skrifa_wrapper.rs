@@ -3,7 +3,7 @@
 //! This module provides a high-level interface to skrifa,
 //! replacing the previous FreeType FFI bindings.
 
-use anyhow::{bail, Result};
+use anyhow::{bail, format_err, Result};
 use skrifa::raw::tables::name::NameId;
 use skrifa::raw::{FontRef, TableProvider};
 use std::sync::Arc;
@@ -131,10 +131,33 @@ impl Face {
         })
     }
 
-    /// Get variable font metrics (minimal support).
+    /// Get variable font metrics.
     pub fn get_mm_var(&self) -> Result<MmVar> {
-        // Variable font support is minimal for now
-        Ok(MmVar { axes: Vec::new() })
+        let font = self
+            .get_font_ref()
+            .ok_or_else(|| format_err!("Failed to parse font"))?;
+        let fvar = match font.fvar() {
+            Ok(f) => f,
+            Err(_) => return Ok(MmVar { axes: Vec::new() }),
+        };
+
+        let axes: Vec<Axis> = fvar
+            .axes()
+            .map_err(|e| format_err!("Failed to read fvar axes: {}", e))?
+            .iter()
+            .map(|record| {
+                let bytes = record.axis_tag().to_be_bytes();
+                let tag = u32::from_be_bytes(bytes);
+                Axis {
+                    tag,
+                    min: record.min_value().to_f32() as i32,
+                    def: record.default_value().to_f32() as i32,
+                    max: record.max_value().to_f32() as i32,
+                }
+            })
+            .collect();
+
+        Ok(MmVar { axes })
     }
 
     /// Set variable design coordinates (no-op).
