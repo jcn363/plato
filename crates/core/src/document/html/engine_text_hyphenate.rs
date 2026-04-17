@@ -1,5 +1,5 @@
 use super::engine::{Engine, ResourceFetcher};
-use super::layout::{LineStats, ParagraphElement, StyleData, TextElement, TextAlign};
+use super::layout::{LineStats, ParagraphElement, StyleData, TextAlign, TextElement};
 use kl_hyphenate::{Hyphenator, Standard};
 use paragraph_breaker::{Breakpoint, Item as ParagraphItem, INFINITE_PENALTY};
 
@@ -57,7 +57,13 @@ impl Engine {
                     data: ParagraphElement::Text(ref element),
                     ..
                 } => {
-                    self.hyphenate_text_element(element, style, dictionary, hyph_indices, &mut hyph_items);
+                    self.hyphenate_text_element(
+                        element,
+                        style,
+                        dictionary,
+                        hyph_indices,
+                        &mut hyph_items,
+                    );
                 }
                 _ => hyph_items.push(itm),
             }
@@ -111,11 +117,8 @@ impl Engine {
                 .unwrap_or_else(|| text.len());
 
             if index_before > index_after {
-                let subelem = self.box_from_chunk(
-                    &text[index_after..index_before],
-                    index_after,
-                    element,
-                );
+                let subelem =
+                    self.box_from_chunk(&text[index_after..index_before], index_after, element);
                 hyph_items.push(subelem);
             }
 

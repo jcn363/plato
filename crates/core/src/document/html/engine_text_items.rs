@@ -1,11 +1,11 @@
 use super::engine::{Engine, ResourceFetcher};
-use super::xml;
-use super::xml::XmlExt;
 use super::layout::{
     FontKind, GlueMaterial, ImageElement, InlineMaterial, ParagraphElement, ParagraphItem,
-    PenaltyMaterial, StyleData, TextElement, TextAlign, WordSpacing, EM_SPACE_RATIOS,
-    FONT_SPACES, WORD_SPACE_RATIOS,
+    PenaltyMaterial, StyleData, TextAlign, TextElement, WordSpacing, EM_SPACE_RATIOS, FONT_SPACES,
+    WORD_SPACE_RATIOS,
 };
+use super::xml;
+use super::xml::XmlExt;
 use crate::document::pdf::PdfOpener;
 use crate::unit::pt_to_px;
 use paragraph_breaker::{Breakpoint, Item as ParagraphItem, INFINITE_PENALTY};
@@ -91,7 +91,11 @@ impl Engine {
         3 * font.plan(" ", None, None).width
     }
 
-    fn add_center_alignment_glue(&self, items: &mut Vec<ParagraphItem<ParagraphElement>>, big_stretch: i32) {
+    fn add_center_alignment_glue(
+        &self,
+        items: &mut Vec<ParagraphItem<ParagraphElement>>,
+        big_stretch: i32,
+    ) {
         items.push(ParagraphItem::Box {
             width: 0,
             data: ParagraphElement::Nothing,
@@ -144,22 +148,20 @@ impl Engine {
 
         let mut start_index = 0;
         for (end_index, _is_hardbreak) in LineBreakIterator::new(&text_material.text) {
-            for chunk in text_material.text[start_index..end_index].split_inclusive(char::is_whitespace) {
+            for chunk in
+                text_material.text[start_index..end_index].split_inclusive(char::is_whitespace)
+            {
                 if let Some((i, c)) = chunk.char_indices().next_back() {
                     let j = i + if c.is_whitespace() { 0 } else { c.len_utf8() };
                     if j > 0 {
                         let buf = &text_material.text[start_index..start_index + j];
                         let local_offset = text_material.offset + start_index;
                         let mut plan = {
-                            let font = self
-                                .fonts
-                                .as_mut()
-                                .expect("fonts not initialized")
-                                .get_mut(
-                                    text_material.style.font_kind,
-                                    text_material.style.font_style,
-                                    text_material.style.font_weight,
-                                );
+                            let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
+                                text_material.style.font_kind,
+                                text_material.style.font_style,
+                                text_material.style.font_weight,
+                            );
                             font.set_size(font_size, self.dpi);
                             font.plan(buf, None, text_material.style.font_features.as_deref())
                         };
@@ -202,12 +204,7 @@ impl Engine {
                             items,
                         );
                     } else if end_index < text_material.text.len() {
-                        self.process_break_opportunity(
-                            c,
-                            parent_style,
-                            space_plan,
-                            items,
-                        );
+                        self.process_break_opportunity(c, parent_style, space_plan, items);
                     }
                 }
                 start_index += chunk.len();
@@ -285,13 +282,10 @@ impl Engine {
             }
         });
 
-        let has_more = text[char_index..]
-            .chars()
-            .any(|c| !c.is_xml_whitespace())
+        let has_more = text[char_index..].chars().any(|c| !c.is_xml_whitespace())
             || inlines[text_index + 1..].iter().any(|m| {
-                m.text().map_or(false, |text| {
-                    text.chars().any(|c| !c.is_xml_whitespace())
-                })
+                m.text()
+                    .map_or(false, |text| text.chars().any(|c| !c.is_xml_whitespace()))
             });
 
         if !parent_style.retain_whitespace
@@ -535,7 +529,8 @@ impl Engine {
         line_width: i32,
         big_stretch: i32,
     ) {
-        if !items.is_empty() && items.last().map(ParagraphItem::penalty) != Some(-INFINITE_PENALTY) {
+        if !items.is_empty() && items.last().map(ParagraphItem::penalty) != Some(-INFINITE_PENALTY)
+        {
             items.push(ParagraphItem::Penalty {
                 penalty: INFINITE_PENALTY,
                 width: 0,

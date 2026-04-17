@@ -1,7 +1,7 @@
 use super::engine::{Engine, ResourceFetcher};
 use super::layout::{
-    collapse_margins, ChildArtifact, DrawCommand, DrawState, ImageCommand, LoopContext,
-    RootData, StyleData, TextCommand,
+    collapse_margins, ChildArtifact, DrawCommand, DrawState, ImageCommand, LoopContext, RootData,
+    StyleData, TextCommand,
 };
 use super::parse::parse_display;
 use super::style::specified_values;

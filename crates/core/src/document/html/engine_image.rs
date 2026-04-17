@@ -31,18 +31,23 @@ impl Engine {
         }) = node.data()
         {
             let props = specified_values(node, stylesheet);
-            
+
             match name.as_ref() {
                 "img" | "image" => {
                     let attr = if name == "img" { "src" } else { "xlink:href" };
                     let path = attributes
                         .get(attr)
                         .and_then(|src| {
-                            spine_dir.join(src).canonicalize().unwrap_or_else(|_| spine_dir.join(src)).to_str().map(|uri| {
-                                percent_decode_str(&crate::helpers::decode_entities(uri))
-                                    .decode_utf8_lossy()
-                                    .into_owned()
-                            })
+                            spine_dir
+                                .join(src)
+                                .canonicalize()
+                                .unwrap_or_else(|_| spine_dir.join(src))
+                                .to_str()
+                                .map(|uri| {
+                                    percent_decode_str(&crate::helpers::decode_entities(uri))
+                                        .decode_utf8_lossy()
+                                        .into_owned()
+                                })
                         })
                         .unwrap_or_default();
 
@@ -157,9 +162,7 @@ impl Engine {
         let dpi = self.dpi;
 
         if let Ok(buf) = resource_fetcher.fetch(path) {
-            if let Some(doc) =
-                PdfOpener::new().and_then(|opener| opener.open_memory(path, &buf))
-            {
+            if let Some(doc) = PdfOpener::new().and_then(|opener| opener.open_memory(path, &buf)) {
                 if let Some((w, h)) = doc.dims(0) {
                     if width == 0 && height == 0 {
                         width = pt_to_px(w, dpi).round() as i32;

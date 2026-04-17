@@ -1,5 +1,5 @@
 //! Large engine methods extracted from engine.rs
-//! 
+//!
 //! This module contains the remaining large methods from engine.rs
 //! to reduce the main file size and improve organization.
 
@@ -194,9 +194,9 @@ impl EngineMethods for super::Engine {
                     .max()
                     .unwrap_or(0);
                 if index < draw_state.column_widths.len() {
-                    draw_state.min_column_widths[index] = 
+                    draw_state.min_column_widths[index] =
                         draw_state.min_column_widths[index].max(min_width);
-                    draw_state.max_column_widths[index] = 
+                    draw_state.max_column_widths[index] =
                         draw_state.max_column_widths[index].max(max_width);
                 }
                 index += colspan;
@@ -227,44 +227,20 @@ impl EngineMethods for super::Engine {
                     }));
                 }
             }
-            NodeData::Element(ref element_data) => {
-                match node.tag_name() {
-                    Some("img") => {
-                        if let Some(src) = element_data.attributes.get("src") {
-                            let src = decode_entities(src);
-                            urls.push(src.clone());
-                            inlines.push(InlineMaterial::Image(ImageElement {
-                                index: urls.len() - 1,
-                                style: parent_style.clone(),
-                            }));
-                        }
+            NodeData::Element(ref element_data) => match node.tag_name() {
+                Some("img") => {
+                    if let Some(src) = element_data.attributes.get("src") {
+                        let src = decode_entities(src);
+                        urls.push(src.clone());
+                        inlines.push(InlineMaterial::Image(ImageElement {
+                            index: urls.len() - 1,
+                            style: parent_style.clone(),
+                        }));
                     }
-                    Some("a") => {
-                        if let Some(href) = element_data.attributes.get("href") {
-                            let href = decode_entities(href);
-                            for child in node.children() {
-                                self.gather_inline_material(
-                                    child,
-                                    stylesheet,
-                                    parent_style,
-                                    spine_dir,
-                                    inlines,
-                                    strings,
-                                    urls,
-                                    font_cache,
-                                );
-                            }
-                            if let Some(last) = inlines.last_mut() {
-                                match last {
-                                    InlineMaterial::Text(text_elem) => {
-                                        text_elem.link = Some(href.clone());
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
-                    }
-                    _ => {
+                }
+                Some("a") => {
+                    if let Some(href) = element_data.attributes.get("href") {
+                        let href = decode_entities(href);
                         for child in node.children() {
                             self.gather_inline_material(
                                 child,
@@ -277,9 +253,31 @@ impl EngineMethods for super::Engine {
                                 font_cache,
                             );
                         }
+                        if let Some(last) = inlines.last_mut() {
+                            match last {
+                                InlineMaterial::Text(text_elem) => {
+                                    text_elem.link = Some(href.clone());
+                                }
+                                _ => {}
+                            }
+                        }
                     }
                 }
-            }
+                _ => {
+                    for child in node.children() {
+                        self.gather_inline_material(
+                            child,
+                            stylesheet,
+                            parent_style,
+                            spine_dir,
+                            inlines,
+                            strings,
+                            urls,
+                            font_cache,
+                        );
+                    }
+                }
+            },
             _ => {}
         }
     }
@@ -302,9 +300,9 @@ impl EngineMethods for super::Engine {
                 InlineMaterial::Text(ref text_element) => {
                     let text = &strings[text_element.index];
                     let style = &text_element.style;
-                    
+
                     let words: Vec<&str> = text.split_whitespace().collect();
-                    
+
                     for (i, word) in words.iter().enumerate() {
                         if i > 0 {
                             items.push(ParagraphItem::Glue(GlueMaterial {
@@ -313,7 +311,7 @@ impl EngineMethods for super::Engine {
                                 shrink: (style.font_size * WORD_SPACE_RATIOS[2]) as i32,
                             }));
                         }
-                        
+
                         items.push(ParagraphItem::Box(ParagraphElement::Text(TextElement {
                             index: text_element.index,
                             uri: text_element.uri.clone(),
@@ -347,14 +345,14 @@ impl EngineMethods for super::Engine {
         display_list: &mut Vec<super::Page>,
     ) -> Rectangle {
         let mut rect = Rectangle::default();
-        
+
         // Simplified paragraph placement
         let line_height = style.line_height;
         let num_lines = (items.len() as f32 / 10.0).ceil() as i32; // Rough estimate
-        
+
         rect.width = line_width as u32;
         rect.height = (num_lines * line_height) as u32;
-        
+
         rect
     }
 
@@ -381,13 +379,13 @@ impl EngineMethods for super::Engine {
         strings: &[String],
     ) -> Vec<ParagraphItem<ParagraphElement>> {
         let mut hyph_items = Vec::new();
-        
+
         for item in items {
             match item {
                 ParagraphItem::Box(ParagraphElement::Text(text_elem)) => {
                     let text = &strings[text_elem.index];
                     let hyphenated = dictionary.hyphenate(text, style.language.as_deref());
-                    
+
                     for (i, chunk) in hyphenated.into_iter().enumerate() {
                         if i > 0 {
                             hyph_indices.push([text_elem.index, i]);
@@ -398,7 +396,7 @@ impl EngineMethods for super::Engine {
                 _ => hyph_items.push(item),
             }
         }
-        
+
         hyph_items
     }
 
@@ -423,18 +421,11 @@ impl EngineMethods for super::Engine {
             match command {
                 DrawCommand::Text(text_cmd) => {
                     // Render text to framebuffer
-                    framebuffer.draw_rectangle(
-                        text_cmd.rect,
-                        text_cmd.bg_color,
-                    );
+                    framebuffer.draw_rectangle(text_cmd.rect, text_cmd.bg_color);
                 }
                 DrawCommand::Image(image_cmd) => {
                     // Render image to framebuffer
-                    framebuffer.draw_pixmap(
-                        image_cmd.rect.x,
-                        image_cmd.rect.y,
-                        &image_cmd.pixmap,
-                    );
+                    framebuffer.draw_pixmap(image_cmd.rect.x, image_cmd.rect.y, &image_cmd.pixmap);
                 }
                 _ => {}
             }

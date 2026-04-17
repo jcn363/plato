@@ -4,9 +4,8 @@ use super::parse::{
     parse_color, parse_display, parse_edge, parse_float, parse_font_features, parse_font_kind,
     parse_font_size, parse_font_style, parse_font_variant, parse_font_weight, parse_height,
     parse_inline_material, parse_letter_spacing, parse_line_height, parse_max_height,
-    parse_max_width, parse_min_height, parse_min_width, parse_text_decoration,
-    parse_text_indent, parse_text_transform, parse_vertical_align, parse_width,
-    parse_word_spacing,
+    parse_max_width, parse_min_height, parse_min_width, parse_text_decoration, parse_text_indent,
+    parse_text_transform, parse_vertical_align, parse_width, parse_word_spacing,
 };
 use super::style::specified_values;
 use crate::helpers::decode_entities;
@@ -34,7 +33,7 @@ impl Engine {
                 let props = specified_values(node, stylesheet);
 
                 self.inherit_parent_styles(&mut style, parent_style);
-                
+
                 style.display = props
                     .get("display")
                     .and_then(|value| parse_display(value))
@@ -62,7 +61,7 @@ impl Engine {
                 }
 
                 self.process_before_insert(&props, &style, inlines);
-                
+
                 for child in node.children() {
                     self.gather_inline_material(
                         child, stylesheet, &style, spine_dir, markers, inlines,
@@ -106,9 +105,7 @@ impl Engine {
     ) {
         style.font_size = props
             .get("font-size")
-            .and_then(|value| {
-                parse_font_size(value, parent_style.font_size, self.font_size)
-            })
+            .and_then(|value| parse_font_size(value, parent_style.font_size, self.font_size))
             .unwrap_or(parent_style.font_size);
 
         style.width = props
@@ -156,9 +153,7 @@ impl Engine {
 
         style.word_spacing = props
             .get("word-spacing")
-            .and_then(|value| {
-                parse_word_spacing(value, style.font_size, self.font_size, self.dpi)
-            })
+            .and_then(|value| parse_word_spacing(value, style.font_size, self.font_size, self.dpi))
             .unwrap_or(parent_style.word_spacing);
 
         style.vertical_align = props
@@ -248,11 +243,16 @@ impl Engine {
         let path = attributes
             .get(attr)
             .and_then(|src| {
-                spine_dir.join(src).canonicalize().unwrap_or_else(|_| spine_dir.join(src)).to_str().map(|uri| {
-                    percent_decode_str(&decode_entities(uri))
-                        .decode_utf8_lossy()
-                        .into_owned()
-                })
+                spine_dir
+                    .join(src)
+                    .canonicalize()
+                    .unwrap_or_else(|_| spine_dir.join(src))
+                    .to_str()
+                    .map(|uri| {
+                        percent_decode_str(&decode_entities(uri))
+                            .decode_utf8_lossy()
+                            .into_owned()
+                    })
             })
             .unwrap_or_default();
 
@@ -304,9 +304,10 @@ impl Engine {
         style: &StyleData,
         inlines: &mut Vec<InlineMaterial>,
     ) {
-        if let Some(mut v) = props.get("-plato-insert-before").map(|value| {
-            parse_inline_material(value, style.font_size, self.font_size, self.dpi)
-        }) {
+        if let Some(mut v) = props
+            .get("-plato-insert-before")
+            .map(|value| parse_inline_material(value, style.font_size, self.font_size, self.dpi))
+        {
             inlines.append(&mut v);
         }
     }
@@ -317,9 +318,10 @@ impl Engine {
         style: &StyleData,
         inlines: &mut Vec<InlineMaterial>,
     ) {
-        if let Some(mut v) = props.get("-plato-insert-after").map(|value| {
-            parse_inline_material(value, style.font_size, self.font_size, self.dpi)
-        }) {
+        if let Some(mut v) = props
+            .get("-plato-insert-after")
+            .map(|value| parse_inline_material(value, style.font_size, self.font_size, self.dpi))
+        {
             inlines.append(&mut v);
         }
     }

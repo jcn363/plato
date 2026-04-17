@@ -1,7 +1,7 @@
 use super::engine::{Engine, ResourceFetcher};
 use super::layout::{
-    DrawCommand, DrawState, FontKind, Float, ImageElement, InlineMaterial, LineStats,
-    ListStyleType, LoopContext, ParagraphElement, RootData, StyleData, TextElement, TextAlign,
+    DrawCommand, DrawState, Float, FontKind, ImageElement, InlineMaterial, LineStats,
+    ListStyleType, LoopContext, ParagraphElement, RootData, StyleData, TextAlign, TextElement,
     WordSpacing, EM_SPACE_RATIOS, FONT_SPACES, WORD_SPACE_RATIOS,
 };
 use super::parse::parse_list_style_type;
@@ -92,7 +92,8 @@ impl Engine {
         let mut line_lengths: Vec<i32> = para_shape.iter().map(|(a, b)| b - a).collect();
         line_lengths[0] -= text_indent;
 
-        let mut bps = paragraph_breaker::total_fit(&items, &line_lengths, self.stretch_tolerance, 0);
+        let mut bps =
+            paragraph_breaker::total_fit(&items, &line_lengths, self.stretch_tolerance, 0);
 
         let mut hyph_indices = Vec::new();
         let mut glue_drifts = Vec::new();
@@ -107,7 +108,8 @@ impl Engine {
             .and_then(|lang| super::layout::HYPHENATION_PATTERNS.get(&lang))
             {
                 items = self.hyphenate_paragraph(style, dictionary, items, &mut hyph_indices);
-                bps = paragraph_breaker::total_fit(&items, &line_lengths, self.stretch_tolerance, 0);
+                bps =
+                    paragraph_breaker::total_fit(&items, &line_lengths, self.stretch_tolerance, 0);
             }
         }
 
@@ -266,7 +268,11 @@ impl Engine {
         }
     }
 
-    fn handle_oversized_items(&mut self, items: &mut Vec<paragraph_breaker::Item<ParagraphElement>>, line_lengths: &[i32]) {
+    fn handle_oversized_items(
+        &mut self,
+        items: &mut Vec<paragraph_breaker::Item<ParagraphElement>>,
+        line_lengths: &[i32],
+    ) {
         let max_width = *line_lengths.iter().min().expect("line_lengths is empty");
 
         for itm in items.iter_mut() {
@@ -281,11 +287,11 @@ impl Engine {
                             font_size,
                             ..
                         }) => {
-                            let font = self
-                                .fonts
-                                .as_mut()
-                                .expect("fonts not initialized")
-                                .get_mut(*font_kind, *font_style, *font_weight);
+                            let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
+                                *font_kind,
+                                *font_style,
+                                *font_weight,
+                            );
                             font.set_size(*font_size, self.dpi);
                             font.crop_right(plan, max_width);
                             *width = plan.width;
@@ -474,7 +480,11 @@ impl Engine {
                         if let Some((pixmap, _)) = PdfOpener::new()
                             .and_then(|opener| opener.open_memory(path, &buf))
                             .and_then(|mut doc| {
-                                doc.pixmap(crate::document::Location::Exact(0), scale_factor * *scale, samples)
+                                doc.pixmap(
+                                    crate::document::Location::Exact(0),
+                                    scale_factor * *scale,
+                                    samples,
+                                )
                             })
                         {
                             let position = Point::from(scale_factor * Vec2::from(*position));

@@ -146,9 +146,16 @@ impl Home {
     }
 
     /// Update library configuration
-    pub fn update_library_config(&mut self, _config: LibraryToggleConfig) {
-        // TODO: Implement library config update
-        // This would require recreating the library menu if visible
+    pub fn update_library_config(&mut self, config: LibraryToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+        let show_stats_current = self.should_show_library_statistics();
+
+        // If statistics visibility changed and menu is open, recreate it
+        if config.show_statistics != show_stats_current && self.library_menu.is_some() {
+            self.library_menu = None;
+            self.show_library_menu(rq, context);
+        }
+
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
     /// Handle library menu events
@@ -177,40 +184,53 @@ impl Home {
     fn handle_library_selection(
         &mut self,
         name: &str,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
+        use crate::view::notification::Notification;
+
         match name {
-            "import_books" => {
-                // TODO: Send appropriate import books event
+            "Import" => {
+                self.import(hub, rq, context);
+                let msg = "Importing books...".to_string();
+                let notif = Notification::new(msg, hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
                 self.hide_library_menu(rq, context);
             }
-            "library_statistics" => {
-                // TODO: Send appropriate library statistics event
+            "SystemInfo" => {
+                // Library statistics - calculate and display
+                let stats = utils::calculate_library_statistics(context);
+                let msg = format!(
+                    "Library: {} books ({} PDF, {} EPUB, {} other)",
+                    stats.total_books, stats.pdf_count, stats.epub_count, stats.other_count
+                );
+                let notif = Notification::new(msg, hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
                 self.hide_library_menu(rq, context);
             }
-            "sort_by_title" => {
-                // TODO: Send appropriate sort by title event
-                self.hide_library_menu(rq, context);
-            }
-            "sort_by_author" => {
-                // TODO: Send appropriate sort by author event
-                self.hide_library_menu(rq, context);
-            }
-            "sort_by_date" => {
-                // TODO: Send appropriate sort by date event
+            "Sort" => {
+                // Sort methods are handled via EntryId in input.rs
+                // This branch handles the string match fallback
                 self.hide_library_menu(rq, context);
             }
             "filter_by_format" => {
-                // TODO: Send appropriate filter by format event
+                // Future: Open filter dialog for formats (PDF, EPUB, etc.)
+                let msg = "Filter by format: Feature coming soon".to_string();
+                let notif = Notification::new(msg, hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
                 self.hide_library_menu(rq, context);
             }
             "filter_by_category" => {
-                // TODO: Send appropriate filter by category event
+                // Future: Open filter dialog for categories
+                let msg = "Filter by category: Feature coming soon".to_string();
+                let notif = Notification::new(msg, hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
                 self.hide_library_menu(rq, context);
             }
-            _ => {}
+            _ => {
+                self.hide_library_menu(rq, context);
+            }
         }
     }
 
@@ -229,17 +249,31 @@ impl Home {
         self.get_library_state().config.animation_duration
     }
 
-    /// Update library statistics
-    pub fn update_library_statistics(&mut self, rq: &mut RenderQueue) {
-        // TODO: Update library statistics display
-        if let Some(ref mut _library_menu) = self.library_menu {
+    /// Update library statistics display
+    ///
+    /// Shows a notification with current library statistics.
+    /// Call this when statistics need to be refreshed.
+    pub fn update_library_statistics(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+        let stats = utils::calculate_library_statistics(context);
+
+        // Show notification with updated statistics
+        let msg = format!(
+            "Library updated: {} books ({} PDF, {} EPUB, {} other)",
+            stats.total_books, stats.pdf_count, stats.epub_count, stats.other_count
+        );
+
+        use crate::view::notification::Notification;
+        let notif = Notification::new(msg, hub, rq, context);
+        self.children.push(Box::new(notif) as Box<dyn View>);
+
+        // Refresh the library menu if visible
+        if self.library_menu.is_some() {
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }
     }
 }
 
 /// Utility functions for library toggles
-#[allow(dead_code)] // Reserved for future library utilities
 pub mod utils {
     use super::*;
 

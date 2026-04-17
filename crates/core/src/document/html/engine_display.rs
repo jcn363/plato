@@ -1,5 +1,5 @@
 //! Display list building for HTML engine
-//! 
+//!
 //! This module contains the large `build_display_list` method
 //! extracted from engine.rs to reduce file size.
 
@@ -158,7 +158,14 @@ impl<'a> DisplayListBuilder<'a> {
 
         style.line_height = props
             .get("line-height")
-            .and_then(|value| parse_line_height(value, style.font_size, self.engine.font_size, self.engine.dpi))
+            .and_then(|value| {
+                parse_line_height(
+                    value,
+                    style.font_size,
+                    self.engine.font_size,
+                    self.engine.dpi,
+                )
+            })
             .unwrap_or_else(|| {
                 ((style.font_size / parent_style.font_size) * parent_style.line_height as f32)
                     .round() as i32
@@ -167,7 +174,12 @@ impl<'a> DisplayListBuilder<'a> {
         style.letter_spacing = props
             .get("letter-spacing")
             .and_then(|value| {
-                parse_letter_spacing(value, style.font_size, self.engine.font_size, self.engine.dpi)
+                parse_letter_spacing(
+                    value,
+                    style.font_size,
+                    self.engine.font_size,
+                    self.engine.dpi,
+                )
             })
             .unwrap_or(parent_style.letter_spacing);
 
@@ -188,7 +200,14 @@ impl<'a> DisplayListBuilder<'a> {
 
         style.word_spacing = props
             .get("word-spacing")
-            .and_then(|value| parse_word_spacing(value, style.font_size, self.engine.font_size, self.engine.dpi))
+            .and_then(|value| {
+                parse_word_spacing(
+                    value,
+                    style.font_size,
+                    self.engine.font_size,
+                    self.engine.dpi,
+                )
+            })
             .unwrap_or(parent_style.word_spacing);
 
         style.vertical_align = props
@@ -241,7 +260,9 @@ impl<'a> DisplayListBuilder<'a> {
 
         style.text_indent = props
             .get("text-indent")
-            .and_then(|v| parse_text_indent(v, style.font_size, self.engine.font_size, self.engine.dpi))
+            .and_then(|v| {
+                parse_text_indent(v, style.font_size, self.engine.font_size, self.engine.dpi)
+            })
             .unwrap_or(parent_style.text_indent);
 
         style.direction = props
@@ -262,21 +283,21 @@ impl<'a> DisplayListBuilder<'a> {
             .get("height")
             .and_then(|v| parse_height(v, style.font_size, self.engine.font_size, self.engine.dpi));
 
-        style.min_width = props
-            .get("min-width")
-            .and_then(|v| parse_min_width(v, style.font_size, self.engine.font_size, self.engine.dpi));
+        style.min_width = props.get("min-width").and_then(|v| {
+            parse_min_width(v, style.font_size, self.engine.font_size, self.engine.dpi)
+        });
 
-        style.min_height = props
-            .get("min-height")
-            .and_then(|v| parse_min_height(v, style.font_size, self.engine.font_size, self.engine.dpi));
+        style.min_height = props.get("min-height").and_then(|v| {
+            parse_min_height(v, style.font_size, self.engine.font_size, self.engine.dpi)
+        });
 
-        style.max_width = props
-            .get("max-width")
-            .and_then(|v| parse_max_width(v, style.font_size, self.engine.font_size, self.engine.dpi));
+        style.max_width = props.get("max-width").and_then(|v| {
+            parse_max_width(v, style.font_size, self.engine.font_size, self.engine.dpi)
+        });
 
-        style.max_height = props
-            .get("max-height")
-            .and_then(|v| parse_max_height(v, style.font_size, self.engine.font_size, self.engine.dpi));
+        style.max_height = props.get("max-height").and_then(|v| {
+            parse_max_height(v, style.font_size, self.engine.font_size, self.engine.dpi)
+        });
 
         // Apply margin and padding properties
         self.apply_edge_properties(&mut style, &props, parent_style);
@@ -385,24 +406,43 @@ impl<'a> DisplayListBuilder<'a> {
         display_list: &mut Vec<super::Page>,
     ) -> ChildArtifact {
         match style.display {
-            Display::Block | Display::InlineBlock => {
-                self.process_block_children(node, style, loop_context, stylesheet, root_data, resource_fetcher, draw_state, display_list)
-            }
-            Display::Inline => {
-                self.process_inline_children(node, style, loop_context, stylesheet, root_data, resource_fetcher, draw_state, display_list)
-            }
-            Display::InlineTable => {
-                self.process_table_children(node, style, loop_context, stylesheet, root_data, resource_fetcher, draw_state, display_list)
-            }
-            Display::None => {
-                ChildArtifact {
-                    sibling_style: SiblingStyle {
-                        padding: Edge::default(),
-                        margin: Edge::default(),
-                    },
-                    rects: Vec::new(),
-                }
-            }
+            Display::Block | Display::InlineBlock => self.process_block_children(
+                node,
+                style,
+                loop_context,
+                stylesheet,
+                root_data,
+                resource_fetcher,
+                draw_state,
+                display_list,
+            ),
+            Display::Inline => self.process_inline_children(
+                node,
+                style,
+                loop_context,
+                stylesheet,
+                root_data,
+                resource_fetcher,
+                draw_state,
+                display_list,
+            ),
+            Display::InlineTable => self.process_table_children(
+                node,
+                style,
+                loop_context,
+                stylesheet,
+                root_data,
+                resource_fetcher,
+                draw_state,
+                display_list,
+            ),
+            Display::None => ChildArtifact {
+                sibling_style: SiblingStyle {
+                    padding: Edge::default(),
+                    margin: Edge::default(),
+                },
+                rects: Vec::new(),
+            },
         }
     }
 

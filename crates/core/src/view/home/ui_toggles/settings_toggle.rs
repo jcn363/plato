@@ -205,7 +205,6 @@ impl Home {
 }
 
 /// Utility functions for settings toggles
-#[allow(dead_code)] // Reserved for future settings utilities
 pub mod utils {
     use super::*;
 
