@@ -69,7 +69,7 @@ impl Home {
             return;
         }
 
-        let rect = self.calculate_directory_view_rect(context);
+        let _rect = self.calculate_directory_view_rect(context);
         // TODO: Create actual directory view
         // let directory_view = DirectoryView::new(rect, self.id, context);
 
@@ -79,7 +79,7 @@ impl Home {
     }
 
     /// Hide directory view
-    fn hide_directory_view(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_directory_view(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.directory_view.is_none() {
             return;
         }
@@ -90,7 +90,7 @@ impl Home {
     }
 
     /// Calculate directory view rectangle
-    fn calculate_directory_view_rect(&self, context: &Context) -> Rectangle {
+    fn calculate_directory_view_rect(&self, _context: &Context) -> Rectangle {
         let top_offset = self.calculate_top_offset();
         let bottom_offset = self.calculate_bottom_offset();
 
@@ -112,7 +112,7 @@ impl Home {
     }
 
     /// Update directory view configuration
-    pub fn update_directory_view_config(&mut self, config: DirectoryViewToggleConfig) {
+    pub fn update_directory_view_config(&mut self, _config: DirectoryViewToggleConfig) {
         // TODO: Implement directory view config update
         // This would require recreating the directory view if visible
     }
@@ -121,7 +121,7 @@ impl Home {
     pub fn handle_directory_view_event(
         &mut self,
         event: &Event,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
@@ -151,7 +151,7 @@ impl Home {
 
     /// Update directory view content
     pub fn update_directory_view_content(&mut self, rq: &mut RenderQueue) {
-        if let Some(ref mut directory_view) = self.directory_view {
+        if let Some(ref mut _directory_view) = self.directory_view {
             // TODO: Update directory view content based on current directory
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }
@@ -159,6 +159,7 @@ impl Home {
 }
 
 /// Utility functions for directory view toggles
+#[allow(dead_code)] // Reserved for future directory view utilities
 pub mod utils {
     use super::*;
 

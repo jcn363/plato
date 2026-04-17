@@ -12,6 +12,7 @@ use crate::view::menu::{Menu, MenuKind};
 use crate::view::{Hub, Id, RenderQueue, ViewId};
 
 /// Settings menu types for the Reader
+#[allow(dead_code)] // Reserved for future settings menu expansion
 #[derive(Debug, Clone)]
 pub enum ReaderSettingsMenu {
     FontSettings,
@@ -22,6 +23,7 @@ pub enum ReaderSettingsMenu {
 }
 
 /// Settings UI manager for the Reader view
+#[allow(dead_code)] // Reserved for future settings management UI
 pub struct ReaderSettingsManager {
     pub id: Id,
     pub current_menu: Option<ReaderSettingsMenu>,
@@ -34,6 +36,7 @@ pub struct ReaderSettingsManager {
     pub margin_width: i32,
 }
 
+#[allow(dead_code)] // Reserved for future settings management UI
 impl ReaderSettingsManager {
     /// Create a new settings manager
     pub fn new(id: Id) -> Self {
@@ -182,9 +185,9 @@ impl ReaderSettingsManager {
     pub fn handle_menu_selection(
         &mut self,
         selection: &str,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
+        _hub: &Hub,
+        _rq: &mut RenderQueue,
+        _context: &mut Context,
     ) -> Option<ReaderSettingsMenu> {
         match selection {
             "font_settings" => Some(ReaderSettingsMenu::FontSettings),

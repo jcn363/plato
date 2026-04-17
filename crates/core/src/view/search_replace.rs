@@ -272,7 +272,7 @@ impl SearchReplaceView {
     fn add_separator(
         children: &mut Vec<Box<dyn View>>,
         rect: &Rectangle,
-        padding: i32,
+        _padding: i32,
         row_height: i32,
         title_padding: i32,
         thickness: i32,
@@ -297,7 +297,7 @@ impl SearchReplaceView {
         padding: i32,
         row_height: i32,
         title_padding: i32,
-        thickness: i32,
+        _thickness: i32,
     ) {
         let dpi = crate::unit::get_device_dpi();
         let btn_spacing = scale_by_dpi(8.0, dpi) as i32;

@@ -189,8 +189,8 @@ impl Library {
         relat: &Path,
         fp: Fp,
         nfp: Fp,
-        path: &Path,
-        md: &Metadata,
+        _path: &Path,
+        _md: &Metadata,
     ) {
         log_info!(
             "Update fingerprint for {}: {} → {}.",

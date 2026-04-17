@@ -82,7 +82,7 @@ impl Home {
     }
 
     /// Hide navigation bar
-    fn hide_navigation_bar(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_navigation_bar(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.navigation_bar.is_none() {
             return;
         }
@@ -93,7 +93,7 @@ impl Home {
     }
 
     /// Calculate navigation bar rectangle
-    fn calculate_navigation_bar_rect(&self, context: &Context) -> Rectangle {
+    fn calculate_navigation_bar_rect(&self, _context: &Context) -> Rectangle {
         let height = scale_by_dpi(SMALL_BAR_HEIGHT, CURRENT_DEVICE.dpi) as i32;
         let width = self.rect.width() as i32;
         let y = if self.address_bar.is_some() {
@@ -115,7 +115,7 @@ impl Home {
     }
 
     /// Update navigation bar configuration
-    pub fn update_navigation_bar_config(&mut self, config: NavigationBarToggleConfig) {
+    pub fn update_navigation_bar_config(&mut self, _config: NavigationBarToggleConfig) {
         // TODO: Implement navigation bar config update
         // This would require recreating the navigation bar if visible
     }
@@ -124,7 +124,7 @@ impl Home {
     pub fn handle_navigation_bar_event(
         &mut self,
         event: &Event,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
@@ -149,7 +149,7 @@ impl Home {
 
     /// Update navigation bar breadcrumbs
     pub fn update_navigation_bar_breadcrumbs(&mut self, rq: &mut RenderQueue) {
-        if let Some(ref mut nav_bar) = self.navigation_bar {
+        if let Some(ref mut _nav_bar) = self.navigation_bar {
             // TODO: Update breadcrumbs based on current directory
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }
@@ -166,7 +166,7 @@ pub mod utils {
     }
 
     /// Format breadcrumbs for display
-    pub fn format_breadcrumbs(path: &str, max_length: usize) -> String {
+    pub fn format_breadcrumbs(path: &str, _max_length: usize) -> String {
         let parts: Vec<&str> = path.split('/').filter(|p| !p.is_empty()).collect();
 
         if parts.len() <= 3 {

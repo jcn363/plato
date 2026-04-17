@@ -147,7 +147,7 @@ impl HomeInputExt for Home {
                 toggle_clock_menu(self, rect, None, rq, context);
                 true
             }
-            Event::ToggleNear(ViewId::LibraryMenu, rect) => {
+            Event::ToggleNear(ViewId::LibraryMenu, _rect) => {
                 self.toggle_library_menu(None, hub, rq, context);
                 true
             }

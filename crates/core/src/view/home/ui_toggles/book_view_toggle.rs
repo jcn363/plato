@@ -69,7 +69,7 @@ impl Home {
             return;
         }
 
-        let rect = self.calculate_book_view_rect(context);
+        let _rect = self.calculate_book_view_rect(context);
         // TODO: Create actual book view
         // let book_view = BookView::new(rect, self.id, context);
 
@@ -80,7 +80,7 @@ impl Home {
     }
 
     /// Hide book view
-    fn hide_book_view(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_book_view(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.book_view.is_none() {
             return;
         }
@@ -92,7 +92,7 @@ impl Home {
     }
 
     /// Calculate book view rectangle
-    fn calculate_book_view_rect(&self, context: &Context) -> Rectangle {
+    fn calculate_book_view_rect(&self, _context: &Context) -> Rectangle {
         let top_offset = self.calculate_top_offset();
         let bottom_offset = self.calculate_bottom_offset();
 
@@ -114,7 +114,7 @@ impl Home {
     }
 
     /// Update book view configuration
-    pub fn update_book_view_config(&mut self, config: BookViewToggleConfig) {
+    pub fn update_book_view_config(&mut self, _config: BookViewToggleConfig) {
         // TODO: Implement book view config update
         // This would require recreating the book view if visible
     }
@@ -123,7 +123,7 @@ impl Home {
     pub fn handle_book_view_event(
         &mut self,
         event: &Event,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
@@ -149,7 +149,7 @@ impl Home {
     /// Open book in book view
     pub fn open_book_in_view(
         &mut self,
-        book_path: &str,
+        _book_path: &str,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -159,6 +159,7 @@ impl Home {
 }
 
 /// Utility functions for book view toggles
+#[allow(dead_code)] // Reserved for future book view utilities
 pub mod utils {
     use super::*;
 
@@ -198,7 +199,7 @@ pub mod utils {
     }
 
     /// Generate book preview thumbnail
-    pub fn generate_book_preview(book_path: &str) -> Option<Vec<u8>> {
+    pub fn generate_book_preview(_book_path: &str) -> Option<Vec<u8>> {
         // TODO: Implement book preview generation
         None
     }

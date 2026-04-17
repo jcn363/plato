@@ -80,7 +80,7 @@ impl Home {
     }
 
     /// Hide settings menu
-    fn hide_settings_menu(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_settings_menu(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.settings_menu.is_none() {
             return;
         }
@@ -143,7 +143,7 @@ impl Home {
     }
 
     /// Update settings configuration
-    pub fn update_settings_config(&mut self, config: SettingsToggleConfig) {
+    pub fn update_settings_config(&mut self, _config: SettingsToggleConfig) {
         // TODO: Implement settings config update
         // This would require recreating the settings menu if visible
     }
@@ -173,7 +173,7 @@ impl Home {
     fn handle_settings_selection(
         &mut self,
         entry_id: &EntryId,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -205,6 +205,7 @@ impl Home {
 }
 
 /// Utility functions for settings toggles
+#[allow(dead_code)] // Reserved for future settings utilities
 pub mod utils {
     use super::*;
 

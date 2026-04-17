@@ -85,7 +85,7 @@ impl Home {
     }
 
     /// Hide shelf view
-    fn hide_shelf_view(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_shelf_view(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.shelf.is_none() {
             return;
         }
@@ -96,7 +96,7 @@ impl Home {
     }
 
     /// Calculate shelf view rectangle
-    fn calculate_shelf_view_rect(&self, context: &Context) -> Rectangle {
+    fn calculate_shelf_view_rect(&self, _context: &Context) -> Rectangle {
         let top_offset = self.calculate_top_offset();
         let bottom_offset = self.calculate_bottom_offset();
 
@@ -118,7 +118,7 @@ impl Home {
     }
 
     /// Update shelf view configuration
-    pub fn update_shelf_view_config(&mut self, config: ShelfViewToggleConfig) {
+    pub fn update_shelf_view_config(&mut self, _config: ShelfViewToggleConfig) {
         // TODO: Implement shelf view config update
         // This would require recreating the shelf if visible
     }
@@ -127,7 +127,7 @@ impl Home {
     pub fn handle_shelf_view_event(
         &mut self,
         event: &Event,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
@@ -152,7 +152,7 @@ impl Home {
 
     /// Update shelf view content
     pub fn update_shelf_view_content(&mut self, rq: &mut RenderQueue) {
-        if let Some(ref mut shelf) = self.shelf {
+        if let Some(ref mut _shelf) = self.shelf {
             // TODO: Update shelf content based on current directory
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }

@@ -80,7 +80,7 @@ impl Home {
     }
 
     /// Hide library menu
-    fn hide_library_menu(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_library_menu(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.library_menu.is_none() {
             return;
         }
@@ -146,7 +146,7 @@ impl Home {
     }
 
     /// Update library configuration
-    pub fn update_library_config(&mut self, config: LibraryToggleConfig) {
+    pub fn update_library_config(&mut self, _config: LibraryToggleConfig) {
         // TODO: Implement library config update
         // This would require recreating the library menu if visible
     }
@@ -177,7 +177,7 @@ impl Home {
     fn handle_library_selection(
         &mut self,
         name: &str,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -232,13 +232,14 @@ impl Home {
     /// Update library statistics
     pub fn update_library_statistics(&mut self, rq: &mut RenderQueue) {
         // TODO: Update library statistics display
-        if let Some(ref mut library_menu) = self.library_menu {
+        if let Some(ref mut _library_menu) = self.library_menu {
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         }
     }
 }
 
 /// Utility functions for library toggles
+#[allow(dead_code)] // Reserved for future library utilities
 pub mod utils {
     use super::*;
 

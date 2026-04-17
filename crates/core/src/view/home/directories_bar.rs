@@ -163,7 +163,7 @@ impl DirectoriesBar {
         let dpi = get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let min_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32 - thickness;
-        let mut font = font_from_style(fonts, &NORMAL_STYLE, dpi);
+        let font = font_from_style(fonts, &NORMAL_STYLE, dpi);
         let x_height = font.x_heights.0 as i32;
         let padding = font.em() as i32;
         let vertical_padding = min_height - x_height;
@@ -272,7 +272,7 @@ impl DirectoriesBar {
         page
     }
 
-    fn create_start_line(&self, start_index: usize, padding: i32) -> Line {
+    fn create_start_line(&self, start_index: usize, padding: i32) -> Line<'_> {
         let mut line = Line::default();
         if start_index > 0 {
             if let Some(pixmap) = ICONS_PIXMAPS.get("angle-left-small") {

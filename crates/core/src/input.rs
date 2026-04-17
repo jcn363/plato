@@ -519,8 +519,9 @@ fn handle_syn_event(
     proto: TouchProto,
     ty: &Sender<DeviceEvent>,
 ) {
-    if (evt.time.tv_sec - *last_activity).abs() >= 60 {
-        *last_activity = evt.time.tv_sec;
+    let tv_sec = evt.time.tv_sec as i64;
+    if (tv_sec - *last_activity).abs() >= 60 {
+        *last_activity = tv_sec;
         ty.send(DeviceEvent::UserActivity).ok();
     }
 

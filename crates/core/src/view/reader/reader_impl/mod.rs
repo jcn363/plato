@@ -1,4 +1,5 @@
 //! Reader Implementation
+#![allow(dead_code)]
 //!
 //! This module provides the core document reading view for Plato. It handles:
 //! - Document loading and rendering (PDF, EPUB, HTML)

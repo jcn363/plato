@@ -178,6 +178,7 @@ pub struct Home {
     shelf: Option<Box<dyn View>>,
     book_view: Option<Box<dyn View>>,
     directory_view: Option<Box<dyn View>>,
+    #[allow(dead_code)] // Reserved for future bottom bar functionality
     bottom_bar: Option<Box<dyn View>>,
 }
 
@@ -192,6 +193,7 @@ struct Fetcher {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)] // Reserved for future book menu functionality
 pub struct BookMenuData {
     path: PathBuf,
     kind: String,
@@ -209,9 +211,9 @@ impl Home {
         context: &mut Context,
     ) -> Result<Home, Error> {
         let id = ID_FEEDER.next();
-        let (dpi, thickness, small_thickness, big_thickness, small_height, big_height) =
+        let (_dpi, thickness, small_thickness, big_thickness, small_height, big_height) =
             Self::calculate_dimensions();
-        let (selected_library, library_settings, current_directory, sort_method, reverse_order) =
+        let (_selected_library, library_settings, current_directory, sort_method, reverse_order) =
             Self::get_library_settings(context);
 
         context.library.sort(sort_method, reverse_order);
@@ -380,9 +382,9 @@ impl Home {
         y_start: i32,
         thickness: i32,
         small_height: i32,
-        small_thickness: i32,
+        _small_thickness: i32,
         current_directory: &Path,
-        shelf_index: usize,
+        _shelf_index: usize,
     ) -> i32 {
         let mut y_start = y_start;
         if context.settings.home.address_bar {
@@ -420,7 +422,7 @@ impl Home {
         small_thickness: i32,
         current_directory: &Path,
         dirs: &std::collections::BTreeSet<PathBuf>,
-        shelf_index: usize,
+        _shelf_index: usize,
     ) -> i32 {
         let mut y_start = y_start;
         if context.settings.home.navigation_bar {
@@ -458,11 +460,11 @@ impl Home {
         y_start: i32,
         small_height: i32,
         small_thickness: i32,
-        big_height: i32,
+        _big_height: i32,
         thickness: i32,
         visible_books: &[crate::metadata::Info],
         current_page: usize,
-        library_settings: &crate::settings::LibrarySettings,
+        _library_settings: &crate::settings::LibrarySettings,
         count: usize,
     ) -> usize {
         let selected_library = context.settings.selected_library;
@@ -656,7 +658,7 @@ impl Home {
 
     fn get_address_bar_end_y(
         context: &mut Context,
-        rect: Rectangle,
+        _rect: Rectangle,
         shelf_min_y: i32,
         thickness: i32,
         small_height: i32,
@@ -894,7 +896,7 @@ impl View for Home {
         );
         shelf_min_y =
             Self::get_address_bar_end_y(context, rect, shelf_min_y, thickness, small_height);
-        (index, shelf_min_y) = Self::resize_navigation_bar_if_enabled(
+        (_, shelf_min_y) = Self::resize_navigation_bar_if_enabled(
             &mut self.children,
             context,
             rect,

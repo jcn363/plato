@@ -31,11 +31,13 @@ pub fn mm_to_px(mm: f32, dpi: u16) -> f32 {
     mm * (dpi as f32 / MILLIMETERS_PER_INCH)
 }
 
+#[allow(dead_code)] // Reserved for future DPI scaling patterns
 #[inline]
 pub fn scale_by_dpi_raw(x: f32, dpi: u16) -> f32 {
     x * (dpi as f32) / BASE_DPI
 }
 
+#[allow(dead_code)] // Reserved for future DPI scaling patterns
 #[inline]
 pub fn scale_by_dpi(x: f32, dpi: u16) -> f32 {
     scale_by_dpi_raw(x, dpi).round().max(1.0)
@@ -43,6 +45,7 @@ pub fn scale_by_dpi(x: f32, dpi: u16) -> f32 {
 
 /// Scale value by current device DPI.
 /// DRY helper to avoid repeated `let dpi = CURRENT_DEVICE.dpi` pattern across view modules.
+#[allow(dead_code)] // Reserved for future DPI scaling patterns
 #[inline]
 pub fn scale_by_device_dpi(x: f32) -> f32 {
     scale_by_dpi(x, crate::device::CURRENT_DEVICE.dpi)
@@ -50,6 +53,7 @@ pub fn scale_by_device_dpi(x: f32) -> f32 {
 
 /// Scale value by current device DPI (raw, no rounding).
 /// DRY helper to avoid repeated `let dpi = CURRENT_DEVICE.dpi` pattern across view modules.
+#[allow(dead_code)] // Reserved for future DPI scaling patterns
 #[inline]
 pub fn scale_by_device_dpi_raw(x: f32) -> f32 {
     scale_by_dpi_raw(x, crate::device::CURRENT_DEVICE.dpi)

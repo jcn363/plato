@@ -89,7 +89,7 @@ impl Menu {
 
         entries = Self::handle_entry_overflow(entries, max_entries);
 
-        let mut y_pos = y_start + dir * (border_space - border_thickness);
+        let y_pos = y_start + dir * (border_space - border_thickness);
 
         let entry_width = Self::calculate_entry_width(
             kind,
@@ -156,8 +156,8 @@ impl Menu {
         kind: MenuKind,
         target: Rectangle,
         height: u32,
-        small_height: i32,
-        thickness: i32,
+        _small_height: i32,
+        _thickness: i32,
         border_thickness: i32,
     ) -> (i32, i32, i32) {
         let north_space = target.min.y;
@@ -227,8 +227,8 @@ impl Menu {
     }
 
     fn calculate_entry_width(
-        kind: MenuKind,
-        target: Rectangle,
+        _kind: MenuKind,
+        _target: Rectangle,
         width: u32,
         padding: i32,
         border_thickness: i32,
@@ -414,7 +414,7 @@ impl Menu {
         });
     }
 
-    fn handle_tap_outside(&mut self, center: Point, bus: &mut Bus) {
+    fn handle_tap_outside(&mut self, _center: Point, bus: &mut Bus) {
         if self.root {
             bus.push_back(Event::Close(self.view_id));
         } else {
@@ -469,7 +469,7 @@ impl Menu {
         fb: &mut dyn Framebuffer,
         fonts: &mut Fonts,
         dpi: u16,
-        border_radius: i32,
+        _border_radius: i32,
         border_thickness: u16,
         corners: CornerSpec,
     ) {
@@ -499,7 +499,7 @@ impl Menu {
     fn render_standard_menu(
         &self,
         fb: &mut dyn Framebuffer,
-        border_radius: i32,
+        _border_radius: i32,
         border_thickness: u16,
         corners: CornerSpec,
     ) {

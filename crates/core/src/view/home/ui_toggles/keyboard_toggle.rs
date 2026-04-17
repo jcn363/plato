@@ -61,7 +61,7 @@ impl Home {
     pub fn toggle_keyboard(
         &mut self,
         enable: Option<bool>,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -90,7 +90,7 @@ impl Home {
     }
 
     /// Hide keyboard
-    fn hide_keyboard(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_keyboard(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.keyboard.is_none() {
             return;
         }
@@ -139,7 +139,7 @@ impl Home {
     }
 
     /// Update keyboard configuration
-    pub fn update_keyboard_config(&mut self, config: KeyboardToggleConfig) {
+    pub fn update_keyboard_config(&mut self, _config: KeyboardToggleConfig) {
         // TODO: Implement keyboard config update
         // This would require recreating the keyboard if visible
     }
@@ -168,8 +168,8 @@ impl Home {
     /// Handle keyboard text submission
     fn handle_keyboard_submit(
         &mut self,
-        text: &str,
-        hub: &Hub,
+        _text: &str,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -189,6 +189,7 @@ impl Home {
 }
 
 /// Utility functions for keyboard toggles
+#[allow(dead_code)] // Reserved for future keyboard utilities
 pub mod utils {
     use super::*;
 

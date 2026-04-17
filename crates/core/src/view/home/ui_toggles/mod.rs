@@ -3,6 +3,8 @@
 //! This module provides UI toggle functionality for the Home view,
 //! including keyboard, address bar, navigation bar, and other UI components.
 
+#![allow(dead_code)]
+
 pub mod address_bar_toggle;
 pub mod book_view_toggle;
 pub mod directory_view_toggle;

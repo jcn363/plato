@@ -2,6 +2,8 @@
 //!
 //! This module provides hyphenation functionality for text layout.
 
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 
 /// Trait for hyphenation implementations

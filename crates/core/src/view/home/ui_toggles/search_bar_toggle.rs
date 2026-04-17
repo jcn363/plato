@@ -55,7 +55,7 @@ impl Home {
         &mut self,
         enable: Option<bool>,
         _update: bool,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -84,7 +84,7 @@ impl Home {
     }
 
     /// Hide search bar
-    fn hide_search_bar(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_search_bar(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.search_bar.is_none() {
             return;
         }
@@ -96,7 +96,7 @@ impl Home {
     }
 
     /// Calculate search bar rectangle
-    fn calculate_search_bar_rect(&self, context: &Context) -> Rectangle {
+    fn calculate_search_bar_rect(&self, _context: &Context) -> Rectangle {
         let height = scale_by_dpi(BIG_BAR_HEIGHT, CURRENT_DEVICE.dpi) as i32;
         let width = self.rect.width() as i32;
 
@@ -113,7 +113,7 @@ impl Home {
     }
 
     /// Update search bar configuration
-    pub fn update_search_bar_config(&mut self, config: SearchBarToggleConfig) {
+    pub fn update_search_bar_config(&mut self, _config: SearchBarToggleConfig) {
         // TODO: Implement search bar config update
         // This would require recreating the search bar if visible
     }

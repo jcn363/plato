@@ -84,7 +84,7 @@ impl Dictionary {
         let image_rect =
             Self::calculate_image_rect(rect, small_height, big_thickness, small_thickness);
 
-        Self::add_image(&mut children, image_rect);
+        let _ = Self::add_image(&mut children, image_rect);
         let doc = Self::create_document(image_rect, context, dpi);
         Self::add_separator(
             &mut children,

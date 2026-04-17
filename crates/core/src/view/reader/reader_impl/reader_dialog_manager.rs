@@ -75,7 +75,7 @@ impl ReaderDialogManager {
     }
 
     /// Create an edit note dialog
-    pub fn create_edit_note_dialog(&self, note_text: &str, context: &mut Context) -> Dialog {
+    pub fn create_edit_note_dialog(&self, _note_text: &str, context: &mut Context) -> Dialog {
         let title = "Edit Note".to_string();
         let message = "Enter your note:".to_string();
 
@@ -89,7 +89,7 @@ impl ReaderDialogManager {
     }
 
     /// Create a search dialog
-    pub fn create_search_dialog(&self, current_query: &str, context: &mut Context) -> Dialog {
+    pub fn create_search_dialog(&self, _current_query: &str, context: &mut Context) -> Dialog {
         let title = "Search".to_string();
         let message = "Enter search text:".to_string();
 
@@ -224,13 +224,13 @@ impl ReaderDialogManager {
         &mut self,
         dialog_type: &ReaderDialogType,
         text: &str,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
+        _hub: &Hub,
+        _rq: &mut RenderQueue,
+        _context: &mut Context,
     ) -> bool {
         match dialog_type {
             ReaderDialogType::GoToPage => {
-                if let Ok(page_num) = text.parse::<usize>() {
+                if let Ok(_page_num) = text.parse::<usize>() {
                     // Emit go-to-page event
                     return true;
                 }
@@ -257,9 +257,9 @@ impl ReaderDialogManager {
         &mut self,
         dialog_type: &ReaderDialogType,
         confirmed: bool,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
+        _hub: &Hub,
+        _rq: &mut RenderQueue,
+        _context: &mut Context,
     ) -> bool {
         match dialog_type {
             ReaderDialogType::ConfirmDelete => {
@@ -275,7 +275,7 @@ impl ReaderDialogManager {
 
     /// Update dialog state
     pub fn update_dialog(&mut self, rect: Rectangle, rq: &mut RenderQueue) {
-        if let Some(dialog_type) = &self.current_dialog {
+        if let Some(_dialog_type) = &self.current_dialog {
             // Update dialog position and size
             rq.add(crate::view::RenderData::new(
                 self.id,

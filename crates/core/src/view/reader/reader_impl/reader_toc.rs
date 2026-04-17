@@ -8,6 +8,7 @@ use crate::metadata::Info;
 use std::collections::HashMap;
 
 /// Table of contents manager for the Reader view
+#[allow(dead_code)] // Reserved for future TOC navigation features
 pub struct ReaderTocManager {
     pub toc_entries: Vec<TocEntry>,
     pub simple_toc: Vec<SimpleTocEntry>,
@@ -15,6 +16,7 @@ pub struct ReaderTocManager {
     pub current_chapter: Option<usize>,
 }
 
+#[allow(dead_code)] // Reserved for future TOC navigation features
 impl ReaderTocManager {
     /// Create a new TOC manager
     pub fn new() -> Self {
@@ -206,7 +208,7 @@ impl ReaderTocManager {
     pub fn navigate_to_chapter(
         &mut self,
         chapter_index: usize,
-        current_page: usize,
+        _current_page: usize,
     ) -> Option<usize> {
         if chapter_index < self.toc_entries.len() {
             if let Some(page) = self.toc_entries[chapter_index].page {
@@ -304,6 +306,7 @@ impl ReaderTocManager {
 }
 
 /// TOC statistics
+#[allow(dead_code)] // Reserved for future TOC analytics features
 #[derive(Debug, Clone)]
 pub struct TocStats {
     pub total_chapters: usize,
@@ -312,6 +315,7 @@ pub struct TocStats {
 }
 
 /// Utility functions for TOC management
+#[allow(dead_code)] // Reserved for future TOC utility functions
 pub mod utils {
     use super::*;
 

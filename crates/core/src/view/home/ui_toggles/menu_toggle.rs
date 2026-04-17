@@ -81,7 +81,7 @@ impl Home {
     }
 
     /// Hide sort menu
-    fn hide_sort_menu(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_sort_menu(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.sort_menu.is_none() {
             return;
         }
@@ -155,7 +155,7 @@ impl Home {
     }
 
     /// Hide book menu
-    fn hide_book_menu(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_book_menu(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.book_menu.is_none() {
             return;
         }
@@ -208,7 +208,7 @@ impl Home {
     }
 
     /// Update menu configuration
-    pub fn update_menu_config(&mut self, config: MenuToggleConfig) {
+    pub fn update_menu_config(&mut self, _config: MenuToggleConfig) {
         // TODO: Implement menu config update
         // This would require recreating the menus if visible
     }
@@ -242,7 +242,7 @@ impl Home {
     fn handle_menu_selection(
         &mut self,
         entry_id: &EntryId,
-        hub: &Hub,
+        _hub: &Hub,
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
@@ -369,7 +369,7 @@ pub mod utils {
 
     /// Adjust menu position to fit on screen
     pub fn adjust_menu_position(
-        mut position: (i32, i32),
+        position: (i32, i32),
         screen_size: (i32, i32),
         menu_size: (i32, i32),
     ) -> (i32, i32) {

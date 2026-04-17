@@ -73,7 +73,7 @@ impl Home {
             return;
         }
 
-        let rect = self.calculate_go_to_page_rect(context);
+        let _rect = self.calculate_go_to_page_rect(context);
         let go_to_page = NamedInput::new(
             "Go to Page".to_string(),
             ViewId::GoToPageInput,
@@ -89,7 +89,7 @@ impl Home {
     }
 
     /// Hide go-to-page dialog
-    fn hide_go_to_page(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_go_to_page(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.go_to_page.is_none() {
             return;
         }
@@ -123,7 +123,7 @@ impl Home {
     }
 
     /// Update go-to-page configuration
-    pub fn update_go_to_page_config(&mut self, config: GoToPageToggleConfig) {
+    pub fn update_go_to_page_config(&mut self, _config: GoToPageToggleConfig) {
         // TODO: Implement go-to-page config update
         // This would require recreating the go-to-page dialog if visible
     }
@@ -177,6 +177,7 @@ impl Home {
 }
 
 /// Utility functions for go-to-page toggles
+#[allow(dead_code)] // Reserved for future go-to-page utilities
 pub mod utils {
     use super::*;
 

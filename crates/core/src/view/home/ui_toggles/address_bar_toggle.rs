@@ -83,7 +83,7 @@ impl Home {
     }
 
     /// Hide address bar
-    fn hide_address_bar(&mut self, rq: &mut RenderQueue, context: &mut Context) {
+    fn hide_address_bar(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
         if self.address_bar.is_none() {
             return;
         }
@@ -95,7 +95,7 @@ impl Home {
     }
 
     /// Calculate address bar rectangle
-    fn calculate_address_bar_rect(&self, context: &Context) -> Rectangle {
+    fn calculate_address_bar_rect(&self, _context: &Context) -> Rectangle {
         let height = scale_by_dpi(BIG_BAR_HEIGHT, CURRENT_DEVICE.dpi) as i32;
         let width = self.rect.width() as i32;
 
@@ -112,7 +112,7 @@ impl Home {
     }
 
     /// Update address bar configuration
-    pub fn update_address_bar_config(&mut self, config: AddressBarToggleConfig) {
+    pub fn update_address_bar_config(&mut self, _config: AddressBarToggleConfig) {
         // TODO: Implement address bar config update
         // This would require recreating the address bar if visible
     }
@@ -162,6 +162,7 @@ impl Home {
 }
 
 /// Utility functions for address bar toggles
+#[allow(dead_code)] // Reserved for future address bar utilities
 pub mod utils {
     use super::*;
 

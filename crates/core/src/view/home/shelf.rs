@@ -118,7 +118,7 @@ impl Shelf {
         let dpi = crate::unit::get_device_dpi();
         let big_height = scale_by_dpi(BIG_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
-        let (small_thickness, big_thickness) = halves(thickness);
+        let (_small_thickness, big_thickness) = halves(thickness);
         let max_lines = ((rect.height() as i32 + thickness) / big_height) as usize;
         let book_heights = divide(rect.height() as i32, max_lines as i32);
         (max_lines, book_heights, thickness, big_thickness)

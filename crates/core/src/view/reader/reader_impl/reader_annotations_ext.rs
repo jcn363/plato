@@ -81,7 +81,7 @@ impl ReaderAnnotationManager {
     pub fn create_bookmark(
         &mut self,
         page: usize,
-        location: Location,
+        _location: Location,
         title: String,
     ) -> Annotation {
         let bookmark = Annotation {
@@ -101,7 +101,7 @@ impl ReaderAnnotationManager {
     pub fn create_highlight(
         &mut self,
         page: usize,
-        location: Location,
+        _location: Location,
         text: String,
         _color: crate::color::Color,
     ) -> Annotation {
@@ -122,7 +122,7 @@ impl ReaderAnnotationManager {
     pub fn create_note(
         &mut self,
         page: usize,
-        location: Location,
+        _location: Location,
         text: String,
         note: String,
     ) -> Annotation {

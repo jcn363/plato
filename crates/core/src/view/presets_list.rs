@@ -78,7 +78,7 @@ impl PresetsList {
         let presets_count = presets.len() as i32;
         let mut children = Vec::with_capacity(max_per_line as usize);
         let mut item_index = 0;
-        let mut index = 0;
+        let index = 0;
 
         while index < presets_count {
             let position = item_index % max_per_line;

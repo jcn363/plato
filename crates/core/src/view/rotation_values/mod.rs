@@ -227,7 +227,7 @@ impl View for RotationValues {
         context: &mut Context,
     ) -> bool {
         match *evt {
-            Event::Gesture(GestureEvent::Tap(mut pt)) if !self.finished => {
+            Event::Gesture(GestureEvent::Tap(pt)) if !self.finished => {
                 self.process_tap(pt, hub, rq, context);
                 true
             }

@@ -1,3 +1,6 @@
+// Allow dead code for fonts field (may be used in future)
+#![allow(dead_code)]
+
 use super::dom::NodeRef;
 use super::layout::TextAlign;
 use super::layout::{

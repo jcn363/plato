@@ -11,6 +11,7 @@ use anyhow::Error;
 use std::collections::HashMap;
 
 /// Rendering cache for the Reader view
+#[allow(dead_code)] // Reserved for future rendering cache optimization
 pub struct ReaderRenderCache {
     pub cache: HashMap<usize, Pixmap>,
     pub chunks: Vec<RenderChunk>,
@@ -18,6 +19,7 @@ pub struct ReaderRenderCache {
     pub current_memory_usage: usize,
 }
 
+#[allow(dead_code)] // Reserved for future rendering cache optimization
 impl ReaderRenderCache {
     /// Create a new render cache
     pub fn new(max_cache_size: usize) -> Self {
@@ -79,6 +81,7 @@ impl ReaderRenderCache {
 }
 
 /// Cache statistics
+#[allow(dead_code)] // Reserved for future cache analytics
 #[derive(Debug, Clone)]
 pub struct CacheStats {
     pub entries: usize,
@@ -87,12 +90,14 @@ pub struct CacheStats {
 }
 
 /// Rendering engine for the Reader view
+#[allow(dead_code)] // Reserved for future rendering engine optimization
 pub struct ReaderRenderEngine {
     pub cache: ReaderRenderCache,
     pub viewport: ViewPort,
     pub state: State,
 }
 
+#[allow(dead_code)] // Reserved for future rendering engine optimization
 impl ReaderRenderEngine {
     /// Create a new render engine
     pub fn new(max_cache_size: usize) -> Self {
@@ -143,9 +148,9 @@ impl ReaderRenderEngine {
     /// Render page to pixmap
     fn render_page_to_pixmap(
         &self,
-        page: usize,
+        _page: usize,
         rect: Rectangle,
-        context: &mut Context,
+        _context: &mut Context,
     ) -> Result<Pixmap, Error> {
         // TODO: Implement actual page rendering
         // This would involve calling the document's render method
@@ -249,6 +254,7 @@ impl ReaderRenderEngine {
 }
 
 /// Rendering performance metrics
+#[allow(dead_code)] // Reserved for future rendering analytics
 #[derive(Debug, Clone)]
 pub struct RenderingMetrics {
     pub cache_hit_rate: f32,
@@ -258,6 +264,7 @@ pub struct RenderingMetrics {
 }
 
 /// Utility functions for rendering
+#[allow(dead_code)] // Reserved for future rendering utilities
 pub mod utils {
     use super::*;
 
@@ -277,7 +284,7 @@ pub mod utils {
     pub fn should_preload_page(
         current_page: usize,
         target_page: usize,
-        total_pages: usize,
+        _total_pages: usize,
     ) -> bool {
         let distance = (target_page as isize - current_page as isize).abs();
         distance <= 2 // Preload up to 2 pages ahead/behind
