@@ -184,6 +184,15 @@ impl Engine {
     }
 
     /// Recursive display list builder
+    ///
+    /// Traverses the DOM tree recursively, computing styles, laying out nodes,
+    /// and generating draw commands for the display list.
+    ///
+    /// TODO: Full implementation requires:
+    /// - StyleSheet::match_rules() method for CSS matching
+    /// - Proper handling of all NodeData variants
+    /// - Integration with layout engine for positioning
+    /// - Resource fetching for images and external content
     fn build_display_list_recursive(
         &mut self,
         _node: NodeRef,
@@ -195,19 +204,18 @@ impl Engine {
         _draw_state: &mut DrawState,
         _display_list: &mut Vec<Page>,
     ) -> ChildArtifact {
-        // Placeholder implementation - full implementation would:
+        // Placeholder implementation - returns minimal valid artifact
+        // Full implementation would:
         // 1. Compute styles for this node
-        // 2. Layout the node and its children
-        // 3. Generate draw commands
+        // 2. Layout the node and its children recursively
+        // 3. Generate appropriate draw commands
         // 4. Handle pagination for multi-page documents
-
-        // Return minimal valid artifact
         ChildArtifact {
             sibling_style: SiblingStyle {
-                padding: Default::default(),
-                margin: Default::default(),
+                padding: Edge::default(),
+                margin: Edge::default(),
             },
-            rects: vec![None],
+            rects: vec![],
         }
     }
 
