@@ -225,7 +225,7 @@ impl Engine {
             };
         }
 
-        if let Some(color) = computed_styles.get("color") {
+        if let Some(_color) = computed_styles.get("color") {
             // Parse color value (simplified)
             style.color = crate::color::BLACK;
         }
