@@ -293,15 +293,17 @@ The following TODOs remain for future architectural work (requires infrastructur
      - Complete layout engine integration for node positioning
      - Resource fetching infrastructure for images and external content
 
-2. **Home Module Refactoring** (view/home/mod.rs) - PARTIALLY IMPLEMENTED
+2. **Home Module Refactoring** (view/home/mod.rs) - ✓ COMPLETE
    - Created home_core.rs (222 lines) - Data model and state management
-   - Created home_ui.rs (468 lines) - UI layout and rendering helpers  
-   - Split mod.rs from 972 lines to ~400 lines (main entry point)
+   - Created home_ui.rs (471 lines) - UI layout and rendering helpers
+   - Split mod.rs to 404 lines (main entry point with new(), View trait)
    - New structure:
-     - mod.rs: Main Home impl with new(), View trait, imports
-     - home_core.rs: Home struct, Fetcher, BookMenuData, data accessors
+     - mod.rs: Main Home impl with new(), View trait, event handling
+     - home_core.rs: Home struct, Fetcher, BookMenuData, TRASH_DIRNAME
      - home_ui.rs: calculate_*, add_*, resize_* helper methods
-   - Status: Structure complete, minor function signature alignment needed
+   - All function signatures aligned
+   - Clean build with cargo check
+   - Status: Complete and functional
 
 ## Recent Implementation: Reader Advanced Features
 
