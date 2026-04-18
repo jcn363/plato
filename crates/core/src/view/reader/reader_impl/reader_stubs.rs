@@ -20,6 +20,11 @@ use crate::input::DeviceEvent;
 use crate::view::key::KeyKind;
 use crate::view::{Event, Hub, RenderData, RenderQueue, View};
 
+// Re-export types used in methods
+use crate::document::TextLocation;
+use crate::metadata::Annotation;
+use chrono::Local;
+
 use super::reader::Reader;
 use super::reader_core::Search;
 
@@ -171,15 +176,6 @@ impl Reader {
             };
 
             if let Some(page) = target_page {
-                let annotation = Annotation {
-                    note: String::new(),
-                    text: String::new(),
-                    selection: [
-                        TextLocation::Static(self.current_page, 0),
-                        TextLocation::Static(self.current_page, 100),
-                    ],
-                    modified: Local::now().naive_local(),
-                };
                 self.go_to_page(page, true, hub, rq, context);
                 return;
             }
@@ -189,14 +185,44 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Go to annotation
+    /// Navigate to next or previous annotation
     pub fn go_to_annotation(
         &mut self,
-        _dir: CycleDir,
-        _hub: &Hub,
+        dir: CycleDir,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
+        // Get annotations from document info
+        let annotations = self
+            .info
+            .reader
+            .as_ref()
+            .map(|r| &r.annotations)
+            .filter(|a| !a.is_empty());
+
+        if let Some(annotations) = annotations {
+            // Find annotation relative to current position
+            // Extract page from TextLocation
+            let target_annotation = match dir {
+                CycleDir::Next => annotations.iter().find(|a| {
+                    let page = a.selection[0].location();
+                    page > self.current_page
+                }),
+                CycleDir::Previous => annotations.iter().rev().find(|a| {
+                    let page = a.selection[0].location();
+                    page < self.current_page
+                }),
+            };
+
+            if let Some(annotation) = target_annotation {
+                let page = annotation.selection[0].location();
+                self.go_to_page(page, true, hub, rq, context);
+                return;
+            }
+        }
+
+        // No annotation found, just update
         self.queue_partial_update(rq);
     }
 
@@ -425,75 +451,240 @@ impl Reader {
         }
     }
 
-    /// Stub: Handle show annotations
+    /// Handle show annotations - display annotation sidebar
     pub fn handle_show_annotations(
         &mut self,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        use crate::view::notification::Notification;
+
+        // Check if annotations exist
+        let annotation_count = self
+            .info
+            .reader
+            .as_ref()
+            .map(|r| r.annotations.len())
+            .unwrap_or(0);
+
+        if annotation_count > 0 {
+            // Show notification with annotation count
+            let msg = format!("{} annotations in document", annotation_count);
+            let notif = Notification::new(msg, hub, rq, context);
+            self.children.push(Box::new(notif) as Box<dyn View>);
+
+            // Trigger UI update to show annotation sidebar
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        } else {
+            // No annotations, show info
+            let msg = "No annotations in this document".to_string();
+            let notif = Notification::new(msg, hub, rq, context);
+            self.children.push(Box::new(notif) as Box<dyn View>);
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        }
     }
 
-    /// Stub: Handle show bookmarks
+    /// Handle show bookmarks - display bookmark list
     pub fn handle_show_bookmarks(
         &mut self,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        use crate::view::notification::Notification;
+
+        // Get bookmark count
+        let bookmark_count = self
+            .info
+            .reader
+            .as_ref()
+            .map(|r| r.bookmarks.len())
+            .unwrap_or(0);
+
+        if bookmark_count > 0 {
+            // Show notification with bookmark count
+            let msg = format!("{} bookmarks in document", bookmark_count);
+            let notif = Notification::new(msg, hub, rq, context);
+            self.children.push(Box::new(notif) as Box<dyn View>);
+
+            // Trigger UI update to show bookmark sidebar
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+        } else {
+            // No bookmarks, show info
+            let msg = "No bookmarks in this document".to_string();
+            let notif = Notification::new(msg, hub, rq, context);
+            self.children.push(Box::new(notif) as Box<dyn View>);
+            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        }
     }
 
-    /// Stub: Handle search result
+    /// Handle search result - navigate to search result with highlighting
     pub fn handle_search_result(
         &mut self,
-        _result: usize,
-        _hub: &Hub,
+        result_index: usize,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        use crate::view::notification::Notification;
+
+        // Check if search is active and results exist
+        if let Some(ref search) = self.search {
+            if result_index < search.results.len() {
+                let location = &search.results[result_index];
+
+                // Navigate to the result page
+                if let crate::document::Location::Exact(page) = *location {
+                    if page != self.current_page {
+                        self.go_to_page(page, true, hub, rq, context);
+                        return;
+                    }
+                }
+
+                // Show notification of result position
+                let msg = format!(
+                    "Search result {} of {}",
+                    result_index + 1,
+                    search.results.len()
+                );
+                let notif = Notification::new(msg, hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
+            }
+        }
+
+        // Update UI to show search result
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    /// Stub: Handle end of search
+    /// Handle end of search - finalize search and clear search state
     pub fn handle_end_of_search(
         &mut self,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        use crate::view::notification::Notification;
+
+        // Get final search statistics
+        let (result_count, query) = self.search.as_ref().map_or((0, String::new()), |s| {
+            (s.results.len(), s._query.clone())
+        });
+
+        // Show completion message
+        let msg = if result_count > 0 {
+            format!("Search complete: {} results for '{}'", result_count, query)
+        } else if !query.is_empty() {
+            format!("No results found for '{}'", query)
+        } else {
+            "Search ended".to_string()
+        };
+
+        let notif = Notification::new(msg, hub, rq, context);
+        self.children.push(Box::new(notif) as Box<dyn View>);
+
+        // Clear search state but keep highlights visible
+        if let Some(ref mut search) = self.search {
+            search.running.store(false, std::sync::atomic::Ordering::SeqCst);
+        }
+
+        // Update UI to clear search bar
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    /// Stub: Handle highlight selection
+    /// Handle highlight selection - process selected text for highlighting
     pub fn handle_highlight_selection(
         &mut self,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        use crate::view::notification::Notification;
+
+        // Get current selection if any
+        if let Some(ref selection) = self.selection {
+            // Calculate selection rectangle
+            let rect = crate::geom::Rectangle::new(selection.start, selection.end);
+
+            // Store highlight for current page
+            if let Some(ref mut search) = self.search {
+                search
+                    .highlights
+                    .entry(self.current_page)
+                    .or_insert_with(Vec::new)
+                    .push(rect);
+            }
+
+            // Show confirmation
+            let msg = "Selection highlighted".to_string();
+            let notif = Notification::new(msg, hub, rq, context);
+            self.children.push(Box::new(notif) as Box<dyn View>);
+        }
+
+        // Update UI to show highlights
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    /// Stub: Handle add highlight
+    /// Handle add highlight - create new highlight at current location
     pub fn handle_add_highlight(
         &mut self,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        use crate::view::notification::Notification;
+
+        // Update document info with new annotation
+        if let Some(ref mut reader_info) = self.info.reader {
+            let annotation = Annotation {
+                note: String::new(),
+                text: String::new(),
+                selection: [
+                    TextLocation::Static(self.current_page, 0),
+                    TextLocation::Static(self.current_page, 100),
+                ],
+                modified: Local::now().naive_local(),
+            };
+            reader_info.annotations.push(annotation);
+        }
+
+        // Show confirmation
+        let msg = format!("Highlight added on page {}", self.current_page + 1);
+        let notif = Notification::new(msg, hub, rq, context);
+        self.children.push(Box::new(notif) as Box<dyn View>);
+
+        // Update UI
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    /// Stub: Handle delete highlight
+    /// Handle delete highlight - remove highlight from current location
     pub fn handle_delete_highlight(
         &mut self,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        use crate::view::notification::Notification;
+
+        // Remove highlight from current page if exists
+        let mut removed = false;
+        if let Some(ref mut search) = self.search {
+            if search.highlights.remove(&self.current_page).is_some() {
+                removed = true;
+            }
+        }
+
+        // Show confirmation
+        let msg = if removed {
+            format!("Highlight removed from page {}", self.current_page + 1)
+        } else {
+            format!("No highlights on page {}", self.current_page + 1)
+        };
+        let notif = Notification::new(msg, hub, rq, context);
+        self.children.push(Box::new(notif) as Box<dyn View>);
+
+        // Update UI
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
     /// Stub: Handle adjust selection

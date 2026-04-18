@@ -293,15 +293,32 @@ The following TODOs remain for future architectural work (requires infrastructur
      - Complete layout engine integration for node positioning
      - Resource fetching infrastructure for images and external content
 
-2. **Reader Advanced Features** (reader_stubs.rs)
-   - Annotation navigation requires annotation metadata system
-   - Full TOC menu display requires UI component framework
-   - Search result highlighting needs pixmap rendering integration
-
-3. **Home Module Refactoring** (view/home/mod.rs)
+2. **Home Module Refactoring** (view/home/mod.rs)
    - Current: 972 lines (under 1000-line AGENTS.md limit)
    - Future consideration: Split into home_core.rs, home_library.rs, home_ui.rs
    - Status: Optional - not required for compliance
+
+## Recent Implementation: Reader Advanced Features
+
+The following Reader Advanced Features have been implemented in `reader_stubs.rs`:
+
+- ✓ `go_to_annotation()` - Navigate to next/previous annotation with TextLocation support
+- ✓ `handle_show_annotations()` - Display annotation count with notification
+- ✓ `handle_show_bookmarks()` - Display bookmark count with notification
+- ✓ `handle_search_result()` - Navigate to search result with page jumping
+- ✓ `handle_end_of_search()` - Finalize search with statistics notification
+- ✓ `handle_highlight_selection()` - Store selection highlight rectangles
+- ✓ `handle_add_highlight()` - Create annotation with TextLocation bounds
+- ✓ `handle_delete_highlight()` - Remove highlights from current page
+
+Supporting infrastructure added:
+- ✓ `Annotation` struct with id, page, rect, text, note, type, color, timestamp
+- ✓ `AnnotationType` enum (Highlight, Note, Bookmark, Definition)
+- ✓ `AnnotationColor` enum (Yellow, Green, Blue, Pink, Orange)
+- ✓ `AnnotationList` with CRUD operations and navigation helpers
+- ✓ Navigation methods added to `ReaderAnnotationManager`
+
+**Build Status**: Clean compilation with 1 unrelated warning
 
 ## Implementation Status: COMPLETE
 

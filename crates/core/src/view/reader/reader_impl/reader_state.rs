@@ -10,7 +10,6 @@ use crate::view::reader::reader_impl::reader_core::State;
 use crate::view::{Hub, RenderQueue};
 
 /// Reader state management utilities
-#[allow(dead_code)] // Reserved for future state management features
 pub struct ReaderStateManager {
     pub state: State,
     pub info: Info,
@@ -18,7 +17,6 @@ pub struct ReaderStateManager {
     pub pages_count: usize,
 }
 
-#[allow(dead_code)] // Reserved for future state management features
 impl ReaderStateManager {
     /// Create a new reader state manager
     pub fn new(info: Info, initial_page: usize, pages_count: usize) -> Self {
