@@ -106,7 +106,6 @@ where
 ///
 /// # Returns
 /// Vector of processed TOC entries
-#[allow(dead_code)] // Used by build_toc function
 pub(crate) fn build_toc_aux<F>(
     simple_toc: &[SimpleTocEntry],
     index: &mut usize,
@@ -814,7 +813,6 @@ pub(crate) fn toggle_title_menu(
 /// - `info`: Reader info to update
 /// - `contrast`: Contrast settings to update
 /// - `exponent`: New contrast exponent value
-#[allow(dead_code)] // Used by Reader::set_contrast_exponent method
 pub(crate) fn update_contrast_exponent(
     info: &mut Info,
     contrast: &mut super::reader_core::Contrast,
@@ -835,7 +833,6 @@ pub(crate) fn update_contrast_exponent(
 /// - `info`: Reader info to update
 /// - `contrast`: Contrast settings to update
 /// - `gray`: New contrast gray value
-#[allow(dead_code)] // Used by Reader::set_contrast_gray method
 pub(crate) fn update_contrast_gray(
     info: &mut Info,
     contrast: &mut super::reader_core::Contrast,
