@@ -7,7 +7,6 @@ use crate::theme;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 
 /// Label for displaying search results count
-#[allow(dead_code)] // Implemented but not yet integrated into search UI
 pub struct ResultsLabel {
     id: Id,
     rect: Rectangle,
@@ -16,7 +15,6 @@ pub struct ResultsLabel {
     completed: bool,
 }
 
-#[allow(dead_code)] // Implemented but not yet integrated into search UI
 impl ResultsLabel {
     pub fn new(rect: Rectangle, count: usize, completed: bool) -> ResultsLabel {
         ResultsLabel {

@@ -9,14 +9,21 @@
 //! need to be handled.
 use crate::context::Context;
 use crate::geom::Rectangle;
-use crate::view::{Hub, RenderQueue, ViewId, SliderId};
-use crate::view::menu::{toggle_main_menu, toggle_battery_menu, toggle_clock_menu};
-use crate::input::{FingerStatus};
+use crate::input::FingerStatus;
+use crate::view::menu::{toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
+use crate::view::{Hub, RenderQueue, SliderId, ViewId};
 
 use super::reader::Reader;
+use super::reader_core::Resource;
 
 impl Reader {
-    pub(crate) fn handle_menu_event(&mut self, evt: &crate::view::Event, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) -> bool {
+    pub(crate) fn handle_menu_event(
+        &mut self,
+        evt: &crate::view::Event,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) -> bool {
         use crate::view::Event;
         match evt {
             Event::Update(mode) => {
@@ -173,6 +180,35 @@ impl Reader {
             }
             Event::Close(ViewId::GoToResultsPage) => {
                 self.toggle_go_to_page(Some(false), ViewId::GoToResultsPage, hub, rq, context);
+                true
+            }
+            Event::Show(ViewId::MarginCropper) => {
+                use crate::view::reader::margin_cropper::MarginCropper;
+                if let Some(Resource { pixmap, .. }) = self.cache.get(&self.current_page) {
+                    let doc = self
+                        ._doc
+                        .lock()
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                    let margin = doc.margin(self.current_page).unwrap_or_default();
+                    let cropper = MarginCropper::new(self.rect, pixmap.clone(), &margin, context);
+                    self.children
+                        .push(Box::new(cropper) as Box<dyn crate::view::View>);
+                    rq.add(RenderData::new(
+                        self.id,
+                        self.rect,
+                        crate::framebuffer::UpdateMode::Gui,
+                    ));
+                }
+                true
+            }
+            Event::Close(ViewId::MarginCropper) => {
+                self.children
+                    .retain(|child| child.view_id() != Some(ViewId::MarginCropper));
+                rq.add(RenderData::new(
+                    self.id,
+                    self.rect,
+                    crate::framebuffer::UpdateMode::Gui,
+                ));
                 true
             }
             _ => false,

@@ -12,11 +12,9 @@ use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 
 /// Diameter of margin cropper buttons
-#[allow(dead_code)] // Implemented but not yet wired to PDF tool
 pub const BUTTON_DIAMETER: f32 = 40.0;
 
 /// View for cropping PDF margins
-#[allow(dead_code)] // Implemented but not yet integrated into reader
 pub struct MarginCropper {
     id: Id,
     rect: Rectangle,
@@ -25,7 +23,6 @@ pub struct MarginCropper {
     frame: Rectangle,
 }
 
-#[allow(dead_code)] // Implemented but not yet integrated into reader
 impl MarginCropper {
     pub fn new(
         rect: Rectangle,

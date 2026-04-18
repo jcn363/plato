@@ -9,7 +9,6 @@ use crate::theme;
 use crate::view::Bus;
 
 /// Label for displaying current chapter title and progress
-#[allow(dead_code)] // Implemented but not yet integrated into bottom bar
 pub struct ChapterLabel {
     id: Id,
     rect: Rectangle,
@@ -18,7 +17,6 @@ pub struct ChapterLabel {
     progress: f32,
 }
 
-#[allow(dead_code)] // Implemented but not yet integrated into bottom bar
 impl ChapterLabel {
     pub fn new(rect: Rectangle, title: String, progress: f32) -> ChapterLabel {
         ChapterLabel {
