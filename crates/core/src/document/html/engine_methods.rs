@@ -220,10 +220,19 @@ impl EngineMethods for super::Engine {
                 if !text_data.text.trim().is_empty() {
                     strings.push(text_data.text.clone());
                     inlines.push(InlineMaterial::Text(TextElement {
-                        index: strings.len() - 1,
+                        offset: strings.len() - 1,
+                        language: None,
+                        text: strings.last().unwrap().clone(),
+                        plan: RenderPlan::default(),
+                        font_features: None,
+                        font_kind: parent_style.font_kind,
+                        font_style: parent_style.font_style,
+                        font_weight: parent_style.font_weight,
+                        font_size: parent_style.font_size as u32,
+                        letter_spacing: parent_style.letter_spacing,
+                        vertical_align: parent_style.vertical_align,
+                        color: parent_style.color,
                         uri: None,
-                        link: None,
-                        style: parent_style.clone(),
                     }));
                 }
             }
@@ -233,8 +242,16 @@ impl EngineMethods for super::Engine {
                         let src = decode_entities(src);
                         urls.push(src.clone());
                         inlines.push(InlineMaterial::Image(ImageElement {
-                            index: urls.len() - 1,
-                            style: parent_style.clone(),
+                            offset: urls.len() - 1,
+                            width: 0,
+                            height: 0,
+                            scale: 1.0,
+                            vertical_align: 0,
+                            display: Display::Inline,
+                            margin: Edge::default(),
+                            float: None,
+                            path: src.clone(),
+                            uri: None,
                         }));
                     }
                 }
@@ -298,7 +315,7 @@ impl EngineMethods for super::Engine {
         for inline in inlines {
             match inline {
                 InlineMaterial::Text(ref text_element) => {
-                    let text = &strings[text_element.index];
+                    let text = &strings[text_element.offset];
                     let style = &text_element.style;
 
                     let words: Vec<&str> = text.split_whitespace().collect();
@@ -313,10 +330,19 @@ impl EngineMethods for super::Engine {
                         }
 
                         items.push(ParagraphItem::Box(ParagraphElement::Text(TextElement {
-                            index: text_element.index,
-                            uri: text_element.uri.clone(),
-                            link: text_element.link.clone(),
-                            style: style.clone(),
+                            offset: text_element.offset,
+                            language: None,
+                            text: word.to_string(),
+                            plan: RenderPlan::default(),
+                            font_features: None,
+                            font_kind: style.font_kind,
+                            font_style: style.font_style,
+                            font_weight: style.font_weight,
+                            font_size: style.font_size as u32,
+                            letter_spacing: style.letter_spacing,
+                            vertical_align: style.vertical_align,
+                            color: style.color,
+                            uri: None,
                         })));
                     }
                 }

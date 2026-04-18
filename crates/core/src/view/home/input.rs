@@ -119,6 +119,29 @@ impl HomeInputExt for Home {
                 self.toggle_keyboard(Some(true), hub, rq, context);
                 true
             }
+            Event::Show(ViewId::AboutDialog) => {
+                use crate::view::about_dialog::AboutDialog;
+                let dialog = AboutDialog::new(context);
+                self.children.push(Box::new(dialog) as Box<dyn View>);
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
+            Event::Show(ViewId::ShareDialog) => {
+                use crate::view::share_dialog::ShareDialog;
+                let dialog = ShareDialog::new(context, None);
+                self.children.push(Box::new(dialog) as Box<dyn View>);
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
+            Event::Close(ViewId::AboutDialog) | Event::Close(ViewId::ShareDialog) => {
+                // Remove dialog from children
+                self.children.retain(|child| {
+                    child.view_id() != Some(ViewId::AboutDialog)
+                        && child.view_id() != Some(ViewId::ShareDialog)
+                });
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
             Event::Toggle(ViewId::GoToPage) => {
                 self.toggle_go_to_page(None, hub, rq, context);
                 true
