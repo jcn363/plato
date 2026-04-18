@@ -89,7 +89,7 @@ impl CloudDialog {
 
         for (i, (label, _provider)) in providers.iter().enumerate() {
             let i = i as i32;
-            let button_width = dialog_width - 2 * padding;
+            let _button_width = dialog_width - 2 * padding;
             let rect_button = rect![
                 rect.min.x + padding,
                 rect.min.y + 2 * padding + button_height + i * (button_height + padding),

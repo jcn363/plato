@@ -23,7 +23,6 @@ const LABEL_CANCEL: &str = "Cancel";
 const LABEL_SEND: &str = "Send";
 const LABEL_TO: &str = "To:";
 const LABEL_SUBJECT: &str = "Subject:";
-const LABEL_BODY: &str = "Message:";
 
 /// Email dialog for composing and sending documents
 pub struct EmailDialog {
@@ -140,11 +139,11 @@ impl EmailDialog {
         children.push(Box::new(label_body));
 
         // Add Cancel button
-        let button_width = font.plan(LABEL_CANCEL, Some(max_button_width), None).width as i32 + padding;
+        let _button_width = font.plan(LABEL_CANCEL, Some(max_button_width), None).width as i32 + padding;
         let rect_cancel = rect![
             rect.min.x + padding,
             rect.max.y - button_height - padding,
-            rect.min.x + padding + button_width,
+            rect.min.x + padding + _button_width,
             rect.max.y - padding
         ];
         let cancel_button = Button::new(rect_cancel, Event::Cancel, LABEL_CANCEL.to_string());
@@ -187,6 +186,11 @@ impl EmailDialog {
     /// Get the current subject
     pub fn subject(&self) -> &str {
         &self.subject
+    }
+
+    /// Get the email body
+    pub fn body(&self) -> &str {
+        &self.body
     }
 }
 
