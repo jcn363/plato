@@ -187,11 +187,6 @@ impl Home {
             &current_directory,
             shelf_index,
         );
-        shelf_index = if context.settings.home.address_bar {
-            shelf_index + 2
-        } else {
-            shelf_index
-        };
         y_start = Self::add_navigation_bar_if_enabled(
             &mut children,
             context,
@@ -202,11 +197,6 @@ impl Home {
             small_thickness,
             &current_directory,
         );
-        shelf_index = if context.settings.home.navigation_bar {
-            shelf_index + 2
-        } else {
-            shelf_index
-        };
         // Calculate y_max for shelf (leaving room for bottom bar)
         let y_max = rect.max.y - small_height - thickness;
         // Calculate pages count (using default shelf capacity of 10)
@@ -306,7 +296,7 @@ impl View for Home {
         self.children.retain(|child| !child.is::<Menu>());
 
         let mut shelf_min_y = rect.min.y + small_height + big_thickness;
-        let mut index = 2;
+        let index = 2;
 
         Self::resize_top_bar(
             &mut self.children,
@@ -331,7 +321,7 @@ impl View for Home {
         );
         shelf_min_y =
             Self::get_address_bar_end_y(context, rect, shelf_min_y, small_height, thickness);
-        (index, shelf_min_y) = Self::resize_navigation_bar_if_enabled(
+        let (_idx, new_shelf_min_y) = Self::resize_navigation_bar_if_enabled(
             &mut self.children,
             context,
             rect,
@@ -342,6 +332,7 @@ impl View for Home {
             hub,
             rq,
         );
+        shelf_min_y = new_shelf_min_y;
         let bottom_bar_index = Self::resize_bottom_bar(
             &mut self.children,
             rect,

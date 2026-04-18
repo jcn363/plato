@@ -193,7 +193,7 @@ impl Home {
     #[allow(clippy::too_many_arguments)]
     pub fn add_shelf_and_bottom_bar(
         children: &mut Vec<Box<dyn View>>,
-        hub: &Hub,
+        _hub: &Hub,
         context: &mut Context,
         rect: Rectangle,
         y_min: i32,
