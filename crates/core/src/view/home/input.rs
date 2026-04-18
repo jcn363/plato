@@ -147,9 +147,17 @@ impl HomeInputExt for Home {
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }
+            Event::Show(ViewId::CloudDialog) => {
+                use crate::view::cloud_dialog::CloudDialog;
+                let dialog = CloudDialog::new(context, None);
+                self.children.push(Box::new(dialog) as Box<dyn View>);
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
             Event::Close(ViewId::AboutDialog)
             | Event::Close(ViewId::ShareDialog)
             | Event::Close(ViewId::EmailDialog)
+            | Event::Close(ViewId::CloudDialog)
             | Event::Close(ViewId::SystemInfo) => {
                 // Remove dialog from children
                 self.children.retain(|child| {
@@ -157,6 +165,7 @@ impl HomeInputExt for Home {
                     view_id != Some(ViewId::AboutDialog)
                         && view_id != Some(ViewId::ShareDialog)
                         && view_id != Some(ViewId::EmailDialog)
+                        && view_id != Some(ViewId::CloudDialog)
                         && view_id != Some(ViewId::SystemInfo)
                 });
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));

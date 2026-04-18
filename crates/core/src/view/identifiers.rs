@@ -73,6 +73,7 @@ pub enum ViewId {
     AboutDialog,
     ShareDialog,
     EmailDialog,
+    CloudDialog,
     SystemInfo,
     MarginCropper,
     TopBottomBars,

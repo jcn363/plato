@@ -86,12 +86,25 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 - **Export Functionality** - Actually copies file with timestamp (e.g., `doc_export_1234567890.pdf`)
 - **Error Handling** - Proper error messages for failed exports
 
+### Email Integration ✅
+
+- **EmailDialog** - Full email composition dialog with recipient and subject fields
+- **ViewId::EmailDialog** - New dialog view identifier
+- **ShareDialog integration** - Opens EmailDialog when Email sharing selected
+- **Home event handlers** - Show/Close event handling for EmailDialog
+
+### Cloud Provider Integration ✅
+
+- **CloudDialog** - Cloud provider selection dialog (Dropbox, Google Drive)
+- **CloudProvider enum** - Tracks selected provider type
+- **ViewId::CloudDialog** - New dialog view identifier
+- **ShareDialog integration** - Opens CloudDialog when Cloud sharing selected
+- **OAuth guidance** - Provides configuration instructions for cloud providers
+
 ## Remaining Work (Future Features)
 
 *All requested UI features have been implemented. Future enhancements could include:*
 
-- Email integration with system email client
-- Cloud provider OAuth integration (Dropbox, Google Drive)
 - Export format conversion (EPUB to PDF, etc.)
 
 ## Verification

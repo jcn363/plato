@@ -146,15 +146,15 @@ impl View for ShareDialog {
                 true
             }
             Event::Show(ViewId::ShareDialog) => {
-                // Cloud sharing selected
+                // Cloud sharing selected - open cloud dialog
                 self.selected_method = Some(ShareMethod::Cloud);
                 if self.will_close {
                     return true;
                 }
                 self.will_close = true;
-                let msg = "Cloud sharing: Configure cloud settings in preferences".to_string();
-                bus.push_back(Event::Notify(msg));
+                // Close share dialog and open cloud dialog
                 bus.push_back(Event::Close(ViewId::ShareDialog));
+                bus.push_back(Event::Show(ViewId::CloudDialog));
                 true
             }
             Event::Toggle(ViewId::SystemInfo) => {
