@@ -55,23 +55,18 @@ impl Home {
         context: &Context,
     ) -> (
         usize,
-        SortMethod,
+        crate::metadata::SortMethod,
         bool,
-        FirstColumn,
-        crate::settings::SecondColumn,
     ) {
-        let library_settings = &context.settings.home;
-        let sort_method = library_settings.sort_method;
-        let reverse_order = library_settings.reverse_order;
-        let first_column = library_settings.first_column;
-        let second_column = library_settings.second_column;
+        let selected_library = context.settings.selected_library;
+        let library = &context.library;
+        let sort_method = library.sort_method;
+        let reverse_order = library.reverse_order;
 
         (
-            library_settings.library_path.clone().len(),
+            selected_library,
             sort_method,
             reverse_order,
-            first_column,
-            second_column,
         )
     }
 
@@ -306,17 +301,18 @@ impl Home {
         y_min: i32,
         thickness: i32,
         small_height: i32,
-        _small_thickness: i32,
-        _shelf_index: usize,
+        _index: usize,
+        hub: &Hub,
+        rq: &mut RenderQueue,
     ) -> i32 {
         let mut y_min = y_min;
         if context.settings.home.address_bar {
             let address_bar_rect = rect![rect.min.x, y_min, rect.max.x, y_min + small_height];
-            children[2].resize(address_bar_rect, context.hub(), context.rq(), context);
+            children[2].resize(address_bar_rect, hub, rq, context);
             y_min += small_height;
 
             let separator_rect = rect![rect.min.x, y_min, rect.max.x, y_min + thickness];
-            children[3].resize(separator_rect, context.hub(), context.rq(), context);
+            children[3].resize(separator_rect, hub, rq, context);
             y_min += thickness;
         }
         y_min
@@ -346,6 +342,8 @@ impl Home {
         thickness: i32,
         small_height: i32,
         small_thickness: i32,
+        hub: &Hub,
+        rq: &mut RenderQueue,
     ) -> (usize, i32) {
         let mut index = 2;
         let mut y_min = y_min;
@@ -357,18 +355,18 @@ impl Home {
 
         if context.settings.home.navigation_bar {
             let separator_rect = rect![rect.min.x, y_min, rect.max.x, y_min + small_thickness];
-            children[index].resize(separator_rect, context.hub(), context.rq(), context);
+            children[index].resize(separator_rect, hub, rq, context);
             y_min += small_thickness;
             index += 1;
 
             let nav_bar_rect =
                 rect![rect.min.x, y_min, rect.max.x, y_min + small_height - thickness];
-            children[index].resize(nav_bar_rect, context.hub(), context.rq(), context);
+            children[index].resize(nav_bar_rect, hub, rq, context);
             y_min += small_height - thickness;
             index += 1;
 
             let separator_rect = rect![rect.min.x, y_min, rect.max.x, y_min + thickness];
-            children[index].resize(separator_rect, context.hub(), context.rq(), context);
+            children[index].resize(separator_rect, hub, rq, context);
             y_min += thickness;
             index += 1;
         }

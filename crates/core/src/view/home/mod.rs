@@ -128,27 +128,17 @@ pub use self::navigation_bar::NavigationBar;
 pub use self::shelf::Shelf;
 
 use self::input::HomeInputExt;
-use super::top_bar::TopBar;
 
 use crate::context::Context;
 use crate::font::Fonts;
-use crate::framebuffer::{Framebuffer, UpdateMode};
-use crate::geom::{halves, Rectangle};
-use crate::metadata::{BookQuery, Metadata, SimpleStatus, SortMethod};
-use crate::settings::{FirstColumn, SecondColumn};
-use crate::theme;
-use crate::unit::scale_by_dpi;
-use crate::view::filler::Filler;
-use crate::view::keyboard::Keyboard;
+use crate::framebuffer::Framebuffer;
+use crate::geom::Rectangle;
 use crate::view::menu::Menu;
-use crate::view::search_bar::SearchBar;
 use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{Id, ViewId, ID_FEEDER};
-use crate::view::{BIG_BAR_HEIGHT, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use crate::view::{Id, ID_FEEDER, UpdateMode};
 use anyhow::Error;
 use rustc_hash::{FxHashMap, FxHashSet};
-use std::path::{Path, PathBuf};
-use std::process::Child;
+use std::path::PathBuf;
 
 // Note: Home, Fetcher, BookMenuData, and TRASH_DIRNAME are defined in home_core.rs
 // and re-exported above for public API compatibility
