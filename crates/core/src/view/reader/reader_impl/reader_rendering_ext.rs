@@ -11,7 +11,6 @@ use anyhow::Error;
 use std::collections::HashMap;
 
 /// Rendering cache for the Reader view
-#[allow(dead_code)] // Reserved for future rendering cache optimization
 pub struct ReaderRenderCache {
     pub cache: HashMap<usize, Pixmap>,
     pub chunks: Vec<RenderChunk>,
@@ -22,7 +21,6 @@ pub struct ReaderRenderCache {
     pub eviction_count: u64,
 }
 
-#[allow(dead_code)] // Reserved for future rendering cache optimization
 impl ReaderRenderCache {
     /// Create a new render cache
     pub fn new(max_cache_size: usize) -> Self {
@@ -105,7 +103,6 @@ impl ReaderRenderCache {
 }
 
 /// Cache statistics
-#[allow(dead_code)] // Reserved for future cache analytics
 #[derive(Debug, Clone)]
 pub struct CacheStats {
     pub entries: usize,
@@ -116,7 +113,6 @@ pub struct CacheStats {
 }
 
 /// Rendering engine for the Reader view
-#[allow(dead_code)] // Reserved for future rendering engine optimization
 pub struct ReaderRenderEngine {
     pub cache: ReaderRenderCache,
     pub viewport: ViewPort,
@@ -125,7 +121,6 @@ pub struct ReaderRenderEngine {
     pub max_render_times: usize,
 }
 
-#[allow(dead_code)] // Reserved for future rendering engine optimization
 impl ReaderRenderEngine {
     /// Create a new render engine
     pub fn new(max_cache_size: usize) -> Self {
@@ -320,7 +315,6 @@ impl ReaderRenderEngine {
 }
 
 /// Rendering performance metrics
-#[allow(dead_code)] // Reserved for future rendering analytics
 #[derive(Debug, Clone)]
 pub struct RenderingMetrics {
     pub cache_hit_rate: f32,
@@ -330,7 +324,6 @@ pub struct RenderingMetrics {
 }
 
 /// Utility functions for rendering
-#[allow(dead_code)] // Reserved for future rendering utilities
 pub mod utils {
     use super::*;
 
