@@ -140,12 +140,23 @@ impl HomeInputExt for Home {
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }
-            Event::Close(ViewId::AboutDialog) | Event::Close(ViewId::ShareDialog) | Event::Close(ViewId::SystemInfo) => {
+            Event::Show(ViewId::EmailDialog) => {
+                use crate::view::email_dialog::EmailDialog;
+                let dialog = EmailDialog::new(context, None);
+                self.children.push(Box::new(dialog) as Box<dyn View>);
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
+            Event::Close(ViewId::AboutDialog)
+            | Event::Close(ViewId::ShareDialog)
+            | Event::Close(ViewId::EmailDialog)
+            | Event::Close(ViewId::SystemInfo) => {
                 // Remove dialog from children
                 self.children.retain(|child| {
                     let view_id = child.view_id();
                     view_id != Some(ViewId::AboutDialog)
                         && view_id != Some(ViewId::ShareDialog)
+                        && view_id != Some(ViewId::EmailDialog)
                         && view_id != Some(ViewId::SystemInfo)
                 });
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));

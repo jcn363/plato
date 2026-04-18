@@ -107,6 +107,7 @@ pub mod cover_editor;
 pub mod about_dialog;
 pub mod dialog;
 pub mod dictionary;
+pub mod email_dialog;
 pub mod epub_editor;
 pub mod filler;
 pub mod frontlight;

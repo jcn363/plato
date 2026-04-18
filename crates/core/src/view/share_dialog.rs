@@ -134,19 +134,15 @@ impl View for ShareDialog {
     ) -> bool {
         match *evt {
             Event::Show(ViewId::AboutDialog) => {
-                // Email sharing selected
+                // Email sharing selected - open email composition dialog
                 self.selected_method = Some(ShareMethod::Email);
                 if self.will_close {
                     return true;
                 }
                 self.will_close = true;
-                let msg = if let Some(ref path) = self.document_path {
-                    format!("Email sharing ready for: {}", path.display())
-                } else {
-                    "Email: Please select a document first".to_string()
-                };
-                bus.push_back(Event::Notify(msg));
+                // Close share dialog and open email dialog
                 bus.push_back(Event::Close(ViewId::ShareDialog));
+                bus.push_back(Event::Show(ViewId::EmailDialog));
                 true
             }
             Event::Show(ViewId::ShareDialog) => {
