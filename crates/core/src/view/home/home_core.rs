@@ -60,7 +60,6 @@ pub struct Home {
     pub shelf: Option<Box<dyn View>>,
     pub book_view: Option<Box<dyn View>>,
     pub directory_view: Option<Box<dyn View>>,
-    #[allow(dead_code)] // Reserved for future bottom bar functionality
     pub bottom_bar: Option<Box<dyn View>>,
 }
 
@@ -77,7 +76,6 @@ pub struct Fetcher {
 
 /// Book menu context data for menu operations
 #[derive(Debug)]
-#[allow(dead_code)] // Reserved for future book menu functionality
 pub struct BookMenuData {
     pub path: PathBuf,
     pub kind: String,

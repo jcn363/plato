@@ -310,7 +310,6 @@ impl Home {
 }
 
 /// Utility functions for book view toggles
-#[allow(dead_code)] // Reserved for future book view utilities
 pub mod utils {
     use super::*;
 

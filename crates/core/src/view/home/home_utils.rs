@@ -4,7 +4,7 @@ use crate::view::{Hub, RenderQueue};
 use crate::view::{View, ViewId};
 
 /// Find the index of a child view with the specified ViewId.
-#[allow(dead_code)] // Reserved for future dialog management improvements
+#[allow(dead_code)] // Utility function for future dialog management
 pub fn find_child_index_by_view_id(children: &[Box<dyn View>], view_id: ViewId) -> Option<usize> {
     children
         .iter()
