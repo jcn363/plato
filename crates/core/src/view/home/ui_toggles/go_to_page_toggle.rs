@@ -188,7 +188,6 @@ impl Home {
 }
 
 /// Utility functions for go-to-page toggles
-#[allow(dead_code)] // Reserved for future go-to-page utilities
 pub mod utils {
     use super::*;
 

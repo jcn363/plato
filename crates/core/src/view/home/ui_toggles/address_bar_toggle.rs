@@ -112,7 +112,12 @@ impl Home {
     }
 
     /// Update address bar configuration
-    pub fn update_address_bar_config(&mut self, config: AddressBarToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn update_address_bar_config(
+        &mut self,
+        config: AddressBarToggleConfig,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         let was_visible = self.address_bar.is_some();
         let old_config = self.get_address_bar_state().config;
 
@@ -176,7 +181,6 @@ impl Home {
 }
 
 /// Utility functions for address bar toggles
-#[allow(dead_code)] // Reserved for future address bar utilities
 pub mod utils {
     use super::*;
 

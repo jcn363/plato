@@ -306,6 +306,7 @@ The following TODOs remain for future architectural work (requires infrastructur
 ## Implementation Status: COMPLETE
 
 All actionable TODOs have been implemented following AGENTS.md rules:
+
 - ✓ Library menu actions with filter features
 - ✓ Menu toggle actions  
 - ✓ HTML engine documentation and structure

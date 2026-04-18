@@ -190,4 +190,45 @@ impl ReaderAnnotationManager {
     pub fn annotation_count(&self, page: usize) -> usize {
         self.annotations.get(&page).map(|v| v.len()).unwrap_or(0)
     }
+
+    /// Find next annotation from current page
+    pub fn find_next(&self, current_page: usize) -> Option<&Annotation> {
+        let mut candidates = Vec::new();
+        for (&page, annotations) in &self.annotations {
+            if page > current_page {
+                candidates.extend(annotations.iter());
+            }
+        }
+        candidates.sort_by(|a, b| a.selection[0].cmp(&b.selection[0]));
+        candidates.first().copied()
+    }
+
+    /// Find previous annotation from current page
+    pub fn find_previous(&self, current_page: usize) -> Option<&Annotation> {
+        let mut candidates = Vec::new();
+        for (&page, annotations) in &self.annotations {
+            if page < current_page {
+                candidates.extend(annotations.iter());
+            }
+        }
+        candidates.sort_by(|a, b| b.selection[0].cmp(&a.selection[0]));
+        candidates.first().copied()
+    }
+
+    /// Get all annotations sorted by position
+    pub fn get_all_sorted(&self) -> Vec<&Annotation> {
+        let mut all: Vec<_> = self.annotations.values().flatten().collect();
+        all.sort_by(|a, b| a.selection[0].cmp(&b.selection[0]));
+        all
+    }
+
+    /// Get annotation by index in sorted list
+    pub fn get_by_index(&self, index: usize) -> Option<&Annotation> {
+        self.get_all_sorted().get(index).copied()
+    }
+
+    /// Get total annotation count across all pages
+    pub fn total_count(&self) -> usize {
+        self.annotations.values().map(|v| v.len()).sum()
+    }
 }

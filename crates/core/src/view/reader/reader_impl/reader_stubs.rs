@@ -18,7 +18,7 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::{CycleDir, Point};
 use crate::input::DeviceEvent;
 use crate::view::key::KeyKind;
-use crate::view::{Event, Hub, RenderData, RenderQueue};
+use crate::view::{Event, Hub, RenderData, RenderQueue, View};
 
 use super::reader::Reader;
 use super::reader_core::Search;
@@ -171,6 +171,15 @@ impl Reader {
             };
 
             if let Some(page) = target_page {
+                let annotation = Annotation {
+                    note: String::new(),
+                    text: String::new(),
+                    selection: [
+                        TextLocation::Static(self.current_page, 0),
+                        TextLocation::Static(self.current_page, 100),
+                    ],
+                    modified: Local::now().naive_local(),
+                };
                 self.go_to_page(page, true, hub, rq, context);
                 return;
             }

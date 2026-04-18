@@ -122,6 +122,159 @@ pub struct Search {
     pub direction: crate::geom::LinearDir,
 }
 
+/// Annotation type for categorizing annotations
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AnnotationType {
+    Highlight,
+    Note,
+    Bookmark,
+    Definition,
+}
+
+impl Default for AnnotationType {
+    fn default() -> Self {
+        AnnotationType::Highlight
+    }
+}
+
+/// Color for annotation highlighting
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AnnotationColor {
+    Yellow,
+    Green,
+    Blue,
+    Pink,
+    Orange,
+}
+
+impl Default for AnnotationColor {
+    fn default() -> Self {
+        AnnotationColor::Yellow
+    }
+}
+
+/// Annotation representing a user highlight, note, or bookmark
+#[derive(Debug, Clone)]
+pub struct Annotation {
+    pub id: usize,
+    pub page: usize,
+    pub rect: Rectangle,
+    pub text: String,
+    pub note: Option<String>,
+    pub annotation_type: AnnotationType,
+    pub color: AnnotationColor,
+    pub timestamp: u64,
+}
+
+impl Annotation {
+    /// Create a new annotation
+    pub fn new(
+        id: usize,
+        page: usize,
+        rect: Rectangle,
+        text: String,
+        annotation_type: AnnotationType,
+    ) -> Self {
+        Annotation {
+            id,
+            page,
+            rect,
+            text,
+            note: None,
+            annotation_type,
+            color: AnnotationColor::default(),
+            timestamp: 0, // Would be set to actual timestamp in production
+        }
+    }
+
+    /// Add a note to the annotation
+    pub fn with_note(mut self, note: String) -> Self {
+        self.note = Some(note);
+        self
+    }
+
+    /// Set the annotation color
+    pub fn with_color(mut self, color: AnnotationColor) -> Self {
+        self.color = color;
+        self
+    }
+}
+
+/// Annotation list for managing document annotations
+#[derive(Debug, Default)]
+pub struct AnnotationList {
+    pub annotations: Vec<Annotation>,
+    pub next_id: usize,
+}
+
+impl AnnotationList {
+    /// Create a new empty annotation list
+    pub fn new() -> Self {
+        AnnotationList {
+            annotations: Vec::new(),
+            next_id: 1,
+        }
+    }
+
+    /// Add an annotation to the list
+    pub fn add(&mut self, mut annotation: Annotation) -> usize {
+        let id = self.next_id;
+        annotation.id = id;
+        self.next_id += 1;
+        self.annotations.push(annotation);
+        id
+    }
+
+    /// Remove an annotation by ID
+    pub fn remove(&mut self, id: usize) -> bool {
+        if let Some(pos) = self.annotations.iter().position(|a| a.id == id) {
+            self.annotations.remove(pos);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Get all annotations for a specific page
+    pub fn get_for_page(&self, page: usize) -> Vec<&Annotation> {
+        self.annotations
+            .iter()
+            .filter(|a| a.page == page)
+            .collect()
+    }
+
+    /// Find next annotation from current page
+    pub fn find_next(&self, current_page: usize) -> Option<&Annotation> {
+        self.annotations
+            .iter()
+            .filter(|a| a.page > current_page)
+            .min_by_key(|a| a.page)
+    }
+
+    /// Find previous annotation from current page
+    pub fn find_previous(&self, current_page: usize) -> Option<&Annotation> {
+        self.annotations
+            .iter()
+            .filter(|a| a.page < current_page)
+            .max_by_key(|a| a.page)
+    }
+
+    /// Get annotation by ID
+    pub fn get(&self, id: usize) -> Option<&Annotation> {
+        self.annotations.iter().find(|a| a.id == id)
+    }
+
+    /// Check if there are any annotations
+    pub fn is_empty(&self) -> bool {
+        self.annotations.is_empty()
+    }
+
+    /// Get total annotation count
+    pub fn len(&self) -> usize {
+        self.annotations.len()
+    }
+}
+
 /// Cached rendered resource
 #[derive(Debug)]
 pub struct Resource {

@@ -139,7 +139,12 @@ impl Home {
     }
 
     /// Update keyboard configuration
-    pub fn update_keyboard_config(&mut self, config: KeyboardToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn update_keyboard_config(
+        &mut self,
+        config: KeyboardToggleConfig,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         let was_visible = self.keyboard.is_some();
         let old_config = self.get_keyboard_state().config;
 
@@ -201,7 +206,6 @@ impl Home {
 }
 
 /// Utility functions for keyboard toggles
-#[allow(dead_code)] // Reserved for future keyboard utilities
 pub mod utils {
     use super::*;
 
