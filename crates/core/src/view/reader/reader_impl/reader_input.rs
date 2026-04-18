@@ -10,7 +10,6 @@ use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 use crate::view::{Event, Hub, Id, RenderQueue};
 
 /// Input event types for the Reader
-#[allow(dead_code)] // Reserved for future input event handling
 #[derive(Debug, Clone)]
 pub enum ReaderInputEvent {
     TouchStart(Point),
@@ -22,7 +21,6 @@ pub enum ReaderInputEvent {
 }
 
 /// Gesture types recognized by the Reader
-#[allow(dead_code)] // Reserved for future gesture recognition
 #[derive(Debug, Clone)]
 pub enum ReaderGesture {
     Tap(Point),
@@ -34,7 +32,6 @@ pub enum ReaderGesture {
 }
 
 /// Input handler for the Reader view
-#[allow(dead_code)] // Reserved for future input handling
 pub struct ReaderInputHandler {
     pub id: Id,
     pub held_buttons: std::collections::HashSet<ButtonCode>,
@@ -42,7 +39,6 @@ pub struct ReaderInputHandler {
     pub gesture_start: Option<Point>,
 }
 
-#[allow(dead_code)] // Reserved for future input handling
 impl ReaderInputHandler {
     /// Create a new input handler
     pub fn new(id: Id) -> Self {
