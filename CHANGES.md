@@ -142,5 +142,5 @@ cargo build --target aarch64-unknown-linux-gnu -p plato-core
 
 - All modified files < 1000 lines ✓
 - All functions < 50 lines ✓
-- ARM build warnings fixed: 3/8 resolved
-- Pre-existing warnings documented (home/mod.rs logic)
+- ARM build warnings: **ALL FIXED** (8/8 resolved)
+- 1 pre-existing warning in html/engine.rs (unrelated to UI work)
