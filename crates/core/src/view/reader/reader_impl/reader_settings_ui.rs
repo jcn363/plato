@@ -56,11 +56,11 @@ impl ReaderSettingsManager {
     /// Create the main settings menu
     pub fn create_main_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
         let entries = vec![
-            EntryKind::Command("Font Settings".to_string(), EntryId::SystemInfo),
-            EntryKind::Command("Display Settings".to_string(), EntryId::SystemInfo),
-            EntryKind::Command("Navigation Settings".to_string(), EntryId::SystemInfo),
-            EntryKind::Command("Annotation Settings".to_string(), EntryId::SystemInfo),
-            EntryKind::Command("Search Settings".to_string(), EntryId::SystemInfo),
+            EntryKind::Command("Font Settings".to_string(), EntryId::FontSettings),
+            EntryKind::Command("Display Settings".to_string(), EntryId::DisplaySettings),
+            EntryKind::Command("Navigation Settings".to_string(), EntryId::NavigationSettings),
+            EntryKind::Command("Annotation Settings".to_string(), EntryId::AnnotationSettings),
+            EntryKind::Command("Search Settings".to_string(), EntryId::SearchSettings),
         ];
 
         Menu::new(

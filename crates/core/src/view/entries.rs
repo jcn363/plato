@@ -54,6 +54,12 @@ impl EntryKind {
 pub enum EntryId {
     About,
     SystemInfo,
+    // Reader Settings EntryIds (replacing SystemInfo placeholders)
+    FontSettings,
+    DisplaySettings,
+    NavigationSettings,
+    AnnotationSettings,
+    SearchSettings,
     LoadLibrary(usize),
     Load(PathBuf),
     Flush,
@@ -178,6 +184,11 @@ impl EntryId {
         match self {
             EntryId::About => "About",
             EntryId::SystemInfo => "SystemInfo",
+            EntryId::FontSettings => "FontSettings",
+            EntryId::DisplaySettings => "DisplaySettings",
+            EntryId::NavigationSettings => "NavigationSettings",
+            EntryId::AnnotationSettings => "AnnotationSettings",
+            EntryId::SearchSettings => "SearchSettings",
             EntryId::LoadLibrary(_) => "LoadLibrary",
             EntryId::Load(_) => "Load",
             EntryId::Flush => "Flush",
