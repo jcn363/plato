@@ -4,7 +4,7 @@
 
 Comprehensive plan to replace MuPDF C library dependency with pure Rust alternatives in Plato, following AGENTS.md rules (no backward compatibility).
 
-## Current MuPDF Usage Summary
+## 1. Current MuPDF Usage Summary
 
 | Module | File | Lines | Category |
 |--------|------|-------|----------|
@@ -21,14 +21,27 @@ Comprehensive plan to replace MuPDF C library dependency with pure Rust alternat
 | Module | `mupdf/mod.rs` | 30 | Re-exports |
 | **Total** | | **1,867** | |
 
-## Replacement Strategy
+### Search Integration
+
+| Component | File | Lines | Purpose |
+|-----------|------|--------|
+| `Search` struct | `reader_core.rs` | Search state |
+| Search handler | `reader_search_handler.rs` | 234 | Search management |
+| Search UI | `search_bar.rs` | ~200 | Search interface |
+| Search stub | `reader_stubs.rs` | ~50 | Search logic |
+
+**Total search code**: ~500 lines
+
+---
+
+## 2. Replacement Strategy
 
 ### Primary Libraries
 
 | Purpose | Library | Version | License |
 |---------|---------|---------|----------|
 | PDF parsing/editing | `lopdf` | 0.40+ | MIT |
-| Rendering | ` printpdf` | 0.7+ | MIT/Apache |
+| Rendering | `printpdf` | 0.7+ | MIT/Apache |
 | Text extraction | `pdf-extract` | 0.4+ | Apache |
 
 ### Fallback for Complex Features
@@ -38,12 +51,13 @@ For features not available in pure Rust, create custom implementations:
 1. **Text bounding boxes** - Custom text analysis
 2. **E-ink rendering** - Custom partial update logic
 3. **Annotation handling** - Custom implementation
+4. **Search positions** - Custom position tracking
 
 ---
 
-## Phase 1: Foundation Replacements
+## 3. Phase 1: Foundation Replacements
 
-### 1.1 Replace FFI Types (mupdf_sys.rs)
+### 3.1.1 Replace FFI Types (mupdf_sys.rs)
 
 **Current**: Raw C FFI bindings for MuPDF
 
@@ -82,7 +96,7 @@ pub struct PdfRect {
 
 ---
 
-### 1.2 Replace Document Context (mupdf/context.rs)
+### 3.1.2 Replace Document Context (mupdf/context.rs)
 
 **Current**: `MuPdfContext::new()`, matrix operations
 
@@ -122,7 +136,7 @@ impl PdfContext {
 
 ---
 
-### 1.3 Replace Document Operations (mupdf/document.rs)
+### 3.1.3 Replace Document Operations (mupdf/document.rs)
 
 **Current**: Document-level operations (pages, metadata, outline)
 
@@ -171,9 +185,9 @@ impl PdfDocument {
 
 ---
 
-## Phase 2: Page Operations
+## 4. Phase 2: Page Operations
 
-### 2.1 Replace Page Operations (mupdf/page.rs)
+### 4.2.1 Replace Page Operations (mupdf/page.rs)
 
 **Current**: Page bounds, rotation, rendering
 
@@ -217,7 +231,7 @@ impl PageRef<'_> {
 
 ---
 
-### 2.2 Replace Text Extraction (mupdf/text.rs)
+### 4.2.2 Replace Text Extraction (mupdf/text.rs)
 
 **Current**: Full text extraction with word/character positions
 
@@ -279,9 +293,9 @@ impl TextPage {
 
 ---
 
-## Phase 3: Rendering
+## 5. Phase 3: Rendering
 
-### 3.1 Replace Pixmap Rendering (mupdf/pixmap.rs)
+### 5.3.1 Replace Pixmap Rendering (mupdf/pixmap.rs)
 
 **Current**: Page to Pixmap rendering for e-ink display
 
@@ -321,9 +335,9 @@ impl Pixmap {
 
 ---
 
-## Phase 4: Advanced Features
+## 6. Phase 4: Advanced Features
 
-### 4.1 Replace Links (mupdf/link.rs)
+### 6.4.1 Replace Links (mupdf/link.rs)
 
 **Current**: PDF internal/external links
 
@@ -359,7 +373,7 @@ impl Link {
 
 ---
 
-### 4.2 Replace Annotations (mupdf/annotation.rs)
+### 6.4.2 Replace Annotations (mupdf/annotation.rs)
 
 **Current**: Full annotation CRUD
 
@@ -386,7 +400,7 @@ pub enum AnnotType {
 
 ---
 
-### 4.3 Replace Outline/TOC (mupdf/outline.rs)
+### 6.4.3 Replace Outline/TOC (mupdf/outline.rs)
 
 **Current**: Navigate TOC structure
 
@@ -415,7 +429,7 @@ impl Outline {
 
 ---
 
-### 4.4 Replace Image Extraction (mupdf/image.rs)
+### 6.4.4 Replace Image Extraction (mupdf/image.rs)
 
 **Current**: Extract embedded images
 
@@ -446,7 +460,7 @@ impl Image {
 
 ---
 
-## Phase 5: Integration
+## 7. Phase 5: Integration
 
 ### 5.1 Create Unified Module
 
@@ -494,7 +508,7 @@ use_lopdf = ["lopdf", "printpdf"]
 
 ---
 
-## Phase 4.5: Search Feature (CRITICAL)
+## 8. Phase 5b: Search Feature (CRITICAL)
 
 ### Current Search Implementation
 
@@ -727,7 +741,7 @@ use_rust_search = ["lopdf", "regex"]
 
 ---
 
-## Implementation Order
+## 9. Implementation Order
 
 | Phase | Module | Priority | Complexity |
 |------|--------|----------|-------------|
@@ -746,7 +760,7 @@ use_rust_search = ["lopdf", "regex"]
 
 ---
 
-## Known Limitations
+## 10. Known Limitations
 
 | Feature | MuPDF | Replacement | Status |
 |--------|------|-------------|--------|
@@ -759,7 +773,7 @@ use_rust_search = ["lopdf", "regex"]
 
 ---
 
-## Files to Create
+## 11. Files to Create
 
 ```
 crates/core/src/document/pdf_rust/
@@ -778,7 +792,7 @@ crates/core/src/document/pdf_rust/
 
 ---
 
-## Test Strategy
+## 12. Test Strategy
 
 ```rust
 #[cfg(test)]
@@ -802,7 +816,7 @@ mod tests {
 
 ---
 
-## Build Verification
+## 13. Build Verification
 
 ```bash
 # Build for ARM
@@ -817,7 +831,7 @@ cargo clippy -- -D warnings
 
 ---
 
-## Completion Criteria
+## 14. Completion Criteria
 
 - [ ] All MuPDF usages replaced in code
 - [ ] Zero warnings on ARM and host builds
