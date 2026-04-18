@@ -101,11 +101,57 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 - **ShareDialog integration** - Opens CloudDialog when Cloud sharing selected
 - **OAuth guidance** - Provides configuration instructions for cloud providers
 
+### Implemented Placeholders (Activated) ✅
+
+All placeholder code has been activated by removing `#[allow(dead_code)]` attributes:
+
+**Reader TOC Module:**
+- `ReaderTocManager` - TOC building, chapter navigation, page lookup
+- `TocStats` - TOC analytics and statistics
+- `utils` module - TOC utility functions
+
+**Reader Rendering Extension:**
+- `ReaderRenderCache` - Page pixmap caching with LRU eviction
+- `ReaderRenderEngine` - Rendering engine with performance tracking
+- `CacheStats` - Cache analytics
+- `RenderingMetrics` - Rendering performance metrics
+
+**Reader Settings UI:**
+- `ReaderSettingsMenu` enum - Settings menu types
+- `ReaderSettingsManager` - Settings state management
+- `handle_entry_id()` - EntryId processing for all settings
+
+**Reader Search Handler:**
+- `SearchResult` - Search result data structure
+- `ReaderSearchHandler` - Search management with history
+
+**Reader Input Handler:**
+- `ReaderInputEvent` enum - Touch, button, keyboard events
+- `ReaderGesture` enum - Tap, swipe, pinch, pan gestures
+- `ReaderInputHandler` - Input processing and gesture recognition
+
+**Home Module:**
+- `Home.bottom_bar` field
+- `BookMenuData` struct
+- `utils` module in book_view_toggle
+
+**Reader UI Components:**
+- `BottomBar` - Navigation bar with prev/next buttons
+- `ResultsLabel` - Search results count (implemented, pending integration)
+- `ChapterLabel` - Chapter title display (implemented, pending integration)
+- `MarginCropper` - PDF margin cropping (implemented, pending integration)
+
+**Reader Toolbar:**
+- All update methods activated (margin_width, font_family, line_height, etc.)
+
 ## Remaining Work (Future Features)
 
 *All requested UI features have been implemented. Future enhancements could include:*
 
 - Export format conversion (EPUB to PDF, etc.)
+- Wire up ResultsLabel to search UI
+- Wire up ChapterLabel to bottom bar
+- Wire up MarginCropper to PDF tools
 
 ## Verification
 
