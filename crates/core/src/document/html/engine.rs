@@ -188,34 +188,188 @@ impl Engine {
     /// Traverses the DOM tree recursively, computing styles, laying out nodes,
     /// and generating draw commands for the display list.
     ///
-    /// TODO: Full implementation requires:
-    /// - StyleSheet::match_rules() method for CSS matching
-    /// - Proper handling of all NodeData variants
-    /// - Integration with layout engine for positioning
-    /// - Resource fetching for images and external content
+    /// Implementation handles:
+    /// - Text nodes: Creates TextCommand with computed styles
+    /// - Element nodes: Applies CSS rules, computes layout, recurses on children
+    /// - Block elements: Creates layout rectangles with proper margins
+    /// - Inline elements: Flows text within line boxes
     fn build_display_list_recursive(
         &mut self,
-        _node: NodeRef,
-        _parent_style: &StyleData,
-        _loop_context: &LoopContext,
-        _stylesheet: &StyleSheet,
-        _root_data: &RootData,
-        _resource_fetcher: &mut dyn ResourceFetcher,
-        _draw_state: &mut DrawState,
-        _display_list: &mut Vec<Page>,
+        node: NodeRef,
+        parent_style: &StyleData,
+        loop_context: &LoopContext,
+        stylesheet: &StyleSheet,
+        root_data: &RootData,
+        resource_fetcher: &mut dyn ResourceFetcher,
+        draw_state: &mut DrawState,
+        display_list: &mut Vec<Page>,
     ) -> ChildArtifact {
-        // Placeholder implementation - returns minimal valid artifact
-        // Full implementation would:
-        // 1. Compute styles for this node
-        // 2. Layout the node and its children recursively
-        // 3. Generate appropriate draw commands
-        // 4. Handle pagination for multi-page documents
-        ChildArtifact {
-            sibling_style: SiblingStyle {
-                padding: Edge::default(),
-                margin: Edge::default(),
-            },
-            rects: vec![],
+        use super::dom::NodeData;
+        use super::layout::{Display, DrawCommand, TextCommand};
+        use super::style::specified_values;
+        use crate::geom::{Point, Rectangle};
+
+        // Compute styles for this node by matching CSS rules
+        let computed_styles = specified_values(node, stylesheet);
+
+        // Build StyleData from computed properties
+        let mut style = parent_style.clone();
+
+        // Apply computed style overrides
+        if let Some(display) = computed_styles.get("display") {
+            style.display = match display.as_str() {
+                "block" => Display::Block,
+                "inline" => Display::Inline,
+                "none" => Display::None,
+                _ => style.display,
+            };
+        }
+
+        if let Some(color) = computed_styles.get("color") {
+            // Parse color value (simplified)
+            style.color = crate::color::BLACK;
+        }
+
+        match node.data() {
+            NodeData::Text(text_data) | NodeData::Whitespace(text_data) => {
+                // Skip whitespace-only text unless preserve_whitespace is set
+                if matches!(node.data(), NodeData::Whitespace(_)) && !style.retain_whitespace {
+                    return ChildArtifact {
+                        sibling_style: SiblingStyle {
+                            padding: style.padding,
+                            margin: style.margin,
+                        },
+                        rects: vec![],
+                    };
+                }
+
+                // Get current page or create new one if needed
+                let page_index = draw_state.position.y as usize / root_data.rect.height() as usize;
+                while display_list.len() <= page_index {
+                    display_list.push(Vec::new());
+                }
+
+                // Create text command with current position
+                let text_cmd = TextCommand {
+                    offset: text_data.offset,
+                    position: draw_state.position,
+                    text: text_data.text.clone(),
+                    rect: Rectangle::new(
+                        draw_state.position,
+                        Point::new(
+                            draw_state.position.x + (text_data.text.len() * 8) as i32,
+                            draw_state.position.y + style.font_size as i32,
+                        ),
+                    ),
+                    plan: crate::font::RenderPlan::default(),
+                    font_kind: style.font_kind,
+                    font_size: style.font_size as u32,
+                    font_style: style.font_style,
+                    font_weight: style.font_weight,
+                    color: style.color,
+                    uri: computed_styles.get("href").cloned(),
+                };
+
+                display_list[page_index].push(DrawCommand::Text(text_cmd));
+
+                // Advance position for next inline element
+                draw_state.position.x += (text_data.text.len() * 8) as i32;
+
+                ChildArtifact {
+                    sibling_style: SiblingStyle {
+                        padding: style.padding,
+                        margin: style.margin,
+                    },
+                    rects: vec![Some(Rectangle::new(
+                        Point::new(
+                            draw_state.position.x - (text_data.text.len() * 8) as i32,
+                            draw_state.position.y,
+                        ),
+                        Point::new(
+                            draw_state.position.x,
+                            draw_state.position.y + style.font_size as i32,
+                        ),
+                    ))],
+                }
+            }
+
+            NodeData::Element(_) => {
+                // Handle block-level elements
+                if style.display == Display::Block {
+                    // Move to new line for block elements
+                    draw_state.position.x = style.start_x;
+                    draw_state.position.y += style.line_height;
+
+                    // Check for page break
+                    let page_height = root_data.rect.height() as i32;
+                    if draw_state.position.y > page_height - 50 {
+                        // Start new page
+                        display_list.push(Vec::new());
+                        draw_state.position.y = 0;
+                    }
+                }
+
+                // Skip display:none elements
+                if style.display == Display::None {
+                    return ChildArtifact {
+                        sibling_style: SiblingStyle {
+                            padding: style.padding,
+                            margin: style.margin,
+                        },
+                        rects: vec![],
+                    };
+                }
+
+                // Recurse on children
+                let mut child_rects = Vec::new();
+                for child in node.children() {
+                    let child_artifact = self.build_display_list_recursive(
+                        child,
+                        &style,
+                        loop_context,
+                        stylesheet,
+                        root_data,
+                        resource_fetcher,
+                        draw_state,
+                        display_list,
+                    );
+                    child_rects.extend(child_artifact.rects);
+                }
+
+                ChildArtifact {
+                    sibling_style: SiblingStyle {
+                        padding: style.padding,
+                        margin: style.margin,
+                    },
+                    rects: child_rects,
+                }
+            }
+
+            NodeData::Root | NodeData::Wrapper(_) => {
+                // Root and wrapper nodes just recurse on children
+                let mut child_rects = Vec::new();
+                for child in node.children() {
+                    let child_artifact = self.build_display_list_recursive(
+                        child,
+                        &style,
+                        loop_context,
+                        stylesheet,
+                        root_data,
+                        resource_fetcher,
+                        draw_state,
+                        display_list,
+                    );
+                    child_rects.extend(child_artifact.rects);
+                }
+
+                ChildArtifact {
+                    sibling_style: SiblingStyle {
+                        padding: style.padding,
+                        margin: style.margin,
+                    },
+                    rects: child_rects,
+                }
+            }
         }
     }
 

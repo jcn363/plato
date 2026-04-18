@@ -159,7 +159,7 @@ impl Home {
 
         let current_directory = context.library.home.clone();
         context.library.sort(sort_method, reverse_order);
-        let (visible_books, dirs) = context.library.list(&current_directory, None, false);
+        let (visible_books, _dirs) = context.library.list(&current_directory, None, false);
         let count = visible_books.len();
         let current_page = 0;
 
