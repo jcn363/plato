@@ -494,6 +494,239 @@ use_lopdf = ["lopdf", "printpdf"]
 
 ---
 
+## Phase 4.5: Search Feature (CRITICAL)
+
+### Current Search Implementation
+
+| Component | File | Lines | Purpose |
+|-----------|------|-------|---------|
+| Search struct | `reader_core.rs` | ~15 | Search state |
+| Search handler | `reader_search_handler.rs` | 234 | Search management |
+| Search bar UI | `search_bar.rs` | ~200 | Search interface |
+| Search results UI | `reader_stubs.rs` | ~50 | Result display |
+
+### MuPDF Search Usage
+
+The current search relies on MuPDF's text extraction with positions:
+
+```rust
+// Current: Via MuPDF text extraction with bounding boxes
+// mupdf/text.rs provides:
+// - TextPage with word/character positions
+// - TextBlock with exact bounds
+// Search iterates through all characters to find matches
+```
+
+### Replacement Requirements
+
+| Feature | MuPDF | lopdf | printpdf | Custom |
+|---------|------|------|---------|--------|
+| Text content | ✅ | ✅ | ✅ | ✅ |
+| Word positions | ✅ | ❌ | ❌ | ❌ |
+| Case-sensitive | ✅ | ✅ | ✅ | ✅ |
+| Regex support | ✅ | ✅ | ✅ | ✅ |
+| Whole word | ✅ | Via regex | Via regex | ✅ |
+| Search direction | ✅ | Manual | Manual | ✅ |
+| Highlight regions | ✅ | ❌ | ❌ | Custom |
+
+### Search Backend Interface
+
+```rust
+// crates/core/src/document/pdf_rust/search.rs
+
+use lopdf::Document;
+use std::collections::VecDeque;
+
+/// Search result with page location
+#[derive(Debug, Clone)]
+pub struct SearchResult {
+    pub page: usize,
+    pub text: String,
+    pub bounds: PdfRect,
+}
+
+/// PDF backend trait for search
+pub trait PdfSearchBackend {
+    /// Search for text in a specific page
+    fn search_page(&self, page: usize, query: &str) -> Vec<SearchResult>;
+    
+    /// Search all pages
+    fn search_all(&self, query: &str) -> Vec<SearchResult>;
+    
+    /// Get page text content
+    fn get_page_text(&self, page: usize) -> Result<String>;
+}
+```
+
+### Implementation Strategy
+
+```rust
+// Implementation using lopdf + regex
+
+pub struct LopfdfSearch;
+
+impl LopfdfSearch {
+    pub fn search_page(&self, doc: &Document, page: usize, query: &str) -> Vec<SearchResult> {
+        let mut results = Vec::new();
+        
+        // Get page text
+        let text = match doc.extract_text(&[page as u32]) {
+            Ok(t) => t,
+            Err(_) => return results,
+        };
+        
+        // Use regex for flexible search
+        let re = regex::Regex::new(&format!("(?i){}", regex::escape(query))).unwrap();
+        
+        // Find all matches - but NO positions available
+        // This is the fundamental limitation
+        for mat in re.find_iter(&text) {
+            results.push(SearchResult {
+                page,
+                text: mat.as_str().to_string(),
+                bounds: PdfRect::default(), // CANNOT get bounds without MuPDF
+            });
+        }
+        
+        results
+    }
+}
+```
+
+### Advanced Search with Custom Position Tracking
+
+To replace MuPDF search, we need custom text analysis:
+
+```rust
+use lopdf::ObjectId;
+
+/// Custom text word with position tracking
+pub struct WordPosition {
+    pub text: String,
+    pub start_byte: usize,
+    pub end_byte: usize,
+    pub rect: PdfRect,
+}
+
+/// Extract words with approximate positions from content stream
+pub fn extract_words(doc: &Document, page_id: ObjectId) -> Vec<WordPosition> {
+    let mut words = Vec::new();
+    
+    // Get page content stream
+    let page = doc.get_object(page_id).unwrap();
+    let contents = page.get(b"Contents").unwrap();
+    
+    // Parse PDF text showing operators (Tj, TJ)
+    // This is complex but possible:
+    // 1. Parse content stream as operations
+    // 2. Extract text and matrix from Tm (text matrix)
+    // 3. Calculate approximate word positions from matrices
+    
+    // Simplified approach: Use font metrics for position estimation
+    // Warning: Less accurate than MuPDF
+    
+    words
+}
+```
+
+### Search Result Highlighting
+
+The key challenge: **highlighting search results requires bounding boxes**.
+
+| Approach | Accuracy | Complexity |
+|----------|----------|------------|
+| Character-based | High | Very High |
+| Word-based | Medium | High |
+| Line-based | Low | Medium |
+| Page-based | None | Low |
+
+**Recommendation**: Use "approximate" highlighting with text position estimation.
+
+```rust
+/// Estimate word position from text content (approximate)
+pub fn estimate_word_bounds(
+    text: &str,
+    page_width: f32,
+    font_size: f32,
+    char_width_avg: f32,
+) -> PdfRect {
+    let text_width = text.len() as f32 * char_width_avg;
+    PdfRect {
+        x0: 0.0,
+        y0: 0.0,
+        x1: text_width,
+        y1: font_size,
+    }
+}
+```
+
+### Search UI Integration
+
+Update search handler to work with new backend:
+
+```rust
+// Update reader_search_handler.rs to use pdf_rust backend
+
+pub fn search_all(&mut self, query: &str, backend: &dyn PdfSearchBackend) {
+    self.search_results.clear();
+    
+    // Search each page
+    for page in 0..backend.page_count() {
+        let results = backend.search_page(page, query);
+        self.search_results.extend(results);
+    }
+    
+    // Update UI state
+    if self.search_results.is_empty() {
+        // Show "No results"
+    } else {
+        self.current_result_index = 0;
+        // Navigate to first result
+    }
+}
+```
+
+### Feature Flag
+
+```toml
+# Cargo.toml - Select search implementation
+[features]
+default = ["use_mupdf_search"]
+use_rust_search = ["lopdf", "regex"]
+```
+
+### Tasks for Search
+
+1. Create `document/pdf_rust/search.rs`
+   - Implement `SearchResult` struct
+   - Implement `PdfSearchBackend` trait
+   - Implement basic text search via lopdf
+
+2. Create word position estimator
+   - Parse content streams
+   - Estimate positions from font metrics
+   - Document accuracy limitations
+
+3. Update search handler
+   - Switch between backends via feature flag
+   - Handle "no results" gracefully
+
+4. Update UI
+   - Show approximate highlights
+   - Add warning for "position unavailable"
+
+### Search Limitations (vs MuPDF)
+
+| Feature | MuPDF | lopdf Replacement |
+|---------|-------|-------------------|
+| Exact word bounds | ✅ | ❌ (estimated) |
+| Character bounds | ✅ | ❌ |
+| Accurate highlighting | ✅ | Approximate |
+| Performance | Fast | Medium |
+| Unicode support | Full | Limited |
+
+---
+
 ## Implementation Order
 
 | Phase | Module | Priority | Complexity |
@@ -508,6 +741,7 @@ use_lopdf = ["lopdf", "printpdf"]
 | 4.2 | annotation.rs | **P2** | High |
 | 4.3 | outline.rs | **P2** | Low |
 | 4.4 | image.rs | **P2** | Medium |
+| 4.5 | search.rs | **P0** | High |
 | 5 | Integration | **P1** | Medium |
 
 ---
@@ -538,7 +772,8 @@ crates/core/src/document/pdf_rust/
 ├── link.rs      # Links (NEW)
 ├── annotation.rs # Annotations (NEW)
 ├── outline.rs   # TOC (NEW)
-└── image.rs    # Images (NEW)
+├── image.rs     # Images (NEW)
+└── search.rs   # Search functionality (NEW)
 ```
 
 ---
