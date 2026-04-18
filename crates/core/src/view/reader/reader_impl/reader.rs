@@ -143,10 +143,9 @@ use crate::metadata::{DEFAULT_CONTRAST_EXPONENT, DEFAULT_CONTRAST_GRAY};
 use crate::theme;
 use crate::unit::{mm_to_px, scale_by_dpi};
 use anyhow::{Context as AnyhowContext, Error};
-use regex::Regex;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::{BTreeMap, VecDeque};
-use std::sync::{atomic, Arc, LazyLock, Mutex};
+use std::sync::{atomic, Arc, Mutex};
 
 use crate::view::common::locate;
 use crate::view::top_bar::TopBar;
@@ -163,23 +162,8 @@ use super::reader_core::{
 use super::reader_rendering;
 use super::reader_search;
 
-#[allow(dead_code)] // Used by reader gesture handling
-pub const RECT_DIST_JITTER: f32 = 0.1;
-#[allow(dead_code)] // Used by memory scheme handling
 pub const MEM_SCHEME: &str = "mem:";
-
-#[allow(dead_code)] // Used by TOC parsing
-pub static TOC_PAGE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)page\s*(\d+)").unwrap());
-#[allow(dead_code)] // Used by PDF page parsing
-pub static PDF_PAGE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(\d+)").unwrap());
-#[allow(dead_code)] // Used by search result parsing
-pub static SEARCH_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\((\d+),\s*(\d+)\)").unwrap());
-
-#[allow(dead_code)] // Used by annotation rendering
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
-#[allow(dead_code)] // Used by annotation rendering
 pub const ANNOTATION_DRIFT: f32 = 0.05;
 
 // ===========================================================================
