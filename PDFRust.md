@@ -45,8 +45,45 @@ Comprehensive plan to replace MuPDF C library dependency with pure Rust alternat
 | **PDFPurr** | v0.4 | Active | tiny-skia | Full (OCR, forms, encryption) | MIT/Apache |
 | **lopdf** | v0.40+ | Mature | ❌ | PDF editing (no render) | MIT |
 | **oxidize-pdf** | v1.6 | Active | Custom | Full features | AGPL-3.0 |
+| **MuPDF** | 1.27 | Active | Custom | **E-ink optimized** | AGPL-3.0 |
 
-### 2.2 Comparison with MuPDF (458K LOC)
+### 2.2 E-ink Optimization Requirements
+
+E-ink displays have unique requirements that general PDF libraries don't support:
+
+| Requirement | Description | Library Support |
+|-------------|-------------|-----------------|
+| **Partial updates** | Only update changed regions | MuPDF only |
+| **Ghosting reduction** | Clean refresh after updates | Custom needed |
+| **Grayscale only** | 16-level gray for e-ink | Custom needed |
+| **Waveform modes** | Different refresh intensities | Custom needed |
+| **Delta updates** | Send only pixel differences | Custom needed |
+
+**Critical**: Neither hayro nor PDFPurr support e-ink-specific rendering. Custom layer required.
+
+### 2.3 E-ink Optimization Strategy
+
+For Kobo e-readers, we must keep MuPDF wrapper BUT use hayro/PDFPurr for non-critical paths:
+
+```rust
+// Platform-specific PDF backend selection
+#[cfg(target_arch = "arm")]
+use mupdf_rust;  // MuPDF for ARM (Kobo)
+
+#[cfg(not(target_arch = "arm"))]
+use hayro;       // hayro for desktop/emulator
+```
+
+Or use feature flags:
+
+```toml
+[features]
+default = ["eink_optimized"]
+eink_optimized = ["mupdf-rust"]
+desktop = ["hayro"]
+```
+
+### 2.4 Comparison with MuPDF (458K LOC)
 
 | Feature | MuPDF (C) | hayro | PDFPurr | lopdf |
 |---------|-----------|------|---------|-------|
@@ -59,7 +96,7 @@ Comprehensive plan to replace MuPDF C library dependency with pure Rust alternat
 | **E-ink optimized** | ✅ Custom | ❌ | ❌ | ❌ |
 | **Lines of code** | 458K | ~50K | ~80K | N/A |
 
-### 2.3 Recommendation
+### 2.5 Recommendation
 
 **Use existing libraries - don't rewrite!** Add to `Cargo.toml`:
 
@@ -71,7 +108,7 @@ hayro = "0.5"
 pdfpurr = "0.4"
 ```
 
-### 2.4 Usage Examples
+### 2.6 Usage Examples
 
 ```rust
 // hayro - Rendering focused
@@ -139,7 +176,111 @@ impl PdfContext {
 }
 ```
 
-### 4.2 Page Rendering (E-ink Optimized)
+### 4.2 E-ink Rendering Layer (Custom Required)
+
+Since hayro/PDFPurr don't support e-ink, create custom optimization layer:
+
+```rust
+// E-ink specific rendering optimizations
+
+/// Update modes for e-ink displays
+pub enum EinkUpdateMode {
+    /// Full refresh - clears ghosting, uses full waveform
+    Full,
+    /// Partial update - faster, may accumulate ghosting
+    Partial,
+    /// FAST - quick text update
+    Fast,
+}
+
+/// E-ink optimized renderer
+pub struct EinkRenderer {
+    /// Previous frame for delta updates
+    prev_frame: Vec<u8>,
+    /// Current update mode
+    mode: EinkUpdateMode,
+}
+
+impl EinkRenderer {
+    /// Render page with e-ink optimizations
+    pub fn render(&mut self, page: &Page, dpi: f32) -> Pixmap {
+        // First render full page
+        let full = hayro::render(page, dpi);
+        
+        match self.mode {
+            EinkUpdateMode::Full => {
+                // Full waveform, clear previous
+                self.prev_frame = full.pixels.clone();
+                full
+            }
+            EinkUpdateMode::Partial => {
+                // Calculate delta - only changed regions
+                let delta = self.compute_delta(&full);
+                self.prev_frame = full.pixels.clone();
+                delta
+            }
+            EinkUpdateMode::Fast => {
+                // Quick update with reduced quality
+                let fast = self.reduce_quality(&full);
+                self.prev_frame = full.pixels.clone();
+                fast
+            }
+        }
+    }
+    
+    /// Compute delta (only changed pixels)
+    fn compute_delta(&self, new: &Pixmap) -> Pixmap {
+        let mut delta = Vec::with_capacity(new.pixels.len());
+        
+        for (i, (old, new)) in self.prev_frame.iter().zip(new.pixels.iter()).enumerate() {
+            if old != new {
+                delta.push(new);  // Changed
+            } else {
+                delta.push(0);    // Same - transparent
+            }
+        }
+        
+        Pixmap { pixels: delta, .. }
+    }
+    
+    /// Reduce to 4-bit grayscale for FAST mode
+    fn reduce_quality(&self, pixmap: &Pixmap) -> Pixmap {
+        Pixmap {
+            pixels: pixmap.pixels.iter()
+                .map(|p| *p / 17)  // 256 -> 16 levels
+                .collect(),
+            ..
+        }
+    }
+}
+```
+
+### 4.2.1 Waveform Management
+
+E-ink displays use waveforms to control pixel transitions:
+
+```rust
+/// E-ink waveform modes
+pub enum WaveformMode {
+    DU4,    // 4-level fast
+    DU8,     // 8-level medium
+    GC16,    // 16-level for full graphics
+    AUTO,    // Automatic based on content
+}
+
+/// Select optimal waveform mode
+pub fn select_waveform(content: &Content) -> WaveformMode {
+    let text_ratio = content.text_pixels / content.total_pixels;
+    
+    if text_ratio > 0.8 {
+        WaveformMode::DU4   // Mostly text - fast
+    } else if text_ratio > 0.3 {
+        WaveformMode::DU8  // Mixed
+    } else {
+        WaveformMode::GC16 // Graphics
+    }
+}
+```
 
 ```rust
 use hayro::{InterpreterSettings, RenderSettings, render};
