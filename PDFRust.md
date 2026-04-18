@@ -83,7 +83,7 @@ eink_optimized = ["mupdf-rust"]
 desktop = ["hayro"]
 ```
 
-### 2.4 Comparison with MuPDF (458K LOC)
+### 2.4 Feature Comparison
 
 | Feature | MuPDF (C) | hayro | PDFPurr | lopdf |
 |---------|-----------|------|---------|-------|
@@ -96,7 +96,52 @@ desktop = ["hayro"]
 | **E-ink optimized** | ✅ Custom | ❌ | ❌ | ❌ |
 | **Lines of code** | 458K | ~50K | ~80K | N/A |
 
-### 2.5 Recommendation
+### 2.4 Detailed Feature Availability
+
+| # | MuPDF Use | MuPDF Function | lopdf | hayro | PDFPurr |
+|---|-----------|----------------|-------|-------|----------|
+| 1 | Document loading | `MuPdfContext::new()` | ✅ `Document::load()` | ✅ `Pdf::from_file()` | ✅ `PdfDoc::from_path()` |
+| 2 | Context creation | `new_mupdf_context()` | ✅ | ✅ | ✅ |
+| 3 | Page access | `doc.get_page()` | ✅ | ✅ `pdf.pages()` | ✅ |
+| 4 | Page bounds | `page.bound_box()` | ✅ `page.boundaries()` | ✅ | ✅ |
+| 5 | Text extraction | `TextPage::blocks()` | ⚠️ `extract_text()` | ⚠️ ~90% | ✅ |
+| 6 | Text blocks | `TextBlock` | ❌ | ⚠️ Approximate | ✅ |
+| 7 | Character positions | `chr_rect` | ❌ | ❌ | approx |
+| 8 | Word positions | `word_rect` | ❌ | ❌ | approx |
+| 9 | Image extraction | `Image` | ✅ | ✅ | ✅ |
+| 10 | Links extraction | `Link` | ⚠️ | ✅ | ✅ |
+| 11 | Annotations CRUD | `Annotation` | ⚠️ Limited | ⚠️ Limited | ✅ |
+| 12 | TOC/Outline | `Outline` | ✅ `get_toc()` | ✅ | ✅ |
+| 13 | Render to pixmap | `page.to_pixmap()` | ❌ | ✅ `render()` | ✅ `render_page()` |
+| 14 | Save document | `doc.save()` | ✅ `save()` | ✅ | ✅ |
+| 15 | Page insert | `insert_page()` | ✅ | ✅ | ✅ |
+| 16 | Page delete | `delete_page()` | ✅ | ✅ | ✅ |
+| 17 | Merge documents | `add_document_pages()` | ✅ | ✅ | ✅ |
+| 18 | Encryption | AES support | ✅ | ✅ R2-R6 | ✅ Full |
+| 19 | Progressive load | `ProgressiveLoader` | ⚠️ | ⚠️ | ✅ |
+| 20 | Search text | `TextPage::blocks()` | ❌ | ⚠️ Approximate | ⚠️ |
+| 21 | E-ink rendering | Custom partial updates | ❌ | ❌ | ❌ |
+| 22 | Delta updates | Custom algorithm | ❌ | ❌ | ❌ |
+
+### 2.5 Summary by Availability
+
+| Status | Count | Features |
+|--------|-------|----------|
+| **✅ Direct replacement** | 11 | Document load, page access, save, merge, TOC |
+| **⚠️ Partial/Approximate** | 6 | Text ~90%, links, annotations, search |
+| **❌ Custom needed** | 5 | Exact text positions, E-ink, partial updates |
+
+### 2.6 Recommended Backend
+
+| Feature | Backend |
+|---------|---------|
+| Desktop PDF viewing | **hayro** or **PDFPurr** |
+| E-ink rendering | Keep **MuPDF** |
+| Document editing | **lopdf** or **PDFPurr** |
+| Search with positions | Custom + approximate |
+| OCR support | **PDFPurr** |
+
+### 2.7 Recommendation
 
 **Use existing libraries - don't rewrite!** Add to `Cargo.toml`:
 
@@ -108,7 +153,7 @@ hayro = "0.5"
 pdfpurr = "0.4"
 ```
 
-### 2.6 Usage Examples
+### 2.8 Usage Examples
 
 ```rust
 // hayro - Rendering focused
