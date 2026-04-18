@@ -8,7 +8,6 @@ use crate::metadata::Info;
 use std::collections::HashMap;
 
 /// Table of contents manager for the Reader view
-#[allow(dead_code)] // Reserved for future TOC navigation features
 pub struct ReaderTocManager {
     pub toc_entries: Vec<TocEntry>,
     pub simple_toc: Vec<SimpleTocEntry>,
@@ -16,7 +15,6 @@ pub struct ReaderTocManager {
     pub current_chapter: Option<usize>,
 }
 
-#[allow(dead_code)] // Reserved for future TOC navigation features
 impl ReaderTocManager {
     /// Create a new TOC manager
     pub fn new() -> Self {
@@ -306,7 +304,6 @@ impl ReaderTocManager {
 }
 
 /// TOC statistics
-#[allow(dead_code)] // Reserved for future TOC analytics features
 #[derive(Debug, Clone)]
 pub struct TocStats {
     pub total_chapters: usize,
@@ -315,7 +312,6 @@ pub struct TocStats {
 }
 
 /// Utility functions for TOC management
-#[allow(dead_code)] // Reserved for future TOC utility functions
 pub mod utils {
     use super::*;
 
