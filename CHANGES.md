@@ -51,7 +51,8 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 
 - **AboutDialog** - Displays app version (0.9.38), description, license (GPL-3.0), repository URL
 - **ShareDialog** - Provides Email, Cloud, Export sharing options
-- **Event Handlers** - Home view handles Show/Close events for both dialogs
+- **SystemInfoDialog** - Comprehensive system info with library statistics (books, reading time, completion rate)
+- **Event Handlers** - Home view handles Show/Close events for all dialogs
 
 ### EntryId Expansion ✅
 
@@ -68,9 +69,8 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 
 ## Remaining Work (Future Features)
 
-1. **System Info Enhancement** - Detailed device/app/library statistics dialog (currently shows notification only)
-2. **Reader Settings Handlers** - Connect new EntryId variants to actual settings change logic
-3. **Share Implementation** - Actual email/cloud sharing logic (currently shows "not yet implemented")
+1. **Reader Settings Handlers** - Connect new EntryId variants to actual settings change logic
+2. **Share Implementation** - Actual email/cloud sharing logic (currently shows "not yet implemented")
 
 ## Verification
 
