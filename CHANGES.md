@@ -293,10 +293,15 @@ The following TODOs remain for future architectural work (requires infrastructur
      - Complete layout engine integration for node positioning
      - Resource fetching infrastructure for images and external content
 
-2. **Home Module Refactoring** (view/home/mod.rs)
-   - Current: 972 lines (under 1000-line AGENTS.md limit)
-   - Future consideration: Split into home_core.rs, home_library.rs, home_ui.rs
-   - Status: Optional - not required for compliance
+2. **Home Module Refactoring** (view/home/mod.rs) - PARTIALLY IMPLEMENTED
+   - Created home_core.rs (222 lines) - Data model and state management
+   - Created home_ui.rs (468 lines) - UI layout and rendering helpers  
+   - Split mod.rs from 972 lines to ~400 lines (main entry point)
+   - New structure:
+     - mod.rs: Main Home impl with new(), View trait, imports
+     - home_core.rs: Home struct, Fetcher, BookMenuData, data accessors
+     - home_ui.rs: calculate_*, add_*, resize_* helper methods
+   - Status: Structure complete, minor function signature alignment needed
 
 ## Recent Implementation: Reader Advanced Features
 
