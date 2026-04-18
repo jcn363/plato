@@ -286,12 +286,18 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 
 The following TODOs remain for future architectural work (requires infrastructure not yet available):
 
-1. **HTML Engine Display List** (engine.rs)
-   - `build_display_list_recursive()` has documentation outlining requirements
-   - Full implementation requires:
-     - `StyleSheet::match_rules()` method for CSS selector matching
-     - Complete layout engine integration for node positioning
-     - Resource fetching infrastructure for images and external content
+1. **HTML Engine Display List** (engine.rs) - ✓ COMPLETE
+   - `build_display_list_recursive()` fully implemented
+   - Features:
+     - Text node handling with TextCommand creation
+     - Element node handling with CSS rule matching
+     - Block element layout with line/page breaks
+     - Inline element text flow
+     - Whitespace handling (preserves when needed)
+     - Multi-page document support
+   - Uses existing `specified_values()` for CSS matching
+   - Integrates with layout engine for positioning
+   - Build Status: Clean compilation
 
 2. **Home Module Refactoring** (view/home/mod.rs) - ✓ COMPLETE
    - Created home_core.rs (222 lines) - Data model and state management
