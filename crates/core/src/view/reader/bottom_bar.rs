@@ -15,7 +15,6 @@ use crate::view::page_label::PageLabel;
 use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 
 #[derive(Debug)]
-#[allow(dead_code)] // Used for reader navigation bar
 pub struct BottomBar {
     id: Id,
     rect: Rectangle,
@@ -24,7 +23,6 @@ pub struct BottomBar {
     is_next_disabled: bool,
 }
 
-#[allow(dead_code)] // Reader navigation bar implementation
 impl BottomBar {
     pub fn new(
         rect: Rectangle,
