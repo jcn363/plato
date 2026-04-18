@@ -317,6 +317,7 @@ The following Reader Advanced Features have been implemented in `reader_stubs.rs
 - ✓ `handle_delete_highlight()` - Remove highlights from current page
 
 Supporting infrastructure added:
+
 - ✓ `Annotation` struct with id, page, rect, text, note, type, color, timestamp
 - ✓ `AnnotationType` enum (Highlight, Note, Bookmark, Definition)
 - ✓ `AnnotationColor` enum (Yellow, Green, Blue, Pink, Orange)

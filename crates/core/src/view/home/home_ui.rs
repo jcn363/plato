@@ -21,7 +21,6 @@ use std::path::Path;
 use crate::context::Context;
 use crate::geom::{halves, Rectangle};
 use crate::metadata::SortMethod;
-use crate::settings::FirstColumn;
 use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
@@ -201,16 +200,17 @@ impl Home {
         y_max: i32,
         current_page: usize,
         pages_count: usize,
-        visible_books: &crate::metadata::Metadata,
-        sort_method: SortMethod,
-        reverse_order: bool,
     ) -> usize {
+        // Get library settings for shelf display
+        let selected_library = context.settings.selected_library;
+        let library_settings = &context.settings.libraries[selected_library];
+
         // Shelf
         let shelf = super::shelf::Shelf::new(
             rect![rect.min.x, y_min, rect.max.x, y_max],
-            visible_books.clone(),
-            current_page,
-            context,
+            library_settings.first_column,
+            library_settings.second_column,
+            library_settings.thumbnail_previews,
         );
         children.push(Box::new(shelf) as Box<dyn View>);
 
@@ -219,6 +219,9 @@ impl Home {
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, crate::unit::get_device_dpi()) as i32;
         let small_thickness = (thickness + thickness % 2) / 2;
 
+        // Get library name for bottom bar display
+        let selected_library = context.settings.selected_library;
+        let library_name = &context.settings.libraries[selected_library].name;
         let bottom_bar = super::bottom_bar::BottomBar::new(
             rect![
                 rect.min.x,
@@ -228,8 +231,9 @@ impl Home {
             ],
             current_page,
             pages_count,
-            hub,
-            context,
+            library_name,
+            0, // count - will be updated by caller
+            false, // filter - not filtering by default
         );
         children.push(Box::new(bottom_bar) as Box<dyn View>);
 

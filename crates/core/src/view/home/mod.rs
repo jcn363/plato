@@ -135,7 +135,8 @@ use crate::framebuffer::Framebuffer;
 use crate::geom::Rectangle;
 use crate::view::menu::Menu;
 use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{Id, ID_FEEDER, UpdateMode};
+use crate::view::{Id, ID_FEEDER};
+use crate::framebuffer::UpdateMode;
 use anyhow::Error;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::path::PathBuf;
@@ -153,9 +154,10 @@ impl Home {
         let id = ID_FEEDER.next();
         let (_dpi, thickness, small_thickness, big_thickness, small_height, big_height) =
             Self::calculate_dimensions();
-        let (_selected_library, library_settings, current_directory, sort_method, reverse_order) =
+        let (_selected_library, sort_method, reverse_order) =
             Self::get_library_settings(context);
 
+        let current_directory = context.library.home.clone();
         context.library.sort(sort_method, reverse_order);
         let (visible_books, dirs) = context.library.list(&current_directory, None, false);
         let count = visible_books.len();
@@ -197,31 +199,28 @@ impl Home {
             y_start,
             thickness,
             small_height,
-            big_height,
             small_thickness,
             &current_directory,
-            &dirs,
-            shelf_index,
         );
         shelf_index = if context.settings.home.navigation_bar {
             shelf_index + 2
         } else {
             shelf_index
         };
-        let pages_count = Self::add_shelf_and_bottom_bar(
+        // Calculate y_max for shelf (leaving room for bottom bar)
+        let y_max = rect.max.y - small_height - thickness;
+        // Calculate pages count (using default shelf capacity of 10)
+        let shelf_capacity = 10;
+        let pages_count = (count as f32 / shelf_capacity as f32).ceil() as usize;
+        shelf_index = Self::add_shelf_and_bottom_bar(
             &mut children,
             hub,
             context,
             rect,
             y_start,
-            small_height,
-            small_thickness,
-            big_height,
-            thickness,
-            &visible_books,
+            y_max,
             current_page,
-            &library_settings,
-            count,
+            pages_count,
         );
 
         rq.add(RenderData::new(id, rect, UpdateMode::Full));
@@ -319,7 +318,7 @@ impl View for Home {
             rq,
             context,
         );
-        index = Self::resize_address_bar_if_enabled(
+        shelf_min_y = Self::resize_address_bar_if_enabled(
             &mut self.children,
             context,
             rect,
@@ -331,17 +330,15 @@ impl View for Home {
             rq,
         );
         shelf_min_y =
-            Self::get_address_bar_end_y(context, rect, shelf_min_y, thickness, small_height);
-        (_, shelf_min_y) = Self::resize_navigation_bar_if_enabled(
+            Self::get_address_bar_end_y(context, rect, shelf_min_y, small_height, thickness);
+        (index, shelf_min_y) = Self::resize_navigation_bar_if_enabled(
             &mut self.children,
             context,
             rect,
             shelf_min_y,
             thickness,
             small_height,
-            big_height,
             small_thickness,
-            index,
             hub,
             rq,
         );
@@ -349,8 +346,7 @@ impl View for Home {
             &mut self.children,
             rect,
             small_height,
-            small_thickness,
-            big_thickness,
+            thickness,
             hub,
             rq,
             context,
@@ -359,11 +355,9 @@ impl View for Home {
             &mut self.children,
             rect,
             bottom_bar_index,
-            self.shelf_index,
             small_height,
             big_height,
             thickness,
-            small_thickness,
             hub,
             rq,
             context,
