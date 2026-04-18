@@ -136,6 +136,7 @@ pub mod search_replace;
 pub mod settings;
 pub mod share_dialog;
 pub mod sketch;
+pub mod system_info_dialog;
 pub mod slider;
 pub mod statistics;
 pub mod top_bar;

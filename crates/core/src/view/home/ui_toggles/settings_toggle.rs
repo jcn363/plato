@@ -195,8 +195,8 @@ impl Home {
                 self.hide_settings_menu(rq, context);
             }
             EntryId::SystemInfo => {
-                // Show system info notification
-                hub.send(Event::Notify("System Info: Plato e-reader".to_string())).ok();
+                // Show system info dialog with comprehensive info
+                hub.send(Event::Show(ViewId::SystemInfo)).ok();
                 self.hide_settings_menu(rq, context);
             }
             _ => {

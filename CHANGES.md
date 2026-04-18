@@ -48,11 +48,13 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 ## Completed Features (This Session)
 
 ### New UI Dialogs ✅
+
 - **AboutDialog** - Displays app version (0.9.38), description, license (GPL-3.0), repository URL
 - **ShareDialog** - Provides Email, Cloud, Export sharing options
 - **Event Handlers** - Home view handles Show/Close events for both dialogs
 
 ### EntryId Expansion ✅
+
 - **FontSettings** - Font size, family, line height settings
 - **DisplaySettings** - Text align, zoom mode, scroll mode, margin width
 - **NavigationSettings** - Page turning, gesture, button mapping, history
@@ -60,6 +62,7 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 - **SearchSettings** - Search options, history, filters
 
 ### Infrastructure ✅
+
 - **Cleanup** - Removed empty `view/home/events.rs` file
 - **Module Exports** - Added about_dialog and share_dialog to view/mod.rs
 

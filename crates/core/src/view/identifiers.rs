@@ -71,6 +71,7 @@ pub enum ViewId {
     Keyboard,
     AboutDialog,
     ShareDialog,
+    SystemInfo,
     MarginCropper,
     TopBottomBars,
     TableOfContents,
