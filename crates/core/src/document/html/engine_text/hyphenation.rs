@@ -4,7 +4,7 @@
 
 #![allow(dead_code)]
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 /// Trait for hyphenation implementations
 pub trait Hyphenate {
@@ -54,7 +54,7 @@ impl Default for HyphenationConfig {
 /// Hyphenation engine
 pub struct HyphenationEngine {
     config: HyphenationConfig,
-    hyphenators: HashMap<String, Box<dyn Hyphenate>>,
+    hyphenators: FxHashMap<String, Box<dyn Hyphenate>>,
 }
 
 impl HyphenationEngine {
@@ -62,7 +62,7 @@ impl HyphenationEngine {
     pub fn new(config: HyphenationConfig) -> Self {
         Self {
             config,
-            hyphenators: HashMap::new(),
+            hyphenators: FxHashMap::default(),
         }
     }
 

@@ -5,13 +5,13 @@
 
 use crate::document::{SimpleTocEntry, TocEntry, TocLocation};
 use crate::metadata::Info;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 /// Table of contents manager for the Reader view
 pub struct ReaderTocManager {
     pub toc_entries: Vec<TocEntry>,
     pub simple_toc: Vec<SimpleTocEntry>,
-    pub page_map: HashMap<String, usize>,
+    pub page_map: FxHashMap<String, usize>,
     pub current_chapter: Option<usize>,
 }
 
@@ -21,7 +21,7 @@ impl ReaderTocManager {
         Self {
             toc_entries: Vec::new(),
             simple_toc: Vec::new(),
-            page_map: HashMap::new(),
+            page_map: FxHashMap::default(),
             current_chapter: None,
         }
     }
@@ -260,7 +260,7 @@ impl ReaderTocManager {
     }
 
     /// Update page map
-    pub fn update_page_map(&mut self, page_map: HashMap<String, usize>) {
+    pub fn update_page_map(&mut self, page_map: FxHashMap<String, usize>) {
         self.page_map = page_map;
     }
 

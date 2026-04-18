@@ -2,7 +2,7 @@
 //!
 //! This module provides text shaping functionality using HarfBuzz for complex scripts.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 /// Text shaping configuration
 #[derive(Debug, Clone)]
@@ -65,7 +65,7 @@ pub struct ShapedText {
 /// Text shaper
 pub struct TextShaper {
     config: TextShapingConfig,
-    font_cache: HashMap<String, Vec<GlyphInfo>>,
+    font_cache: FxHashMap<String, Vec<GlyphInfo>>,
 }
 
 impl TextShaper {
@@ -73,7 +73,7 @@ impl TextShaper {
     pub fn new(config: TextShapingConfig) -> Self {
         Self {
             config,
-            font_cache: HashMap::new(),
+            font_cache: FxHashMap::default(),
         }
     }
 

@@ -1,9 +1,8 @@
 use crate::metadata::TextAlign;
 use crate::validation::{validate_finite_f32, validate_range};
 use anyhow::{bail, Error};
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use super::defaults::{
     DEFAULT_DITHERED_KINDS, DEFAULT_FONT_FAMILY, DEFAULT_FONT_PATH, DEFAULT_FONT_SIZE,
@@ -116,8 +115,8 @@ pub struct ParagraphBreakerSettings {
 pub struct RefreshRateSettings {
     #[serde(flatten)]
     pub global: RefreshRatePair,
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
-    pub by_kind: HashMap<String, RefreshRatePair>,
+    #[serde(skip_serializing_if = "FxHashMap::is_empty")]
+    pub by_kind: FxHashMap<String, RefreshRatePair>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -189,7 +188,7 @@ impl Default for RefreshRateSettings {
                 regular: 8,
                 inverted: 2,
             },
-            by_kind: HashMap::new(),
+            by_kind: FxHashMap::default(),
         }
     }
 }

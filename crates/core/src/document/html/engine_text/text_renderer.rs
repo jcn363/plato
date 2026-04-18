@@ -5,7 +5,7 @@
 use crate::color::Color;
 use crate::framebuffer::Framebuffer;
 use crate::geom::Rectangle;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 /// Text rendering configuration
 #[derive(Debug, Clone)]
@@ -43,7 +43,7 @@ pub struct TextRenderResult {
 /// Text renderer
 pub struct TextRenderer {
     config: TextRenderConfig,
-    glyph_cache: HashMap<u32, GlyphRenderData>,
+    glyph_cache: FxHashMap<u32, GlyphRenderData>,
     cache_hits: u64,
     cache_misses: u64,
 }
@@ -65,7 +65,7 @@ impl TextRenderer {
     pub fn new(config: TextRenderConfig) -> Self {
         Self {
             config,
-            glyph_cache: HashMap::new(),
+            glyph_cache: FxHashMap::default(),
             cache_hits: 0,
             cache_misses: 0,
         }

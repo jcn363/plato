@@ -2,7 +2,6 @@ use crate::settings::{Plugin, PluginSettings, PluginTrigger};
 use crate::{log_error, log_warn};
 use anyhow::{bail, format_err, Error};
 use rustc_hash::{FxBuildHasher, FxHashMap};
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -16,7 +15,7 @@ impl PluginSystem {
     pub fn new(settings: &PluginSettings) -> PluginSystem {
         let mut system = PluginSystem {
             settings: settings.clone(),
-            plugins: HashMap::with_hasher(FxBuildHasher::default()),
+            plugins: FxHashMap::with_hasher(FxBuildHasher::default()),
         };
 
         if settings.enabled {

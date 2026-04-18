@@ -8,11 +8,11 @@ use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::Rectangle;
 use crate::view::reader::reader_impl::reader_core::{RenderChunk, State, ViewPort};
 use anyhow::Error;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 /// Rendering cache for the Reader view
 pub struct ReaderRenderCache {
-    pub cache: HashMap<usize, Pixmap>,
+    pub cache: FxHashMap<usize, Pixmap>,
     pub chunks: Vec<RenderChunk>,
     pub max_cache_size: usize,
     pub current_memory_usage: usize,
@@ -25,7 +25,7 @@ impl ReaderRenderCache {
     /// Create a new render cache
     pub fn new(max_cache_size: usize) -> Self {
         Self {
-            cache: HashMap::new(),
+            cache: FxHashMap::default(),
             chunks: Vec::new(),
             max_cache_size,
             current_memory_usage: 0,

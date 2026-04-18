@@ -2,7 +2,7 @@
 //!
 //! This module provides font glyph caching functionality for text rendering.
 
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::sync::Arc;
 
 /// Font cache entry
@@ -40,7 +40,7 @@ impl Default for FontCacheConfig {
 
 /// Font glyph cache
 pub struct FontCache {
-    cache: HashMap<u32, FontCacheEntry>,
+    cache: FxHashMap<u32, FontCacheEntry>,
     config: FontCacheConfig,
     current_memory: usize,
     access_order: Vec<u32>,
@@ -53,7 +53,7 @@ impl FontCache {
     /// Create a new font cache
     pub fn new(config: FontCacheConfig) -> Self {
         Self {
-            cache: HashMap::new(),
+            cache: FxHashMap::default(),
             config,
             current_memory: 0,
             access_order: Vec::new(),

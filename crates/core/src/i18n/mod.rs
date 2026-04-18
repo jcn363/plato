@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::sync::{LazyLock, RwLock};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -59,10 +59,10 @@ pub fn t(key: &str) -> String {
     }
 }
 
-type TranslationMap = HashMap<&'static str, &'static str>;
+type TranslationMap = FxHashMap<&'static str, &'static str>;
 
 pub static ENGLISH: LazyLock<TranslationMap> = LazyLock::new(|| {
-    let mut t = HashMap::new();
+    let mut t = FxHashMap::default();
 
     // General
     t.insert("close", "Close");
@@ -141,7 +141,7 @@ pub static ENGLISH: LazyLock<TranslationMap> = LazyLock::new(|| {
 });
 
 pub static SPANISH: LazyLock<TranslationMap> = LazyLock::new(|| {
-    let mut t = HashMap::new();
+    let mut t = FxHashMap::default();
 
     // General
     t.insert("close", "Cerrar");
