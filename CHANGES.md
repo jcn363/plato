@@ -70,6 +70,7 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 ## Completed Features Update
 
 ### Reader Settings Handlers ✅
+
 - **handle_entry_id()** method implemented in ReaderSettingsManager
 - **FontSettings**: Cycles font size (8.0-24.0)
 - **DisplaySettings**: Toggles zoom mode

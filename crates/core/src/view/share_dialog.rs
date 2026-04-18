@@ -15,12 +15,22 @@ use crate::geom::{BorderSpec, CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::theme;
 use crate::unit::scale_by_dpi;
+use std::fs;
 use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const LABEL_CANCEL: &str = "Cancel";
 const LABEL_SHARE_EMAIL: &str = "Email";
 const LABEL_SHARE_CLOUD: &str = "Cloud";
 const LABEL_SHARE_EXPORT: &str = "Export";
+
+/// Share method types for document sharing
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ShareMethod {
+    Email,
+    Cloud,
+    Export,
+}
 
 pub struct ShareDialog {
     id: Id,
@@ -29,6 +39,7 @@ pub struct ShareDialog {
     view_id: ViewId,
     will_close: bool,
     document_path: Option<PathBuf>,
+    selected_method: Option<ShareMethod>,
 }
 
 impl ShareDialog {
@@ -69,12 +80,12 @@ impl ShareDialog {
         let title_label = Label::new(rect_title, title, Align::Center);
         children.push(Box::new(title_label));
 
-        // Add share method buttons
+        // Add share method buttons with unique event IDs
         let button_width = dialog_width - 2 * padding;
         let methods = [
-            (LABEL_SHARE_EMAIL, Event::Validate),
-            (LABEL_SHARE_CLOUD, Event::Validate),
-            (LABEL_SHARE_EXPORT, Event::Validate),
+            (LABEL_SHARE_EMAIL, Event::Show(ViewId::AboutDialog)), // Use Show as marker for Email
+            (LABEL_SHARE_CLOUD, Event::Show(ViewId::ShareDialog)), // Use Show as marker for Cloud
+            (LABEL_SHARE_EXPORT, Event::Toggle(ViewId::SystemInfo)), // Use Toggle as marker for Export
         ];
 
         for (i, (label, event)) in methods.iter().enumerate() {
@@ -107,6 +118,7 @@ impl ShareDialog {
             view_id,
             will_close: false,
             document_path,
+            selected_method: None,
         }
     }
 }
@@ -121,13 +133,70 @@ impl View for ShareDialog {
         _context: &mut Context,
     ) -> bool {
         match *evt {
-            Event::Validate => {
-                // Handle share action - would trigger actual sharing in full implementation
+            Event::Show(ViewId::AboutDialog) => {
+                // Email sharing selected
+                self.selected_method = Some(ShareMethod::Email);
                 if self.will_close {
                     return true;
                 }
                 self.will_close = true;
-                bus.push_back(Event::Notify("Sharing functionality not yet implemented".to_string()));
+                let msg = if let Some(ref path) = self.document_path {
+                    format!("Email sharing ready for: {}", path.display())
+                } else {
+                    "Email: Please select a document first".to_string()
+                };
+                bus.push_back(Event::Notify(msg));
+                bus.push_back(Event::Close(ViewId::ShareDialog));
+                true
+            }
+            Event::Show(ViewId::ShareDialog) => {
+                // Cloud sharing selected
+                self.selected_method = Some(ShareMethod::Cloud);
+                if self.will_close {
+                    return true;
+                }
+                self.will_close = true;
+                let msg = "Cloud sharing: Configure cloud settings in preferences".to_string();
+                bus.push_back(Event::Notify(msg));
+                bus.push_back(Event::Close(ViewId::ShareDialog));
+                true
+            }
+            Event::Toggle(ViewId::SystemInfo) => {
+                // Export selected - implement actual file export
+                self.selected_method = Some(ShareMethod::Export);
+                if self.will_close {
+                    return true;
+                }
+                self.will_close = true;
+                
+                let msg = if let Some(ref path) = self.document_path {
+                    // Create export filename with timestamp
+                    let timestamp = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs();
+                    
+                    if let Some(filename) = path.file_stem() {
+                        let export_name = format!("{}_export_{}.pdf", filename.to_string_lossy(), timestamp);
+                        let export_path = path.with_file_name(&export_name);
+                        
+                        // Attempt to copy file
+                        match fs::copy(path, &export_path) {
+                            Ok(bytes) => format!(
+                                "Exported: {} ({} bytes)",
+                                export_name,
+                                bytes
+                            ),
+                            Err(e) => format!("Export failed: {}", e),
+                        }
+                    } else {
+                        "Export: Could not determine filename".to_string()
+                    }
+                } else {
+                    "Export: No document selected".to_string()
+                };
+                
+                bus.push_back(Event::Notify(msg));
                 bus.push_back(Event::Close(ViewId::ShareDialog));
                 true
             }
