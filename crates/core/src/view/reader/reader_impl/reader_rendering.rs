@@ -37,7 +37,6 @@ use rustc_hash::FxHashMap;
 /// Scale factor to apply to page rendering (1.0 = native size)
 ///
 /// Extracted from `Reader::scaling_factor()` (line 1788)
-#[allow(dead_code)] // Used by Reader::update method
 pub(crate) fn scaling_factor(
     rect: &Rectangle,
     _margin: &Margin,
@@ -71,7 +70,6 @@ pub(crate) fn scaling_factor(
 ///
 /// # Returns
 /// The extracted text as a String, or None if no text found in range
-#[allow(dead_code)] // Used by Reader::text_excerpt method
 pub(crate) fn text_excerpt(
     text: &FxHashMap<usize, Vec<BoundedText>>,
     sel: [Point; 2],
@@ -120,7 +118,6 @@ pub(crate) fn text_excerpt(
 ///
 /// # Returns
 /// The bounding rectangle for the selected text, or None if no text found
-#[allow(dead_code)] // Used by Reader::text_rect method
 pub(crate) fn text_rect(
     text: &FxHashMap<usize, Vec<BoundedText>>,
     chunks: &[super::reader_core::RenderChunk],
@@ -162,7 +159,6 @@ pub(crate) fn text_rect(
 ///
 /// # Returns
 /// Rectangular region covering the selection, or None if no selection
-#[allow(dead_code)] // Used by Reader::selection_rect method
 pub(crate) fn selection_rect(
     selection: Option<&super::reader_core::Selection>,
     text_data: &FxHashMap<usize, Vec<BoundedText>>,
@@ -184,7 +180,6 @@ pub(crate) fn selection_rect(
 ///
 /// # Returns
 /// Adjusted page offset, or None if margins are out of bounds
-#[allow(dead_code)] // Used by Reader::update method
 pub(crate) fn calculate_margin_offset(
     offset: Point,
     pixmap_width: u32,

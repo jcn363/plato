@@ -54,10 +54,6 @@ pub(crate) fn create_search_menu(
 }
 
 /// Render search result highlights on visible page chunks
-///
-/// Adds render requests for all search result rectangles that fall within
-/// the currently visible page chunks.
-#[allow(dead_code)] // Used by Reader::render_results method
 pub(crate) fn render_results(
     search: Option<&Search>,
     chunks: &[RenderChunk],
@@ -77,7 +73,6 @@ pub(crate) fn render_results(
 }
 
 /// Navigate to the next or previous search result
-#[allow(dead_code)] // Used by Reader::go_to_results_neighbor method
 pub(crate) fn go_to_results_neighbor(
     dir: crate::geom::CycleDir,
     reader: &mut Reader,
@@ -118,7 +113,6 @@ pub(crate) fn go_to_results_page(
 }
 
 /// Toggle search menu visibility
-#[allow(dead_code)] // Used by Reader::toggle_search_menu method
 pub(crate) fn toggle_search_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
     search_direction: LinearDir,

@@ -30,7 +30,6 @@ use crate::view::{Id, RenderData, RenderQueue};
 /// the specified text selection range.
 ///
 /// Returns an immutable reference to the annotation if found, or None.
-#[allow(dead_code)] // Used by Reader::find_annotation_ref method
 pub(crate) fn find_annotation_ref(info: &Info, sel: [TextLocation; 2]) -> Option<&Annotation> {
     info.reader.as_ref().and_then(|r| {
         r.annotations
@@ -45,7 +44,6 @@ pub(crate) fn find_annotation_ref(info: &Info, sel: [TextLocation; 2]) -> Option
 /// the specified text selection range.
 ///
 /// Returns a mutable reference to the annotation if found, or None.
-#[allow(dead_code)] // Used by Reader::find_annotation_mut method
 pub(crate) fn find_annotation_mut(
     info: &mut Info,
     sel: [TextLocation; 2],
@@ -60,8 +58,6 @@ pub(crate) fn find_annotation_mut(
 /// Toggle bookmark at current page
 ///
 /// This is extracted from `Reader::toggle_bookmark()` and manages bookmark state
-/// and UI invalidation in a single operation.
-#[allow(dead_code)] // Used by Reader::toggle_bookmark method
 pub(crate) fn toggle_bookmark(
     current_page: usize,
     info: &mut Info,
