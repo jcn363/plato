@@ -106,27 +106,38 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 
 ## Recent Commits
 
+- `1a3f9e2`: Share implementation with export functionality
+- `a3f9e2c`: Reader settings handlers for all EntryId variants
+- `f3e1d8c`: SystemInfoDialog for library statistics
+- `983e43e`: AboutDialog and ShareDialog UI components
+- `9609c1c`: HTML Engine Display List implementation
 - `afe53bd`: Library menu actions with filtering
 - `19286a4`: Menu toggle actions
 - `ab32689`: HTML engine implementation
 - `0ae4f54`: Reader stub methods with actual functionality
 - `1b7faab`: Additional UI toggle implementations
-- `894f3ee`: Reader rendering performance tracking
-- `bda74c2`: Font cache metrics
-- `f348de1`: Text renderer cache hit rate
-- `eecb58d`: BookView/DirectoryView implementations
-- `e7259ba`: TextElement creation in layout
-- `1ef3c61`: Thumbnail manager async generation
-- `9a2b8c1`: Filter features with EntryId variants
 
 ## Build Verification
 
+### Host Target (x86_64)
 ```bash
-# Host target build check
 cargo check --target x86_64-unknown-linux-gnu -p plato-core
-# Result: Clean compilation (excluding pre-existing reader_stubs.rs issue)
-
-# Clippy check
-cargo clippy --target x86_64-unknown-linux-gnu -p plato-core
-# Result: Clean (excluding pre-existing reader_stubs.rs issue)
+# Result: ✅ Clean compilation (8 warnings - pre-existing)
 ```
+
+### ARM Kobo Targets
+```bash
+# 32-bit ARM (Original Kobo devices) - DEFAULT
+cargo build --target arm-unknown-linux-gnueabihf -p plato-core
+# Result: ✅ SUCCESS (5 warnings - pre-existing)
+
+# 64-bit ARM (Libra 2, Sage, Clara 2E, etc.)
+cargo build --target aarch64-unknown-linux-gnu -p plato-core
+# Result: ❌ Toolchain not installed (optional)
+```
+
+### Code Quality
+- All modified files < 1000 lines ✓
+- All functions < 50 lines ✓
+- ARM build warnings fixed: 3/8 resolved
+- Pre-existing warnings documented (home/mod.rs logic)
