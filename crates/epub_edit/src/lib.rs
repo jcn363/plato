@@ -606,7 +606,7 @@ impl EpubEditorCore {
         &self,
         dir: &Path,
         zip: &mut ZipWriter<W>,
-        options: &FileOptions<()>,
+        options: &FileOptions<'_, ()>,
         buffer: &mut Vec<u8>,
     ) -> io::Result<()> {
         for entry in fs::read_dir(dir)? {

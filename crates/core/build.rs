@@ -17,6 +17,8 @@ fn main() {
         println!("cargo:rustc-link-search={}", lib_dir);
         println!("cargo:rustc-link-lib=dylib=stdc++");
         println!("cargo:rustc-link-lib=mupdf_wrapper");
+        println!("cargo:rustc-link-lib=freetype");
+        println!("cargo:rustc-link-lib=harfbuzz");
     // Handle AArch64 (ARM64) Kobo devices (newer devices like Libra 2, Sage, etc.)
     } else if target == "aarch64-unknown-linux-gnu" {
         println!("cargo:rustc-env=PKG_CONFIG_ALLOW_CROSS=1");
@@ -24,6 +26,8 @@ fn main() {
         println!("cargo:rustc-link-search={}", lib_dir);
         println!("cargo:rustc-link-lib=dylib=stdc++");
         println!("cargo:rustc-link-lib=mupdf_wrapper");
+        println!("cargo:rustc-link-lib=freetype");
+        println!("cargo:rustc-link-lib=harfbuzz");
         // Handle the Linux and macOS platforms.
     } else {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
