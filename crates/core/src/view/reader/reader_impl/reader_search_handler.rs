@@ -16,7 +16,6 @@ use std::collections::VecDeque;
 use std::sync::atomic::AtomicBool;
 
 /// Search result information
-#[allow(dead_code)] // Reserved for future search result display features
 #[derive(Debug, Clone)]
 pub struct SearchResult {
     pub page: usize,
@@ -26,7 +25,6 @@ pub struct SearchResult {
 }
 
 /// Search handler for the Reader view
-#[allow(dead_code)] // Reserved for future search management features
 pub struct ReaderSearchHandler {
     pub id: Id,
     pub current_search: Option<Search>,
@@ -37,7 +35,6 @@ pub struct ReaderSearchHandler {
     pub max_history_size: usize,
 }
 
-#[allow(dead_code)] // Reserved for future search management features
 impl ReaderSearchHandler {
     /// Create a new search handler
     pub fn new(id: Id) -> Self {
