@@ -81,7 +81,7 @@ impl ShareDialog {
         children.push(Box::new(title_label));
 
         // Add share method buttons with unique event IDs
-        let button_width = dialog_width - 2 * padding;
+        let _button_width = dialog_width - 2 * padding;
         let methods = [
             (LABEL_SHARE_EMAIL, Event::Show(ViewId::AboutDialog)), // Use Show as marker for Email
             (LABEL_SHARE_CLOUD, Event::Show(ViewId::ShareDialog)), // Use Show as marker for Cloud

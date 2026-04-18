@@ -152,7 +152,7 @@ impl Home {
         context: &mut Context,
     ) -> Result<Home, Error> {
         let id = ID_FEEDER.next();
-        let (_dpi, thickness, small_thickness, big_thickness, small_height, big_height) =
+        let (_dpi, thickness, small_thickness, big_thickness, small_height, _big_height) =
             Self::calculate_dimensions();
         let (_selected_library, sort_method, reverse_order) =
             Self::get_library_settings(context);
