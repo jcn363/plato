@@ -67,10 +67,19 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 - **Cleanup** - Removed empty `view/home/events.rs` file
 - **Module Exports** - Added about_dialog and share_dialog to view/mod.rs
 
+## Completed Features Update
+
+### Reader Settings Handlers ✅
+- **handle_entry_id()** method implemented in ReaderSettingsManager
+- **FontSettings**: Cycles font size (8.0-24.0)
+- **DisplaySettings**: Toggles zoom mode
+- **NavigationSettings**: Cycles scroll mode (Screen→Page→Vertical)
+- **AnnotationSettings**: Cycles text alignment
+- **SearchSettings**: Adjusts margin width (0-20)
+
 ## Remaining Work (Future Features)
 
-1. **Reader Settings Handlers** - Connect new EntryId variants to actual settings change logic
-2. **Share Implementation** - Actual email/cloud sharing logic (currently shows "not yet implemented")
+1. **Share Implementation** - Actual email/cloud sharing backend (currently shows "not yet implemented" notification)
 
 ## Verification
 
