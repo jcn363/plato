@@ -6,6 +6,9 @@ pub mod tool_bar; // Made public
 
 pub mod bottom_bar; // Made public
 
+pub use margin_cropper::MarginCropper;
+pub use results_label::ResultsLabel;
+
 pub use reader_impl::{
     Contrast, PageAnimKind, PageAnimation, Reader, RenderChunk, Resource, Selection, State,
     ViewPort,
