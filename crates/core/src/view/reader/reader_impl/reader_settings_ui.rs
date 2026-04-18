@@ -246,4 +246,60 @@ impl ReaderSettingsManager {
             self.margin_width,
         )
     }
+
+    /// Handle settings EntryId and apply changes
+    ///
+    /// Processes the new EntryId variants and updates the corresponding settings.
+    /// Returns true if a setting was changed, false otherwise.
+    pub fn handle_entry_id(&mut self, entry_id: &EntryId) -> bool {
+        match entry_id {
+            EntryId::FontSettings => {
+                // Cycle through font sizes as example implementation
+                self.font_size = if self.font_size >= 24.0 {
+                    8.0
+                } else {
+                    (self.font_size + 2.0).clamp(8.0, 72.0)
+                };
+                true
+            }
+            EntryId::DisplaySettings => {
+                // Toggle between zoom modes
+                self.zoom_mode = match self.zoom_mode {
+                    ZoomMode::Fit(scale) if scale >= 2.0 => ZoomMode::Fit(1.0),
+                    ZoomMode::Fit(scale) => ZoomMode::Fit((scale + 0.5).clamp(1.0, 3.0)),
+                    _ => ZoomMode::Fit(1.0),
+                };
+                true
+            }
+            EntryId::NavigationSettings => {
+                // Toggle scroll mode between valid variants
+                self.scroll_mode = match self.scroll_mode {
+                    ScrollMode::Screen => ScrollMode::Page,
+                    ScrollMode::Page => ScrollMode::Vertical,
+                    ScrollMode::Vertical => ScrollMode::Screen,
+                };
+                true
+            }
+            EntryId::AnnotationSettings => {
+                // Toggle text alignment as example
+                self.text_align = match self.text_align {
+                    TextAlign::Left => TextAlign::Center,
+                    TextAlign::Center => TextAlign::Right,
+                    TextAlign::Right => TextAlign::Justify,
+                    TextAlign::Justify => TextAlign::Left,
+                };
+                true
+            }
+            EntryId::SearchSettings => {
+                // Adjust margin width as example
+                self.margin_width = if self.margin_width >= 20 {
+                    0
+                } else {
+                    (self.margin_width + 4).clamp(0, 100)
+                };
+                true
+            }
+            _ => false,
+        }
+    }
 }

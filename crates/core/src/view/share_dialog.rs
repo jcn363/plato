@@ -115,7 +115,7 @@ impl View for ShareDialog {
     fn handle_event(
         &mut self,
         evt: &Event,
-        hub: &Hub,
+        _hub: &Hub,
         bus: &mut Bus,
         _rq: &mut RenderQueue,
         _context: &mut Context,
