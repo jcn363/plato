@@ -45,13 +45,29 @@ Implementation of reserved UI features marked with `#[allow(dead_code)]` and mig
 ✅ **Build Status**: Clean compilation for host target (x86_64-unknown-linux-gnu)
 ⚠️ **Known Issue**: Pre-existing broken code in `reader_stubs.rs` (missing imports) - unrelated to current work
 
+## Completed Features (This Session)
+
+### New UI Dialogs ✅
+- **AboutDialog** - Displays app version (0.9.38), description, license (GPL-3.0), repository URL
+- **ShareDialog** - Provides Email, Cloud, Export sharing options
+- **Event Handlers** - Home view handles Show/Close events for both dialogs
+
+### EntryId Expansion ✅
+- **FontSettings** - Font size, family, line height settings
+- **DisplaySettings** - Text align, zoom mode, scroll mode, margin width
+- **NavigationSettings** - Page turning, gesture, button mapping, history
+- **AnnotationSettings** - Highlight color, notes, bookmarks, export
+- **SearchSettings** - Search options, history, filters
+
+### Infrastructure ✅
+- **Cleanup** - Removed empty `view/home/events.rs` file
+- **Module Exports** - Added about_dialog and share_dialog to view/mod.rs
+
 ## Remaining Work (Future Features)
 
-1. **AboutDialog** (`ViewId::AboutDialog`) - Version/credits/license display
-2. **ShareDialog** (`ViewId::ShareDialog`) - Document sharing via email/cloud
-3. **System Info Enhancement** - Detailed device/app/library statistics dialog
-4. **Reader Settings EntryIds** - Proper variants for font/display/navigation/search/annotation settings
-5. **Cleanup** - Remove empty `view/home/events.rs` file
+1. **System Info Enhancement** - Detailed device/app/library statistics dialog (currently shows notification only)
+2. **Reader Settings Handlers** - Connect new EntryId variants to actual settings change logic
+3. **Share Implementation** - Actual email/cloud sharing logic (currently shows "not yet implemented")
 
 ## Verification
 
