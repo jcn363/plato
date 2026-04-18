@@ -9,7 +9,9 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::halves;
 use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
-use crate::view::{EntryId, Event, Hub, RenderData, RenderQueue, ViewId, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use crate::view::{
+    EntryId, Event, Hub, RenderData, RenderQueue, ViewId, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
+};
 
 use super::super::Home;
 
@@ -79,7 +81,8 @@ impl Home {
         _context: &mut Context,
     ) {
         // Send event to toggle select directory
-        hub.send(Event::Select(EntryId::ToggleSelectDirectory(path.clone()))).ok();
+        hub.send(Event::Select(EntryId::ToggleSelectDirectory(path.clone())))
+            .ok();
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 }

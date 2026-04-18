@@ -127,18 +127,15 @@ impl Reader {
                         None
                     }
                 }),
-                CycleDir::Previous => current_chapter.and_then(|c| {
-                    if c > 0 {
-                        Some(c - 1)
-                    } else {
-                        None
-                    }
-                }),
+                CycleDir::Previous => {
+                    current_chapter.and_then(|c| if c > 0 { Some(c - 1) } else { None })
+                }
             };
 
             // Navigate to target chapter's page
             if let Some(chapter_idx) = target_chapter {
-                if let Some(page) = toc_manager.navigate_to_chapter(chapter_idx, self.current_page) {
+                if let Some(page) = toc_manager.navigate_to_chapter(chapter_idx, self.current_page)
+                {
                     self.go_to_page(page, true, hub, rq, context);
                     return;
                 }
@@ -307,21 +304,15 @@ impl Reader {
     }
 
     /// Search for text in document
-    pub fn search(
-        &mut self,
-        query: &str,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) {
+    pub fn search(&mut self, query: &str, hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
         if query.is_empty() {
             self.queue_partial_update(rq);
             return;
         }
 
         // Store search query
-        use std::sync::atomic::AtomicBool;
         use rustc_hash::FxHashMap;
+        use std::sync::atomic::AtomicBool;
 
         self.search = Some(Search {
             _query: query.to_string(),
@@ -558,18 +549,14 @@ impl Reader {
     }
 
     /// Handle end of search - finalize search and clear search state
-    pub fn handle_end_of_search(
-        &mut self,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) {
+    pub fn handle_end_of_search(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         use crate::view::notification::Notification;
 
         // Get final search statistics
-        let (result_count, query) = self.search.as_ref().map_or((0, String::new()), |s| {
-            (s.results.len(), s._query.clone())
-        });
+        let (result_count, query) = self
+            .search
+            .as_ref()
+            .map_or((0, String::new()), |s| (s.results.len(), s._query.clone()));
 
         // Show completion message
         let msg = if result_count > 0 {
@@ -585,7 +572,9 @@ impl Reader {
 
         // Clear search state but keep highlights visible
         if let Some(ref mut search) = self.search {
-            search.running.store(false, std::sync::atomic::Ordering::SeqCst);
+            search
+                .running
+                .store(false, std::sync::atomic::Ordering::SeqCst);
         }
 
         // Update UI to clear search bar
@@ -626,12 +615,7 @@ impl Reader {
     }
 
     /// Handle add highlight - create new highlight at current location
-    pub fn handle_add_highlight(
-        &mut self,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) {
+    pub fn handle_add_highlight(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         use crate::view::notification::Notification;
 
         // Update document info with new annotation

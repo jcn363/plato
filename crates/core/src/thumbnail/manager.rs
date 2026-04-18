@@ -181,8 +181,10 @@ impl ThumbnailManager {
         self.pending_requests.insert(file_path.clone(), ());
 
         // Create and submit request with response channel
-        let (response_tx, response_rx): (Sender<ThumbnailResult<PathBuf>>, Receiver<ThumbnailResult<PathBuf>>) =
-            mpsc::channel();
+        let (response_tx, response_rx): (
+            Sender<ThumbnailResult<PathBuf>>,
+            Receiver<ThumbnailResult<PathBuf>>,
+        ) = mpsc::channel();
         let request = ThumbnailRequest::new(
             file_path.clone(),
             thumbnail_path.clone(),
@@ -230,9 +232,7 @@ impl ThumbnailManager {
 
         // Use library home directory if available (similar to library.thumbnail_preview_path())
         if let Some(ref home) = self.library_home {
-            Ok(home
-                .join(THUMBNAIL_PREVIEWS_DIRNAME)
-                .join(thumbnail_name))
+            Ok(home.join(THUMBNAIL_PREVIEWS_DIRNAME).join(thumbnail_name))
         } else {
             // Fallback: compute path relative to file's parent directory
             Ok(file_path

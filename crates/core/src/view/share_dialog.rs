@@ -64,7 +64,8 @@ impl ShareDialog {
         // Calculate dialog dimensions
         let button_count = 3i32; // Email, Cloud, Export
         let dialog_width = max_button_width.max(title_plan.width as i32) + 4 * padding;
-        let dialog_height = button_height * (button_count + 1) + (button_count + 3) * padding + x_height;
+        let dialog_height =
+            button_height * (button_count + 1) + (button_count + 3) * padding + x_height;
 
         let dx = (width as i32 - dialog_width) / 2;
         let dy = (height as i32 - dialog_height) / 2;
@@ -94,14 +95,19 @@ impl ShareDialog {
                 rect.min.x + padding,
                 rect.min.y + 2 * padding + button_height + i * (button_height + padding),
                 rect.max.x - padding,
-                rect.min.y + 2 * padding + button_height + i * (button_height + padding) + button_height
+                rect.min.y
+                    + 2 * padding
+                    + button_height
+                    + i * (button_height + padding)
+                    + button_height
             ];
             let button = Button::new(rect_button, event.clone(), label.to_string());
             children.push(Box::new(button));
         }
 
         // Add cancel button at bottom
-        let cancel_width = font.plan(LABEL_CANCEL, Some(max_button_width), None).width as i32 + padding;
+        let cancel_width =
+            font.plan(LABEL_CANCEL, Some(max_button_width), None).width as i32 + padding;
         let rect_cancel = rect![
             rect.max.x - cancel_width - padding,
             rect.max.y - button_height - padding,
@@ -164,25 +170,22 @@ impl View for ShareDialog {
                     return true;
                 }
                 self.will_close = true;
-                
+
                 let msg = if let Some(ref path) = self.document_path {
                     // Create export filename with timestamp
                     let timestamp = SystemTime::now()
                         .duration_since(UNIX_EPOCH)
                         .unwrap_or_default()
                         .as_secs();
-                    
+
                     if let Some(filename) = path.file_stem() {
-                        let export_name = format!("{}_export_{}.pdf", filename.to_string_lossy(), timestamp);
+                        let export_name =
+                            format!("{}_export_{}.pdf", filename.to_string_lossy(), timestamp);
                         let export_path = path.with_file_name(&export_name);
-                        
+
                         // Attempt to copy file
                         match fs::copy(path, &export_path) {
-                            Ok(bytes) => format!(
-                                "Exported: {} ({} bytes)",
-                                export_name,
-                                bytes
-                            ),
+                            Ok(bytes) => format!("Exported: {} ({} bytes)", export_name, bytes),
                             Err(e) => format!("Export failed: {}", e),
                         }
                     } else {
@@ -191,7 +194,7 @@ impl View for ShareDialog {
                 } else {
                     "Export: No document selected".to_string()
                 };
-                
+
                 bus.push_back(Event::Notify(msg));
                 bus.push_back(Event::Close(ViewId::ShareDialog));
                 true

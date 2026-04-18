@@ -55,8 +55,14 @@ impl ReaderSettingsManager {
         let entries = vec![
             EntryKind::Command("Font Settings".to_string(), EntryId::FontSettings),
             EntryKind::Command("Display Settings".to_string(), EntryId::DisplaySettings),
-            EntryKind::Command("Navigation Settings".to_string(), EntryId::NavigationSettings),
-            EntryKind::Command("Annotation Settings".to_string(), EntryId::AnnotationSettings),
+            EntryKind::Command(
+                "Navigation Settings".to_string(),
+                EntryId::NavigationSettings,
+            ),
+            EntryKind::Command(
+                "Annotation Settings".to_string(),
+                EntryId::AnnotationSettings,
+            ),
             EntryKind::Command("Search Settings".to_string(), EntryId::SearchSettings),
         ];
 

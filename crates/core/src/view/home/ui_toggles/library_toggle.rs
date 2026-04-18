@@ -126,16 +126,28 @@ impl Home {
             EntryKind::SubMenu(
                 "Filter by Format".to_string(),
                 vec![
-                    EntryKind::Command("PDF".to_string(), EntryId::FilterByFormat("pdf".to_string())),
-                    EntryKind::Command("EPUB".to_string(), EntryId::FilterByFormat("epub".to_string())),
+                    EntryKind::Command(
+                        "PDF".to_string(),
+                        EntryId::FilterByFormat("pdf".to_string()),
+                    ),
+                    EntryKind::Command(
+                        "EPUB".to_string(),
+                        EntryId::FilterByFormat("epub".to_string()),
+                    ),
                     EntryKind::Command("All Formats".to_string(), EntryId::ClearFilters),
                 ],
             ),
             EntryKind::SubMenu(
                 "Filter by Category".to_string(),
                 vec![
-                    EntryKind::Command("Fiction".to_string(), EntryId::FilterByCategory("fiction".to_string())),
-                    EntryKind::Command("Non-Fiction".to_string(), EntryId::FilterByCategory("non-fiction".to_string())),
+                    EntryKind::Command(
+                        "Fiction".to_string(),
+                        EntryId::FilterByCategory("fiction".to_string()),
+                    ),
+                    EntryKind::Command(
+                        "Non-Fiction".to_string(),
+                        EntryId::FilterByCategory("non-fiction".to_string()),
+                    ),
                     EntryKind::Command("All Categories".to_string(), EntryId::ClearFilters),
                 ],
             ),
@@ -160,7 +172,12 @@ impl Home {
     }
 
     /// Update library configuration
-    pub fn update_library_config(&mut self, config: LibraryToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn update_library_config(
+        &mut self,
+        config: LibraryToggleConfig,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         let show_stats_current = self.should_show_library_statistics();
 
         // If statistics visibility changed and menu is open, recreate it
@@ -266,7 +283,12 @@ impl Home {
     ///
     /// Shows a notification with current library statistics.
     /// Call this when statistics need to be refreshed.
-    pub fn update_library_statistics(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn update_library_statistics(
+        &mut self,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         let stats = utils::calculate_library_statistics(context);
 
         // Show notification with updated statistics
@@ -302,7 +324,11 @@ impl Home {
             .filter(|(_, info)| info.file.kind == format)
             .count();
 
-        let msg = format!("Filter applied: {} format ({} books)", format.to_uppercase(), count);
+        let msg = format!(
+            "Filter applied: {} format ({} books)",
+            format.to_uppercase(),
+            count
+        );
         let notif = Notification::new(msg, hub, rq, context);
         self.children.push(Box::new(notif) as Box<dyn View>);
 
@@ -337,19 +363,11 @@ impl Home {
     }
 
     /// Clear all active filters
-    fn clear_all_filters(
-        &mut self,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) {
+    fn clear_all_filters(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         use crate::view::notification::Notification;
 
         let stats = utils::calculate_library_statistics(context);
-        let msg = format!(
-            "Filters cleared. Showing all {} books",
-            stats.total_books
-        );
+        let msg = format!("Filters cleared. Showing all {} books", stats.total_books);
         let notif = Notification::new(msg, hub, rq, context);
         self.children.push(Box::new(notif) as Box<dyn View>);
 

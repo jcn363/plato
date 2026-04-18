@@ -73,8 +73,8 @@ impl View for BookView {
     fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut crate::font::Fonts) {
         use crate::color::{background, text_normal};
         use crate::geom::{BorderSpec, CornerSpec};
-        use crate::view::rendering::THICKNESS_MEDIUM;
         use crate::unit::scale_by_dpi;
+        use crate::view::rendering::THICKNESS_MEDIUM;
 
         let dpi = crate::unit::get_device_dpi();
         let dark = crate::theme::is_dark_mode();
@@ -96,11 +96,7 @@ impl View for BookView {
         // Draw placeholder text if no book is set
         if self.book_path.is_none() {
             let text = "No book selected";
-            let font = crate::font::font_from_style(
-                fonts,
-                &crate::font::NORMAL_STYLE,
-                dpi,
-            );
+            let font = crate::font::font_from_style(fonts, &crate::font::NORMAL_STYLE, dpi);
             let plan = font.plan(text, None, None);
             let x = self.rect.min.x + (self.rect.width() as i32 - plan.width) / 2;
             let y = self.rect.min.y + (self.rect.height() as i32) / 2;
@@ -219,7 +215,12 @@ impl Home {
     }
 
     /// Update book view configuration
-    pub fn update_book_view_config(&mut self, config: BookViewToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn update_book_view_config(
+        &mut self,
+        config: BookViewToggleConfig,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         let was_visible = self.book_view.is_some();
 
         // Check if settings changed before any mutable borrows

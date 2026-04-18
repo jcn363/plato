@@ -115,7 +115,11 @@ impl Home {
     }
 
     /// Update navigation bar configuration
-    pub fn update_navigation_bar_config(&mut self, config: NavigationBarToggleConfig, rq: &mut RenderQueue) {
+    pub fn update_navigation_bar_config(
+        &mut self,
+        config: NavigationBarToggleConfig,
+        rq: &mut RenderQueue,
+    ) {
         let was_visible = self.navigation_bar.is_some();
         let old_config = self.get_navigation_bar_state().config;
 

@@ -113,7 +113,11 @@ impl Home {
     }
 
     /// Update search bar configuration
-    pub fn update_search_bar_config(&mut self, config: SearchBarToggleConfig, rq: &mut RenderQueue) {
+    pub fn update_search_bar_config(
+        &mut self,
+        config: SearchBarToggleConfig,
+        rq: &mut RenderQueue,
+    ) {
         let was_visible = self.search_bar.is_some();
         let old_config = self.get_search_bar_state().config;
 

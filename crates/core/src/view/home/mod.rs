@@ -116,7 +116,7 @@ mod ui_toggles;
 mod updates;
 
 // Re-export types from home_core for public API
-pub use self::home_core::{Home, Fetcher, BookMenuData, TRASH_DIRNAME};
+pub use self::home_core::{BookMenuData, Fetcher, Home, TRASH_DIRNAME};
 
 pub use self::address_bar::AddressBar;
 pub use self::book::Book;
@@ -132,11 +132,11 @@ use self::input::HomeInputExt;
 use crate::context::Context;
 use crate::font::Fonts;
 use crate::framebuffer::Framebuffer;
+use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::view::menu::Menu;
 use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{Id, ID_FEEDER};
-use crate::framebuffer::UpdateMode;
 use anyhow::Error;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::path::PathBuf;
@@ -154,8 +154,7 @@ impl Home {
         let id = ID_FEEDER.next();
         let (_dpi, thickness, small_thickness, big_thickness, small_height, _big_height) =
             Self::calculate_dimensions();
-        let (_selected_library, sort_method, reverse_order) =
-            Self::get_library_settings(context);
+        let (_selected_library, sort_method, reverse_order) = Self::get_library_settings(context);
 
         let current_directory = context.library.home.clone();
         context.library.sort(sort_method, reverse_order);

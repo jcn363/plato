@@ -118,7 +118,12 @@ impl Home {
     }
 
     /// Update shelf view configuration
-    pub fn update_shelf_view_config(&mut self, config: ShelfViewToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn update_shelf_view_config(
+        &mut self,
+        config: ShelfViewToggleConfig,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         let was_visible = self.shelf.is_some();
         let old_config = self.get_shelf_view_state().config;
 

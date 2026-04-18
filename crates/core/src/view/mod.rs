@@ -98,14 +98,14 @@
 //! - `font` - Text rendering
 //! - `input` - Event definitions
 
+pub mod about_dialog;
 pub mod battery;
 pub mod button;
 pub mod calculator;
 pub mod clock;
+pub mod cloud_dialog;
 pub mod common;
 pub mod cover_editor;
-pub mod about_dialog;
-pub mod cloud_dialog;
 pub mod dialog;
 pub mod dictionary;
 pub mod email_dialog;
@@ -138,9 +138,9 @@ pub mod search_replace;
 pub mod settings;
 pub mod share_dialog;
 pub mod sketch;
-pub mod system_info_dialog;
 pub mod slider;
 pub mod statistics;
+pub mod system_info_dialog;
 pub mod top_bar;
 pub mod touch_events;
 

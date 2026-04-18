@@ -89,12 +89,9 @@ impl EmailDialog {
             rect.max.x - padding,
             y_start + input_height
         ];
-        let input_to = InputField::new(
-            rect_input_to,
-            ViewId::EmailSubjectInput,
-        )
-        .border(true)
-        .placeholder("recipient@example.com");
+        let input_to = InputField::new(rect_input_to, ViewId::EmailSubjectInput)
+            .border(true)
+            .placeholder("recipient@example.com");
         children.push(Box::new(input_to));
 
         // Add Subject: label and input
@@ -106,7 +103,11 @@ impl EmailDialog {
             rect.min.x + padding + subject_label_width,
             y_subject + input_height
         ];
-        let label_subject = Label::new(rect_label_subject, LABEL_SUBJECT.to_string(), Align::Left(0));
+        let label_subject = Label::new(
+            rect_label_subject,
+            LABEL_SUBJECT.to_string(),
+            Align::Left(0),
+        );
         children.push(Box::new(label_subject));
 
         let rect_input_subject = rect![
@@ -116,11 +117,8 @@ impl EmailDialog {
             y_subject + input_height
         ];
         // Create input field with text set separately to avoid borrow issues
-        let input_subject = InputField::new(
-            rect_input_subject,
-            ViewId::EmailSubjectInput,
-        )
-        .border(true);
+        let input_subject =
+            InputField::new(rect_input_subject, ViewId::EmailSubjectInput).border(true);
         children.push(Box::new(input_subject));
 
         // Add Message: label
@@ -139,7 +137,8 @@ impl EmailDialog {
         children.push(Box::new(label_body));
 
         // Add Cancel button
-        let _button_width = font.plan(LABEL_CANCEL, Some(max_button_width), None).width as i32 + padding;
+        let _button_width =
+            font.plan(LABEL_CANCEL, Some(max_button_width), None).width as i32 + padding;
         let rect_cancel = rect![
             rect.min.x + padding,
             rect.max.y - button_height - padding,
@@ -150,7 +149,8 @@ impl EmailDialog {
         children.push(Box::new(cancel_button));
 
         // Add Send button
-        let send_button_width = font.plan(LABEL_SEND, Some(max_button_width), None).width as i32 + padding;
+        let send_button_width =
+            font.plan(LABEL_SEND, Some(max_button_width), None).width as i32 + padding;
         let rect_send = rect![
             rect.max.x - padding - send_button_width,
             rect.max.y - button_height - padding,

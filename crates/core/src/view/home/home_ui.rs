@@ -50,23 +50,13 @@ impl Home {
     }
 
     /// Get library settings from context
-    pub fn get_library_settings(
-        context: &Context,
-    ) -> (
-        usize,
-        crate::metadata::SortMethod,
-        bool,
-    ) {
+    pub fn get_library_settings(context: &Context) -> (usize, crate::metadata::SortMethod, bool) {
         let selected_library = context.settings.selected_library;
         let library = &context.library;
         let sort_method = library.sort_method;
         let reverse_order = library.reverse_order;
 
-        (
-            selected_library,
-            sort_method,
-            reverse_order,
-        )
+        (selected_library, sort_method, reverse_order)
     }
 
     /// Add top bar to children vector
@@ -155,12 +145,7 @@ impl Home {
         let mut y_start = y_start;
         if context.settings.home.navigation_bar {
             let separator = Filler::new(
-                rect![
-                    rect.min.x,
-                    y_start,
-                    rect.max.x,
-                    y_start + small_thickness
-                ],
+                rect![rect.min.x, y_start, rect.max.x, y_start + small_thickness],
                 crate::color::foreground(theme::is_dark_mode()),
             );
             children.push(Box::new(separator) as Box<dyn View>);
@@ -232,7 +217,7 @@ impl Home {
             current_page,
             pages_count,
             library_name,
-            0, // count - will be updated by caller
+            0,     // count - will be updated by caller
             false, // filter - not filtering by default
         );
         children.push(Box::new(bottom_bar) as Box<dyn View>);
@@ -363,8 +348,12 @@ impl Home {
             y_min += small_thickness;
             index += 1;
 
-            let nav_bar_rect =
-                rect![rect.min.x, y_min, rect.max.x, y_min + small_height - thickness];
+            let nav_bar_rect = rect![
+                rect.min.x,
+                y_min,
+                rect.max.x,
+                y_min + small_height - thickness
+            ];
             children[index].resize(nav_bar_rect, hub, rq, context);
             y_min += small_height - thickness;
             index += 1;

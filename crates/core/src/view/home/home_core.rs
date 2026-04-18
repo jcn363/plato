@@ -223,5 +223,4 @@ impl Home {
     pub fn set_current_directory(&mut self, dir: PathBuf) {
         self.current_directory = dir;
     }
-
 }

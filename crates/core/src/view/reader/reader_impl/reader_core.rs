@@ -237,10 +237,7 @@ impl AnnotationList {
 
     /// Get all annotations for a specific page
     pub fn get_for_page(&self, page: usize) -> Vec<&Annotation> {
-        self.annotations
-            .iter()
-            .filter(|a| a.page == page)
-            .collect()
+        self.annotations.iter().filter(|a| a.page == page).collect()
     }
 
     /// Find next annotation from current page

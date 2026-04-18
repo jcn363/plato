@@ -143,7 +143,12 @@ impl Home {
     }
 
     /// Update settings configuration
-    pub fn update_settings_config(&mut self, config: SettingsToggleConfig, rq: &mut RenderQueue, context: &mut Context) {
+    pub fn update_settings_config(
+        &mut self,
+        config: SettingsToggleConfig,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
         let was_visible = self.settings_menu.is_some();
         let old_config = self.get_settings_state().config;
 
