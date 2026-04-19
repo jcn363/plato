@@ -36,7 +36,7 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
     }
 
-    /// Stub: Update the view
+    /// Update the view
     pub fn update(
         &mut self,
         _update: Option<UpdateMode>,
@@ -47,12 +47,12 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Update the toolbar
+    /// Update the toolbar
     pub fn update_tool_bar(&mut self, rq: &mut RenderQueue, _context: &Context) {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Update the bottom bar
+    /// Update the bottom bar
     pub fn update_bottom_bar(&mut self, rq: &mut RenderQueue) {
         self.queue_partial_update(rq);
     }
@@ -75,7 +75,7 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
     }
 
-    /// Stub: Handle focus change
+    /// Handle focus change
     pub fn handle_focus(
         &mut self,
         _v: bool,
@@ -86,12 +86,12 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Update annotations
+    /// Update annotations
     pub fn update_annotations(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Update non-inverted regions
+    /// Update non-inverted regions
     pub fn update_noninverted_regions(&mut self, rq: &mut RenderQueue) {
         self.queue_partial_update(rq);
     }
@@ -233,7 +233,7 @@ impl Reader {
         }
     }
 
-    /// Stub: Directional scroll
+    /// Directional scroll
     pub fn directional_scroll(
         &mut self,
         delta: Point,
@@ -246,7 +246,7 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Vertical scroll
+    /// Vertical scroll
     pub fn vertical_scroll(
         &mut self,
         distance: i32,
@@ -270,7 +270,7 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    /// Stub: Toggle keyboard
+    /// Toggle keyboard
     pub fn toggle_keyboard(
         &mut self,
         enable: bool,
@@ -287,7 +287,7 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Toggle search bar
+    /// Toggle search bar
     pub fn toggle_search_bar(
         &mut self,
         enable: bool,
@@ -303,7 +303,7 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Toggle margin cropper
+    /// Toggle margin cropper
     pub fn toggle_margin_cropper(
         &mut self,
         _hub: &Hub,
@@ -342,7 +342,7 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    /// Stub: Load pixmap
+    /// Load pixmap
     pub fn load_pixmap(
         &mut self,
         page_index: usize,
@@ -422,7 +422,7 @@ impl Reader {
         self.toggle_search_bar(false, hub, rq, context);
     }
 
-    /// Stub: Handle go to location
+    /// Handle go to location
     pub fn handle_go_to_location(
         &mut self,
         location: &Location,
@@ -441,7 +441,7 @@ impl Reader {
         }
     }
 
-    /// Stub: Handle close search bar
+    /// Handle close search bar
     pub fn handle_close_search_bar(
         &mut self,
         hub: &Hub,
@@ -453,7 +453,7 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Handle close edit note
+    /// Handle close edit note
     pub fn handle_close_edit_note(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &Context) {
         self._target_annotation = None;
         self.focus = None;
@@ -517,7 +517,7 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Handle menu event
+    /// Handle menu event
     pub fn handle_menu_event(
         &mut self,
         _evt: &Event,
@@ -551,7 +551,7 @@ impl Reader {
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Handle keyboard
+    /// Handle keyboard
     pub fn handle_keyboard(
         &mut self,
         _key: KeyKind,
@@ -791,12 +791,12 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    /// Stub: Handle shown
+    /// Handle shown
     pub fn handle_shown(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
     }
 
-    /// Stub: Handle open
+    /// Handle open
     pub fn handle_open(
         &mut self,
         _file: &Box<crate::metadata::Info>,
@@ -807,7 +807,7 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
     }
 
-    /// Stub: Handle back
+    /// Handle back
     pub fn handle_back(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         if let Some(prev_page) = self.history.pop_back() {
             self.go_to_page(prev_page, true, hub, rq, context);
