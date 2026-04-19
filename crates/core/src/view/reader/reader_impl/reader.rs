@@ -201,6 +201,7 @@ pub struct Reader {
     pub(crate) animation: Option<PageAnimation>,
     pub(crate) previous_chunks: Vec<RenderChunk>,
     pub(crate) bars_visible: bool,
+    pub(crate) margin_cropper_visible: bool,
 }
 
 // ===========================================================================
@@ -302,6 +303,7 @@ impl Reader {
             animation: None,
             previous_chunks: Vec::new(),
             bars_visible: true,
+            margin_cropper_visible: false,
         }
     }
 
