@@ -116,10 +116,15 @@ All `#[allow(dead_code)]` attributes have been removed from actionable code:
   - `animation` and `previous_chunks` fields - Used for page transition animations
   - `render_animation()` and related methods - Called from View trait `render()`
   - `start_page_animation()` and `clear_animation()` - Public API for animation control
-- Module-level `#[allow(dead_code)]` retained only for intentionally reserved API methods
-- Build passes with zero warnings
+- Gesture handling system fully integrated:
+  - `handle_gesture_event()` and `handle_button_event()` - Wired to View trait
+  - Selection motion handlers and helper functions - All actively used
+  - Removed duplicate standalone `handle_event` and `render` methods
+- **All `#[allow(dead_code)]` attributes removed** from reader module codebase-wide
+- Build passes with zero errors
 
 **Commits**:
 
 - `1de4711` - Remove 'reserved for future' dead_code: wire up toc, text_excerpt, find_annotation_mut
 - `7fc2258` - Wire up animation system: remove dead_code from animation fields and methods
+- `399797d` - Remove all dead_code attributes from reader module (reader_search.rs, reader_gestures.rs)

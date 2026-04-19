@@ -128,7 +128,6 @@
 // Imports and Constants
 // ===========================================================================
 
-use crate::color::{background, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{BoundedText, Document, TextLocation, TocEntry};
