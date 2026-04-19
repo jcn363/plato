@@ -700,9 +700,7 @@ impl Reader {
     // Render
     // -----------------------------------------------------------------------
 
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     /// Handle events for the Reader view
-    /// Used by the View trait implementation and external event handlers
     pub(crate) fn handle_event(
         &mut self,
         evt: &Event,
@@ -743,9 +741,7 @@ impl Reader {
         }
     }
 
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     /// Render the Reader view content
-    /// Used by the View trait implementation
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, _fonts: &mut Fonts) {
         fb.draw_rectangle(&rect, background(theme::is_dark_mode()));
 
