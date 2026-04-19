@@ -22,7 +22,6 @@ use super::{chapter, chapter_relative};
 use super::{BoundedText, Document, Location, TocEntry};
 use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir};
-use std::char;
 use std::path::Path;
 
 const USER_STYLESHEET: &str = "css/html-user.css";
@@ -441,7 +440,7 @@ impl<'a> PdfPage<'a> {
                 let mut word_rect = mupdf::FzRect::default();
 
                 for text_char in line.chars() {
-                    if let Some(c) = char::from_u32(text_char.char_code() as u32) {
+                    if let Some(c) = std::char::from_u32(text_char.char_code() as u32) {
                         if c.is_whitespace() {
                             if !current_word.is_empty() {
                                 let bounds: Boundary = word_rect.into();
