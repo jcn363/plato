@@ -236,60 +236,70 @@ impl Reader {
     /// Stub: Directional scroll
     pub fn directional_scroll(
         &mut self,
-        _delta: Point,
+        delta: Point,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
+        self.view_port.page_offset.y = (self.view_port.page_offset.y + delta.y as i32).max(0);
+        self.view_port.page_offset.x = (self.view_port.page_offset.x + delta.x as i32).max(0);
         self.queue_partial_update(rq);
     }
 
     /// Stub: Vertical scroll
     pub fn vertical_scroll(
         &mut self,
-        _distance: i32,
+        distance: i32,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
+        self.view_port.page_offset.y = (self.view_port.page_offset.y + distance).max(0);
         self.queue_partial_update(rq);
     }
 
     /// Toggle top toolbar visibility
     pub fn toggle_bars(
         &mut self,
-        _show: Option<bool>,
+        show: Option<bool>,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        // The toolbar is the first child in the reader's children vector
-        // A full UI refresh will redraw the toolbar in the correct state
-        // Note: Full implementation would track toolbar visibility state
-        // and conditionally render or hide the toolbar
+        self.bars_visible = show.unwrap_or(!self.bars_visible);
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
     /// Stub: Toggle keyboard
     pub fn toggle_keyboard(
         &mut self,
-        _enable: bool,
+        enable: bool,
         _update: Option<UpdateMode>,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
+        if enable {
+            self.focus = Some(crate::view::ViewId::Keyboard);
+        } else {
+            self.focus = None;
+        }
         self.queue_partial_update(rq);
     }
 
     /// Stub: Toggle search bar
     pub fn toggle_search_bar(
         &mut self,
-        _enable: bool,
+        enable: bool,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
+        if enable {
+            self.focus = Some(crate::view::ViewId::SearchBar);
+        } else {
+            self.focus = None;
+        }
         self.queue_partial_update(rq);
     }
 
@@ -300,6 +310,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
+        self.margin_cropper_visible = !self.margin_cropper_visible;
         self.queue_partial_update(rq);
     }
 
@@ -334,11 +345,20 @@ impl Reader {
     /// Stub: Load pixmap
     pub fn load_pixmap(
         &mut self,
-        _page_index: usize,
+        page_index: usize,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
+        let mut doc = self._doc.lock().unwrap();
+        let (pixmap, _) = doc.pixmap(crate::document::Location::Exact(page_index), 1.0, 3).unwrap();
+        drop(doc);
+        let resource = crate::view::reader::reader_impl::reader_core::Resource {
+            pixmap,
+            frame: self.rect,
+            scale: 1.0,
+        };
+        self.cache.insert(page_index, resource);
         self.queue_partial_update(rq);
     }
 
