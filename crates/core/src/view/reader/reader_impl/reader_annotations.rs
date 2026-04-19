@@ -2,6 +2,9 @@
 //!
 //! Handles annotation management, notes, highlighting, and bookmarks.
 //!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
+//!
 //! ## Methods to Move Here
 //! - `toggle_edit_note()` - Edit annotation note (~45 lines)
 //! - `toggle_annotation_menu()` - Annotation context menu (~70 lines)

@@ -332,7 +332,6 @@ impl Reader {
             running: AtomicBool::new(false),
             _results_count: 0,
             highlights: FxHashMap::default(),
-            direction: crate::geom::LinearDir::Forward,
         });
 
         // Trigger actual search through hub event

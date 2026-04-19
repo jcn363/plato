@@ -2,6 +2,9 @@
 //!
 //! This module handles all annotation-related functionality for the Reader view,
 //! including bookmarks, highlights, and notes management.
+//!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
 
 use crate::document::Location;
 use crate::metadata::Annotation;

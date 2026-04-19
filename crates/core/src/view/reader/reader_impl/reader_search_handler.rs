@@ -2,6 +2,9 @@
 //!
 //! This module handles all search functionality for the Reader view,
 //! including text search, result navigation, and search history.
+//!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
 
 use crate::context::Context;
 use crate::document::Location;
@@ -67,7 +70,6 @@ impl ReaderSearchHandler {
             running: AtomicBool::new(false),
             _results_count: 0,
             highlights: FxHashMap::default(),
-            direction,
         });
         self.search_direction = direction;
         self.current_result_index = 0;
@@ -153,9 +155,6 @@ impl ReaderSearchHandler {
     /// Set search direction
     pub fn set_search_direction(&mut self, direction: LinearDir) {
         self.search_direction = direction;
-        if let Some(ref mut search) = self.current_search {
-            search.direction = direction;
-        }
     }
 
     /// Get result count

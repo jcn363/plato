@@ -2,6 +2,9 @@
 //!
 //! This module handles rendering functionality for the Reader view,
 //! including page rendering, caching, and display management.
+//!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
 
 use crate::context::Context;
 use crate::framebuffer::{Framebuffer, Pixmap};

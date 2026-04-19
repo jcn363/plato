@@ -2,6 +2,9 @@
 //!
 //! This module handles all dialog creation and management for the Reader view,
 //! including confirmation dialogs, input dialogs, and message dialogs.
+//!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
 
 use crate::color::{BLUE, GREEN, ORANGE, PURPLE, RED, YELLOW};
 use crate::context::Context;

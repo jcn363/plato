@@ -2,6 +2,9 @@
 //!
 //! This module contains the core state management functionality for the Reader view,
 //! including state initialization, updates, and persistence.
+//!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
 
 use crate::context::Context;
 use crate::geom::Rectangle;

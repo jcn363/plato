@@ -2,6 +2,9 @@
 //!
 //! Handles page rendering, animation, text extraction, and display updates.
 //!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
+//!
 //! ## Methods to Move Here
 //! - `render()` - Main rendering to framebuffer (~200 lines)
 //! - `render_animation()` - Page transition animations (~80 lines)

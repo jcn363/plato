@@ -2,6 +2,9 @@
 //!
 //! This module handles all settings menu creation and management for the Reader view,
 //! including font settings, display options, and configuration dialogs.
+//!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
 
 use crate::context::Context;
 use crate::geom::Rectangle;

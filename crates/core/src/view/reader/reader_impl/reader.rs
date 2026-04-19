@@ -159,7 +159,6 @@ use super::reader_core::{
 };
 use super::reader_rendering;
 
-pub const MEM_SCHEME: &str = "mem:";
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
 pub const ANNOTATION_DRIFT: f32 = 0.05;
 
@@ -195,7 +194,9 @@ pub struct Reader {
     pub(crate) reflowable: bool,
     pub(crate) ephemeral: bool,
     pub(crate) finished: bool,
+    #[allow(dead_code)]
     pub(crate) animation: Option<PageAnimation>,
+    #[allow(dead_code)]
     pub(crate) previous_chunks: Vec<RenderChunk>,
     pub(crate) bars_visible: bool,
     pub(crate) margin_cropper_visible: bool,
@@ -349,6 +350,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)]
     fn render_animation(&self, fb: &mut dyn Framebuffer, rect: Rectangle) {
         if let Some(ref anim) = self.animation {
             for chunk in &self.previous_chunks {
@@ -357,6 +359,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)]
     fn render_chunk_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -492,12 +495,14 @@ impl Reader {
     // Table of Contents and Page Lookup
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)]
     fn toc(&self) -> Option<Vec<TocEntry>> {
         super::reader_settings::build_toc(&self.info, |name| {
             super::reader_settings::find_page_by_name(&self.info, name)
         })
     }
 
+    #[allow(dead_code)]
     fn find_page_by_name(&self, name: &str) -> Option<usize> {
         super::reader_settings::find_page_by_name(&self.info, name)
     }
@@ -506,6 +511,7 @@ impl Reader {
     // Text Excerpt and Selection Geometry
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)]
     fn text_excerpt(&self, sel: [Point; 2]) -> Option<String> {
         reader_rendering::text_excerpt(&self.text, sel, &self.info.language)
     }
@@ -514,6 +520,7 @@ impl Reader {
     // Annotation Lookup and UI Reseed
     // -----------------------------------------------------------------------
 
+    #[allow(dead_code)]
     fn find_annotation_mut(&mut self, sel: [TextLocation; 2]) -> Option<&mut Annotation> {
         super::reader_annotations::find_annotation_mut(&mut self.info, sel)
     }

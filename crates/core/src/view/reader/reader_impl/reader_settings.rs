@@ -2,6 +2,9 @@
 //!
 //! Handles all font, contrast, zoom settings menus and configuration.
 //!
+//! Note: This is a WIP module - components are reserved for future use.
+#![allow(dead_code)]
+//!
 //! ## Methods Extracted
 //! - `toggle_font_family_menu()` - Font selection ✓
 //! - `toggle_font_size_menu()` - Font size selection ✓
