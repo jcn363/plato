@@ -10,4 +10,4 @@ log.workspace = true
 regex.workspace = true
 serde.workspace = true
 uuid.workspace = true
-zip = "8.5.1"
+zip.workspace = true

@@ -530,7 +530,7 @@ dependencies = [
 
 [[package]]
 name = "epub_editor"
-version = "0.1.0"
+version = "0.9.45"
 dependencies = [
  "anyhow",
  "env_logger",

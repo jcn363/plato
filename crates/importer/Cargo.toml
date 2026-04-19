@@ -1,9 +1,9 @@
 [package]
 authors = ["Bastien Dejean <nihilhill@gmail.com>"]
 name = "importer"
-version = "0.9.45"
-edition = "2021"
-license = "MIT"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [[bin]]
 name = "plato-import"
