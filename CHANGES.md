@@ -189,7 +189,8 @@ All placeholder code has been activated by removing `#[allow(dead_code)]` attrib
 
 - **Created docs/README.md**: Comprehensive documentation index
 - **Archived Outdated Plans**: Moved APK, MOBI, and Rust-only plans to docs/archive/
-- **Consolidated PDF Documentation**: Moved PDF.md and PDFRust.md to docs/
+- **Consolidated PDF Documentation**: Moved PDF.md back to root (user preference), PDFRust.md to docs/
+- **Added APPLE-PLAN.md**: iPhone and iPad support plan moved to docs/
 
 ## Verification
 
@@ -226,10 +227,7 @@ cargo check --target x86_64-unknown-linux-gnu -p plato-core
 ### Current Status
 
 - **Zero dead code warnings** for implementations (44 remaining are reserved for future use)
-- **5 unused component warnings** - available for future integration:
-  - `ResultsLabel` - search results count display
-  - `MarginCropper` - PDF margin cropping tool
-  - `BUTTON_DIAMETER` - margin cropper button size constant
+- **UI components wired up**: ResultsLabel, ChapterLabel, MarginCropper integrated
 - Build: ✅ ARM core library compiles successfully
 
 ### Code Quality
