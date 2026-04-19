@@ -131,7 +131,7 @@
 use crate::color::{background, foreground};
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
-use crate::document::{BoundedText, Document, SimpleTocEntry, TextLocation, TocEntry};
+use crate::document::{BoundedText, Document, TextLocation, TocEntry};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::LinearDir;
@@ -147,8 +147,6 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{atomic, Arc, Mutex};
 
-use crate::view::common::locate;
-use crate::view::top_bar::TopBar;
 use crate::view::{
     Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER, SMALL_BAR_HEIGHT,
 };
@@ -160,7 +158,6 @@ use super::reader_core::{
     State, ViewPort,
 };
 use super::reader_rendering;
-use super::reader_search;
 
 pub const MEM_SCHEME: &str = "mem:";
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
@@ -352,7 +349,6 @@ impl Reader {
         }
     }
 
-    #[allow(dead_code)] // Used by Reader::render method
     fn render_animation(&self, fb: &mut dyn Framebuffer, rect: Rectangle) {
         if let Some(ref anim) = self.animation {
             for chunk in &self.previous_chunks {
@@ -496,21 +492,12 @@ impl Reader {
     // Table of Contents and Page Lookup
     // -----------------------------------------------------------------------
 
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn toc(&self) -> Option<Vec<TocEntry>> {
         super::reader_settings::build_toc(&self.info, |name| {
             super::reader_settings::find_page_by_name(&self.info, name)
         })
     }
 
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
-    fn toc_aux(&self, simple_toc: &[SimpleTocEntry], index: &mut usize) -> Vec<TocEntry> {
-        super::reader_settings::build_toc_aux(simple_toc, index, |name| {
-            super::reader_settings::find_page_by_name(&self.info, name)
-        })
-    }
-
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn find_page_by_name(&self, name: &str) -> Option<usize> {
         super::reader_settings::find_page_by_name(&self.info, name)
     }
@@ -519,56 +506,16 @@ impl Reader {
     // Text Excerpt and Selection Geometry
     // -----------------------------------------------------------------------
 
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn text_excerpt(&self, sel: [Point; 2]) -> Option<String> {
         reader_rendering::text_excerpt(&self.text, sel, &self.info.language)
-    }
-
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
-    fn selected_text(&self) -> Option<String> {
-        self.selection
-            .as_ref()
-            .and_then(|sel| self.text_excerpt([sel.start, sel.end]))
-    }
-
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
-    fn text_rect(&self, sel: [Point; 2]) -> Option<Rectangle> {
-        reader_rendering::text_rect(&self.text, &self.chunks, sel)
-    }
-
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
-    fn render_results(&self, rq: &mut RenderQueue) {
-        reader_search::render_results(self.search.as_ref(), &self.chunks, self.id, rq);
-    }
-
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
-    fn selection_rect(&self) -> Option<Rectangle> {
-        super::reader_rendering::selection_rect(self.selection.as_ref(), &self.text, &self.chunks)
     }
 
     // -----------------------------------------------------------------------
     // Annotation Lookup and UI Reseed
     // -----------------------------------------------------------------------
 
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
-    fn find_annotation_ref(&mut self, sel: [TextLocation; 2]) -> Option<&Annotation> {
-        super::reader_annotations::find_annotation_ref(&self.info, sel)
-    }
-
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
     fn find_annotation_mut(&mut self, sel: [TextLocation; 2]) -> Option<&mut Annotation> {
         super::reader_annotations::find_annotation_mut(&mut self.info, sel)
-    }
-
-    #[allow(dead_code)] // Used by Reader::handle_menu_event method
-    fn reseed(&mut self, rq: &mut RenderQueue, context: &mut Context) {
-        if let Some(index) = locate::<TopBar>(self) {
-            if let Some(top_bar) = self.child_mut(index).downcast_mut::<TopBar>() {
-                top_bar.reseed(rq, context);
-            }
-        }
-
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
     // -----------------------------------------------------------------------

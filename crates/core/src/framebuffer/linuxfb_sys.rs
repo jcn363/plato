@@ -1,6 +1,4 @@
-#![allow(unused)]
-
-use anyhow::{Context, Error};
+use anyhow::Error;
 use nix::{ioctl_read_bad, ioctl_write_ptr_bad};
 use std::fs::File;
 use std::mem;

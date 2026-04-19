@@ -18,10 +18,6 @@ use std::path::PathBuf;
 const MIN_CROP_SIZE: u32 = 10;
 const CROP_BORDER_THICKNESS: u16 = 2;
 const CROP_SELECTION_COLOR: crate::color::Color = WHITE;
-#[allow(dead_code)] // Used by cover editor tests
-const CROP_SHOW_OVERLAY: bool = false;
-#[allow(dead_code)] // Used by cover editor tests
-const CROP_OVERLAY_ALPHA: f32 = 0.25;
 
 #[derive(Clone, PartialEq)]
 enum EditorMode {

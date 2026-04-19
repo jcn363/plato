@@ -1,15 +1,7 @@
 use crate::context::Context;
 use crate::geom::Point;
 use crate::view::{Hub, RenderQueue};
-use crate::view::{View, ViewId};
-
-/// Find the index of a child view with the specified ViewId.
-#[allow(dead_code)] // Utility function for future dialog management
-pub fn find_child_index_by_view_id(children: &[Box<dyn View>], view_id: ViewId) -> Option<usize> {
-    children
-        .iter()
-        .position(|child| child.view_id() == Some(view_id))
-}
+use crate::view::View;
 
 /// Find the index of a child view of the specified type.
 pub fn find_child_index_by_type<T: 'static + View>(children: &[Box<dyn View>]) -> Option<usize> {

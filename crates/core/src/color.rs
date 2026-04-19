@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use crate::geom::lerp;
 use serde::{Deserialize, Serialize};
 
