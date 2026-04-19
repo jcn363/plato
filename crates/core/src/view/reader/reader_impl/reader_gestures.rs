@@ -20,11 +20,9 @@ use super::reader::Reader;
 use super::reader_core::State;
 use crate::view::{Event, Hub, RenderData, RenderQueue};
 
-#[allow(dead_code)] // Used in handle_selection_motion and handle_selection_up functions
 const RECT_DIST_JITTER: f32 = 15.0;
 
 /// Update selection rectangles in forward direction (for handle_selection_motion)
-#[allow(dead_code)] // Selection rectangle updates for gesture handling
 fn update_selection_rects_forward(
     rects: &[(Rectangle, Point)],
     boundary_low: Point,
@@ -58,7 +56,6 @@ fn update_selection_rects_forward(
 }
 
 /// Update selection rectangles in backward direction (for handle_selection_up)
-#[allow(dead_code)] // Backward selection rectangle update for gesture handling
 fn update_selection_rects_backward(
     rects: &[(Rectangle, Point)],
     boundary_low: Point,
@@ -103,7 +100,6 @@ fn merge_rects_at_boundary(rect: &mut Rectangle, other: Rectangle) {
 }
 
 /// Update selection rectangles by dispatching to forward or backward handler
-#[allow(dead_code)] // Used for selection rectangle updates in gesture handling
 fn update_selection_rects(
     rects: &[(Rectangle, Point)],
     boundary_low: Point,
@@ -124,7 +120,6 @@ fn update_selection_rects(
 }
 
 impl Reader {
-    #[allow(dead_code)] // Used by event handling system
     pub(crate) fn handle_gesture_event(
         &mut self,
         evt: &GestureEvent,
@@ -339,7 +334,6 @@ impl Reader {
         true
     }
 
-    #[allow(dead_code)] // Used by event handling system
     pub(crate) fn handle_button_event(
         &mut self,
         evt: &DeviceEvent,
@@ -394,7 +388,6 @@ impl Reader {
         }
     }
 
-    #[allow(dead_code)] // Used by gesture event handling
     fn handle_selection_motion(
         &mut self,
         position: Point,
@@ -411,7 +404,6 @@ impl Reader {
     }
 
     /// Find the nearest word to the given position and return rects
-    #[allow(dead_code)] // Used by handle_selection_motion
     fn find_nearest_word_and_rects(
         &self,
         position: Point,
@@ -442,7 +434,6 @@ impl Reader {
     }
 
     /// Update selection bounds based on a new word and render changes
-    #[allow(dead_code)] // Used by handle_selection_motion
     fn update_selection_from_word(
         &mut self,
         word: crate::document::BoundedText,
@@ -471,7 +462,6 @@ impl Reader {
     }
 
     /// Get current selection bounds or return early if none exists
-    #[allow(dead_code)] // Used by update_selection_from_word
     fn get_selection_bounds(&self) -> Option<(Point, Point)> {
         self.selection
             .as_ref()
@@ -479,7 +469,6 @@ impl Reader {
     }
 
     /// Render selection changes using the shared rect update logic
-    #[allow(dead_code)] // Used by update_selection_from_word
     fn render_selection_changes(
         &self,
         rects: &[(Rectangle, Point)],
@@ -496,7 +485,6 @@ impl Reader {
         update_selection_rects(&rects, end_low, end_high, rq, self.id, false);
     }
 
-    #[allow(dead_code)] // Used by gesture event handling
     fn handle_selection_up(
         &mut self,
         center: Point,
@@ -513,7 +501,6 @@ impl Reader {
     }
 
     /// Find the word at the given center position and return with rects
-    #[allow(dead_code)] // Used by handle_selection_up
     fn find_word_at_center(
         &self,
         center: Point,
@@ -544,7 +531,6 @@ impl Reader {
     }
 
     /// Finalize selection bounds based on the tapped word
-    #[allow(dead_code)] // Used by handle_selection_up
     fn finalize_selection(
         &mut self,
         word: crate::document::BoundedText,
@@ -566,7 +552,6 @@ impl Reader {
     }
 
     /// Update the selection bounds in the selection struct
-    #[allow(dead_code)] // Used by finalize_selection
     fn update_selection_bounds(&mut self, start: Point, end: Point) {
         if let Some(selection) = self.selection.as_mut() {
             selection.start = start;
@@ -575,7 +560,6 @@ impl Reader {
     }
 
     /// Calculate the final selection bounds based on word position
-    #[allow(dead_code)] // Used by finalize_selection
     fn calculate_selection_bounds(
         &self,
         word: crate::document::BoundedText,

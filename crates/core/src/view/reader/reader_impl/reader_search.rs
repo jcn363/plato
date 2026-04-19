@@ -25,7 +25,6 @@ use super::reader_core::{RenderChunk, Search};
 ///
 /// Creates a menu for selecting search direction (Forward/Backward).
 /// This menu is toggled by Reader::toggle_search_menu().
-#[allow(dead_code)] // Used by search menu functionality
 pub(crate) fn create_search_menu(
     search_direction: LinearDir,
     rect: Rectangle,
