@@ -178,7 +178,6 @@ impl TextLine {
                 None
             } else {
                 Some(TextChar {
-                    ctx: self.ctx,
                     text_char: chr,
                 })
             }
@@ -208,7 +207,6 @@ impl Iterator for TextCharIter {
             None
         } else {
             let text_char = TextChar {
-                ctx: self.ctx,
                 text_char: self.current,
             };
             self.current = unsafe { (*self.current).next };
@@ -219,8 +217,6 @@ impl Iterator for TextCharIter {
 
 /// Safe wrapper around an MuPDF text character. Not owned — borrows from TextLine.
 pub struct TextChar {
-    #[allow(dead_code)] // MuPDF context reference for text character operations
-    ctx: *mut FzContext,
     text_char: *mut FzTextChar,
 }
 
