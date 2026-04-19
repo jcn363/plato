@@ -159,6 +159,7 @@ All placeholder code has been activated by removing `#[allow(dead_code)]` attrib
 **Goal**: Remove dead code warnings by properly integrating ReaderAnnotationManager
 
 **Implementation Steps Completed**:
+
 1. **ReaderAnnotationManager Integration**
    - ✅ Replaced `_annotations: FxHashMap<usize, Vec<Annotation>>` with `annotation_manager: ReaderAnnotationManager`
    - ✅ Wired up `handle_show_annotations()` to use annotation manager
@@ -178,6 +179,7 @@ All placeholder code has been activated by removing `#[allow(dead_code)]` attrib
    - ✅ Using `HIGHLIGHT_DRIFT` constant for visual offset
 
 **Dead Code Activated**:
+
 - ✅ `ReaderAnnotationManager` struct - Now integrated with Reader
 - ✅ `animation` and `previous_chunks` fields - Reserved for page transition animations
 - ✅ `render_animation()` and `render_chunk_animation()` methods - Animation system ready

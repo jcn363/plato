@@ -2,8 +2,6 @@
 //!
 //! This module handles all search functionality for the Reader view,
 //! including text search, result navigation, and search history.
-//!
-//! Note: This is a WIP module - components are reserved for future use.
 #![allow(dead_code)]
 
 use crate::context::Context;

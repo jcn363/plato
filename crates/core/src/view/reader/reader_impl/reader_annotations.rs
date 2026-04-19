@@ -1,8 +1,6 @@
 //! Reader Annotations Module
 //!
 //! Handles annotation management, notes, highlighting, and bookmarks.
-//!
-//! Note: This is a WIP module - components are reserved for future use.
 #![allow(dead_code)]
 //!
 //! ## Methods to Move Here

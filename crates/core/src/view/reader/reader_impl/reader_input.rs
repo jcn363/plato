@@ -2,8 +2,6 @@
 //!
 //! This module handles all input processing and gesture recognition for the Reader view,
 //! including touch events, button presses, and keyboard input.
-//!
-//! Note: This is a WIP module - components are reserved for future use.
 #![allow(dead_code)]
 
 use crate::context::Context;

@@ -2,8 +2,6 @@
 //!
 //! This module handles table of contents functionality for the Reader view,
 //! including TOC navigation, page lookup, and chapter management.
-//!
-//! Note: This is a WIP module - components are reserved for future use.
 #![allow(dead_code)]
 
 use crate::document::{SimpleTocEntry, TocEntry, TocLocation};

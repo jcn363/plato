@@ -158,7 +158,14 @@ use super::reader_core::{
     State, ViewPort,
 };
 use super::reader_annotations_ext::ReaderAnnotationManager;
+use super::reader_dialog_manager::ReaderDialogManager;
+use super::reader_input::ReaderInputHandler;
 use super::reader_rendering;
+use super::reader_rendering_ext::{ReaderRenderCache, ReaderRenderEngine};
+use super::reader_search_handler::ReaderSearchHandler;
+use super::reader_settings_ui::ReaderSettingsManager;
+use super::reader_state::ReaderStateManager;
+use super::reader_toc::ReaderTocManager;
 
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
 pub const ANNOTATION_DRIFT: f32 = 0.05;
@@ -176,6 +183,22 @@ pub struct Reader {
     pub(crate) chunks: Vec<RenderChunk>,
     pub(crate) text: FxHashMap<usize, Vec<BoundedText>>,
     pub(crate) annotation_manager: ReaderAnnotationManager,
+    #[allow(dead_code)]
+    pub(crate) dialog_manager: ReaderDialogManager,
+    #[allow(dead_code)]
+    pub(crate) input_handler: ReaderInputHandler,
+    #[allow(dead_code)]
+    pub(crate) render_cache: ReaderRenderCache,
+    #[allow(dead_code)]
+    pub(crate) render_engine: ReaderRenderEngine,
+    #[allow(dead_code)]
+    pub(crate) search_handler: ReaderSearchHandler,
+    #[allow(dead_code)]
+    pub(crate) settings_manager: ReaderSettingsManager,
+    #[allow(dead_code)]
+    pub(crate) state_manager: ReaderStateManager,
+    #[allow(dead_code)]
+    pub(crate) toc_manager: ReaderTocManager,
     pub(crate) _noninverted_regions: FxHashMap<usize, Vec<Boundary>>,
     pub(crate) focus: Option<ViewId>,
     pub(crate) search: Option<Search>,
@@ -280,6 +303,14 @@ impl Reader {
             chunks: Vec::new(),
             text: FxHashMap::default(),
             annotation_manager: ReaderAnnotationManager::new(),
+            dialog_manager: ReaderDialogManager::new(id),
+            input_handler: ReaderInputHandler::new(id),
+            render_cache: ReaderRenderCache::new(50 * 1024 * 1024), // 50MB cache
+            render_engine: ReaderRenderEngine::new(50 * 1024 * 1024),
+            search_handler: ReaderSearchHandler::new(id),
+            settings_manager: ReaderSettingsManager::new(id),
+            state_manager: ReaderStateManager::new(info.clone(), 0, pages_count),
+            toc_manager: ReaderTocManager::new(),
             _noninverted_regions: FxHashMap::default(),
             focus: None,
             search: None,

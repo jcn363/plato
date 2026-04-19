@@ -2,8 +2,6 @@
 //!
 //! This module provides search functionality for the Reader view,
 //! including search result navigation and highlighting.
-//!
-//! Note: This is a WIP module - components are reserved for future use.
 #![allow(dead_code)]
 
 //! ## Methods to Move Here

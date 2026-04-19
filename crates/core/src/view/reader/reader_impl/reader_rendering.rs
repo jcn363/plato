@@ -1,8 +1,6 @@
 //! Reader Rendering Module
 //!
 //! Handles page rendering, animation, text extraction, and display updates.
-//!
-//! Note: This is a WIP module - components are reserved for future use.
 #![allow(dead_code)]
 //!
 //! ## Methods to Move Here
