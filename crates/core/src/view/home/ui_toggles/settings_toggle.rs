@@ -222,48 +222,6 @@ impl Home {
     }
 }
 
-/// Utility functions for settings toggles
-pub mod utils {
-    use super::*;
-
-    /// Create default settings toggle config
-    pub fn create_default_settings_config() -> SettingsToggleConfig {
-        SettingsToggleConfig::default()
-    }
-
-    /// Settings categories
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum SettingsCategory {
-        Font,
-        Display,
-        Reading,
-        Advanced,
-        About,
-        Help,
-    }
-
-    /// Format settings value for display
-    pub fn format_settings_value(category: SettingsCategory, key: &str, value: &str) -> String {
-        match (category, key) {
-            (SettingsCategory::Font, "font_size") => {
-                if let Ok(size) = value.parse::<f32>() {
-                    format!("{:.1}pt", size)
-                } else {
-                    value.to_string()
-                }
-            }
-            (SettingsCategory::Display, "brightness") => {
-                if let Ok(brightness) = value.parse::<f32>() {
-                    format!("{:.0}%", brightness * 100.0)
-                } else {
-                    value.to_string()
-                }
-            }
-            _ => value.to_string(),
-        }
-    }
-}
-
 // Settings event types
 #[derive(Debug, Clone)]
 pub enum FontSettings {}

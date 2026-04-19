@@ -216,10 +216,21 @@ impl Home {
                     }
                     EntryId::SystemInfo => {
                         // Library statistics - calculate and display
-                        let stats = utils::calculate_library_statistics(context);
+                        let total_books = context.library.len();
+                        let pdf_count = context
+                            .library
+                            .iter()
+                            .filter(|(_, info)| info.file.kind == "pdf")
+                            .count();
+                        let epub_count = context
+                            .library
+                            .iter()
+                            .filter(|(_, info)| info.file.kind == "epub")
+                            .count();
+                        let other_count = total_books - pdf_count - epub_count;
                         let msg = format!(
                             "Library: {} books ({} PDF, {} EPUB, {} other)",
-                            stats.total_books, stats.pdf_count, stats.epub_count, stats.other_count
+                            total_books, pdf_count, epub_count, other_count
                         );
                         let notif = Notification::new(msg, hub, rq, context);
                         self.children.push(Box::new(notif) as Box<dyn View>);
@@ -289,12 +300,23 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let stats = utils::calculate_library_statistics(context);
+        let total_books = context.library.len();
+        let pdf_count = context
+            .library
+            .iter()
+            .filter(|(_, info)| info.file.kind == "pdf")
+            .count();
+        let epub_count = context
+            .library
+            .iter()
+            .filter(|(_, info)| info.file.kind == "epub")
+            .count();
+        let other_count = total_books - pdf_count - epub_count;
 
         // Show notification with updated statistics
         let msg = format!(
             "Library updated: {} books ({} PDF, {} EPUB, {} other)",
-            stats.total_books, stats.pdf_count, stats.epub_count, stats.other_count
+            total_books, pdf_count, epub_count, other_count
         );
 
         use crate::view::notification::Notification;
@@ -366,101 +388,13 @@ impl Home {
     fn clear_all_filters(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
         use crate::view::notification::Notification;
 
-        let stats = utils::calculate_library_statistics(context);
-        let msg = format!("Filters cleared. Showing all {} books", stats.total_books);
+        let total_books = context.library.len();
+        let msg = format!("Filters cleared. Showing all {} books", total_books);
         let notif = Notification::new(msg, hub, rq, context);
         self.children.push(Box::new(notif) as Box<dyn View>);
 
         // Trigger library refresh to clear visual filters
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-    }
-}
-
-/// Utility functions for library toggles
-pub mod utils {
-    use super::*;
-
-    /// Create default library toggle config
-    pub fn create_default_library_config() -> LibraryToggleConfig {
-        LibraryToggleConfig::default()
-    }
-
-    /// Get library sort options
-    pub fn get_library_sort_options() -> Vec<LibrarySortOption> {
-        vec![
-            LibrarySortOption::Title,
-            LibrarySortOption::Author,
-            LibrarySortOption::Date,
-            LibrarySortOption::Size,
-            LibrarySortOption::Format,
-        ]
-    }
-
-    /// Library sort options
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum LibrarySortOption {
-        Title,
-        Author,
-        Date,
-        Size,
-        Format,
-    }
-
-    /// Get library filter options
-    pub fn get_library_filter_options() -> Vec<LibraryFilterOption> {
-        vec![
-            LibraryFilterOption::All,
-            LibraryFilterOption::PDF,
-            LibraryFilterOption::EPUB,
-            LibraryFilterOption::TXT,
-            LibraryFilterOption::Other,
-        ]
-    }
-
-    /// Library filter options
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum LibraryFilterOption {
-        All,
-        PDF,
-        EPUB,
-        TXT,
-        Other,
-    }
-
-    /// Calculate library statistics
-    pub fn calculate_library_statistics(context: &Context) -> LibraryStatistics {
-        let total_books = context.library.len();
-        let pdf_count = context
-            .library
-            .iter()
-            .filter(|(_, info)| info.file.kind == "pdf")
-            .count();
-        let epub_count = context
-            .library
-            .iter()
-            .filter(|(_, info)| info.file.kind == "epub")
-            .count();
-        let other_count = total_books - pdf_count - epub_count;
-
-        let total_size = context.library.iter().map(|(_, info)| info.file.size).sum();
-
-        LibraryStatistics {
-            total_books,
-            pdf_count,
-            epub_count,
-            other_count,
-            total_size,
-        }
-    }
-
-    /// Library statistics
-    #[derive(Debug, Clone)]
-    pub struct LibraryStatistics {
-        pub total_books: usize,
-        pub pdf_count: usize,
-        pub epub_count: usize,
-        pub other_count: usize,
-        pub total_size: u64,
     }
 }
 

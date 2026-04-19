@@ -34,23 +34,6 @@ impl DirectoryView {
             show_hidden: false,
         }
     }
-
-    /// Set the directory to display
-    pub fn set_directory(&mut self, path: std::path::PathBuf, rq: &mut RenderQueue) {
-        self.current_path = Some(path);
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-    }
-
-    /// Get the current directory path
-    pub fn current_path(&self) -> Option<&std::path::PathBuf> {
-        self.current_path.as_ref()
-    }
-
-    /// Set whether to show hidden files
-    pub fn set_show_hidden(&mut self, show: bool, rq: &mut RenderQueue) {
-        self.show_hidden = show;
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-    }
 }
 
 impl View for DirectoryView {
@@ -289,72 +272,6 @@ impl Home {
             // This would scan the current directory and update the view
             // based on show_hidden, sort_by_name, and show_details settings
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-        }
-    }
-}
-
-/// Utility functions for directory view toggles
-pub mod utils {
-    use super::*;
-
-    /// Create default directory view toggle config
-    pub fn create_default_directory_view_config() -> DirectoryViewToggleConfig {
-        DirectoryViewToggleConfig::default()
-    }
-
-    /// Get directory view sort options
-    pub fn get_directory_view_sort_options() -> Vec<DirectoryViewSortOption> {
-        vec![
-            DirectoryViewSortOption::Name,
-            DirectoryViewSortOption::Size,
-            DirectoryViewSortOption::Date,
-            DirectoryViewSortOption::Type,
-        ]
-    }
-
-    /// Directory view sort options
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum DirectoryViewSortOption {
-        Name,
-        Size,
-        Date,
-        Type,
-    }
-
-    /// Format file size for display
-    pub fn format_file_size(size: u64) -> String {
-        const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
-        let mut size_f = size as f64;
-        let mut unit_index = 0;
-
-        while size_f >= 1024.0 && unit_index < UNITS.len() - 1 {
-            size_f /= 1024.0;
-            unit_index += 1;
-        }
-
-        if unit_index == 0 {
-            format!("{} {}", size, UNITS[unit_index])
-        } else {
-            format!("{:.1} {}", size_f, UNITS[unit_index])
-        }
-    }
-
-    /// Get file icon for display
-    pub fn get_file_icon(file_name: &str) -> &'static str {
-        if file_name.ends_with(".pdf") {
-            "PDF"
-        } else if file_name.ends_with(".epub") {
-            "EPUB"
-        } else if file_name.ends_with(".txt") {
-            "TXT"
-        } else if file_name.ends_with(".jpg") || file_name.ends_with(".png") {
-            "IMG"
-        } else if file_name.ends_with(".mp3") || file_name.ends_with(".flac") {
-            "AUD"
-        } else if file_name.ends_with(".mp4") || file_name.ends_with(".avi") {
-            "VID"
-        } else {
-            "FILE"
         }
     }
 }

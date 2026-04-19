@@ -204,30 +204,3 @@ impl Home {
         self.get_keyboard_state().config.animation_duration
     }
 }
-
-/// Utility functions for keyboard toggles
-pub mod utils {
-    use super::*;
-
-    /// Create default keyboard toggle config
-    pub fn create_default_keyboard_config() -> KeyboardToggleConfig {
-        KeyboardToggleConfig::default()
-    }
-
-    /// Calculate optimal keyboard size for screen
-    pub fn calculate_optimal_keyboard_size(screen_width: i32, screen_height: i32) -> (i32, i32) {
-        let width = (screen_width as f32 * 0.9) as i32;
-        let height = (screen_height as f32 * 0.3) as i32;
-        (width, height)
-    }
-
-    /// Input types that trigger keyboard
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum InputType {
-        Text,
-        Search,
-        Url,
-        Numeric,
-        Password,
-    }
-}

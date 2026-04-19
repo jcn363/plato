@@ -179,36 +179,3 @@ impl Home {
         }
     }
 }
-
-/// Utility functions for shelf view toggles
-pub mod utils {
-    use super::*;
-
-    /// Create default shelf view toggle config
-    pub fn create_default_shelf_view_config() -> ShelfViewToggleConfig {
-        ShelfViewToggleConfig::default()
-    }
-
-    /// Calculate optimal grid columns for screen size
-    pub fn calculate_optimal_grid_columns(screen_width: i32, item_width: i32) -> u8 {
-        let max_columns = (screen_width / item_width) as u8;
-        max_columns.min(5).max(2)
-    }
-
-    /// Calculate shelf item size based on grid columns
-    pub fn calculate_shelf_item_size(grid_columns: u8, available_width: i32) -> (i32, i32) {
-        let padding = 20; // Padding between items
-        let total_padding = padding * (grid_columns as i32 - 1);
-        let item_width = (available_width - total_padding) / grid_columns as i32;
-        let item_height = (item_width as f32 * 1.4) as i32; // Book aspect ratio
-
-        (item_width, item_height)
-    }
-
-    /// Shelf layout options
-    #[derive(Debug, Clone)]
-    pub enum ShelfLayoutOption {
-        Grid { columns: u8 },
-        List,
-    }
-}
