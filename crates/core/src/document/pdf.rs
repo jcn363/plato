@@ -116,10 +116,8 @@ pub struct PdfDocument {
 }
 
 /// PDF page for rendering and text extraction.
-#[allow(dead_code)] // Used for PDF page-level operations and text extraction
 pub struct PdfPage<'a> {
     page: mupdf::Page,
-    index: usize,
     _doc: &'a PdfDocument,
 }
 
@@ -182,10 +180,9 @@ impl PdfDocument {
     ///
     /// # Returns
     /// None if the page doesn't exist or cannot be loaded.
-    pub fn page(&self, index: usize) -> Option<PdfPage<'_>> {
-        self.doc.load_page(index as i32).ok().map(|page| PdfPage {
+    pub fn page(&self, _index: usize) -> Option<PdfPage<'_>> {
+        self.doc.load_page(_index as i32).ok().map(|page| PdfPage {
             page,
-            index,
             _doc: self,
         })
     }
