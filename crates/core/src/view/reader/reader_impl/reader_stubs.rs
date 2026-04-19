@@ -16,7 +16,7 @@ use crate::context::Context;
 use crate::document::Location;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{CycleDir, Point};
-use crate::input::DeviceEvent;
+use crate::input::{ButtonStatus, DeviceEvent};
 use crate::view::key::KeyKind;
 use crate::view::{Event, Hub, RenderData, RenderQueue, View};
 
@@ -383,11 +383,20 @@ impl Reader {
     /// Stub: Handle edit note submit
     pub fn handle_edit_note_submit(
         &mut self,
-        _note: &str,
+        note: &str,
         _hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        _context: &Context,
     ) {
+        if let Some(ref target_annotation) = self._target_annotation {
+            if let Some(ref mut reader_info) = self.info.reader {
+                if let Some(ann) = reader_info.annotations.iter_mut()
+                    .find(|a| a.selection == *target_annotation) {
+                    ann.note = note.to_string();
+                    ann.modified = Local::now().naive_local();
+                }
+            }
+        }
         self.queue_partial_update(rq);
     }
 
@@ -416,21 +425,31 @@ impl Reader {
     /// Stub: Handle go to location
     pub fn handle_go_to_location(
         &mut self,
-        _location: &Location,
-        _hub: &Hub,
+        location: &Location,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        if let Location::Exact(page) = *location {
+            if page != self.current_page && page < self.pages_count {
+                self.go_to_page(page, true, hub, rq, context);
+            } else {
+                self.queue_partial_update(rq);
+            }
+        } else {
+            self.queue_partial_update(rq);
+        }
     }
 
     /// Stub: Handle close search bar
     pub fn handle_close_search_bar(
         &mut self,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
+        self.toggle_search_bar(false, hub, rq, context);
+        self.focus = None;
         self.queue_partial_update(rq);
     }
 
@@ -439,8 +458,10 @@ impl Reader {
         &mut self,
         _hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        _context: &Context,
     ) {
+        self._target_annotation = None;
+        self.focus = None;
         self.queue_partial_update(rq);
     }
 
@@ -460,6 +481,61 @@ impl Reader {
             // No TOC available, just update
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
         }
+    }
+
+    /// Stub: Handle adjust selection
+    pub fn handle_adjust_selection(
+        &mut self,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &Context,
+    ) {
+        self.selection = None;
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Handle menu event
+    pub fn handle_menu_event(
+        &mut self,
+        _evt: &Event,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &Context,
+    ) -> bool {
+        self.queue_partial_update(rq);
+        true
+    }
+
+    /// Stub: Handle device event
+    pub fn handle_device_event(
+        &mut self,
+        device_event: DeviceEvent,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &Context,
+    ) {
+        match device_event {
+            DeviceEvent::Button { code, status, .. } => {
+                if status == ButtonStatus::Pressed {
+                    self.held_buttons.insert(code);
+                } else {
+                    self.held_buttons.remove(&code);
+                }
+            }
+            _ => {}
+        }
+        self.queue_partial_update(rq);
+    }
+
+    /// Stub: Handle keyboard
+    pub fn handle_keyboard(
+        &mut self,
+        _key: KeyKind,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
+        self.queue_partial_update(rq);
     }
 
     /// Handle show annotations - display annotation sidebar
@@ -691,53 +767,9 @@ impl Reader {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    /// Stub: Handle adjust selection
-    pub fn handle_adjust_selection(
-        &mut self,
-        _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) {
-        self.queue_partial_update(rq);
-    }
-
-    /// Stub: Handle menu event
-    pub fn handle_menu_event(
-        &mut self,
-        _evt: &Event,
-        _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) -> bool {
-        self.queue_partial_update(rq);
-        false
-    }
-
-    /// Stub: Handle device event
-    pub fn handle_device_event(
-        &mut self,
-        _device_event: DeviceEvent,
-        _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) {
-        self.queue_partial_update(rq);
-    }
-
-    /// Stub: Handle keyboard
-    pub fn handle_keyboard(
-        &mut self,
-        _key: KeyKind,
-        _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) {
-        self.queue_partial_update(rq);
-    }
-
     /// Stub: Handle shown
     pub fn handle_shown(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
-        self.queue_partial_update(rq);
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
     }
 
     /// Stub: Handle open
@@ -748,33 +780,51 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        self.queue_partial_update(rq);
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
     }
 
     /// Stub: Handle back
-    pub fn handle_back(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &mut Context) {
-        self.queue_partial_update(rq);
+    pub fn handle_back(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+        if let Some(prev_page) = self.history.pop_back() {
+            self.go_to_page(prev_page, true, hub, rq, context);
+        } else {
+            self.queue_partial_update(rq);
+        }
     }
 
-    /// Stub: Go to results page
+    /// Go to results page
     pub fn go_to_results_page(
         &mut self,
-        _index: usize,
+        index: usize,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
+        if let Some(ref mut search) = self.search {
+            if index < search.results.len() {
+                search.index = index;
+            }
+        }
         self.queue_partial_update(rq);
     }
 
-    /// Stub: Go to results neighbor
+    /// Go to results neighbor
     pub fn go_to_results_neighbor(
         &mut self,
-        _dir: CycleDir,
-        _hub: &Hub,
+        dir: CycleDir,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
+        if let Some(ref search) = self.search {
+            let new_index = match dir {
+                CycleDir::Next => search.index.saturating_add(1),
+                CycleDir::Previous => search.index.saturating_sub(1),
+            };
+            if new_index < search.results.len() {
+                self.go_to_results_page(new_index, hub, rq, context);
+            }
+        }
         self.queue_partial_update(rq);
     }
 }
