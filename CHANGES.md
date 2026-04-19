@@ -141,5 +141,13 @@ cargo clippy --target x86_64-unknown-linux-gnu -p plato-core -- -D warnings
 All `#[allow(dead_code)]` attributes have been removed from actionable code:
 
 - All 9 manager fields in Reader struct are now actively used
+- Reader helper methods wired up:
+  - `toc()` - Used in `handle_show_table_of_contents()`
+  - `find_page_by_name()` - Used via `toc_manager`
+  - `text_excerpt()` - Used in `get_selected_text_excerpt()`
+  - `find_annotation_mut()` - Used in `handle_edit_note_submit()`
 - Module-level `#[allow(dead_code)]` retained only for intentionally reserved API methods
 - Build passes with zero warnings
+
+**Commits**:
+- `1de4711` - Remove 'reserved for future' dead_code: wire up toc, text_excerpt, find_annotation_mut
