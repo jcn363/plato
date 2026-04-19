@@ -210,9 +210,7 @@ pub struct Reader {
     pub(crate) reflowable: bool,
     pub(crate) ephemeral: bool,
     pub(crate) finished: bool,
-    #[allow(dead_code)]
     pub(crate) animation: Option<PageAnimation>,
-    #[allow(dead_code)]
     pub(crate) previous_chunks: Vec<RenderChunk>,
     pub(crate) bars_visible: bool,
     pub(crate) margin_cropper_visible: bool,
@@ -374,7 +372,7 @@ impl Reader {
         }
     }
 
-    #[allow(dead_code)]
+    /// Render page transition animation
     fn render_animation(&self, fb: &mut dyn Framebuffer, rect: Rectangle) {
         if let Some(ref anim) = self.animation {
             for chunk in &self.previous_chunks {
@@ -383,7 +381,7 @@ impl Reader {
         }
     }
 
-    #[allow(dead_code)]
+    /// Render a single chunk of page animation
     fn render_chunk_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -404,7 +402,7 @@ impl Reader {
         }
     }
 
-    #[allow(dead_code)]
+    /// Dispatch to specific animation type
     fn render_animation_kind(
         &self,
         fb: &mut dyn Framebuffer,
@@ -425,7 +423,7 @@ impl Reader {
         }
     }
 
-    #[allow(dead_code)]
+    /// Render slide animation effect
     fn render_slide_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -452,7 +450,7 @@ impl Reader {
         );
     }
 
-    #[allow(dead_code)]
+    /// Render peel animation effect
     fn render_peel_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -473,7 +471,7 @@ impl Reader {
         }
     }
 
-    #[allow(dead_code)]
+    /// Render fade animation effect
     fn render_fade_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -493,7 +491,7 @@ impl Reader {
         );
     }
 
-    #[allow(dead_code)]
+    /// Render flip animation effect
     fn render_flip_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -564,6 +562,33 @@ impl Reader {
     /// Update render engine viewport
     pub fn update_render_viewport(&mut self, viewport: super::reader_core::ViewPort) {
         self.render_engine.viewport = viewport;
+    }
+
+    /// Start page transition animation
+    pub fn start_page_animation(&mut self, kind: super::reader_core::PageAnimKind, _duration_ms: u32) {
+        // Store current chunks for animation reference
+        self.previous_chunks = self.chunks.clone();
+
+        // Create animation state
+        let anim_state = super::reader_core::AnimState {
+            kind,
+            direction: self.search_direction,
+            progress: 0.0,
+        };
+
+        // Create animation based on kind
+        self.animation = Some(match kind {
+            super::reader_core::PageAnimKind::Slide => {
+                super::reader_core::PageAnimation::Slide(anim_state)
+            }
+            _ => super::reader_core::PageAnimation::Peel(anim_state),
+        });
+    }
+
+    /// Clear animation state
+    pub fn clear_animation(&mut self) {
+        self.animation = None;
+        self.previous_chunks.clear();
     }
 
     // -----------------------------------------------------------------------
@@ -676,6 +701,8 @@ impl Reader {
     // -----------------------------------------------------------------------
 
     #[allow(dead_code)] // Used by Reader::handle_menu_event method
+    /// Handle events for the Reader view
+    /// Used by the View trait implementation and external event handlers
     pub(crate) fn handle_event(
         &mut self,
         evt: &Event,
@@ -717,6 +744,8 @@ impl Reader {
     }
 
     #[allow(dead_code)] // Used by Reader::handle_menu_event method
+    /// Render the Reader view content
+    /// Used by the View trait implementation
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, _fonts: &mut Fonts) {
         fb.draw_rectangle(&rect, background(theme::is_dark_mode()));
 
@@ -952,8 +981,9 @@ impl View for Reader {
         }
     }
 
-    fn render(&self, _fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
-        // Implementation would go here
+    fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, _fonts: &mut Fonts) {
+        // Render page transition animation if active
+        self.render_animation(fb, rect);
     }
 
     fn rect(&self) -> &Rectangle {

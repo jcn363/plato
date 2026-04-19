@@ -150,4 +150,5 @@ All `#[allow(dead_code)]` attributes have been removed from actionable code:
 - Build passes with zero warnings
 
 **Commits**:
+
 - `1de4711` - Remove 'reserved for future' dead_code: wire up toc, text_excerpt, find_annotation_mut
