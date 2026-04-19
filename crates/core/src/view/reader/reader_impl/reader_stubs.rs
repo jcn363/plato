@@ -350,8 +350,8 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        let mut doc = self._doc.lock().unwrap();
-        let (pixmap, _) = doc.pixmap(crate::document::Location::Exact(page_index), 1.0, 3).unwrap();
+        let mut doc = self._doc.lock().expect("doc lock poisoned");
+        let (pixmap, _) = doc.pixmap(crate::document::Location::Exact(page_index), 1.0, 3).expect("failed to load pixmap");
         drop(doc);
         let resource = crate::view::reader::reader_impl::reader_core::Resource {
             pixmap,

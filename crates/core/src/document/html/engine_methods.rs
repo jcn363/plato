@@ -222,7 +222,7 @@ impl EngineMethods for super::Engine {
                     inlines.push(InlineMaterial::Text(TextElement {
                         offset: strings.len() - 1,
                         language: None,
-                        text: strings.last().unwrap().clone(),
+                        text: strings.last().expect("strings should have at least one element").clone(),
                         plan: RenderPlan::default(),
                         font_features: None,
                         font_kind: parent_style.font_kind,
