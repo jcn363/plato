@@ -31,16 +31,16 @@ impl Default for SettingsToggleConfig {
 /// Settings toggle state
 #[derive(Debug, Clone)]
 pub struct SettingsToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: SettingsToggleConfig,
 }
 
 impl Default for SettingsToggleState {
     fn default() -> Self {
         Self {
-            visible: false,
-            active: false,
+            _visible: false,
+            _active: false,
             config: SettingsToggleConfig::default(),
         }
     }
@@ -136,8 +136,8 @@ impl Home {
     /// Get settings state
     fn get_settings_state(&self) -> SettingsToggleState {
         SettingsToggleState {
-            visible: self.settings_menu.is_some(),
-            active: self.focus == Some(ViewId::SettingsMenu),
+            _visible: self.settings_menu.is_some(),
+            _active: self.focus == Some(ViewId::SettingsMenu),
             config: SettingsToggleConfig::default(),
         }
     }

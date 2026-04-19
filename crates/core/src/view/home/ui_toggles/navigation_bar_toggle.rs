@@ -34,16 +34,16 @@ impl Default for NavigationBarToggleConfig {
 /// Navigation bar toggle state
 #[derive(Debug, Clone)]
 pub struct NavigationBarToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: NavigationBarToggleConfig,
 }
 
 impl Default for NavigationBarToggleState {
     fn default() -> Self {
         Self {
-            visible: true,
-            active: false,
+            _visible: false,
+            _active: false,
             config: NavigationBarToggleConfig::default(),
         }
     }
@@ -108,8 +108,8 @@ impl Home {
     /// Get navigation bar state
     fn get_navigation_bar_state(&self) -> NavigationBarToggleState {
         NavigationBarToggleState {
-            visible: self.navigation_bar.is_some(),
-            active: false, // Navigation bar is never active
+            _visible: self.navigation_bar.is_some(),
+            _active: false, // Navigation bar is never active
             config: NavigationBarToggleConfig::default(),
         }
     }

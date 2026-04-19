@@ -140,16 +140,16 @@ impl Default for DirectoryViewToggleConfig {
 /// Directory view toggle state
 #[derive(Debug, Clone)]
 pub struct DirectoryViewToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: DirectoryViewToggleConfig,
 }
 
 impl Default for DirectoryViewToggleState {
     fn default() -> Self {
         Self {
-            visible: true,
-            active: false,
+            _visible: false,
+            _active: false,
             config: DirectoryViewToggleConfig::default(),
         }
     }
@@ -214,8 +214,8 @@ impl Home {
     /// Get directory view state
     fn get_directory_view_state(&self) -> DirectoryViewToggleState {
         DirectoryViewToggleState {
-            visible: self.directory_view.is_some(),
-            active: false, // Directory view is never active
+            _visible: self.directory_view.is_some(),
+            _active: false, // Directory view is never active
             config: DirectoryViewToggleConfig::default(),
         }
     }

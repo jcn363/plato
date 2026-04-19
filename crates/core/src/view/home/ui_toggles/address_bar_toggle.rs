@@ -34,16 +34,16 @@ impl Default for AddressBarToggleConfig {
 /// Address bar toggle state
 #[derive(Debug, Clone)]
 pub struct AddressBarToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: AddressBarToggleConfig,
 }
 
 impl Default for AddressBarToggleState {
     fn default() -> Self {
         Self {
-            visible: false,
-            active: false,
+            _visible: false,
+            _active: false,
             config: AddressBarToggleConfig::default(),
         }
     }
@@ -105,8 +105,8 @@ impl Home {
     /// Get address bar state
     fn get_address_bar_state(&self) -> AddressBarToggleState {
         AddressBarToggleState {
-            visible: self.address_bar.is_some(),
-            active: self.focus == Some(ViewId::AddressBar),
+            _visible: self.address_bar.is_some(),
+            _active: self.focus == Some(ViewId::AddressBar),
             config: AddressBarToggleConfig::default(),
         }
     }

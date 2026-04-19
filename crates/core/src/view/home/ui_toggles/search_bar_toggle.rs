@@ -34,16 +34,16 @@ impl Default for SearchBarToggleConfig {
 /// Search bar toggle state
 #[derive(Debug, Clone)]
 pub struct SearchBarToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: SearchBarToggleConfig,
 }
 
 impl Default for SearchBarToggleState {
     fn default() -> Self {
         Self {
-            visible: false,
-            active: false,
+            _visible: false,
+            _active: false,
             config: SearchBarToggleConfig::default(),
         }
     }
@@ -106,8 +106,8 @@ impl Home {
     /// Get search bar state
     fn get_search_bar_state(&self) -> SearchBarToggleState {
         SearchBarToggleState {
-            visible: self.search_bar.is_some(),
-            active: self.focus == Some(ViewId::SearchBar),
+            _visible: self.search_bar.is_some(),
+            _active: self.focus == Some(ViewId::SearchBar),
             config: SearchBarToggleConfig::default(),
         }
     }

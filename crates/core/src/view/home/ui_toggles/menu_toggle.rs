@@ -32,16 +32,16 @@ impl Default for MenuToggleConfig {
 /// Menu toggle state
 #[derive(Debug, Clone)]
 pub struct MenuToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: MenuToggleConfig,
 }
 
 impl Default for MenuToggleState {
     fn default() -> Self {
         Self {
-            visible: false,
-            active: false,
+            _visible: false,
+            _active: false,
             config: MenuToggleConfig::default(),
         }
     }
@@ -200,8 +200,8 @@ impl Home {
     /// Get menu state
     fn get_menu_state(&self) -> MenuToggleState {
         MenuToggleState {
-            visible: self.sort_menu.is_some() || self.book_menu.is_some(),
-            active: self.focus == Some(ViewId::SortMenu) || self.focus == Some(ViewId::BookMenu),
+            _visible: self.sort_menu.is_some() || self.book_menu.is_some(),
+            _active: self.focus == Some(ViewId::SortMenu) || self.focus == Some(ViewId::BookMenu),
             config: MenuToggleConfig::default(),
         }
     }

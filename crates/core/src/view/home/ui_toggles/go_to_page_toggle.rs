@@ -34,16 +34,16 @@ impl Default for GoToPageToggleConfig {
 /// Go to page toggle state
 #[derive(Debug, Clone)]
 pub struct GoToPageToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: GoToPageToggleConfig,
 }
 
 impl Default for GoToPageToggleState {
     fn default() -> Self {
         Self {
-            visible: false,
-            active: false,
+            _visible: false,
+            _active: false,
             config: GoToPageToggleConfig::default(),
         }
     }
@@ -116,8 +116,8 @@ impl Home {
     /// Get go-to-page state
     fn get_go_to_page_state(&self) -> GoToPageToggleState {
         GoToPageToggleState {
-            visible: self.go_to_page.is_some(),
-            active: self.focus == Some(ViewId::GoToPage),
+            _visible: self.go_to_page.is_some(),
+            _active: self.focus == Some(ViewId::GoToPage),
             config: GoToPageToggleConfig::default(),
         }
     }

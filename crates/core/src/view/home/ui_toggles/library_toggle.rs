@@ -31,16 +31,16 @@ impl Default for LibraryToggleConfig {
 /// Library toggle state
 #[derive(Debug, Clone)]
 pub struct LibraryToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: LibraryToggleConfig,
 }
 
 impl Default for LibraryToggleState {
     fn default() -> Self {
         Self {
-            visible: false,
-            active: false,
+            _visible: false,
+            _active: false,
             config: LibraryToggleConfig::default(),
         }
     }
@@ -165,8 +165,8 @@ impl Home {
     /// Get library state
     fn get_library_state(&self) -> LibraryToggleState {
         LibraryToggleState {
-            visible: self.library_menu.is_some(),
-            active: self.focus == Some(ViewId::LibraryMenu),
+            _visible: self.library_menu.is_some(),
+            _active: self.focus == Some(ViewId::LibraryMenu),
             config: LibraryToggleConfig::default(),
         }
     }

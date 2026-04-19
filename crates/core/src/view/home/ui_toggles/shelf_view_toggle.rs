@@ -32,16 +32,16 @@ impl Default for ShelfViewToggleConfig {
 /// Shelf view toggle state
 #[derive(Debug, Clone)]
 pub struct ShelfViewToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: ShelfViewToggleConfig,
 }
 
 impl Default for ShelfViewToggleState {
     fn default() -> Self {
         Self {
-            visible: true,
-            active: false,
+            _visible: false,
+            _active: false,
             config: ShelfViewToggleConfig::default(),
         }
     }
@@ -111,8 +111,8 @@ impl Home {
     /// Get shelf view state
     fn get_shelf_view_state(&self) -> ShelfViewToggleState {
         ShelfViewToggleState {
-            visible: self.shelf.is_some(),
-            active: false, // Shelf view is never active
+            _visible: self.shelf.is_some(),
+            _active: false, // Shelf view is never active
             config: ShelfViewToggleConfig::default(),
         }
     }

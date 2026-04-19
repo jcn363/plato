@@ -119,16 +119,16 @@ impl Default for BookViewToggleConfig {
 /// Book view toggle state
 #[derive(Debug, Clone)]
 pub struct BookViewToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: BookViewToggleConfig,
 }
 
 impl Default for BookViewToggleState {
     fn default() -> Self {
         Self {
-            visible: false,
-            active: false,
+            _visible: false,
+            _active: false,
             config: BookViewToggleConfig::default(),
         }
     }
@@ -195,8 +195,8 @@ impl Home {
     /// Get book view state
     fn get_book_view_state(&self) -> BookViewToggleState {
         BookViewToggleState {
-            visible: self.book_view.is_some(),
-            active: self.focus == Some(ViewId::BookView),
+            _visible: self.book_view.is_some(),
+            _active: self.focus == Some(ViewId::BookView),
             config: BookViewToggleConfig::default(),
         }
     }

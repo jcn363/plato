@@ -41,16 +41,16 @@ impl Default for KeyboardToggleConfig {
 /// Keyboard toggle state
 #[derive(Debug, Clone)]
 pub struct KeyboardToggleState {
-    pub visible: bool,
-    pub active: bool,
+    pub _visible: bool,
+    pub _active: bool,
     pub config: KeyboardToggleConfig,
 }
 
 impl Default for KeyboardToggleState {
     fn default() -> Self {
         Self {
-            visible: false,
-            active: false,
+            _visible: false,
+            _active: false,
             config: KeyboardToggleConfig::default(),
         }
     }
@@ -132,8 +132,8 @@ impl Home {
     /// Get keyboard state
     fn get_keyboard_state(&self) -> KeyboardToggleState {
         KeyboardToggleState {
-            visible: self.keyboard.is_some(),
-            active: self.focus == Some(ViewId::Keyboard),
+            _visible: self.keyboard.is_some(),
+            _active: self.focus == Some(ViewId::Keyboard),
             config: KeyboardToggleConfig::default(),
         }
     }
