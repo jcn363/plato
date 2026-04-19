@@ -152,11 +152,68 @@ All placeholder code has been activated by removing `#[allow(dead_code)]` attrib
 
 - All update methods activated (margin_width, font_family, line_height, etc.)
 
-## Remaining Work (Future Features)
+## Remaining Work (Implementation Plan)
 
-*All requested UI features have been implemented. Future enhancements could include:*
+### Phase 1: Annotation System Integration (In Progress)
+
+**Goal**: Remove dead code warnings by properly integrating ReaderAnnotationManager
+
+**Implementation Steps**:
+
+1. **ReaderAnnotationManager Integration**
+   - Replace `_annotations: FxHashMap<usize, Vec<Annotation>>` with `annotation_manager: ReaderAnnotationManager`
+   - Wire up `handle_show_annotations()` to use annotation manager
+   - Integrate `go_to_annotation()` with annotation manager
+   - Connect `handle_add_highlight()` and `handle_delete_highlight()` methods
+
+2. **ReaderAnnotationManager Usage**
+   - `add_annotation()` - Create new annotations from selections
+   - `remove_annotation()` - Delete annotations by ID
+   - `get_annotations()` - Retrieve annotations for current page (for rendering)
+   - `find_next()` / `find_previous()` - Navigate between annotations
+   - `get_bookmarks()` / `get_highlights()` / `get_notes()` - Filter by type
+
+3. **Rendering Integration**
+   - Update render loop to use annotation manager for highlights
+   - Connect highlight rendering in `render_page()` method
+   - Use `HIGHLIGHT_DRIFT` constant for visual offset
+
+**Dead Code to Activate**:
+
+- `ReaderAnnotationManager` struct and all methods
+- `animation` and `previous_chunks` fields (for page transition animations)
+- `render_animation()` and `render_chunk_animation()` methods
+- `toc()`, `find_page_by_name()`, `text_excerpt()`, `find_annotation_mut()` helper methods
+
+### Phase 2: WIP Module Completion (Pending)
+
+**Modules with `#[allow(dead_code)]` to be activated**:
+
+| Module | Purpose | Key Components |
+|--------|---------|----------------|
+| `reader_rendering_ext.rs` | Rendering engine | `ReaderRenderEngine`, `ReaderRenderCache` |
+| `reader_search.rs` | Search UI | `create_search_menu()`, `render_results()` |
+| `reader_search_handler.rs` | Search management | `ReaderSearchHandler`, search history |
+| `reader_settings.rs` | Settings menus | Menu toggles, TOC building |
+| `reader_settings_ui.rs` | Settings UI | `ReaderSettingsManager`, handlers |
+| `reader_state.rs` | State management | `ReaderStateManager` |
+| `reader_toc.rs` | TOC management | `ReaderTocManager`, chapter navigation |
+| `reader_input.rs` | Input handling | `ReaderInputHandler`, gesture recognition |
+| `reader_dialog_manager.rs` | Dialog management | `ReaderDialogManager` |
+
+**Integration Points**:
+
+- Reader needs to instantiate and use these managers
+- Event handling should delegate to appropriate manager
+- State updates need to flow between managers and Reader
+
+### Phase 3: Future Features (Post-Cleanup)
+
+After dead code warnings are resolved:
 
 - Export format conversion (EPUB to PDF, etc.)
+- Advanced gesture recognition (multi-touch)
+- Plugin architecture for custom document types
 
 ## Recent Updates (April 2026)
 

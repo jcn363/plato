@@ -157,6 +157,7 @@ use super::reader_core::{
     AnimState, Contrast, PageAnimKind, PageAnimation, RenderChunk, Resource, Search, Selection,
     State, ViewPort,
 };
+use super::reader_annotations_ext::ReaderAnnotationManager;
 use super::reader_rendering;
 
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
@@ -174,7 +175,7 @@ pub struct Reader {
     pub(crate) cache: BTreeMap<usize, Resource>,
     pub(crate) chunks: Vec<RenderChunk>,
     pub(crate) text: FxHashMap<usize, Vec<BoundedText>>,
-    pub(crate) _annotations: FxHashMap<usize, Vec<Annotation>>,
+    pub(crate) annotation_manager: ReaderAnnotationManager,
     pub(crate) _noninverted_regions: FxHashMap<usize, Vec<Boundary>>,
     pub(crate) focus: Option<ViewId>,
     pub(crate) search: Option<Search>,
@@ -278,7 +279,7 @@ impl Reader {
             cache: BTreeMap::new(),
             chunks: Vec::new(),
             text: FxHashMap::default(),
-            _annotations: FxHashMap::default(),
+            annotation_manager: ReaderAnnotationManager::new(),
             _noninverted_regions: FxHashMap::default(),
             focus: None,
             search: None,
@@ -380,6 +381,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)]
     fn render_animation_kind(
         &self,
         fb: &mut dyn Framebuffer,
@@ -400,6 +402,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)]
     fn render_slide_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -426,6 +429,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)]
     fn render_peel_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -446,6 +450,7 @@ impl Reader {
         }
     }
 
+    #[allow(dead_code)]
     fn render_fade_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -465,6 +470,7 @@ impl Reader {
         );
     }
 
+    #[allow(dead_code)]
     fn render_flip_animation(
         &self,
         fb: &mut dyn Framebuffer,
@@ -492,7 +498,7 @@ impl Reader {
     }
 
     // -----------------------------------------------------------------------
-    // Table of Contents and Page Lookup
+    // Table of Contents and Page Lookup (reserved for future TOC UI)
     // -----------------------------------------------------------------------
 
     #[allow(dead_code)]
@@ -508,7 +514,7 @@ impl Reader {
     }
 
     // -----------------------------------------------------------------------
-    // Text Excerpt and Selection Geometry
+    // Text Excerpt and Selection Geometry (reserved for future text operations)
     // -----------------------------------------------------------------------
 
     #[allow(dead_code)]
@@ -517,7 +523,7 @@ impl Reader {
     }
 
     // -----------------------------------------------------------------------
-    // Annotation Lookup and UI Reseed
+    // Annotation Lookup and UI Reseed (reserved for future annotation editing)
     // -----------------------------------------------------------------------
 
     #[allow(dead_code)]
@@ -745,7 +751,8 @@ impl Reader {
                     }
                 }
 
-                if let Some(annotations) = self._annotations.get(&chunk.location) {
+                let annotations = self.annotation_manager.get_annotations(chunk.location);
+                if !annotations.is_empty() {
                     for annot in annotations {
                         let drift = if annot.note.is_empty() {
                             HIGHLIGHT_DRIFT
