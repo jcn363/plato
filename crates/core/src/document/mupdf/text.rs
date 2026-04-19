@@ -185,7 +185,7 @@ impl TextLine {
     /// Iterate over all characters in this line.
     pub fn chars(&self) -> TextCharIter {
         TextCharIter {
-            ctx: self.ctx,
+            _ctx: self.ctx,
             current: unsafe { (*self.line).first_char },
         }
     }
@@ -193,7 +193,7 @@ impl TextLine {
 
 /// Iterator over text characters in a text line.
 pub struct TextCharIter {
-    ctx: *mut FzContext,
+    _ctx: *mut FzContext,
     current: *mut FzTextChar,
 }
 

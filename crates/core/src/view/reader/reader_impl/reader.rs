@@ -158,8 +158,8 @@ use super::reader_core::{
 use super::reader_rendering;
 use super::reader_toc::ReaderTocManager;
 
-pub const HIGHLIGHT_DRIFT: f32 = 0.1;
-pub const ANNOTATION_DRIFT: f32 = 0.05;
+pub const _HIGHLIGHT_DRIFT: f32 = 0.1;
+pub const _ANNOTATION_DRIFT: f32 = 0.05;
 
 // ===========================================================================
 // Type Definitions
@@ -182,7 +182,7 @@ pub struct Reader {
     pub(crate) selection: Option<Selection>,
     pub(crate) _target_annotation: Option<[TextLocation; 2]>,
     pub(crate) history: VecDeque<usize>,
-    pub(crate) state: State,
+    pub(crate) _state: State,
     pub(crate) info: Info,
     pub(crate) current_page: usize,
     pub(crate) pages_count: usize,
@@ -284,7 +284,7 @@ impl Reader {
             selection: None,
             _target_annotation: None,
             history: VecDeque::new(),
-            state: State::Idle,
+            _state: State::Idle,
             info,
             current_page: 0,
             pages_count,

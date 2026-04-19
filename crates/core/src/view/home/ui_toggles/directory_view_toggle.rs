@@ -18,8 +18,8 @@ pub struct DirectoryView {
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
     current_path: Option<std::path::PathBuf>,
-    parent_id: Id,
-    show_hidden: bool,
+    _parent_id: Id,
+    _show_hidden: bool,
 }
 
 impl DirectoryView {
@@ -30,8 +30,8 @@ impl DirectoryView {
             rect,
             children: Vec::new(),
             current_path: None,
-            parent_id,
-            show_hidden: false,
+            _parent_id: parent_id,
+            _show_hidden: false,
         }
     }
 }

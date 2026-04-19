@@ -373,7 +373,7 @@ impl Reader {
                 status: FingerStatus::Motion,
                 id,
                 ..
-            } if self.state == State::Selection(*id as usize) => {
+            } if self._state == State::Selection(*id as usize) => {
                 self.handle_selection_motion(*position, hub, rq, context)
             }
             DeviceEvent::Finger {
@@ -381,7 +381,7 @@ impl Reader {
                 status: FingerStatus::Up,
                 id,
                 ..
-            } if self.state == State::Selection(*id as usize) => {
+            } if self._state == State::Selection(*id as usize) => {
                 self.handle_selection_up(*position, hub, rq, context)
             }
             _ => false,
