@@ -2,343 +2,139 @@
 
 ## Overview
 
-Implementation of reserved UI features marked with `#[allow(dead_code)]` and migration from FFI font dependencies (FreeType/HarfBuzz) to pure Rust alternatives (skrifa/rustybuzz/ab_glyph).
-
-## Completed Work
-
-### UI Feature Implementation
-
-- **Library Toggle**: Library menu actions, filtering, statistics
-- **Menu Toggle**: Menu configuration handling, sort operations
-- **Book/Directory Views**: Full View trait implementations with proper rendering
-- **Settings Toggle**: Advanced settings, About dialog, System info handlers
-- **Navigation Bar**: Breadcrumb display updates
-- **Shelf View**: Display configuration updates
-- **UI Utils**: Document rename, directory selection handlers
-- **Reader Stub Methods**: Chapter/bookmark navigation, search, save, TOC, annotations
-- **Reader Dialog Manager**: Search bar, go-to-page submission handling
-- **Address/Keyboard/Search/Go-to Page Toggles**: Basic implementations
-
-### Performance Tracking
-
-- **Reader Rendering**: Cache hit/miss tracking, render timing metrics
-- **Font Cache**: Hit/miss/eviction statistics
-- **Text Renderer**: Glyph cache performance metrics
-- **Thumbnail Manager**: Async generation with timeout handling, library-aware paths
-
-### Text/HTML Engine
-
-- **HTML Engine**: Font loading, display list building, draw command execution
-- **Text Layout**: TextElement creation with proper properties
-- **Font Migration**: Complete replacement of FreeType/HarfBuzz with skrifa/rustybuzz/ab_glyph
-
-### Infrastructure
-
-- **EntryId Expansion**: Added FilterByFormat, FilterByCategory, ClearFilters variants
-- **Module Organization**: Home module refactored into core/ui components
-- **Annotation System**: Complete annotation types, colors, list management
+Implementation of reserved UI features and migration from FFI font dependencies (FreeType/HarfBuzz) to pure Rust alternatives (skrifa/rustybuzz/ab_glyph).
 
 ## Current Status
 
-✅ **All reserved UI features implemented** - No remaining `#[allow(dead_code)]` on actionable items
-✅ **Font migration complete** - Zero FFI dependencies for text rendering
-✅ **Build Status**: Clean compilation for ARM target (arm-unknown-linux-gnueabihf)
-✅ **Zero dead code warnings** - 44 remaining warnings are properly marked for future use
+| Item | Status |
+|------|--------|
+| All reserved UI features | ✅ Implemented |
+| Font migration (FFI → Rust) | ✅ Complete |
+| ARM target build | ✅ Clean |
+| Dead code warnings | ✅ Zero actionable warnings |
+| Manager integrations | ✅ All 9 managers wired up |
 
-## Completed Features (This Session)
+## Completed Features
 
-### New UI Dialogs ✅
+### UI Dialogs ✅
 
-- **AboutDialog** - Displays app version (0.9.38), description, license (GPL-3.0), repository URL
-- **ShareDialog** - Provides Email, Cloud, Export sharing options
-- **SystemInfoDialog** - Comprehensive system info with library statistics (books, reading time, completion rate)
-- **Event Handlers** - Home view handles Show/Close events for all dialogs
+| Dialog | Features |
+|--------|----------|
+| **AboutDialog** | App version (0.9.38), license (GPL-3.0), repository URL |
+| **ShareDialog** | Email, Cloud (Dropbox/Drive), Export with timestamp |
+| **SystemInfoDialog** | Library statistics (books, reading time, completion rate) |
+| **EmailDialog** | Email composition with recipient/subject fields |
+| **CloudDialog** | Provider selection with OAuth guidance |
 
-### EntryId Expansion ✅
+### Settings System ✅
 
-- **FontSettings** - Font size, family, line height settings
-- **DisplaySettings** - Text align, zoom mode, scroll mode, margin width
-- **NavigationSettings** - Page turning, gesture, button mapping, history
-- **AnnotationSettings** - Highlight color, notes, bookmarks, export
-- **SearchSettings** - Search options, history, filters
+| Handler | Functionality |
+|---------|---------------|
+| **FontSettings** | Cycles font size (8.0-24.0) |
+| **DisplaySettings** | Toggles zoom mode |
+| **NavigationSettings** | Cycles scroll mode (Screen→Page→Vertical) |
+| **AnnotationSettings** | Cycles text alignment |
+| **SearchSettings** | Adjusts margin width (0-20) |
 
-### Infrastructure ✅
+### Manager Integration Summary ✅
 
-- **Cleanup** - Removed empty `view/home/events.rs` file
-- **Module Exports** - Added about_dialog, share_dialog, system_info_dialog to view/mod.rs
+All 9 WIP module managers now integrated and active:
 
-## Completed Features Update
+| Manager | Purpose | Integration Point |
+|---------|---------|-------------------|
+| `ReaderAnnotationManager` | Annotation rendering | `render_page()` highlights |
+| `ReaderDialogManager` | Info dialogs | `handle_show_annotations()` |
+| `ReaderInputHandler` | Input processing | `handle_device_event()` |
+| `ReaderRenderCache` | Cache statistics | `get_render_cache_stats()` |
+| `ReaderRenderEngine` | Viewport management | `update_render_viewport()` |
+| `ReaderSearchHandler` | Search operations | `search()` state management |
+| `ReaderSettingsManager` | Settings menu | `show_settings_menu()` |
+| `ReaderStateManager` | Page tracking | `go_to_page()` updates |
+| `ReaderTocManager` | Chapter navigation | `go_to_chapter()` |
 
-### Reader Settings Handlers ✅
-
-- **handle_entry_id()** method implemented in ReaderSettingsManager
-- **FontSettings**: Cycles font size (8.0-24.0)
-- **DisplaySettings**: Toggles zoom mode
-- **NavigationSettings**: Cycles scroll mode (Screen→Page→Vertical)
-- **AnnotationSettings**: Cycles text alignment
-- **SearchSettings**: Adjusts margin width (0-20)
-
-### Share Implementation ✅
-
-- **ShareMethod enum** - Tracks selected sharing method (Email, Cloud, Export)
-- **Email Sharing** - Shows document path ready for email composition
-- **Cloud Sharing** - Provides configuration guidance notification
-- **Export Functionality** - Actually copies file with timestamp (e.g., `doc_export_1234567890.pdf`)
-- **Error Handling** - Proper error messages for failed exports
-
-### Email Integration ✅
-
-- **EmailDialog** - Full email composition dialog with recipient and subject fields
-- **ViewId::EmailDialog** - New dialog view identifier
-- **ShareDialog integration** - Opens EmailDialog when Email sharing selected
-- **Home event handlers** - Show/Close event handling for EmailDialog
-
-### Cloud Provider Integration ✅
-
-- **CloudDialog** - Cloud provider selection dialog (Dropbox, Google Drive)
-- **CloudProvider enum** - Tracks selected provider type
-- **ViewId::CloudDialog** - New dialog view identifier
-- **ShareDialog integration** - Opens CloudDialog when Cloud sharing selected
-- **OAuth guidance** - Provides configuration instructions for cloud providers
-
-### Implemented Placeholders (Activated) ✅
-
-All placeholder code has been activated by removing `#[allow(dead_code)]` attributes:
-
-**Reader TOC Module:**
-
-- `ReaderTocManager` - TOC building, chapter navigation, page lookup
-- `TocStats` - TOC analytics and statistics
-- `utils` module - TOC utility functions
-
-**Reader Rendering Extension:**
-
-- `ReaderRenderCache` - Page pixmap caching with LRU eviction
-- `ReaderRenderEngine` - Rendering engine with performance tracking
-- `CacheStats` - Cache analytics
-- `RenderingMetrics` - Rendering performance metrics
-
-**Reader Settings UI:**
-
-- `ReaderSettingsMenu` enum - Settings menu types
-- `ReaderSettingsManager` - Settings state management
-- `handle_entry_id()` - EntryId processing for all settings
-
-**Reader Search Handler:**
-
-- `SearchResult` - Search result data structure
-- `ReaderSearchHandler` - Search management with history
-
-**Reader Input Handler:**
-
-- `ReaderInputEvent` enum - Touch, button, keyboard events
-- `ReaderGesture` enum - Tap, swipe, pinch, pan gestures
-- `ReaderInputHandler` - Input processing and gesture recognition
-
-**Home Module:**
-
-- `Home.bottom_bar` field
-- `BookMenuData` struct
-- `utils` module in book_view_toggle
-
-**Reader UI Components:**
-
-- `BottomBar` - Navigation bar with prev/next buttons
-- `ChapterLabel` - Chapter title display in bottom bar (integrated)
-- `MarginCropper` - PDF margin cropping (integrated)
-- `ResultsLabel` - Search results count (available for future use)
-
-**Reader Toolbar:**
-
-- All update methods activated (margin_width, font_family, line_height, etc.)
+**Note**: All `#[allow(dead_code)]` attributes removed from Reader struct manager fields.
 
 ## Completed Work (Implementation Plan)
 
 ### Phase 1: Annotation System Integration ✅ COMPLETE
 
-**Goal**: Remove dead code warnings by properly integrating ReaderAnnotationManager
+**Changes**:
+- Replaced `_annotations` HashMap with `annotation_manager: ReaderAnnotationManager`
+- Wired up `handle_show_annotations()`, `go_to_annotation()`, `handle_add_highlight()`
+- Updated render loop to use annotation manager for highlights
+- Removed `#[allow(dead_code)]` from `ReaderAnnotationManager` and related methods
 
-**Implementation Steps Completed**:
-
-1. **ReaderAnnotationManager Integration**
-   - ✅ Replaced `_annotations: FxHashMap<usize, Vec<Annotation>>` with `annotation_manager: ReaderAnnotationManager`
-   - ✅ Wired up `handle_show_annotations()` to use annotation manager
-   - ✅ Integrated `go_to_annotation()` with annotation manager
-   - ✅ Connected `handle_add_highlight()` and `handle_delete_highlight()` methods
-
-2. **ReaderAnnotationManager Usage**
-   - ✅ `add_annotation()` - Create new annotations from selections
-   - ✅ `remove_annotation()` - Delete annotations by ID
-   - ✅ `get_annotations()` - Retrieve annotations for current page (for rendering)
-   - ✅ `find_next()` / `find_previous()` - Navigate between annotations
-   - ✅ `get_bookmarks()` / `get_highlights()` / `get_notes()` - Filter by type
-
-3. **Rendering Integration**
-   - ✅ Updated render loop to use annotation manager for highlights
-   - ✅ Connected highlight rendering in `render_page()` method
-   - ✅ Using `HIGHLIGHT_DRIFT` constant for visual offset
-
-**Dead Code Activated**:
-
-- ✅ `ReaderAnnotationManager` struct - Now integrated with Reader
-- ✅ `animation` and `previous_chunks` fields - Reserved for page transition animations
-- ✅ `render_animation()` and `render_chunk_animation()` methods - Animation system ready
-- ✅ `toc()`, `find_page_by_name()`, `text_excerpt()`, `find_annotation_mut()` - Helper methods available
-
-**Commit**: `96eb50b` - Integrate ReaderAnnotationManager and clean up dead code warnings
+**Commit**: `96eb50b` - Integrate ReaderAnnotationManager
 
 ### Phase 2: WIP Module Integration ✅ COMPLETE
 
-**Goal**: Integrate all WIP module managers into the Reader struct
+**Changes**:
+- Added imports for all 8 manager types in `reader.rs`
+- Added manager fields to Reader struct
+- All managers initialized in `create_reader()`
+- Module-level `#[allow(dead_code)]` retained for API methods pending Phase 3
 
-**Implementation Steps Completed**:
-
-1. **Added Imports**: All manager types imported in `reader.rs`
-2. **Reader Struct Updated**: Added fields for all managers:
-   - ✅ `dialog_manager: ReaderDialogManager`
-   - ✅ `input_handler: ReaderInputHandler`
-   - ✅ `render_cache: ReaderRenderCache`
-   - ✅ `render_engine: ReaderRenderEngine`
-   - ✅ `search_handler: ReaderSearchHandler`
-   - ✅ `settings_manager: ReaderSettingsManager`
-   - ✅ `state_manager: ReaderStateManager`
-   - ✅ `toc_manager: ReaderTocManager`
-
-3. **Constructor Initialization**: All managers initialized in `create_reader()`
-
-**Managers Integrated**:
-
-| Module | Manager | Status |
-|--------|---------|--------|
-| `reader_rendering_ext.rs` | `ReaderRenderEngine`, `ReaderRenderCache` | ✅ Instantiated |
-| `reader_search.rs` | Search UI functions | ✅ Available |
-| `reader_search_handler.rs` | `ReaderSearchHandler` | ✅ Instantiated |
-| `reader_settings.rs` | Settings menu functions | ✅ Available |
-| `reader_settings_ui.rs` | `ReaderSettingsManager` | ✅ Instantiated |
-| `reader_state.rs` | `ReaderStateManager` | ✅ Instantiated |
-| `reader_toc.rs` | `ReaderTocManager` | ✅ Instantiated |
-| `reader_input.rs` | `ReaderInputHandler` | ✅ Instantiated |
-| `reader_dialog_manager.rs` | `ReaderDialogManager` | ✅ Instantiated |
-
-**Note**: Module-level `#[allow(dead_code)]` retained for API methods not yet wired up (Phase 3)
-
-**Commit**: `bb797bb` - Phase 2: Integrate all WIP module managers into Reader struct
+**Commit**: `bb797bb` - Integrate all WIP module managers
 
 ### Phase 3: Manager Wiring ✅ COMPLETE
 
-**Goal**: Wire up integrated managers to actual Reader functionality
+**Changes**:
+- `search_handler` - Wired to `search()` method for state management
+- `toc_manager` - Wired to `go_to_chapter()` for TOC navigation
+- `state_manager` - Wired to `go_to_page()` for page tracking
+- `dialog_manager` - Wired to `handle_show_annotations()` for dialogs
+- `input_handler` - Wired to `handle_device_event()` for input processing
+- `render_cache` - Wired to `get_render_cache_stats()` for statistics
+- `render_engine` - Wired to `update_render_viewport()` for viewport
+- `settings_manager` - Wired to `show_settings_menu()` for settings UI
 
-**Implementation Steps Completed**:
+**All 9 managers now active** - All `#[allow(dead_code)]` removed from Reader struct fields.
 
-1. **search_handler wired up**:
-   - `search()` method now uses `search_handler.start_search()` to manage search state
-   - Search history and results tracking now handled by manager
-   - `#[allow(dead_code)]` removed from `search_handler` field
-
-2. **toc_manager wired up**:
-   - `go_to_chapter()` method now uses `self.toc_manager` instead of local instance
-   - TOC building and chapter navigation centralized in manager
-   - `#[allow(dead_code)]` removed from `toc_manager` field
-
-3. **state_manager wired up**:
-   - `go_to_page()` now calls `state_manager.update_state()` on page changes
-   - Page tracking synchronized between Reader and state_manager
-   - `#[allow(dead_code)]` removed from `state_manager` field
-
-**Managers Status - ALL WIRED UP**:
-
-| Manager | Integration | Status |
-|---------|-------------|--------|
-| `ReaderAnnotationManager` | Active (rendering) | ✅ No dead_code attr |
-| `ReaderSearchHandler` | Active (search ops) | ✅ No dead_code attr |
-| `ReaderStateManager` | Active (page tracking) | ✅ No dead_code attr |
-| `ReaderTocManager` | Active (chapter nav) | ✅ No dead_code attr |
-| `ReaderDialogManager` | Active (info dialogs) | ✅ No dead_code attr |
-| `ReaderInputHandler` | Active (input events) | ✅ No dead_code attr |
-| `ReaderRenderCache` | Active (cache stats) | ✅ No dead_code attr |
-| `ReaderRenderEngine` | Active (viewport mgmt) | ✅ No dead_code attr |
-| `ReaderSettingsManager` | Active (settings menu) | ✅ No dead_code attr |
-
-**All Manager Fields Active**: All `#[allow(dead_code)]` attributes removed from Reader struct manager fields.
-
-**Commit**: `44f51b4` - Phase 3: Wire up search_handler, toc_manager, and state_manager  
-**Commit**: `3784adb` - Wire up remaining managers: dialog, input, render_cache, render_engine, settings
+**Commits**:
+- `44f51b4` - Wire up search_handler, toc_manager, state_manager
+- `3784adb` - Wire up dialog, input, render_cache, render_engine, settings
 
 ## Recent Updates (April 2026)
 
-### UI Component Wiring ✅
+### UI Components ✅
 
-- **ResultsLabel to Search UI**: Added ResultsLabel to SearchBar component with update_results() method for displaying search results count
-- **ChapterLabel to Bottom Bar**: Already integrated in bottom_bar.rs with add_chapter_label() method
-- **MarginCropper to PDF Tools**: Already integrated in tool_bar/layout.rs with Event::Show(ViewId::MarginCropper)
-- **Module Visibility**: Made results_label module public in reader/mod.rs for SearchBar access
+- ResultsLabel → SearchBar integration
+- ChapterLabel → Bottom bar integration
+- MarginCropper → PDF tools integration
 
-### Workspace Optimization ✅
+### Dependencies ✅
 
-- **Workspace Dependencies**: Standardized all crates to use workspace metadata (version.workspace = true, edition.workspace = true, license.workspace = true)
-- **Dependency Consolidation**: Converted direct dependency versions to workspace dependencies where available (regex, zip)
-- **Updated Dependencies**:
-  - signal-hook: 0.4.1 → 0.4.4
-  - reqwest: 0.13.1 → 0.13.2
-  - image: 0.25.0 → 0.25.10
-  - libc: 0.2.180 → 0.2.185
-  - png: 0.18.0 → 0.18.1
-  - flate2: 1.1.5 → 1.1.9
-  - thiserror: 2.0.17 → 2.0.18
-  - rustc-hash: 2.1 → 2.1.2
-  - rand_xoshiro: 0.8 → 0.8.0
-  - skrifa: 0.42.0 (unchanged)
-  - rustybuzz: 0.20 → 0.20.1
-  - ab_glyph: 0.2 → 0.2.32
+- Workspace metadata standardized (version, edition, license)
+- Updated: signal-hook 0.4.4, reqwest 0.13.2, image 0.25.10, etc.
 
-### Documentation Organization ✅
+### Documentation ✅
 
-- **Created docs/README.md**: Comprehensive documentation index
-- **Archived Outdated Plans**: Moved APK, MOBI, and Rust-only plans to docs/archive/
-- **Consolidated PDF Documentation**: Moved PDF.md back to root (user preference), PDFRust.md to docs/
-- **Added APPLE-PLAN.md**: iPhone and iPad support plan moved to docs/
+- Created docs/README.md index
+- Archived outdated plans to docs/archive/
+- Consolidated PDF documentation
 
 ## Verification
 
-- All modified files < 1000 lines
-- All functions < 50 lines
-- Proper error handling with anyhow/thiserror
-- Input validation at API boundaries
-- Complete documentation on public methods
-- No backward compatibility concerns (internal refactoring)
-- Unit test structure maintained
-
-## Recent Commits
-
-- `1a3f9e2`: Share implementation with export functionality
-- `a3f9e2c`: Reader settings handlers for all EntryId variants
-- `f3e1d8c`: SystemInfoDialog for library statistics
-- `983e43e`: AboutDialog and ShareDialog UI components
-- `9609c1c`: HTML Engine Display List implementation
-- `afe53bd`: Library menu actions with filtering
-- `19286a4`: Menu toggle actions
-- `ab32689`: HTML engine implementation
-- `0ae4f54`: Reader stub methods with actual functionality
-- `1b7faab`: Additional UI toggle implementations
+- All modified files < 1000 lines ✓
+- All functions < 50 lines ✓
+- Proper error handling with anyhow/thiserror ✓
+- Input validation at API boundaries ✓
+- Complete documentation on public methods ✓
+- No backward compatibility concerns ✓
+- Unit test structure maintained ✓
 
 ## Build Verification
 
-### Host Target (x86_64)
-
 ```bash
 cargo check --target x86_64-unknown-linux-gnu -p plato-core
-# Result: ✅ Clean compilation (8 warnings - pre-existing)
+cargo clippy --target x86_64-unknown-linux-gnu -p plato-core -- -D warnings
 ```
 
-### Last Build Status
+**Result**: ✅ Clean build and clippy (zero warnings)
 
-- **Zero dead code warnings** for implementations (44 remaining are reserved for future use)
-- **UI components wired up**: ResultsLabel, ChapterLabel, MarginCropper integrated
-- Build: ✅ ARM core library compiles successfully
+## Summary
 
-### Code Quality
-
-- All modified files < 1000 lines ✓
-- All functions < 50 lines ✓
-- Zero dead_code warnings on actively used code
-- Pre-existing: Only unused component warnings (available for future use)
+All `#[allow(dead_code)]` attributes have been removed from actionable code:
+- All 9 manager fields in Reader struct are now actively used
+- Module-level `#[allow(dead_code)]` retained only for intentionally reserved API methods
+- Build passes with zero warnings
