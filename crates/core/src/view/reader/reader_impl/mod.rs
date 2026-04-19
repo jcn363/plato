@@ -33,19 +33,12 @@ pub use reader::Reader;
 
 // Feature modules (WIP)
 pub mod reader_annotations;
-pub mod reader_annotations_ext;
-pub mod reader_dialog_manager;
 pub mod reader_dialogs;
 pub mod reader_gestures;
-pub mod reader_input;
 pub mod reader_navigation;
 pub mod reader_rendering;
-pub mod reader_rendering_ext;
 pub mod reader_search;
-pub mod reader_search_handler;
 pub mod reader_settings;
-pub mod reader_settings_ui;
-pub mod reader_state;
 pub mod reader_stubs;
 pub mod reader_toc;
 

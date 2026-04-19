@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::geom::Point;
-use crate::view::{Hub, RenderQueue};
 use crate::view::View;
+use crate::view::{Hub, RenderQueue};
 
 /// Find the index of a child view of the specified type.
 pub fn find_child_index_by_type<T: 'static + View>(children: &[Box<dyn View>]) -> Option<usize> {

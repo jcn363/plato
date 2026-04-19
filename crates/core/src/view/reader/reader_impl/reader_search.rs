@@ -2,8 +2,7 @@
 //!
 //! This module provides search functionality for the Reader view,
 //! including search result navigation and highlighting.
-#![allow(dead_code)]
-
+//!
 //! ## Methods to Move Here
 //! - `toggle_search_menu()` - Search direction menu
 //! - `render_results()` - Highlight search results on page

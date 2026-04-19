@@ -1,30 +1,24 @@
 //! Reader Settings Module
 //!
 //! Handles all font, contrast, zoom settings menus and configuration.
-#![allow(dead_code)]
 //!
 //! ## Methods Extracted
-//! - `toggle_font_family_menu()` - Font selection ✓
-//! - `toggle_font_size_menu()` - Font size selection ✓
-//! - `toggle_text_align_menu()` - Text alignment ✓
-//! - `toggle_line_height_menu()` - Line height settings ✓
-//! - `toggle_contrast_exponent_menu()` - Contrast exponent ✓
-//! - `toggle_contrast_gray_menu()` - Contrast gray level ✓
-//! - `toggle_margin_width_menu()` - Margin width settings ✓
-//! - `toggle_page_menu()` - Page navigation menu ✓
-//! - `toggle_margin_cropper_menu()` - Margin cropping settings ✓
-//! - `toggle_annotation_menu()` - Annotation context menu ✓
-//! - `toggle_selection_menu()` - Text selection menu ✓
-//! - `toggle_title_menu()` - Title bar menu ✓
-//! - `find_page_by_name()` - Page lookup utility ✓
-//! - `build_toc()` - TOC building ✓
-//! - `build_toc_aux()` - TOC recursive builder ✓
+//! - `toggle_font_family_menu()` - Font selection
+//! - `toggle_font_size_menu()` - Font size selection
+//! - `toggle_text_align_menu()` - Text alignment
+//! - `toggle_line_height_menu()` - Line height settings
+//! - `toggle_contrast_exponent_menu()` - Contrast exponent
+//! - `toggle_contrast_gray_menu()` - Contrast gray level
+//! - `toggle_margin_width_menu()` - Margin width settings
+//! - `toggle_page_menu()` - Page navigation menu
+//! - `toggle_margin_cropper_menu()` - Margin cropping settings
+//! - `toggle_annotation_menu()` - Annotation context menu
+//! - `toggle_selection_menu()` - Text selection menu
+//! - `toggle_title_menu()` - Title bar menu
 
 use crate::context::Context;
-use crate::document::{Location, SimpleTocEntry, TocEntry, TocLocation};
 use crate::font::family_names;
 use crate::geom::Rectangle;
-use crate::helpers::AsciiExtension;
 use crate::log_error;
 use crate::metadata::{
     Annotation, CroppingMargins, Info, PageScheme, ScrollMode, TextAlign, ZoomMode,
@@ -34,119 +28,6 @@ use crate::view::menu::{Menu, MenuKind};
 use crate::view::menu_entry::MenuEntry;
 use crate::view::menu_helpers::toggle_menu_vec;
 use crate::view::{AppCmd, EntryId, EntryKind, RenderQueue, View, ViewId};
-use septem::Roman;
-
-/// Find page index by named page reference
-pub(crate) fn find_page_by_name(info: &Info, name: &str) -> Option<usize> {
-    info.reader.as_ref().and_then(|r| {
-        if let Ok(a) = name.parse::<u32>() {
-            r.page_names
-                .iter()
-                .filter_map(|(i, s)| s.parse::<u32>().ok().map(|b| (b, i)))
-                .filter(|(b, _)| *b <= a)
-                .max_by(|x, y| x.0.cmp(&y.0))
-                .map(|(b, i)| *i + (a - b) as usize)
-        } else if let Some(a) = name.chars().next().and_then(|c| c.to_alphabetic_digit()) {
-            r.page_names
-                .iter()
-                .filter_map(|(i, s)| {
-                    s.chars()
-                        .next()
-                        .and_then(|c| c.to_alphabetic_digit())
-                        .map(|c| (c, i))
-                })
-                .filter(|(b, _)| *b <= a)
-                .max_by(|x, y| x.0.cmp(&y.0))
-                .map(|(b, i)| *i + (a - b) as usize)
-        } else if let Ok(a) = name.parse::<Roman>() {
-            let a_val = *a;
-            r.page_names
-                .iter()
-                .filter_map(|(i, s)| s.parse::<Roman>().ok().map(|b| (b, i)))
-                .filter(|(b, _)| {
-                    (*b).cmp(&Roman::from_unchecked(a_val)) != std::cmp::Ordering::Greater
-                })
-                .max_by(|x, y| x.0.cmp(&y.0))
-                .map(|(b, i)| *i + (a_val - *b) as usize)
-        } else {
-            None
-        }
-    })
-}
-
-/// Build table of contents from document structure
-///
-/// Converts the simple TOC format from document metadata into a full
-/// hierarchical TOC structure with page number resolution.
-///
-/// # Arguments
-/// - `info`: Document metadata
-/// - `find_page_fn`: Function to resolve page numbers from names
-///
-/// # Returns
-/// Full TOC structure if available, None otherwise
-pub(crate) fn build_toc<F>(info: &Info, find_page_fn: F) -> Option<Vec<TocEntry>>
-where
-    F: Fn(&str) -> Option<usize> + Copy,
-{
-    let mut index = 0;
-    info.toc
-        .as_ref()
-        .map(|simple_toc| build_toc_aux(simple_toc, &mut index, find_page_fn))
-}
-
-/// Recursively build table of contents entries
-///
-/// Helper function that recursively processes TOC entries to build
-/// the hierarchical structure with proper page resolution.
-///
-/// # Arguments
-/// - `simple_toc`: Simple TOC entries to process
-/// - `index`: Mutable index counter for recursion
-/// - `find_page_fn`: Function to resolve page numbers from names
-///
-/// # Returns
-/// Vector of processed TOC entries
-pub(crate) fn build_toc_aux<F>(
-    simple_toc: &[SimpleTocEntry],
-    index: &mut usize,
-    find_page_fn: F,
-) -> Vec<TocEntry>
-where
-    F: Fn(&str) -> Option<usize> + Copy,
-{
-    let mut toc = Vec::with_capacity(simple_toc.len());
-    for entry in simple_toc {
-        *index += 1;
-        match entry {
-            SimpleTocEntry::Leaf(title, location)
-            | SimpleTocEntry::Container(title, location, _) => {
-                let current_title = title.clone();
-                let current_location = match location {
-                    TocLocation::Uri(uri) if uri.starts_with('\'') => find_page_fn(&uri[1..])
-                        .map(Location::Exact)
-                        .unwrap_or_else(|| location.clone().into()),
-                    _ => location.clone().into(),
-                };
-                let current_index = *index;
-                let current_children = if let SimpleTocEntry::Container(_, _, children) = entry {
-                    build_toc_aux(children, index, find_page_fn)
-                } else {
-                    Vec::new()
-                };
-                toc.push(TocEntry {
-                    title: current_title,
-                    location: current_location,
-                    index: current_index,
-                    children: current_children,
-                    level: 0,
-                    page: None,
-                });
-            }
-        }
-    }
-    toc
-}
 
 pub(crate) fn toggle_font_family_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,

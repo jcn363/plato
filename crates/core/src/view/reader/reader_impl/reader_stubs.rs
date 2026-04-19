@@ -132,7 +132,9 @@ impl Reader {
 
             // Navigate to target chapter's page
             if let Some(chapter_idx) = target_chapter {
-                if let Some(page) = self.toc_manager.navigate_to_chapter(chapter_idx, self.current_page)
+                if let Some(page) = self
+                    .toc_manager
+                    .navigate_to_chapter(chapter_idx, self.current_page)
                 {
                     self.go_to_page(page, true, hub, rq, context);
                     return;
@@ -319,9 +321,7 @@ impl Reader {
             return;
         }
 
-        // Use search_handler to manage search state
-        self.search_handler.start_search(query.to_string(), self.search_direction);
-
+        // NOTE: search_handler module removed during dead code cleanup
         // Store search query for rendering highlights
         use rustc_hash::FxHashMap;
         use std::sync::atomic::AtomicBool;
@@ -351,7 +351,9 @@ impl Reader {
         _context: &mut Context,
     ) {
         let mut doc = self._doc.lock().expect("doc lock poisoned");
-        let (pixmap, _) = doc.pixmap(crate::document::Location::Exact(page_index), 1.0, 3).expect("failed to load pixmap");
+        let (pixmap, _) = doc
+            .pixmap(crate::document::Location::Exact(page_index), 1.0, 3)
+            .expect("failed to load pixmap");
         drop(doc);
         let resource = crate::view::reader::reader_impl::reader_core::Resource {
             pixmap,
@@ -452,12 +454,7 @@ impl Reader {
     }
 
     /// Stub: Handle close edit note
-    pub fn handle_close_edit_note(
-        &mut self,
-        _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &Context,
-    ) {
+    pub fn handle_close_edit_note(&mut self, _hub: &Hub, rq: &mut RenderQueue, _context: &Context) {
         self._target_annotation = None;
         self.focus = None;
         self.queue_partial_update(rq);
@@ -472,7 +469,12 @@ impl Reader {
     ) {
         // Check if TOC is available using self.toc()
         // Note: toc() internally uses toc_manager which may mutate cache
-        let toc_available = self.info.simple_toc.as_ref().map(|t| !t.is_empty()).unwrap_or(false);
+        let toc_available = self
+            .info
+            .simple_toc
+            .as_ref()
+            .map(|t| !t.is_empty())
+            .unwrap_or(false);
 
         if toc_available {
             // Build TOC using toc_manager
@@ -535,10 +537,7 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &Context,
     ) {
-        // Process event through input_handler
-        let _input_events = self.input_handler.handle_device_event(device_event);
-
-        // Also update held_buttons for backward compatibility
+        // Update held_buttons for backward compatibility
         match device_event {
             DeviceEvent::Button { code, status, .. } => {
                 if status == ButtonStatus::Pressed {
@@ -589,10 +588,10 @@ impl Reader {
             // Trigger UI update to show annotation sidebar
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         } else {
-            // No annotations, show info using dialog_manager
+            // No annotations, show notification
             let msg = "No annotations in this document".to_string();
-            let dialog = self.dialog_manager.create_info_dialog("Annotations".to_string(), msg, context);
-            self.children.push(Box::new(dialog) as Box<dyn View>);
+            let notif = Notification::new(msg, hub, rq, context);
+            self.children.push(Box::new(notif) as Box<dyn View>);
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
         }
     }
@@ -815,41 +814,5 @@ impl Reader {
         } else {
             self.queue_partial_update(rq);
         }
-    }
-
-    /// Go to results page
-    pub fn go_to_results_page(
-        &mut self,
-        index: usize,
-        _hub: &Hub,
-        rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) {
-        if let Some(ref mut search) = self.search {
-            if index < search.results.len() {
-                search.index = index;
-            }
-        }
-        self.queue_partial_update(rq);
-    }
-
-    /// Go to results neighbor
-    pub fn go_to_results_neighbor(
-        &mut self,
-        dir: CycleDir,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) {
-        if let Some(ref search) = self.search {
-            let new_index = match dir {
-                CycleDir::Next => search.index.saturating_add(1),
-                CycleDir::Previous => search.index.saturating_sub(1),
-            };
-            if new_index < search.results.len() {
-                self.go_to_results_page(new_index, hub, rq, context);
-            }
-        }
-        self.queue_partial_update(rq);
     }
 }

@@ -1,9 +1,9 @@
+pub mod bottom_bar;
 mod chapter_label;
 mod margin_cropper;
 mod reader_impl;
 pub mod results_label;
 pub mod tool_bar;
-pub mod bottom_bar;
 
 pub use margin_cropper::MarginCropper;
 pub use results_label::ResultsLabel;

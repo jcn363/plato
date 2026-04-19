@@ -152,7 +152,13 @@ impl SearchBar {
         }
     }
 
-    pub fn update_results(&mut self, count: usize, completed: bool, hub: &Hub, rq: &mut RenderQueue) {
+    pub fn update_results(
+        &mut self,
+        count: usize,
+        completed: bool,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+    ) {
         if let Some(index) = self.results_label_index {
             if let Some(results_label) = self.children[index].downcast_mut::<ResultsLabel>() {
                 results_label.update(count, rq);

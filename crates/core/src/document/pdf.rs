@@ -180,10 +180,10 @@ impl PdfDocument {
     /// # Returns
     /// None if the page doesn't exist or cannot be loaded.
     pub fn page(&self, _index: usize) -> Option<PdfPage<'_>> {
-        self.doc.load_page(_index as i32).ok().map(|page| PdfPage {
-            page,
-            _doc: self,
-        })
+        self.doc
+            .load_page(_index as i32)
+            .ok()
+            .map(|page| PdfPage { page, _doc: self })
     }
 
     fn walk_toc(outline: &mupdf::Outline, index: &mut usize) -> Vec<TocEntry> {

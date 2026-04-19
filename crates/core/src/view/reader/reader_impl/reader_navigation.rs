@@ -13,9 +13,9 @@ impl Reader {
         &mut self,
         index: usize,
         save_state: bool,
-        hub: &crate::view::Hub,
+        _hub: &crate::view::Hub,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        _context: &mut Context,
     ) {
         let pages_count = self.pages_count;
         if index < pages_count {
@@ -26,10 +26,6 @@ impl Reader {
                 }
             }
             self.current_page = index;
-
-            // Update state_manager with new page
-            self.state_manager.update_state(Some(index), None, hub, rq, context);
-
             self.cache.clear();
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
         }

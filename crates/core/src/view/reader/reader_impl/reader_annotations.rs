@@ -1,7 +1,6 @@
 //! Reader Annotations Module
 //!
 //! Handles annotation management, notes, highlighting, and bookmarks.
-#![allow(dead_code)]
 //!
 //! ## Methods to Move Here
 //! - `toggle_edit_note()` - Edit annotation note (~45 lines)

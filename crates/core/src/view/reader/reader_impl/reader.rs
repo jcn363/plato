@@ -133,14 +133,13 @@ use crate::device::CURRENT_DEVICE;
 use crate::document::{BoundedText, Document, TextLocation, TocEntry};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
-use crate::geom::LinearDir;
-use crate::geom::{BorderSpec, Boundary, CornerSpec, Point, Rectangle, Vec2};
-use crate::input::{ButtonCode, ButtonStatus, DeviceEvent};
+use crate::geom::{Boundary, Point, Rectangle, Vec2};
+use crate::geom::{CycleDir, LinearDir};
+use crate::input::ButtonCode;
 use crate::log_error;
 use crate::metadata::{Annotation, Info, ZoomMode};
 use crate::metadata::{DEFAULT_CONTRAST_EXPONENT, DEFAULT_CONTRAST_GRAY};
-use crate::theme;
-use crate::unit::{mm_to_px, scale_by_dpi};
+use crate::unit::scale_by_dpi;
 use anyhow::{Context as AnyhowContext, Error};
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::{BTreeMap, VecDeque};
@@ -156,14 +155,7 @@ use super::reader_core::{
     AnimState, Contrast, PageAnimKind, PageAnimation, RenderChunk, Resource, Search, Selection,
     State, ViewPort,
 };
-use super::reader_annotations_ext::ReaderAnnotationManager;
-use super::reader_dialog_manager::ReaderDialogManager;
-use super::reader_input::ReaderInputHandler;
 use super::reader_rendering;
-use super::reader_rendering_ext::{ReaderRenderCache, ReaderRenderEngine};
-use super::reader_search_handler::ReaderSearchHandler;
-use super::reader_settings_ui::ReaderSettingsManager;
-use super::reader_state::ReaderStateManager;
 use super::reader_toc::ReaderTocManager;
 
 pub const HIGHLIGHT_DRIFT: f32 = 0.1;
@@ -181,14 +173,6 @@ pub struct Reader {
     pub(crate) cache: BTreeMap<usize, Resource>,
     pub(crate) chunks: Vec<RenderChunk>,
     pub(crate) text: FxHashMap<usize, Vec<BoundedText>>,
-    pub(crate) annotation_manager: ReaderAnnotationManager,
-    pub(crate) dialog_manager: ReaderDialogManager,
-    pub(crate) input_handler: ReaderInputHandler,
-    pub(crate) render_cache: ReaderRenderCache,
-    pub(crate) render_engine: ReaderRenderEngine,
-    pub(crate) search_handler: ReaderSearchHandler,
-    pub(crate) settings_manager: ReaderSettingsManager,
-    pub(crate) state_manager: ReaderStateManager,
     pub(crate) toc_manager: ReaderTocManager,
     pub(crate) _noninverted_regions: FxHashMap<usize, Vec<Boundary>>,
     pub(crate) focus: Option<ViewId>,
@@ -291,14 +275,6 @@ impl Reader {
             cache: BTreeMap::new(),
             chunks: Vec::new(),
             text: FxHashMap::default(),
-            annotation_manager: ReaderAnnotationManager::new(),
-            dialog_manager: ReaderDialogManager::new(id),
-            input_handler: ReaderInputHandler::new(id),
-            render_cache: ReaderRenderCache::new(50 * 1024 * 1024), // 50MB cache
-            render_engine: ReaderRenderEngine::new(50 * 1024 * 1024),
-            search_handler: ReaderSearchHandler::new(id),
-            settings_manager: ReaderSettingsManager::new(id),
-            state_manager: ReaderStateManager::new(info.clone(), 0, pages_count),
             toc_manager: ReaderTocManager::new(),
             _noninverted_regions: FxHashMap::default(),
             focus: None,
@@ -550,21 +526,22 @@ impl Reader {
     }
 
     // -----------------------------------------------------------------------
-    // Rendering Helpers (using render_cache and render_engine)
+    // Rendering Helpers
     // -----------------------------------------------------------------------
 
-    /// Get render cache statistics
-    pub fn get_render_cache_stats(&self) -> super::reader_rendering_ext::CacheStats {
-        self.render_cache.stats()
-    }
-
+    /* NOTE: render_engine module removed
     /// Update render engine viewport
-    pub fn update_render_viewport(&mut self, viewport: super::reader_core::ViewPort) {
-        self.render_engine.viewport = viewport;
+    pub fn update_render_viewport(&mut self, _viewport: super::reader_core::ViewPort) {
+        // render_engine module removed during dead code cleanup
     }
+    */
 
     /// Start page transition animation
-    pub fn start_page_animation(&mut self, kind: super::reader_core::PageAnimKind, _duration_ms: u32) {
+    pub fn start_page_animation(
+        &mut self,
+        kind: super::reader_core::PageAnimKind,
+        _duration_ms: u32,
+    ) {
         // Store current chunks for animation reference
         self.previous_chunks = self.chunks.clone();
 
@@ -757,5 +734,44 @@ impl View for Reader {
 
     fn id(&self) -> Id {
         self.id
+    }
+}
+
+// Additional Reader methods outside View trait
+impl Reader {
+    /// Navigate to a specific search result page
+    pub fn go_to_results_page(
+        &mut self,
+        index: usize,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        super::reader_search::go_to_results_page(index, self, hub, rq, context);
+    }
+
+    /// Navigate to next or previous search result
+    pub fn go_to_results_neighbor(
+        &mut self,
+        dir: CycleDir,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        super::reader_search::go_to_results_neighbor(dir, self, hub, rq, context);
+    }
+
+    /// Render search result highlights
+    pub fn render_search_results(
+        &self,
+        chunks: &[super::reader_core::RenderChunk],
+        rq: &mut RenderQueue,
+    ) {
+        super::reader_search::render_results(self.search.as_ref(), chunks, self.id, rq);
+    }
+
+    /// Get the bounding rectangle for the current text selection
+    pub fn selection_rect(&self, chunks: &[super::reader_core::RenderChunk]) -> Option<Rectangle> {
+        super::reader_rendering::selection_rect(self.selection.as_ref(), &self.text, chunks)
     }
 }

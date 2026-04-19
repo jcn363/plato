@@ -7,7 +7,6 @@ use std::path::PathBuf;
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::halves;
-use crate::geom::Rectangle;
 use crate::unit::scale_by_dpi;
 use crate::view::{
     EntryId, Event, Hub, RenderData, RenderQueue, ViewId, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM,
@@ -40,7 +39,7 @@ impl Home {
         offset
     }
 
-    /// Calculate bottom offset for view positioning based on visible UI elements  
+    /// Calculate bottom offset for view positioning based on visible UI elements
     pub fn calculate_bottom_offset(&self) -> i32 {
         let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
@@ -85,50 +84,4 @@ impl Home {
             .ok();
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
-}
-
-/// Check if keyboard is currently visible
-pub fn is_keyboard_visible(home: &Home) -> bool {
-    home.keyboard.is_some()
-}
-
-/// Check if search bar is currently visible
-pub fn is_search_bar_visible(home: &Home) -> bool {
-    home.search_bar.is_some()
-}
-
-/// Get current focus view ID if any
-pub fn current_focus(home: &Home) -> Option<crate::view::ViewId> {
-    home.focus
-}
-
-/// Update focus to a specific view
-pub fn set_focus(home: &mut Home, view_id: Option<crate::view::ViewId>) {
-    home.focus = view_id;
-}
-
-/// Clear all menus and popups
-pub fn clear_menus(home: &mut Home) {
-    home.sort_menu = None;
-    home.book_menu = None;
-    home.library_menu = None;
-    home.settings_menu = None;
-}
-
-/// Check if any menu is currently open
-pub fn is_any_menu_open(home: &Home) -> bool {
-    home.sort_menu.is_some()
-        || home.book_menu.is_some()
-        || home.library_menu.is_some()
-        || home.settings_menu.is_some()
-}
-
-/// Get available screen height for content area
-pub fn get_content_height(rect: &Rectangle, top_offset: i32, bottom_offset: i32) -> i32 {
-    rect.height() as i32 - top_offset - bottom_offset
-}
-
-/// Get available screen width for content area
-pub fn get_content_width(rect: &Rectangle) -> i32 {
-    rect.width() as i32
 }

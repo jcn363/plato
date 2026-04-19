@@ -177,9 +177,7 @@ impl TextLine {
             if chr.is_null() {
                 None
             } else {
-                Some(TextChar {
-                    text_char: chr,
-                })
+                Some(TextChar { text_char: chr })
             }
         }
     }

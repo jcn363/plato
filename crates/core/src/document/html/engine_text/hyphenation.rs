@@ -2,8 +2,6 @@
 //!
 //! This module provides hyphenation functionality for text layout.
 
-#![allow(dead_code)]
-
 use rustc_hash::FxHashMap;
 
 /// Trait for hyphenation implementations
@@ -13,12 +11,14 @@ pub trait Hyphenate {
 
 /// Simple hyphenator implementation
 pub struct SimpleHyphenator {
-    language: String,
+    _language: String,
 }
 
 impl SimpleHyphenator {
     pub fn new(language: String) -> Self {
-        Self { language }
+        Self {
+            _language: language,
+        }
     }
 }
 

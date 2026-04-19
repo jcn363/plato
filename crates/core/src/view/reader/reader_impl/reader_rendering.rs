@@ -1,7 +1,6 @@
 //! Reader Rendering Module
 //!
 //! Handles page rendering, animation, text extraction, and display updates.
-#![allow(dead_code)]
 //!
 //! ## Methods to Move Here
 //! - `render()` - Main rendering to framebuffer (~200 lines)

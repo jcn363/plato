@@ -18,30 +18,17 @@ pub struct BookView {
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
     book_path: Option<std::path::PathBuf>,
-    parent_id: Id,
 }
 
 impl BookView {
     /// Create a new book view
-    pub fn new(rect: Rectangle, parent_id: Id, _context: &mut Context) -> Self {
+    pub fn new(rect: Rectangle, _parent_id: Id, _context: &mut Context) -> Self {
         Self {
             id: ID_FEEDER.next(),
             rect,
             children: Vec::new(),
             book_path: None,
-            parent_id,
         }
-    }
-
-    /// Set the book to display
-    pub fn set_book(&mut self, path: std::path::PathBuf, rq: &mut RenderQueue) {
-        self.book_path = Some(path);
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-    }
-
-    /// Get the current book path
-    pub fn book_path(&self) -> Option<&std::path::PathBuf> {
-        self.book_path.as_ref()
     }
 }
 
