@@ -205,17 +205,6 @@ pub mod utils {
         (item_width, item_height)
     }
 
-    /// Get shelf view layout options
-    pub fn get_shelf_view_layout_options() -> Vec<ShelfLayoutOption> {
-        vec![
-            ShelfLayoutOption::Grid { columns: 2 },
-            ShelfLayoutOption::Grid { columns: 3 },
-            ShelfLayoutOption::Grid { columns: 4 },
-            ShelfLayoutOption::Grid { columns: 5 },
-            ShelfLayoutOption::List,
-        ]
-    }
-
     /// Shelf layout options
     #[derive(Debug, Clone)]
     pub enum ShelfLayoutOption {

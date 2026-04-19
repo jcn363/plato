@@ -323,17 +323,6 @@ pub mod utils {
         MenuToggleConfig::default()
     }
 
-    /// Get available sort options
-    pub fn get_sort_options() -> Vec<SortOption> {
-        vec![
-            SortOption::Title,
-            SortOption::Author,
-            SortOption::Date,
-            SortOption::Size,
-            SortOption::Format,
-        ]
-    }
-
     /// Sort options
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum SortOption {
@@ -372,20 +361,6 @@ pub mod utils {
         let width = (screen_width as f32 * 0.4) as i32;
         let height = (screen_height as f32 * 0.6) as i32;
         (width, height)
-    }
-
-    /// Check if menu should be shown at position
-    pub fn should_show_menu_at_position(
-        position: (i32, i32),
-        screen_size: (i32, i32),
-        menu_size: (i32, i32),
-    ) -> bool {
-        let (x, y) = position;
-        let (screen_w, screen_h) = screen_size;
-        let (menu_w, menu_h) = menu_size;
-
-        // Check if menu would fit on screen
-        x + menu_w <= screen_w && y + menu_h <= screen_h
     }
 
     /// Adjust menu position to fit on screen

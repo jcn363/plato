@@ -221,14 +221,6 @@ pub mod utils {
         (width, height)
     }
 
-    /// Check if keyboard should be shown for input
-    pub fn should_show_keyboard_for_input(input_type: InputType) -> bool {
-        matches!(
-            input_type,
-            InputType::Text | InputType::Search | InputType::Url
-        )
-    }
-
     /// Input types that trigger keyboard
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum InputType {

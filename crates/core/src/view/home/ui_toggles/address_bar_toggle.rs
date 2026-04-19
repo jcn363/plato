@@ -209,11 +209,6 @@ pub mod utils {
         format!("{}{}{}", prefix, ellipsis, suffix)
     }
 
-    /// Validate address bar input
-    pub fn validate_address_bar_input(input: &str) -> bool {
-        !input.is_empty() && !input.contains(char::is_control)
-    }
-
     /// Get address bar suggestions for input
     pub fn get_address_bar_suggestions(input: &str, context: &Context) -> Vec<String> {
         let mut suggestions = Vec::new();

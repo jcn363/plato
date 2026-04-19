@@ -231,18 +231,6 @@ pub mod utils {
         SettingsToggleConfig::default()
     }
 
-    /// Get available settings categories
-    pub fn get_settings_categories() -> Vec<SettingsCategory> {
-        vec![
-            SettingsCategory::Font,
-            SettingsCategory::Display,
-            SettingsCategory::Reading,
-            SettingsCategory::Advanced,
-            SettingsCategory::About,
-            SettingsCategory::Help,
-        ]
-    }
-
     /// Settings categories
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum SettingsCategory {
@@ -252,16 +240,6 @@ pub mod utils {
         Advanced,
         About,
         Help,
-    }
-
-    /// Validate settings value
-    pub fn validate_settings_value(category: SettingsCategory, key: &str, value: &str) -> bool {
-        match (category, key) {
-            (SettingsCategory::Font, "font_size") => value.parse::<f32>().is_ok(),
-            (SettingsCategory::Display, "brightness") => value.parse::<f32>().is_ok(),
-            (SettingsCategory::Reading, "page_margin") => value.parse::<i32>().is_ok(),
-            _ => true, // Default to valid for unknown settings
-        }
     }
 
     /// Format settings value for display

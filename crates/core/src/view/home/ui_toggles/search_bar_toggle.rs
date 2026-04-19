@@ -206,11 +206,6 @@ pub mod utils {
         format!("{}{}{}", prefix, ellipsis, suffix)
     }
 
-    /// Validate search query
-    pub fn validate_search_query(query: &str) -> bool {
-        !query.is_empty() && !query.contains(char::is_control)
-    }
-
     /// Get search suggestions for input
     pub fn get_search_suggestions(input: &str, context: &Context) -> Vec<String> {
         let mut suggestions = Vec::new();
@@ -228,11 +223,6 @@ pub mod utils {
         }
 
         suggestions
-    }
-
-    /// Check if search should be triggered
-    pub fn should_trigger_search(input: &str, min_length: usize) -> bool {
-        input.len() >= min_length
     }
 
     /// Get search result highlighting

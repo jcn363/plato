@@ -196,34 +196,6 @@ pub mod utils {
         GoToPageToggleConfig::default()
     }
 
-    /// Validate page number input
-    pub fn validate_page_number(input: &str, max_page: usize) -> Result<usize, String> {
-        if input.is_empty() {
-            return Err("Please enter a page number".to_string());
-        }
-
-        if !input.chars().all(|c| c.is_ascii_digit()) {
-            return Err("Please enter a valid number".to_string());
-        }
-
-        let page_num = input
-            .parse::<usize>()
-            .map_err(|_| "Invalid number format".to_string())?;
-
-        if page_num == 0 {
-            return Err("Page number must be greater than 0".to_string());
-        }
-
-        if page_num > max_page {
-            return Err(format!(
-                "Page number must be less than or equal to {}",
-                max_page
-            ));
-        }
-
-        Ok(page_num)
-    }
-
     /// Format page number for display
     pub fn format_page_number(page: usize, total_pages: usize) -> String {
         if total_pages == 0 {

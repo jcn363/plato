@@ -321,16 +321,6 @@ pub mod utils {
         Type,
     }
 
-    /// Check if file should be hidden
-    pub fn is_file_hidden(file_name: &str, show_hidden: bool) -> bool {
-        if !show_hidden && file_name.starts_with('.') {
-            return true;
-        }
-
-        // Check for other hidden patterns
-        matches!(file_name, "Thumbs.db" | "Desktop.ini" | ".DS_Store")
-    }
-
     /// Format file size for display
     pub fn format_file_size(size: u64) -> String {
         const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
