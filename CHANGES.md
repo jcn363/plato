@@ -120,7 +120,10 @@ All `#[allow(dead_code)]` attributes have been removed from actionable code:
   - `handle_gesture_event()` and `handle_button_event()` - Wired to View trait
   - Selection motion handlers and helper functions - All actively used
   - Removed duplicate standalone `handle_event` and `render` methods
-- **All `#[allow(dead_code)]` attributes removed** from reader module codebase-wide
+- **All `#[allow(dead_code)]` attributes removed** from entire `plato-core` crate:
+  - Reader module: 9 managers, animation system, gesture handlers
+  - Document module: `TextChar.ctx` field (unused MuPDF context reference)
+  - HTML engine: Removed 2 unused functions, added missing `is_math_tag()`
 - Build passes with zero errors
 
 **Commits**:
@@ -128,3 +131,4 @@ All `#[allow(dead_code)]` attributes have been removed from actionable code:
 - `1de4711` - Remove 'reserved for future' dead_code: wire up toc, text_excerpt, find_annotation_mut
 - `7fc2258` - Wire up animation system: remove dead_code from animation fields and methods
 - `399797d` - Remove all dead_code attributes from reader module (reader_search.rs, reader_gestures.rs)
+- `fa80f6d` - Remove all remaining dead_code attrs and unused code from core crate
