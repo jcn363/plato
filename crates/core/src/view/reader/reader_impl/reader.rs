@@ -521,36 +521,34 @@ impl Reader {
     }
 
     // -----------------------------------------------------------------------
-    // Table of Contents and Page Lookup (reserved for future TOC UI)
+    // Table of Contents and Page Lookup
     // -----------------------------------------------------------------------
 
-    #[allow(dead_code)]
-    fn toc(&self) -> Option<Vec<TocEntry>> {
-        super::reader_settings::build_toc(&self.info, |name| {
-            super::reader_settings::find_page_by_name(&self.info, name)
-        })
+    /// Get table of contents for current document
+    pub fn toc(&mut self) -> Option<Vec<TocEntry>> {
+        self.toc_manager.build_toc(&self.info)
     }
 
-    #[allow(dead_code)]
-    fn find_page_by_name(&self, name: &str) -> Option<usize> {
-        super::reader_settings::find_page_by_name(&self.info, name)
+    /// Find page index by name
+    pub fn find_page_by_name(&self, name: &str) -> Option<usize> {
+        self.toc_manager.find_page_by_name(&self.info, name)
     }
 
     // -----------------------------------------------------------------------
-    // Text Excerpt and Selection Geometry (reserved for future text operations)
+    // Text Excerpt and Selection Geometry
     // -----------------------------------------------------------------------
 
-    #[allow(dead_code)]
-    fn text_excerpt(&self, sel: [Point; 2]) -> Option<String> {
+    /// Extract text excerpt from selection
+    pub fn text_excerpt(&self, sel: [Point; 2]) -> Option<String> {
         reader_rendering::text_excerpt(&self.text, sel, &self.info.language)
     }
 
     // -----------------------------------------------------------------------
-    // Annotation Lookup and UI Reseed (reserved for future annotation editing)
+    // Annotation Lookup and UI
     // -----------------------------------------------------------------------
 
-    #[allow(dead_code)]
-    fn find_annotation_mut(&mut self, sel: [TextLocation; 2]) -> Option<&mut Annotation> {
+    /// Find mutable reference to annotation by selection
+    pub fn find_annotation_mut(&mut self, sel: [TextLocation; 2]) -> Option<&mut Annotation> {
         super::reader_annotations::find_annotation_mut(&mut self.info, sel)
     }
 

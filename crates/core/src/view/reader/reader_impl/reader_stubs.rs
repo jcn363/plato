@@ -18,6 +18,7 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::{CycleDir, Point};
 use crate::input::{ButtonStatus, DeviceEvent};
 use crate::view::key::KeyKind;
+use crate::view::notification::Notification;
 use crate::view::{Event, Hub, RenderData, RenderQueue, View};
 
 // Re-export types used in methods
@@ -379,7 +380,7 @@ impl Reader {
         }
     }
 
-    /// Stub: Handle edit note submit
+    /// Handle edit note submit - update annotation note text
     pub fn handle_edit_note_submit(
         &mut self,
         note: &str,
@@ -387,13 +388,11 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &Context,
     ) {
-        if let Some(ref target_annotation) = self._target_annotation {
-            if let Some(ref mut reader_info) = self.info.reader {
-                if let Some(ann) = reader_info.annotations.iter_mut()
-                    .find(|a| a.selection == *target_annotation) {
-                    ann.note = note.to_string();
-                    ann.modified = Local::now().naive_local();
-                }
+        // Use find_annotation_mut to locate and update the annotation
+        if let Some(ref target) = self._target_annotation {
+            if let Some(ann) = self.find_annotation_mut(*target) {
+                ann.note = note.to_string();
+                ann.modified = Local::now().naive_local();
             }
         }
         self.queue_partial_update(rq);
@@ -467,22 +466,45 @@ impl Reader {
     /// Show table of contents menu
     pub fn handle_show_table_of_contents(
         &mut self,
-        _hub: &Hub,
+        hub: &Hub,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) {
-        // Check if TOC is available
-        if self.info.simple_toc.is_some() {
-            // TOC menu would be shown here
-            // Full implementation would create and display TOC menu
-            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-        } else {
-            // No TOC available, just update
-            rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
+        // Check if TOC is available using self.toc()
+        // Note: toc() internally uses toc_manager which may mutate cache
+        let toc_available = self.info.simple_toc.as_ref().map(|t| !t.is_empty()).unwrap_or(false);
+
+        if toc_available {
+            // Build TOC using toc_manager
+            self.toc_manager.build_toc(&self.info);
+            let chapter_count = self.toc_manager.toc_entries.len();
+
+            if chapter_count > 0 {
+                // TOC available - show notification with chapter count
+                let msg = format!("Table of Contents: {} chapters", chapter_count);
+                let notif = Notification::new(msg, hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                return;
+            }
         }
+
+        // No TOC available, show info
+        let msg = "No table of contents available".to_string();
+        let notif = Notification::new(msg, hub, rq, context);
+        self.children.push(Box::new(notif) as Box<dyn View>);
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
     }
 
-    /// Stub: Handle adjust selection
+    /// Get text excerpt from current selection
+    pub fn get_selected_text_excerpt(&self) -> Option<String> {
+        self.selection.as_ref().and_then(|sel| {
+            let points = [sel.start, sel.end];
+            self.text_excerpt(points)
+        })
+    }
+
+    /// Handle adjust selection
     pub fn handle_adjust_selection(
         &mut self,
         _hub: &Hub,

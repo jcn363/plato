@@ -59,6 +59,7 @@ All 9 WIP module managers now integrated and active:
 ### Phase 1: Annotation System Integration ✅ COMPLETE
 
 **Changes**:
+
 - Replaced `_annotations` HashMap with `annotation_manager: ReaderAnnotationManager`
 - Wired up `handle_show_annotations()`, `go_to_annotation()`, `handle_add_highlight()`
 - Updated render loop to use annotation manager for highlights
@@ -69,6 +70,7 @@ All 9 WIP module managers now integrated and active:
 ### Phase 2: WIP Module Integration ✅ COMPLETE
 
 **Changes**:
+
 - Added imports for all 8 manager types in `reader.rs`
 - Added manager fields to Reader struct
 - All managers initialized in `create_reader()`
@@ -79,6 +81,7 @@ All 9 WIP module managers now integrated and active:
 ### Phase 3: Manager Wiring ✅ COMPLETE
 
 **Changes**:
+
 - `search_handler` - Wired to `search()` method for state management
 - `toc_manager` - Wired to `go_to_chapter()` for TOC navigation
 - `state_manager` - Wired to `go_to_page()` for page tracking
@@ -91,6 +94,7 @@ All 9 WIP module managers now integrated and active:
 **All 9 managers now active** - All `#[allow(dead_code)]` removed from Reader struct fields.
 
 **Commits**:
+
 - `44f51b4` - Wire up search_handler, toc_manager, state_manager
 - `3784adb` - Wire up dialog, input, render_cache, render_engine, settings
 
@@ -135,6 +139,7 @@ cargo clippy --target x86_64-unknown-linux-gnu -p plato-core -- -D warnings
 ## Summary
 
 All `#[allow(dead_code)]` attributes have been removed from actionable code:
+
 - All 9 manager fields in Reader struct are now actively used
 - Module-level `#[allow(dead_code)]` retained only for intentionally reserved API methods
 - Build passes with zero warnings
