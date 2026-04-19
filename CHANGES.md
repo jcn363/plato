@@ -146,9 +146,14 @@ All `#[allow(dead_code)]` attributes have been removed from actionable code:
   - `find_page_by_name()` - Used via `toc_manager`
   - `text_excerpt()` - Used in `get_selected_text_excerpt()`
   - `find_annotation_mut()` - Used in `handle_edit_note_submit()`
+- Animation system wired up:
+  - `animation` and `previous_chunks` fields - Used for page transition animations
+  - `render_animation()` and related methods - Called from View trait `render()`
+  - `start_page_animation()` and `clear_animation()` - Public API for animation control
 - Module-level `#[allow(dead_code)]` retained only for intentionally reserved API methods
 - Build passes with zero warnings
 
 **Commits**:
 
 - `1de4711` - Remove 'reserved for future' dead_code: wire up toc, text_excerpt, find_annotation_mut
+- `7fc2258` - Wire up animation system: remove dead_code from animation fields and methods
