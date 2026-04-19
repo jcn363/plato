@@ -183,16 +183,11 @@ pub struct Reader {
     pub(crate) chunks: Vec<RenderChunk>,
     pub(crate) text: FxHashMap<usize, Vec<BoundedText>>,
     pub(crate) annotation_manager: ReaderAnnotationManager,
-    #[allow(dead_code)]
     pub(crate) dialog_manager: ReaderDialogManager,
-    #[allow(dead_code)]
     pub(crate) input_handler: ReaderInputHandler,
-    #[allow(dead_code)]
     pub(crate) render_cache: ReaderRenderCache,
-    #[allow(dead_code)]
     pub(crate) render_engine: ReaderRenderEngine,
     pub(crate) search_handler: ReaderSearchHandler,
-    #[allow(dead_code)]
     pub(crate) settings_manager: ReaderSettingsManager,
     pub(crate) state_manager: ReaderStateManager,
     pub(crate) toc_manager: ReaderTocManager,
@@ -557,6 +552,20 @@ impl Reader {
     #[allow(dead_code)]
     fn find_annotation_mut(&mut self, sel: [TextLocation; 2]) -> Option<&mut Annotation> {
         super::reader_annotations::find_annotation_mut(&mut self.info, sel)
+    }
+
+    // -----------------------------------------------------------------------
+    // Rendering Helpers (using render_cache and render_engine)
+    // -----------------------------------------------------------------------
+
+    /// Get render cache statistics
+    pub fn get_render_cache_stats(&self) -> super::reader_rendering_ext::CacheStats {
+        self.render_cache.stats()
+    }
+
+    /// Update render engine viewport
+    pub fn update_render_viewport(&mut self, viewport: super::reader_core::ViewPort) {
+        self.render_engine.viewport = viewport;
     }
 
     // -----------------------------------------------------------------------

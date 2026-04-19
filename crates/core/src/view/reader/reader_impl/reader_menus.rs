@@ -11,9 +11,10 @@
 //! and manages focus state appropriately.
 use super::reader::Reader;
 use crate::context::Context;
+use crate::framebuffer::UpdateMode;
 use crate::geom::Rectangle;
 use crate::metadata::Annotation;
-use crate::view::{Hub, RenderQueue, ViewId};
+use crate::view::{Hub, RenderData, RenderQueue, View, ViewId};
 
 impl Reader {
     pub fn toggle_edit_note(
@@ -159,6 +160,19 @@ impl Reader {
             rq,
             context,
         );
+    }
+
+    /// Show main settings menu using settings_manager
+    pub fn show_settings_menu(
+        &mut self,
+        rect: Rectangle,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        let menu = self.settings_manager.create_main_menu(rect, context);
+        self.children.push(Box::new(menu) as Box<dyn View>);
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
     pub fn toggle_font_family_menu(

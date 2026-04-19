@@ -505,7 +505,7 @@ impl Reader {
         true
     }
 
-    /// Stub: Handle device event
+    /// Handle device event using input_handler
     pub fn handle_device_event(
         &mut self,
         device_event: DeviceEvent,
@@ -513,6 +513,10 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &Context,
     ) {
+        // Process event through input_handler
+        let _input_events = self.input_handler.handle_device_event(device_event);
+
+        // Also update held_buttons for backward compatibility
         match device_event {
             DeviceEvent::Button { code, status, .. } => {
                 if status == ButtonStatus::Pressed {
@@ -563,10 +567,10 @@ impl Reader {
             // Trigger UI update to show annotation sidebar
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
         } else {
-            // No annotations, show info
+            // No annotations, show info using dialog_manager
             let msg = "No annotations in this document".to_string();
-            let notif = Notification::new(msg, hub, rq, context);
-            self.children.push(Box::new(notif) as Box<dyn View>);
+            let dialog = self.dialog_manager.create_info_dialog("Annotations".to_string(), msg, context);
+            self.children.push(Box::new(dialog) as Box<dyn View>);
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
         }
     }
