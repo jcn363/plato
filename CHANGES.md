@@ -224,13 +224,42 @@ All placeholder code has been activated by removing `#[allow(dead_code)]` attrib
 
 **Commit**: `bb797bb` - Phase 2: Integrate all WIP module managers into Reader struct
 
-### Phase 3: Future Features (Post-Cleanup)
+### Phase 3: Manager Wiring ✅ COMPLETE
 
-After dead code warnings are resolved:
+**Goal**: Wire up integrated managers to actual Reader functionality
 
-- Export format conversion (EPUB to PDF, etc.)
-- Advanced gesture recognition (multi-touch)
-- Plugin architecture for custom document types
+**Implementation Steps Completed**:
+
+1. **search_handler wired up**:
+   - `search()` method now uses `search_handler.start_search()` to manage search state
+   - Search history and results tracking now handled by manager
+   - `#[allow(dead_code)]` removed from `search_handler` field
+
+2. **toc_manager wired up**:
+   - `go_to_chapter()` method now uses `self.toc_manager` instead of local instance
+   - TOC building and chapter navigation centralized in manager
+   - `#[allow(dead_code)]` removed from `toc_manager` field
+
+3. **state_manager wired up**:
+   - `go_to_page()` now calls `state_manager.update_state()` on page changes
+   - Page tracking synchronized between Reader and state_manager
+   - `#[allow(dead_code)]` removed from `state_manager` field
+
+**Managers Status**:
+
+| Manager | Integration | Field Attribute |
+|---------|-------------|-----------------|
+| `ReaderAnnotationManager` | Active (rendering) | No attribute |
+| `ReaderSearchHandler` | Active (search ops) | No attribute |
+| `ReaderStateManager` | Active (page tracking) | No attribute |
+| `ReaderTocManager` | Active (chapter nav) | No attribute |
+| `ReaderDialogManager` | Instantiated | `#[allow(dead_code)]` |
+| `ReaderInputHandler` | Instantiated | `#[allow(dead_code)]` |
+| `ReaderRenderCache` | Instantiated | `#[allow(dead_code)]` |
+| `ReaderRenderEngine` | Instantiated | `#[allow(dead_code)]` |
+| `ReaderSettingsManager` | Instantiated | `#[allow(dead_code)]` |
+
+**Commit**: `44f51b4` - Phase 3: Wire up search_handler, toc_manager, and state_manager
 
 ## Recent Updates (April 2026)
 
