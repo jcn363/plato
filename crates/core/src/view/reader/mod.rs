@@ -1,10 +1,9 @@
 mod chapter_label;
 mod margin_cropper;
 mod reader_impl;
-mod results_label;
-pub mod tool_bar; // Made public
-
-pub mod bottom_bar; // Made public
+pub mod results_label;
+pub mod tool_bar;
+pub mod bottom_bar;
 
 pub use margin_cropper::MarginCropper;
 pub use results_label::ResultsLabel;

@@ -10,12 +10,14 @@ use crate::geom::Rectangle;
 use crate::gesture::GestureEvent;
 use crate::input::DeviceEvent;
 use crate::unit::scale_by_dpi;
+use crate::view::reader::results_label::ResultsLabel;
 
 #[derive(Debug)]
 pub struct SearchBar {
     id: Id,
     pub rect: Rectangle,
     children: Vec<Box<dyn View>>,
+    results_label_index: Option<usize>,
 }
 
 impl SearchBar {
@@ -45,7 +47,17 @@ impl SearchBar {
         Self::add_right_separator(&mut children, &rect, thickness, side);
         Self::add_close_icon(&mut children, &rect, side);
 
-        SearchBar { id, rect, children }
+        // Add ResultsLabel to display search results count
+        let results_label = ResultsLabel::new(rect![rect.min, rect.min], 0, false);
+        let results_label_index = children.len();
+        children.push(Box::new(results_label) as Box<dyn View>);
+
+        SearchBar {
+            id,
+            rect,
+            children,
+            results_label_index: Some(results_label_index),
+        }
     }
 
     fn calculate_metrics(rect: &Rectangle) -> (i32, i32) {
@@ -139,6 +151,18 @@ impl SearchBar {
             input_field.set_text(text, true, rq, context);
         }
     }
+
+    pub fn update_results(&mut self, count: usize, completed: bool, rq: &mut RenderQueue) {
+        if let Some(index) = self.results_label_index {
+            if let Some(results_label) = self.children[index].downcast_mut::<ResultsLabel>() {
+                results_label.update(count, rq);
+                if completed {
+                    // TODO: Trigger EndOfSearch event to update completed status
+                    // This will be handled by the ResultsLabel's handle_event
+                }
+            }
+        }
+    }
 }
 
 impl View for SearchBar {
@@ -208,6 +232,10 @@ impl View for SearchBar {
             rq,
             context,
         );
+        // Resize ResultsLabel (hidden by default, positioned at origin)
+        if let Some(index) = self.results_label_index {
+            self.children[index].resize(rect![rect.min, rect.min], hub, rq, context);
+        }
         self.rect = rect;
     }
 

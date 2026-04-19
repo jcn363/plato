@@ -157,9 +157,39 @@ All placeholder code has been activated by removing `#[allow(dead_code)]` attrib
 *All requested UI features have been implemented. Future enhancements could include:*
 
 - Export format conversion (EPUB to PDF, etc.)
-- Wire up ResultsLabel to search UI
-- Wire up ChapterLabel to bottom bar
-- Wire up MarginCropper to PDF tools
+
+## Recent Updates (April 2026)
+
+### UI Component Wiring ✅
+
+- **ResultsLabel to Search UI**: Added ResultsLabel to SearchBar component with update_results() method for displaying search results count
+- **ChapterLabel to Bottom Bar**: Already integrated in bottom_bar.rs with add_chapter_label() method
+- **MarginCropper to PDF Tools**: Already integrated in tool_bar/layout.rs with Event::Show(ViewId::MarginCropper)
+- **Module Visibility**: Made results_label module public in reader/mod.rs for SearchBar access
+
+### Workspace Optimization ✅
+
+- **Workspace Dependencies**: Standardized all crates to use workspace metadata (version.workspace = true, edition.workspace = true, license.workspace = true)
+- **Dependency Consolidation**: Converted direct dependency versions to workspace dependencies where available (regex, zip)
+- **Updated Dependencies**:
+  - signal-hook: 0.4.1 → 0.4.4
+  - reqwest: 0.13.1 → 0.13.2
+  - image: 0.25.0 → 0.25.10
+  - libc: 0.2.180 → 0.2.185
+  - png: 0.18.0 → 0.18.1
+  - flate2: 1.1.5 → 1.1.9
+  - thiserror: 2.0.17 → 2.0.18
+  - rustc-hash: 2.1 → 2.1.2
+  - rand_xoshiro: 0.8 → 0.8.0
+  - skrifa: 0.42.0 (unchanged)
+  - rustybuzz: 0.20 → 0.20.1
+  - ab_glyph: 0.2 → 0.2.32
+
+### Documentation Organization ✅
+
+- **Created docs/README.md**: Comprehensive documentation index
+- **Archived Outdated Plans**: Moved APK, MOBI, and Rust-only plans to docs/archive/
+- **Consolidated PDF Documentation**: Moved PDF.md and PDFRust.md to docs/
 
 ## Verification
 
