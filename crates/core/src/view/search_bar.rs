@@ -152,13 +152,12 @@ impl SearchBar {
         }
     }
 
-    pub fn update_results(&mut self, count: usize, completed: bool, rq: &mut RenderQueue) {
+    pub fn update_results(&mut self, count: usize, completed: bool, hub: &Hub, rq: &mut RenderQueue) {
         if let Some(index) = self.results_label_index {
             if let Some(results_label) = self.children[index].downcast_mut::<ResultsLabel>() {
                 results_label.update(count, rq);
                 if completed {
-                    // TODO: Trigger EndOfSearch event to update completed status
-                    // This will be handled by the ResultsLabel's handle_event
+                    hub.send(Event::EndOfSearch).ok();
                 }
             }
         }
