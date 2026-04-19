@@ -191,13 +191,10 @@ pub struct Reader {
     pub(crate) render_cache: ReaderRenderCache,
     #[allow(dead_code)]
     pub(crate) render_engine: ReaderRenderEngine,
-    #[allow(dead_code)]
     pub(crate) search_handler: ReaderSearchHandler,
     #[allow(dead_code)]
     pub(crate) settings_manager: ReaderSettingsManager,
-    #[allow(dead_code)]
     pub(crate) state_manager: ReaderStateManager,
-    #[allow(dead_code)]
     pub(crate) toc_manager: ReaderTocManager,
     pub(crate) _noninverted_regions: FxHashMap<usize, Vec<Boundary>>,
     pub(crate) focus: Option<ViewId>,

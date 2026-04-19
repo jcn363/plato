@@ -192,6 +192,7 @@ All placeholder code has been activated by removing `#[allow(dead_code)]` attrib
 **Goal**: Integrate all WIP module managers into the Reader struct
 
 **Implementation Steps Completed**:
+
 1. **Added Imports**: All manager types imported in `reader.rs`
 2. **Reader Struct Updated**: Added fields for all managers:
    - ✅ `dialog_manager: ReaderDialogManager`

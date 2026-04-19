@@ -103,25 +103,22 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        use crate::view::reader::reader_impl::reader_toc::ReaderTocManager;
-
-        // Check if TOC is available
+        // Check if TOC is available and build it using integrated toc_manager
         if let Some(ref simple_toc) = self.info.simple_toc {
             if simple_toc.is_empty() {
                 self.queue_partial_update(rq);
                 return;
             }
 
-            let mut toc_manager = ReaderTocManager::new();
-            toc_manager.build_toc(&self.info);
+            self.toc_manager.build_toc(&self.info);
 
             // Find current chapter
-            let current_chapter = toc_manager.get_chapter_for_page(self.current_page);
+            let current_chapter = self.toc_manager.get_chapter_for_page(self.current_page);
 
             // Get target chapter based on direction
             let target_chapter = match dir {
                 CycleDir::Next => current_chapter.and_then(|c| {
-                    if c + 1 < toc_manager.toc_entries.len() {
+                    if c + 1 < self.toc_manager.toc_entries.len() {
                         Some(c + 1)
                     } else {
                         None
@@ -134,7 +131,7 @@ impl Reader {
 
             // Navigate to target chapter's page
             if let Some(chapter_idx) = target_chapter {
-                if let Some(page) = toc_manager.navigate_to_chapter(chapter_idx, self.current_page)
+                if let Some(page) = self.toc_manager.navigate_to_chapter(chapter_idx, self.current_page)
                 {
                     self.go_to_page(page, true, hub, rq, context);
                     return;
@@ -321,7 +318,10 @@ impl Reader {
             return;
         }
 
-        // Store search query
+        // Use search_handler to manage search state
+        self.search_handler.start_search(query.to_string(), self.search_direction);
+
+        // Store search query for rendering highlights
         use rustc_hash::FxHashMap;
         use std::sync::atomic::AtomicBool;
 
