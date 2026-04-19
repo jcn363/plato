@@ -2,17 +2,12 @@
 //!
 //! Handles annotation management, notes, highlighting, and bookmarks.
 //!
-//! ## Methods to Move Here
-//! - `toggle_edit_note()` - Edit annotation note (~45 lines)
-//! - `toggle_annotation_menu()` - Annotation context menu (~70 lines)
-//! - `find_annotation_ref()` - Lookup annotation ✓ MOVED
-//! - `find_annotation_mut()` - Lookup and mutate annotation ✓ MOVED
-//! - `toggle_bookmark()` - Bookmark management (~15 lines) ✓ MOVED
-//! - `update_annotations()` - Update annotation UI
-//! - `go_to_annotation()` - Navigate to annotation
+//! ## Methods
+//! - `find_annotation_mut()` - Lookup and mutate annotation
+//! - `toggle_bookmark()` - Bookmark management
 //!
 //! ## Size
-//! Moderate size (~600 lines total), relatively well-contained.
+//! Moderate size (~100 lines), relatively well-contained.
 //!
 //! ## Dependencies
 //! Depends on Reader's info and selection state.
@@ -23,20 +18,6 @@ use crate::geom::{Point, Rectangle};
 use crate::metadata::{Annotation, Info};
 use crate::unit::{mm_to_px, scale_by_dpi};
 use crate::view::{Id, RenderData, RenderQueue};
-
-/// Find annotation by text selection (immutable reference)
-///
-/// Searches through annotations in the given Info struct to find one matching
-/// the specified text selection range.
-///
-/// Returns an immutable reference to the annotation if found, or None.
-pub(crate) fn find_annotation_ref(info: &Info, sel: [TextLocation; 2]) -> Option<&Annotation> {
-    info.reader.as_ref().and_then(|r| {
-        r.annotations
-            .iter()
-            .find(|a| a.selection[0] == sel[0] && a.selection[1] == sel[1])
-    })
-}
 
 /// Find annotation by text selection (mutable reference)
 ///

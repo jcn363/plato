@@ -16,7 +16,6 @@
 pub mod css;
 pub mod dom;
 pub mod engine;
-pub mod engine_helpers;
 pub mod engine_text;
 pub mod layout;
 pub mod parse;

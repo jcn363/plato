@@ -19,8 +19,6 @@ use anyhow::Error;
 const DEFAULT_WIDTH: u32 = 1404;
 const DEFAULT_HEIGHT: u32 = 1872;
 
-// Math tag detection moved to engine_helpers module
-
 pub type Page = Vec<DrawCommand>;
 
 pub trait ResourceFetcher {

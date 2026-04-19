@@ -13,8 +13,7 @@ pub struct OPDSCatalog {
 impl OPDSCatalog {
     pub fn new(url: &str) -> Result<Self, Error> {
         let client = Client::new();
-        #[allow(unused_mut)]
-        let mut response = client
+        let response = client
             .get(url)
             .send()
             .map_err(|e| anyhow::anyhow!("Failed to fetch OPDS: {}", e))?;

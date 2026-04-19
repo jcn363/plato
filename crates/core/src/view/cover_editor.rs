@@ -15,19 +15,19 @@ use image::{DynamicImage, GenericImageView};
 use std::path::PathBuf;
 
 // Crop selection visual configuration
-const MIN_CROP_SIZE: u32 = 10;
-const CROP_BORDER_THICKNESS: u16 = 2;
-const CROP_SELECTION_COLOR: crate::color::Color = WHITE;
+pub(crate) const MIN_CROP_SIZE: u32 = 10;
+pub(crate) const CROP_BORDER_THICKNESS: u16 = 2;
+pub(crate) const CROP_SELECTION_COLOR: crate::color::Color = WHITE;
 
-#[derive(Clone, PartialEq)]
-enum EditorMode {
+#[derive(Clone, PartialEq, Debug)]
+pub(crate) enum EditorMode {
     SelectBook,
     EditCover,
     CropMode,
 }
 
-#[derive(Clone, PartialEq)]
-enum CropState {
+#[derive(Clone, PartialEq, Debug)]
+pub(crate) enum CropState {
     None,
     Selecting { start: (i32, i32), end: (i32, i32) },
 }
@@ -427,3 +427,7 @@ impl View for CoverEditorView {
 impl Drop for CoverEditorView {
     fn drop(&mut self) {}
 }
+
+#[cfg(test)]
+#[path = "cover_editor_tests.rs"]
+mod cover_editor_tests;

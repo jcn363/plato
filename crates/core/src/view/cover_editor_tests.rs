@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod crop_selection_tests {
-    use super::*;
-    use crate::geom::{pt, Rectangle};
-    use crate::geom::helpers::BorderSpec;
+    use crate::geom::{BorderSpec, Rectangle};
+    use crate::view::cover_editor::{MIN_CROP_SIZE, CROP_BORDER_THICKNESS, CROP_SELECTION_COLOR, EditorMode, CropState};
 
     #[test]
     fn test_coordinate_normalization() {
@@ -60,10 +59,10 @@ mod crop_selection_tests {
         let small_rect = Rectangle::new(pt!(0, 0), pt!(5, 5));
         let valid_rect = Rectangle::new(pt!(0, 0), pt!(15, 15));
         
-        assert!(small_rect.width() < MIN_CROP_SIZE as i32);
-        assert!(small_rect.height() < MIN_CROP_SIZE as i32);
-        assert!(valid_rect.width() >= MIN_CROP_SIZE as i32);
-        assert!(valid_rect.height() >= MIN_CROP_SIZE as i32);
+        assert!(small_rect.width() as u32 < MIN_CROP_SIZE);
+        assert!(small_rect.height() as u32 < MIN_CROP_SIZE);
+        assert!(valid_rect.width() as u32 >= MIN_CROP_SIZE);
+        assert!(valid_rect.height() as u32 >= MIN_CROP_SIZE);
     }
 
     #[test]
@@ -133,8 +132,6 @@ mod crop_selection_tests {
         // Test that configuration constants have expected values
         assert_eq!(MIN_CROP_SIZE, 10);
         assert_eq!(CROP_BORDER_THICKNESS, 2);
-        assert_eq!(CROP_SHOW_OVERLAY, false);
-        assert_eq!(CROP_OVERLAY_ALPHA, 0.25);
     }
 
     #[test]
