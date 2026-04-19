@@ -221,17 +221,3 @@ impl Home {
         self.get_settings_state().config.animation_duration
     }
 }
-
-// Settings event types
-#[derive(Debug, Clone)]
-pub enum FontSettings {}
-#[derive(Debug, Clone)]
-pub enum DisplaySettings {}
-#[derive(Debug, Clone)]
-pub enum ReadingSettings {}
-#[derive(Debug, Clone)]
-pub enum AdvancedSettings {}
-#[derive(Debug, Clone)]
-pub enum About {}
-#[derive(Debug, Clone)]
-pub enum Help {}

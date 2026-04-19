@@ -397,15 +397,3 @@ impl Home {
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 }
-
-// Library event types
-#[derive(Debug, Clone)]
-pub enum ImportBooks {}
-#[derive(Debug, Clone)]
-pub enum LibraryStatistics {}
-#[derive(Debug, Clone)]
-pub enum SortBy {
-    Title,
-    Author,
-    Date,
-}

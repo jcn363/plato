@@ -32,7 +32,7 @@ pub const DEFAULT_MIN_FONT_SIZE: f32 = 4.0;
 
 pub struct Engine {
     // The fonts used for each CSS font family.
-    fonts: Option<Fonts>,
+    _fonts: Option<Fonts>,
     // The minimum font size in points.
     min_font_size: f32,
     // The penalty for lines ending with a hyphen.
@@ -60,7 +60,7 @@ impl Engine {
         let line_height = DEFAULT_LINE_HEIGHT;
 
         Engine {
-            fonts: None,
+            _fonts: None,
             min_font_size: DEFAULT_MIN_FONT_SIZE,
             hyphen_penalty: HYPHEN_PENALTY,
             stretch_tolerance: STRETCH_TOLERANCE,
