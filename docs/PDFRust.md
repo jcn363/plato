@@ -29,9 +29,9 @@ Comprehensive plan to replace MuPDF C library dependency with pure Rust alternat
 | Component | File | Lines | Purpose |
 |-----------|------|--------|
 | `Search` struct | `reader_core.rs` | Search state |
-| Search handler | `reader_search_handler.rs` | 234 | Search management |
+| Search handler | `reader_search.rs` | 234 | Search management |
 | Search UI | `search_bar.rs` | ~200 | Search interface |
-| Search stub | `reader_stubs.rs` | ~50 | Search logic |
+| Search logic | `reader_search.rs` | ~50 | Search methods |
 
 ---
 

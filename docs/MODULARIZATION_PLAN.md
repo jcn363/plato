@@ -3,6 +3,7 @@
 ## Overview
 
 This document tracks the modularization of the Plato codebase following AGENTS.md guidelines:
+
 - **File size limit**: 1000 lines per file (mandatory), target 500-800
 - **Function size limit**: 50 lines per function (mandatory), target 20-30
 - **Single Responsibility**: One clear purpose per module
@@ -28,6 +29,7 @@ This document tracks the modularization of the Plato codebase following AGENTS.m
 ## Module Structure
 
 ### 1. HTML Engine (7 files)
+
 ```
 crates/core/src/document/html/
 ├── engine.rs               (175 lines - core trait)
@@ -45,6 +47,7 @@ crates/core/src/document/html/
 ```
 
 ### 2. Home UI Toggles (12 files)
+
 ```
 crates/core/src/view/home/ui_toggles/
 ├── mod.rs
@@ -61,31 +64,33 @@ crates/core/src/view/home/ui_toggles/
 └── library_toggle.rs
 ```
 
-### 3. Reader Module (21 files)
+### 3. Reader Module (20 files)
+
 ```
 crates/core/src/view/reader/reader_impl/
 ├── reader.rs               (921 lines - main impl)
 ├── reader_core.rs          (types: State, ViewPort, etc.)
-├── reader_stubs.rs         (430 lines - stub methods)
 ├── reader_menus.rs         (379 lines - menu toggles)
 ├── reader_setters.rs       (400 lines - settings setters)
 ├── reader_events.rs        (300 lines - event handling)
 ├── reader_rendering_impl.rs (200 lines - resize, render)
 ├── reader_input.rs         (gesture processing)
 ├── reader_state.rs         (state management)
-├── reader_navigation.rs    (page navigation)
-├── reader_annotations.rs   (annotation handling)
+├── reader_navigation.rs    (page navigation, chapters, bookmarks)
+├── reader_annotations.rs   (annotation handling, bookmarks)
 ├── reader_annotations_ext.rs (extended features)
 ├── reader_dialogs.rs       (dialog types)
 ├── reader_dialog_manager.rs (dialog operations)
 ├── reader_gestures.rs      (gesture processing)
-├── reader_rendering.rs     (rendering logic)
+├── reader_rendering.rs     (rendering logic, load pixmap)
 ├── reader_rendering_ext.rs (caching, scaling)
-├── reader_search.rs        (search functionality)
+├── reader_search.rs        (search functionality, highlights)
 ├── reader_search_handler.rs (search operations)
 ├── reader_settings.rs      (settings management)
 ├── reader_settings_ui.rs   (settings UI)
-└── reader_toc.rs           (table of contents)
+├── reader_toc.rs           (table of contents, TOC display)
+├── reader_ui.rs            (UI updates, toolbar, keyboard)
+└── reader_events.rs        (device events, keyboard input)
 ```
 
 ---
@@ -93,20 +98,24 @@ crates/core/src/view/reader/reader_impl/
 ## AGENTS.md Compliance
 
 ### File Size ✅
+
 - [x] All critical files under 1000 lines
 - [x] Reader modules average 300-500 lines
 
 ### Function Size ✅
+
 - [x] Core functions under 50 lines
 - [x] Helpers extracted with `#[inline]` optimization
 
 ### Code Quality ✅
+
 - [x] No duplicate patterns (160 lines eliminated via helpers)
 - [x] Single responsibility per module
 - [x] Module-level documentation on all new files
 - [x] Proper visibility (`pub` vs `pub(crate)`)
 
 ### Build Status
+
 - [x] Host target (x86_64) compiles
 - [x] ARM Kobo target compiles (336 errors fixed)
 - [x] Tests pass
@@ -118,7 +127,7 @@ crates/core/src/view/reader/reader_impl/
 | Helper | Location | Lines Saved |
 |--------|----------|-------------|
 | `toggle_dialog_view()` | reader_dialogs.rs | ~40 |
-| `queue_partial_update()` | reader_stubs.rs | ~100 |
+| `queue_partial_update()` | reader_navigation.rs | ~100 |
 | `refresh_after_change()` | reader_setters.rs | ~20 |
 | **Total** | | **~160** |
 

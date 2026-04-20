@@ -3,9 +3,15 @@
 //! This module handles table of contents functionality for the Reader view,
 //! including TOC navigation, page lookup, and chapter management.
 
+use crate::context::Context;
 use crate::document::{SimpleTocEntry, TocEntry, TocLocation};
+use crate::framebuffer::UpdateMode;
 use crate::metadata::Info;
+use crate::view::{Hub, RenderData, RenderQueue, View};
+use crate::view::notification::Notification;
 use rustc_hash::FxHashMap;
+
+use super::reader::Reader;
 
 /// Table of contents manager for the Reader view
 pub struct ReaderTocManager {
@@ -184,5 +190,40 @@ impl ReaderTocManager {
 impl Default for ReaderTocManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Reader {
+    /// Show table of contents menu
+    pub fn handle_show_table_of_contents(
+        &mut self,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        let toc_available = self
+            .info
+            .simple_toc
+            .as_ref()
+            .map(|t| !t.is_empty())
+            .unwrap_or(false);
+
+        if toc_available {
+            self.toc_manager.build_toc(&self.info);
+            let chapter_count = self.toc_manager.toc_entries.len();
+
+            if chapter_count > 0 {
+                let msg = format!("Table of Contents: {} chapters", chapter_count);
+                let notif = Notification::new(msg, hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                return;
+            }
+        }
+
+        let msg = "No table of contents available".to_string();
+        let notif = Notification::new(msg, hub, rq, context);
+        self.children.push(Box::new(notif) as Box<dyn View>);
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Partial));
     }
 }

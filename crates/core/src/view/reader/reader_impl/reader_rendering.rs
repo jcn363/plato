@@ -1,26 +1,16 @@
 //! Reader Rendering Module
 //!
 //! Handles page rendering, animation, text extraction, and display updates.
-//!
-//! ## Methods to Move Here
-//! - `render()` - Main rendering to framebuffer (~200 lines)
-//! - `render_animation()` - Page transition animations (~80 lines)
-//! - `render_current_page()` - Render specific page
-//! - `render_results()` - Highlight search results ✓
-//! - `scale_page()` - Handle zoom scaling
-//! - `crop_margins()` - Margin cropping logic
-//! - `text_excerpt()` - Extract text from selection ✓
-//! - `selected_text()` - Get currently selected text ✓
-//! - `text_rect()` - Calculate text bounding box ✓
-//! - `selection_rect()` - Get selection rectangle
-//!
-//! ## Types
-//! Uses `RenderChunk`, `Resource` from reader_core for page rendering state.
 
+use crate::context::Context;
 use crate::document::BoundedText;
 use crate::geom::{Point, Rectangle};
 use crate::metadata::{Margin, ZoomMode};
+use crate::view::{Hub, RenderQueue};
 use rustc_hash::FxHashMap;
+
+use super::reader::Reader;
+use super::reader_core::Resource;
 
 /// Calculate page scaling factor based on zoom mode
 ///
@@ -207,4 +197,28 @@ pub(crate) fn calculate_margin_offset(
     };
 
     Some(Point { x, y })
+}
+
+impl Reader {
+    /// Load pixmap for a page
+    pub fn load_pixmap(
+        &mut self,
+        page_index: usize,
+        _hub: &Hub,
+        rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
+        let mut doc = self._doc.lock().expect("doc lock poisoned");
+        let (pixmap, _) = doc
+            .pixmap(crate::document::Location::Exact(page_index), 1.0, 3)
+            .expect("failed to load pixmap");
+        drop(doc);
+        let resource = Resource {
+            pixmap,
+            frame: self.rect,
+            scale: 1.0,
+        };
+        self.cache.insert(page_index, resource);
+        self.queue_partial_update(rq);
+    }
 }
