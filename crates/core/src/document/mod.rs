@@ -22,7 +22,7 @@
 //!   - Context management, document abstraction
 //!
 //! ### Support Modules
-//! - **pdf_manipulator.rs**: PDF manipulation tools (merge, split, redact)
+//! - **pdf_manipulator/**: PDF manipulation tools (merge, split, redact)
 //! - **progressive_loader.rs**: Progressive document loading with caching
 //! - **mupdf_sys.rs**: Low-level MuPDF FFI bindings
 //!
@@ -54,7 +54,11 @@
 //! │   ├── pixmap.rs       (Pixmap handling)
 //! │   └── text.rs         (Text extraction)
 //! ├── mupdf_sys.rs        (FFI bindings)
-//! ├── pdf_manipulator.rs  (PDF tools)
+//! ├── pdf_manipulator/    (PDF tools)
+//! │   ├── mod.rs          (PdfManipulator core)
+//! │   ├── redaction.rs    (Redaction editor)
+//! │   ├── resources.rs    (Resource extraction)
+//! │   └── annotations.rs  (Annotation export)
 //! └── progressive_loader.rs (Progressive loading)
 //! ```
 //!
