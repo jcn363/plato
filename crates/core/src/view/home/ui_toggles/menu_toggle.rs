@@ -104,6 +104,7 @@ impl Home {
                 "Sort by Manual Order".to_string(),
                 EntryId::Sort(crate::metadata::SortMethod::Manual),
             ),
+            EntryKind::Command("Edit Order".to_string(), EntryId::ToggleReorderMode),
         ];
 
         Menu::new(rect, ViewId::SortMenu, MenuKind::DropDown, entries, context)

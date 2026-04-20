@@ -116,6 +116,7 @@ impl Home {
                 "Sort by Manual Order".to_string(),
                 EntryId::Sort(crate::metadata::SortMethod::Manual),
             ),
+            EntryKind::Command("Edit Manual Order".to_string(), EntryId::ToggleReorderMode),
             EntryKind::Separator,
             EntryKind::SubMenu(
                 "Filter by Format".to_string(),
