@@ -1,6 +1,5 @@
-use super::{Battery, Status};
+use super::{Battery, BatteryError, Status};
 use crate::device::CURRENT_DEVICE;
-use anyhow::{format_err, Context, Error};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
@@ -48,45 +47,25 @@ pub struct KoboBattery {
 }
 
 impl KoboBattery {
-    pub fn new() -> Result<KoboBattery, Error> {
+    pub fn new() -> Result<KoboBattery, BatteryError> {
         let base = Path::new(
             BATTERY_INTERFACES
                 .iter()
                 .find(|bi| Path::new(bi).exists())
-                .ok_or_else(|| format_err!("battery path missing"))?,
+                .ok_or_else(|| BatteryError::CapacityReadError("battery path missing".to_string()))?,
         );
-        let capacity = File::open(base.join(BATTERY_CAPACITY)).with_context(|| {
-            format!(
-                "can't open battery capacity file {}",
-                base.join(BATTERY_CAPACITY).display()
-            )
-        })?;
-        let status = File::open(base.join(BATTERY_STATUS)).with_context(|| {
-            format!(
-                "can't open battery status file {}",
-                base.join(BATTERY_STATUS).display()
-            )
-        })?;
+        let capacity = File::open(base.join(BATTERY_CAPACITY))
+            .map_err(|e| BatteryError::CapacityReadError(format!("can't open battery capacity file {}: {}", base.join(BATTERY_CAPACITY).display(), e)))?;
+        let status = File::open(base.join(BATTERY_STATUS))
+            .map_err(|e| BatteryError::StatusReadError(format!("can't open battery status file {}: {}", base.join(BATTERY_STATUS).display(), e)))?;
         let power_cover = if CURRENT_DEVICE.has_power_cover() {
             let base = Path::new(POWER_COVER_INTERFACE);
-            let capacity = File::open(base.join(POWER_COVER_CAPACITY)).with_context(|| {
-                format!(
-                    "can't open power cover capacity file {}",
-                    base.join(POWER_COVER_CAPACITY).display()
-                )
-            })?;
-            let status = File::open(base.join(POWER_COVER_STATUS)).with_context(|| {
-                format!(
-                    "can't open power cover status file {}",
-                    base.join(POWER_COVER_STATUS).display()
-                )
-            })?;
-            let connected = File::open(base.join(POWER_COVER_CONNECTED)).with_context(|| {
-                format!(
-                    "can't open power cover connected file {}",
-                    base.join(POWER_COVER_CONNECTED).display()
-                )
-            })?;
+            let capacity = File::open(base.join(POWER_COVER_CAPACITY))
+                .map_err(|e| BatteryError::CapacityReadError(format!("can't open power cover capacity file {}: {}", base.join(POWER_COVER_CAPACITY).display(), e)))?;
+            let status = File::open(base.join(POWER_COVER_STATUS))
+                .map_err(|e| BatteryError::StatusReadError(format!("can't open power cover status file {}: {}", base.join(POWER_COVER_STATUS).display(), e)))?;
+            let connected = File::open(base.join(POWER_COVER_CONNECTED))
+                .map_err(|e| BatteryError::CapacityReadError(format!("can't open power cover connected file {}: {}", base.join(POWER_COVER_CONNECTED).display(), e)))?;
             Some(PowerCover {
                 capacity,
                 status,
@@ -111,7 +90,7 @@ impl KoboBattery {
 impl KoboBattery {
     /// Checks power cover connection and caches the result.
     /// Avoids redundant file I/O by storing result in power_cover_connected.
-    fn check_power_cover_connection(&mut self) -> Result<bool, Error> {
+    fn check_power_cover_connection(&mut self) -> Result<bool, BatteryError> {
         if let Some(power_cover) = self.power_cover.as_mut() {
             let mut buf = String::new();
             power_cover.connected.seek(SeekFrom::Start(0))?;
@@ -130,7 +109,7 @@ impl Battery for KoboBattery {
     /// Optimizations:
     /// - Checks power cover connection once and caches result
     /// - Uses separate buffer for power cover read to avoid data corruption
-    fn capacity(&mut self) -> Result<Vec<f32>, Error> {
+    fn capacity(&mut self) -> Result<Vec<f32>, BatteryError> {
         let mut buf = String::new();
         self.capacity.seek(SeekFrom::Start(0))?;
         self.capacity.read_to_string(&mut buf)?;
@@ -155,7 +134,7 @@ impl Battery for KoboBattery {
     ///
     /// Reuses cached power_cover_connected from capacity() call to avoid
     /// redundant file I/O when both methods are called in sequence.
-    fn status(&mut self) -> Result<Vec<Status>, Error> {
+    fn status(&mut self) -> Result<Vec<Status>, BatteryError> {
         let mut buf = String::new();
         self.status.seek(SeekFrom::Start(0))?;
         self.status.read_to_string(&mut buf)?;

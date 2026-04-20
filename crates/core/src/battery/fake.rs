@@ -1,5 +1,4 @@
-use super::{Battery, Status};
-use anyhow::Error;
+use super::{Battery, BatteryError, Status};
 
 /// Fake battery implementation for testing.
 /// Values are cached in struct fields (no file I/O required).
@@ -35,11 +34,11 @@ impl FakeBattery {
 }
 
 impl Battery for FakeBattery {
-    fn capacity(&mut self) -> Result<Vec<f32>, Error> {
+    fn capacity(&mut self) -> Result<Vec<f32>, BatteryError> {
         Ok(vec![self.capacity])
     }
 
-    fn status(&mut self) -> Result<Vec<Status>, Error> {
+    fn status(&mut self) -> Result<Vec<Status>, BatteryError> {
         Ok(vec![self.status])
     }
 }

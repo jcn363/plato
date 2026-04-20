@@ -32,10 +32,21 @@
 mod fake;
 mod kobo;
 
-use anyhow::Error;
+use thiserror::Error;
 
 pub use self::fake::FakeBattery;
 pub use self::kobo::KoboBattery;
+
+/// Battery error types
+#[derive(Debug, Error)]
+pub enum BatteryError {
+    #[error("Failed to read battery capacity: {0}")]
+    CapacityReadError(String),
+    #[error("Failed to read battery status: {0}")]
+    StatusReadError(String),
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Status {
@@ -52,6 +63,6 @@ impl Status {
 }
 
 pub trait Battery {
-    fn capacity(&mut self) -> Result<Vec<f32>, Error>;
-    fn status(&mut self) -> Result<Vec<Status>, Error>;
+    fn capacity(&mut self) -> Result<Vec<f32>, BatteryError>;
+    fn status(&mut self) -> Result<Vec<Status>, BatteryError>;
 }

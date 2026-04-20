@@ -3,8 +3,8 @@ use std::error;
 
 /// Error type, representing the errors which can be returned by the libdict library.
 ///
-/// This enum represents a handful of custom errors and wraps `io:::Error` and
-/// `string::FromUtf8Error`.
+/// This enum represents a handful of custom errors and wraps `io::Error` and
+/// `FromUtf8Error`.
 #[derive(Debug)]
 pub enum DictError {
     /// Invalid character, e.g. within the index file; the error contains the erroneous character,
