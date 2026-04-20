@@ -43,7 +43,6 @@ use globset::Glob;
 use rustc_hash::FxHashMap;
 use std::collections::BTreeSet;
 use std::path::Path;
-use std::str;
 use std::sync::LazyLock;
 
 // Font sizes in 1/64th of a point
