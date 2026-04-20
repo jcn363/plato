@@ -571,6 +571,14 @@ impl HomeInputExt for Home {
                 self.reseed(hub, rq, context);
                 true
             }
+            Event::Select(EntryId::ToggleBookView) => {
+                self.toggle_book_view(None, hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::ToggleDirectoryView) => {
+                self.toggle_directory_view(None, hub, rq, context);
+                true
+            }
             _ => false,
         }
     }
