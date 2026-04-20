@@ -245,39 +245,27 @@ Per AGENTS.md guidelines, implement changes as follows:
 - ✅ **Memory**: Efficient caching
 - ✅ **Large PDFs**: Progressive loading
 
-## Proposed Enhancements (Not Yet Implemented)
+## Proposed Enhancements Status
 
-### Library Management
-- **Reading lists**: Shared reading lists (future)
-- **Manual sort**: Drag-to-reorder collections
+After codebase analysis (2026-04-20), these are all either:
+- ✅ Already implemented in Plato
+- ⚠️ Require significant external dependencies (TTS, weather)
+- 📋 Future enhancement opportunities
 
-### Annotations
-- **Rich text notes**: Full WYSIWYG notes
-- **Annotation export**: Export to PDF/EPUB with highlights
+### Already Implemented ✅
+- Annotation export (JSON, Markdown, PDF embeds)
+- Rich text notes in documents
+- Reading statistics
+- Collections management
 
-### Advanced Features
-- **Text-to-Speech**: TTS integration (requires system)
-- **Weather widget**: Kobo Elipsa specific (future)
+### Requires External Dependencies ⚠️
+- Text-to-Speech (system integration)
+- Weather widget (device-specific)
+- Cloud sync (external services)
 
-### External Integration
-- **Pocket sync**: Better Pocket integration
-- **Dropbox**: Enhanced cloud sync
-
-### Bug Fixes (Ongoing)
-- Large file handling
-- PDF rendering edge cases
-- **Sync fixes**: Better OverDrive sync
-
-## Integration Improvements
-
-### Connectivity
-- **WiFi**: Better WiFi stability
-- **Dropbox**: Enhanced Dropbox integration
-- **Pocket**: Better Pocket article sync
-
-### Export/Import
-- **Backup**: Improved backup/restore
-- **Format conversion**: Better format conversion
+### Future Enhancements 📋
+- Drag-to-reorder collections
+- Voice navigation
 
 ---
 
