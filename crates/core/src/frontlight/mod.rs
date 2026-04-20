@@ -39,19 +39,10 @@ pub use self::standard::StandardFrontlight;
 use crate::geom::lerp;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Default)]
 pub struct LightLevels {
     pub intensity: f32,
     pub warmth: f32,
-}
-
-impl Default for LightLevels {
-    fn default() -> Self {
-        LightLevels {
-            intensity: 0.0,
-            warmth: 0.0,
-        }
-    }
 }
 
 impl LightLevels {

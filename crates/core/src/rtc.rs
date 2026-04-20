@@ -24,6 +24,7 @@ pub struct RtcTime {
     tm_isdst: libc::c_int,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for RtcWkalrm {
     fn default() -> Self {
         // SAFETY: RtcWkalrm is a repr(C) struct with all-Copy fields. mem::zeroed() produces a valid zeroed state.

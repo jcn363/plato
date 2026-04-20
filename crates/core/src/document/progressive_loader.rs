@@ -294,6 +294,7 @@ pub struct ProgressiveLoaderOptions {
     pub preload_behind: usize,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ProgressiveLoaderOptions {
     fn default() -> Self {
         ProgressiveLoaderOptions {

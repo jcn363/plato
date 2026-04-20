@@ -7,8 +7,8 @@ use crate::context::Context;
 use crate::document::{SimpleTocEntry, TocEntry, TocLocation};
 use crate::framebuffer::UpdateMode;
 use crate::metadata::Info;
-use crate::view::{Hub, RenderData, RenderQueue, View};
 use crate::view::notification::Notification;
+use crate::view::{Hub, RenderData, RenderQueue, View};
 use rustc_hash::FxHashMap;
 
 use super::reader::Reader;
@@ -187,6 +187,7 @@ impl ReaderTocManager {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ReaderTocManager {
     fn default() -> Self {
         Self::new()

@@ -152,6 +152,7 @@ pub struct Node {
     last_child: Option<NodeId>,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for Node {
     fn default() -> Self {
         Node {

@@ -75,9 +75,10 @@ impl Library {
                     } else {
                         let relat = path.strip_prefix(&self.home).unwrap_or(path);
                         if skip_files
-                            || query.map_or(false, |q| {
-                                relat.to_str().map_or(true, |s| !q.is_simple_match(s))
-                            })
+                            || query
+                                .as_ref()
+                                .map(|q| relat.to_str().map_or(true, |s| !q.is_simple_match(s)))
+                                .unwrap_or(false)
                         {
                             continue;
                         }

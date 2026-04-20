@@ -13,6 +13,7 @@ pub struct LineBreakConfig {
     pub min_hyphenated_word_length: usize,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for LineBreakConfig {
     fn default() -> Self {
         Self {

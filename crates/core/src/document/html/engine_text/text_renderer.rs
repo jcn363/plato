@@ -18,6 +18,7 @@ pub struct TextRenderConfig {
     pub hinting: bool,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TextRenderConfig {
     fn default() -> Self {
         Self {

@@ -476,7 +476,10 @@ pub fn annotations_as_html(
         let mut note = annot.note.replace('<', "&lt;").replace('>', "&gt;");
         let mut text = annot.text.replace('<', "&lt;").replace('>', "&gt;");
         let start = annot.selection[0];
-        if active_range.map_or(false, |(first, last)| start >= first && start <= last) {
+        if active_range
+            .map(|(first, last)| start >= first && start <= last)
+            .unwrap_or(false)
+        {
             if !note.is_empty() {
                 note = format!("<b>{}</b>", note);
             }

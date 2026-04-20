@@ -27,6 +27,7 @@ pub struct FontCacheConfig {
     pub ttl_seconds: u64,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for FontCacheConfig {
     fn default() -> Self {
         Self {

@@ -126,6 +126,7 @@ impl BackgroundSync {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for BackgroundSync {
     fn default() -> Self {
         BackgroundSync::new(&BackgroundSyncSettings::default())

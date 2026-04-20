@@ -73,7 +73,7 @@ impl Dictionary {
         }
         let entries = self.index.find(&query, false);
         let entry = entries
-            .get(0)
+            .first()
             .ok_or_else(|| errors::DictError::WordNotFound(name.into()))?;
         self.content
             .fetch_definition(entry.offset, entry.size)

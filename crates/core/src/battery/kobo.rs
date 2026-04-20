@@ -116,7 +116,7 @@ impl KoboBattery {
             let mut buf = String::new();
             power_cover.connected.seek(SeekFrom::Start(0))?;
             power_cover.connected.read_to_string(&mut buf)?;
-            self.power_cover_connected = buf.trim_end().parse::<u8>().map_or(false, |v| v == 1);
+            self.power_cover_connected = buf.trim_end().parse::<u8>() == Ok(1);
             Ok(self.power_cover_connected)
         } else {
             Ok(false)

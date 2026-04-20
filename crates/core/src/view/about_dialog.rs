@@ -73,7 +73,7 @@ impl AboutDialog {
         children.push(Box::new(label));
 
         // Add OK button
-        let button_width = font.plan(LABEL_OK, Some(max_button_width), None).width as i32 + padding;
+        let button_width = font.plan(LABEL_OK, Some(max_button_width), None).width + padding;
         let rect_ok = rect![
             (rect.min.x + rect.max.x - button_width) / 2,
             rect.max.y - button_height - padding,

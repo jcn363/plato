@@ -7,11 +7,11 @@ use crate::context::Context;
 use crate::document::Location;
 use crate::framebuffer::UpdateMode;
 use crate::geom::{LinearDir, Rectangle};
-use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::menu_helpers::toggle_menu_vec;
 use crate::view::notification::Notification;
 use crate::view::{EntryId, EntryKind, Id};
+use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 use rustc_hash::FxHashMap;
 use std::sync::atomic::AtomicBool;
 

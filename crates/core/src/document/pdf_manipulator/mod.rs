@@ -70,6 +70,7 @@ pub struct OperationOptions {
     pub progress_callback: Option<ProgressCallback>,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for OperationOptions {
     fn default() -> Self {
         OperationOptions {
@@ -90,6 +91,7 @@ pub struct PdfManipulator {
     progress_callback: Option<ProgressCallback>,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for PdfManipulator {
     fn default() -> Self {
         Self {

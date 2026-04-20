@@ -103,26 +103,20 @@ impl<B: Read + Seek> DictReader for DictReaderRaw<B> {
 pub fn load_dict<P: AsRef<Path>>(path: P) -> Result<Box<dyn DictReader>, DictError> {
     if path.as_ref().extension() == Some(OsStr::new("dz")) {
         let file = File::open(path.as_ref()).map_err(|e| {
-            DictError::IoError(io::Error::new(
-                io::ErrorKind::Other,
-                format!(
-                    "can't open dictionary file {}: {}",
-                    path.as_ref().display(),
-                    e
-                ),
-            ))
+            DictError::IoError(io::Error::other(format!(
+                "can't open dictionary file {}: {}",
+                path.as_ref().display(),
+                e
+            )))
         })?;
         Ok(Box::new(DictReaderDz::new(file)?))
     } else {
         let file = File::open(path.as_ref()).map_err(|e| {
-            DictError::IoError(io::Error::new(
-                io::ErrorKind::Other,
-                format!(
-                    "can't open dictionary file {}: {}",
-                    path.as_ref().display(),
-                    e
-                ),
-            ))
+            DictError::IoError(io::Error::other(format!(
+                "can't open dictionary file {}: {}",
+                path.as_ref().display(),
+                e
+            )))
         })?;
         let reader = BufReader::new(file);
         Ok(Box::new(DictReaderRaw::new(reader)?))
@@ -284,11 +278,11 @@ impl<B: Read + Seek> DictReaderDz<B> {
         buffered_dzdict: &mut BufReader<B>,
     ) -> Result<(Vec<usize>, usize), DictError> {
         let mut chunk_offsets = Vec::with_capacity(chunk_count as usize);
-        let mut end_compressed_data = buffered_dzdict.seek(SeekFrom::Current(0))? as usize;
+        let mut end_compressed_data = buffered_dzdict.stream_position()? as usize;
         let chunks_from_header = &fextra[10usize..(10 + chunk_count * 2) as usize];
 
         for index in (0..chunks_from_header.len()).filter(|i| (i % 2) == 0) {
-            let index = index as usize;
+            let index = index;
             let compressed_len =
                 LittleEndian::read_u16(&chunks_from_header[index..(index + 2)]) as usize;
             chunk_offsets.push(end_compressed_data);
@@ -359,13 +353,10 @@ impl<B: Read + Seek> DictReader for DictReaderDz<B> {
         for chunk in self.get_chunks_for(start_offset, length) {
             let pos = self.dzdict.seek(SeekFrom::Start(chunk.offset as u64))?;
             if pos != (chunk.offset as u64) {
-                return Err(DictError::IoError(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!(
-                        "attempted to seek to {} but new position is {}",
-                        chunk.offset, pos
-                    ),
-                )));
+                return Err(DictError::IoError(io::Error::other(format!(
+                    "attempted to seek to {} but new position is {}",
+                    chunk.offset, pos
+                ))));
             }
             let mut definition = vec![0u8; chunk.length];
             self.dzdict.read_exact(&mut definition)?;

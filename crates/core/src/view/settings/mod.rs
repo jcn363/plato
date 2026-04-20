@@ -66,7 +66,7 @@ impl SettingsEditor {
             .iter()
             .map(|t| font.plan(t, None, None).width)
             .max()
-            .unwrap_or(100) as i32
+            .unwrap_or(100)
         };
 
         let dx = (width as i32 - window_width) / 2;

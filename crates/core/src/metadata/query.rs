@@ -173,7 +173,12 @@ impl BookQuery {
                 || re.is_match(&info.subtitle)
                 || re.is_match(&info.author)
                 || re.is_match(&info.series)
-                || info.file.path.to_str().map_or(false, |s| re.is_match(s))
+                || info
+                    .file
+                    .path
+                    .to_str()
+                    .map(|s| re.is_match(s))
+                    .unwrap_or(false)
         }) != Some(false)
     }
 
@@ -197,10 +202,12 @@ impl BookQuery {
     where
         F: FnOnce(&crate::metadata::info::ReaderInfo) -> bool,
     {
-        field
-            .as_ref()
-            .map(|eq| info.reader.as_ref().map_or(false, |r| check(r) == *eq))
-            != Some(false)
+        field.as_ref().map(|eq| {
+            info.reader
+                .as_ref()
+                .map(|r| check(r) == *eq)
+                .unwrap_or(false)
+        }) != Some(false)
     }
 
     fn matches_date_field<F>(

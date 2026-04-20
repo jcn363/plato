@@ -6,21 +6,11 @@ pub struct GlyphPlan {
     pub advance: crate::geom::Point,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RenderPlan {
     pub width: i32,
     pub scripts: rustc_hash::FxHashMap<usize, rustybuzz::Script>,
     pub glyphs: Vec<GlyphPlan>,
-}
-
-impl Default for RenderPlan {
-    fn default() -> RenderPlan {
-        RenderPlan {
-            width: 0,
-            scripts: rustc_hash::FxHashMap::default(),
-            glyphs: Vec::new(),
-        }
-    }
 }
 
 impl RenderPlan {

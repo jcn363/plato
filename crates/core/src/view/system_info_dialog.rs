@@ -169,7 +169,7 @@ impl View for SystemInfoDialog {
         // Render children
         for child in &self.children {
             let child_rect = child.rect();
-            if let Some(intersection) = rect.intersection(&child_rect) {
+            if let Some(intersection) = rect.intersection(child_rect) {
                 child.render(fb, intersection, fonts);
             }
         }

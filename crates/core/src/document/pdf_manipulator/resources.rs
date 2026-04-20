@@ -28,7 +28,7 @@ pub struct ExtractedFont {
 }
 
 /// Resource extraction summary
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize, Default)]
 pub struct ResourceSummary {
     pub total_pages: usize,
     pub total_images: usize,
@@ -36,19 +36,6 @@ pub struct ResourceSummary {
     pub pages_with_images: Vec<usize>,
     pub is_pdf_a: bool,
     pub pdf_a_version: String,
-}
-
-impl Default for ResourceSummary {
-    fn default() -> Self {
-        ResourceSummary {
-            total_pages: 0,
-            total_images: 0,
-            total_fonts: 0,
-            pages_with_images: Vec::new(),
-            is_pdf_a: false,
-            pdf_a_version: String::new(),
-        }
-    }
 }
 
 /// PDF resource extractor

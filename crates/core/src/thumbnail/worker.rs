@@ -155,7 +155,8 @@ impl Clone for ThumbnailWorkerPool {
     fn clone(&self) -> Self {
         // Create a new worker pool with a default number of workers
         // Try 2 workers first, fall back to 1 if that fails
-        Self::new(2).or_else(|_| Self::new(1))
+        Self::new(2)
+            .or_else(|_| Self::new(1))
             .expect("failed to create thumbnail worker pool (tried 2 and 1 workers)")
     }
 }

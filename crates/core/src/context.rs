@@ -93,7 +93,7 @@ impl Context {
         plugin_system: PluginSystem,
         background_sync: BackgroundSync,
     ) -> Context {
-        let display = Self::initialize_display(&fb);
+        let display = Self::initialize_display(fb.as_ref());
         let rng = Self::initialize_rng();
         let thumbnail_manager = Self::initialize_thumbnail_manager(&settings);
 
@@ -121,7 +121,7 @@ impl Context {
         }
     }
 
-    fn initialize_display(fb: &Box<dyn Framebuffer>) -> Display {
+    fn initialize_display(fb: &dyn Framebuffer) -> Display {
         let dims = fb.dims();
         let rotation = CURRENT_DEVICE.transformed_rotation(fb.rotation());
         Display { dims, rotation }
@@ -247,7 +247,7 @@ impl Context {
             return;
         }
 
-        let history = self.input_history.entry(id).or_insert_with(VecDeque::new);
+        let history = self.input_history.entry(id).or_default();
 
         if history.front().map(String::as_str) != Some(text) {
             history.push_front(text.to_string());

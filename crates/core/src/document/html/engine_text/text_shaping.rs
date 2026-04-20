@@ -15,20 +15,16 @@ pub struct TextShapingConfig {
 }
 
 /// Text direction
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TextDirection {
+    #[default]
     LeftToRight,
     RightToLeft,
     TopToBottom,
     BottomToTop,
 }
 
-impl Default for TextDirection {
-    fn default() -> Self {
-        TextDirection::LeftToRight
-    }
-}
-
+#[allow(clippy::derivable_impls)]
 impl Default for TextShapingConfig {
     fn default() -> Self {
         Self {

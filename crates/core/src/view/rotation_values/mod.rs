@@ -107,7 +107,7 @@ impl RotationValues {
         let msg = format!("{} / {}", step, CORNERS_COUNT);
         let font = font_from_style(fonts, &DISPLAY_STYLE, dpi);
         let plan = font.plan(msg, None, Some(&["lnum".to_string()]));
-        let dx = (width - plan.width as i32) / 2;
+        let dx = (width - plan.width) / 2;
         let dy = (height - font.x_heights.1 as i32) / 3;
 
         font.render(fb, BLACK, &plan, self.rect.min + pt!(dx, dy));
@@ -131,7 +131,7 @@ impl RotationValues {
 
         for line in msg.lines() {
             let plan = font.plan(line, None, None);
-            let dx = (width - plan.width as i32) / 2;
+            let dx = (width - plan.width) / 2;
             font.render(fb, BLACK, &plan, self.rect.min + pt!(dx, *dy));
             *dy += 3 * font.x_heights.0 as i32;
         }

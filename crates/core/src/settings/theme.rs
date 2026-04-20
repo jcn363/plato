@@ -1,19 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum ThemeMode {
+    #[default]
     Light,
     Dark,
     Sepia,
     Auto,
     Scheduled,
-}
-
-impl Default for ThemeMode {
-    fn default() -> Self {
-        Self::Light
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,6 +28,7 @@ impl TimeOfDay {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TimeOfDay {
     fn default() -> Self {
         Self { hour: 6, minute: 0 }
@@ -46,7 +42,7 @@ pub struct ThemeSchedule {
     pub dark_end: TimeOfDay,
     pub enabled: bool,
 }
-
+#[allow(clippy::derivable_impls)]
 impl Default for ThemeSchedule {
     fn default() -> Self {
         Self {

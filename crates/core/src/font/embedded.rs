@@ -302,8 +302,7 @@ extern "C" {
     pub static _binary_resources_fonts_noto_NotoSansNewTaiLue_Regular_otf_start:
         [libc::c_uchar; 10884];
     pub static _binary_resources_fonts_noto_NotoSansNKo_Regular_otf_start: [libc::c_uchar; 15164];
-    pub static _binary_resources_fonts_noto_NotoSansNushu_Regular_otf_start:
-        [libc::c_uchar; 72472];
+    pub static _binary_resources_fonts_noto_NotoSansNushu_Regular_otf_start: [libc::c_uchar; 72472];
     pub static _binary_resources_fonts_noto_NotoSansOgham_Regular_otf_start: [libc::c_uchar; 3720];
     pub static _binary_resources_fonts_noto_NotoSansOlChiki_Regular_otf_start:
         [libc::c_uchar; 7024];
@@ -338,8 +337,7 @@ extern "C" {
         [libc::c_uchar; 5288];
     pub static _binary_resources_fonts_noto_NotoSansPsalterPahlavi_Regular_otf_start:
         [libc::c_uchar; 12748];
-    pub static _binary_resources_fonts_noto_NotoSansRejang_Regular_otf_start:
-        [libc::c_uchar; 6440];
+    pub static _binary_resources_fonts_noto_NotoSansRejang_Regular_otf_start: [libc::c_uchar; 6440];
     pub static _binary_resources_fonts_noto_NotoSansRunic_Regular_otf_start: [libc::c_uchar; 7200];
     pub static _binary_resources_fonts_noto_NotoSansSamaritan_Regular_otf_start:
         [libc::c_uchar; 9024];
@@ -398,8 +396,7 @@ extern "C" {
     pub static _binary_resources_fonts_noto_NotoSansZanabazarSquare_Regular_otf_start:
         [libc::c_uchar; 13804];
     pub static _binary_resources_fonts_noto_NotoSerif_Regular_otf_start: [libc::c_uchar; 289412];
-    pub static _binary_resources_fonts_noto_NotoSerifAhom_Regular_otf_start:
-        [libc::c_uchar; 14516];
+    pub static _binary_resources_fonts_noto_NotoSerifAhom_Regular_otf_start: [libc::c_uchar; 14516];
     pub static _binary_resources_fonts_noto_NotoSerifArmenian_Regular_otf_start:
         [libc::c_uchar; 14160];
     pub static _binary_resources_fonts_noto_NotoSerifBalinese_Regular_otf_start:
@@ -451,12 +448,10 @@ extern "C" {
         [libc::c_uchar; 33752];
     pub static _binary_resources_fonts_noto_NotoSerifTelugu_Regular_otf_start:
         [libc::c_uchar; 82032];
-    pub static _binary_resources_fonts_noto_NotoSerifThai_Regular_otf_start:
-        [libc::c_uchar; 17556];
+    pub static _binary_resources_fonts_noto_NotoSerifThai_Regular_otf_start: [libc::c_uchar; 17556];
     pub static _binary_resources_fonts_noto_NotoSerifTibetan_Regular_otf_start:
         [libc::c_uchar; 334156];
-    pub static _binary_resources_fonts_noto_NotoSerifToto_Regular_otf_start:
-        [libc::c_uchar; 5732];
+    pub static _binary_resources_fonts_noto_NotoSerifToto_Regular_otf_start: [libc::c_uchar; 5732];
     pub static _binary_resources_fonts_noto_NotoSerifVithkuqi_Regular_otf_start:
         [libc::c_uchar; 42508];
     pub static _binary_resources_fonts_noto_NotoSerifYezidi_Regular_otf_start:

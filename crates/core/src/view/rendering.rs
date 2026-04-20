@@ -80,6 +80,7 @@ impl RenderQueue {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for RenderQueue {
     fn default() -> Self {
         Self::new()

@@ -372,18 +372,10 @@ pub fn device_events(
     ry
 }
 
+#[derive(Default)]
 struct TouchState {
     position: Point,
     pressure: i32,
-}
-
-impl Default for TouchState {
-    fn default() -> Self {
-        TouchState {
-            position: Point::default(),
-            pressure: 0,
-        }
-    }
 }
 
 pub fn parse_device_events(

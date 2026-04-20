@@ -150,6 +150,7 @@ impl MockFrontlight {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for MockFrontlight {
     fn default() -> Self {
         Self::new()

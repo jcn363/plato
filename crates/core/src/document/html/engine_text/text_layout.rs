@@ -17,6 +17,7 @@ pub struct TextLayoutConfig {
     pub word_spacing: f32,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TextLayoutConfig {
     fn default() -> Self {
         Self {

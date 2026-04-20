@@ -121,7 +121,7 @@ where
         .with_context(|| format!("can't serialize to JSON file {}", path.as_ref().display()))?;
     writer
         .into_inner()
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))
+        .map_err(|e| io::Error::other(e.to_string()))
         .with_context(|| format!("can't finalize JSON file {}", path.as_ref().display()))?
         .sync_all()
         .with_context(|| format!("can't sync JSON file to disk {}", path.as_ref().display()))

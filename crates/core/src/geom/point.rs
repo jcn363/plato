@@ -122,6 +122,7 @@ impl Point {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for Point {
     fn default() -> Self {
         Point::new(0, 0)

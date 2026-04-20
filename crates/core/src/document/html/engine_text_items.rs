@@ -285,7 +285,7 @@ impl Engine {
         let has_more = text[char_index..].chars().any(|c| !c.is_xml_whitespace())
             || inlines[text_index + 1..].iter().any(|m| {
                 m.text()
-                    .map_or(false, |text| text.chars().any(|c| !c.is_xml_whitespace()))
+                    .map(|text| text.chars().any(|c| !c.is_xml_whitespace())).unwrap_or(false)
             });
 
         if !parent_style.retain_whitespace

@@ -66,6 +66,7 @@ pub struct UpdateInfo {
     pub release_date: String,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for UpdateChecker {
     fn default() -> Self {
         Self::new("https://github.com/anomalyco/plato/releases/latest/version.json")

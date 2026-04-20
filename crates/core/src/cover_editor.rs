@@ -5,6 +5,7 @@ use image::{DynamicImage, GenericImageView, ImageFormat};
 use std::io::Write;
 use std::path::Path;
 
+#[derive(Default)]
 pub struct CoverEditor {
     settings: CoverEditorSettings,
 }
@@ -160,14 +161,6 @@ impl CoverEditor {
 
     pub fn get_cover_dimensions(&self) -> (u32, u32) {
         (self.settings.default_width, self.settings.default_height)
-    }
-}
-
-impl Default for CoverEditor {
-    fn default() -> Self {
-        CoverEditor {
-            settings: CoverEditorSettings::default(),
-        }
     }
 }
 

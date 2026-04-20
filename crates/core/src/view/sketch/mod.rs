@@ -221,7 +221,7 @@ impl Sketch {
             fs::create_dir_all(&self.save_path)?;
         }
         let path = self.save_path.join(&self.filename);
-        self.pixmap.save(&path.to_string_lossy().into_owned())?;
+        self.pixmap.save(&path.to_string_lossy())?;
         Ok(())
     }
 

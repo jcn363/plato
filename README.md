@@ -39,6 +39,7 @@ Any 4.*X*.*Y* firmware, with *X* >= 6, will do.
 ### Recent Verification Results
 
 **Completed** (Final Verification Pass - April 2026):
+
 - Fixed all critical compilation errors
 - Resolved import issues and trait implementations
 - Added missing View trait methods for Reader
@@ -47,6 +48,7 @@ Any 4.*X*.*Y* firmware, with *X* >= 6, will do.
 - Updated documentation with current status
 
 **Critical Issues Identified**:
+
 - 4 files exceed AGENTS.md 1,000 line limit (requires modularization)
   - `document/html/engine.rs`: 2,667 lines
   - `view/reader/reader_impl/reader.rs`: 2,370 lines
@@ -164,7 +166,7 @@ Each directory is populated by `build.sh` or `download.sh` with the appropriate 
 
 ## Performance Optimizations
 
-Recent performance improvements follow the comprehensive [OPTI_PLAN.md](OPTI_PLAN.md) with AGENTS.md compliance:
+Recent performance improvements follow the comprehensive [AGENTS.md](AGENTS.md) guidelines without backward compatibility constraints:
 
 - **Hot-Path Optimizations**: Added `#[inline]` to pixel operations, geometry calculations, and device capabilities
 - **Memory Management**: Migrated to `std::sync::LazyLock`, optimized MuPDF context cache, grayscale thumbnails
@@ -173,8 +175,11 @@ Recent performance improvements follow the comprehensive [OPTI_PLAN.md](OPTI_PLA
 - **Input Validation**: All public APIs validate inputs and fail fast with proper error handling
 - **Error Handling**: Standardized on `anyhow`/`thiserror` throughout the codebase
 - **Zero Tolerance**: No warnings, no errors, no dead code, no backward compatibility constraints
+- **Code Quality**: Strict file size limits (max 1000 lines), function size limits (max 50 lines), DRY enforcement
+- **Modern Rust**: LazyLock for global statics, tracing for structured logging, async patterns where beneficial
+- **Performance**: FxHashMap/FxHashSet for non-cryptographic use, pre-allocated buffers, `Cow<str>` for conditional string ownership
 
-For detailed implementation procedures and verification steps, see [OPTI_PLAN.md](OPTI_PLAN.md).
+For detailed implementation procedures and verification steps, see [AGENTS.md](AGENTS.md).
 
 ## Testing
 

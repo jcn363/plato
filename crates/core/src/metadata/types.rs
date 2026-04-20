@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Margin {
     pub top: f32,
@@ -17,12 +17,6 @@ impl Margin {
             bottom,
             left,
         }
-    }
-}
-
-impl Default for Margin {
-    fn default() -> Margin {
-        Margin::new(0.0, 0.0, 0.0, 0.0)
     }
 }
 

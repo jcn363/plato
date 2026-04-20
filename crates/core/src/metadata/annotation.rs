@@ -16,6 +16,7 @@ pub struct Annotation {
     pub modified: NaiveDateTime,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for Annotation {
     fn default() -> Self {
         Annotation {

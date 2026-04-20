@@ -39,6 +39,7 @@ pub struct HyphenationConfig {
     pub hyphen_char: char,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for HyphenationConfig {
     fn default() -> Self {
         Self {

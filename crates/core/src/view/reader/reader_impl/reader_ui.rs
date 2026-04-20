@@ -4,8 +4,8 @@
 
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
-use crate::view::{Event, Hub, RenderData, RenderQueue, View};
 use crate::view::notification::Notification;
+use crate::view::{Event, Hub, RenderData, RenderQueue, View};
 
 use super::reader::Reader;
 

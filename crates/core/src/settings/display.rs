@@ -21,6 +21,7 @@ pub struct NightLightSchedule {
     pub warmth_end: f32,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for BatterySettings {
     fn default() -> Self {
         BatterySettings {
@@ -57,6 +58,7 @@ impl BatterySettings {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for NightLightSchedule {
     fn default() -> Self {
         NightLightSchedule {

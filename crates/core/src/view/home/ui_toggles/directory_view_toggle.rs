@@ -110,6 +110,7 @@ pub struct DirectoryViewToggleConfig {
     pub show_details: bool,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for DirectoryViewToggleConfig {
     fn default() -> Self {
         Self {
@@ -127,7 +128,7 @@ pub struct DirectoryViewToggleState {
     pub _active: bool,
     pub config: DirectoryViewToggleConfig,
 }
-
+#[allow(clippy::derivable_impls)]
 impl Default for DirectoryViewToggleState {
     fn default() -> Self {
         Self {

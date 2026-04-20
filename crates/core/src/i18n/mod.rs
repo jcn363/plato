@@ -1,16 +1,11 @@
 use rustc_hash::FxHashMap;
 use std::sync::{LazyLock, RwLock};
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Default)]
 pub enum Language {
+    #[default]
     English,
     Spanish,
-}
-
-impl Default for Language {
-    fn default() -> Self {
-        Language::English
-    }
 }
 
 impl Language {

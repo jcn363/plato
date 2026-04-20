@@ -106,6 +106,7 @@ pub struct BookViewToggleConfig {
     pub animation_duration: u32,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for BookViewToggleConfig {
     fn default() -> Self {
         Self {
@@ -123,7 +124,7 @@ pub struct BookViewToggleState {
     pub _active: bool,
     pub config: BookViewToggleConfig,
 }
-
+#[allow(clippy::derivable_impls)]
 impl Default for BookViewToggleState {
     fn default() -> Self {
         Self {

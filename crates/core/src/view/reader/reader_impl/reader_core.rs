@@ -38,17 +38,12 @@ use rustc_hash::FxHashMap;
 // ===========================================================================
 
 /// Reader state machine
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum State {
+    #[default]
     Idle,
     Selection(usize),
     AdjustSelection,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        State::Idle
-    }
 }
 
 /// Text selection with anchor point
@@ -66,6 +61,7 @@ pub struct Contrast {
     pub exponent: f32,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for Contrast {
     fn default() -> Self {
         Contrast {
@@ -138,6 +134,7 @@ pub struct ViewPort {
     pub margin_width: i32,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ViewPort {
     fn default() -> Self {
         ViewPort {
