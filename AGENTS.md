@@ -641,6 +641,58 @@ assert_eq!(loaded.reader.font_size, settings.reader.font_size);
 
 ---
 
+## Recent Architecture Improvements
+
+### Device Trait Extraction (2026-04-20)
+
+The `Device` trait has been extracted to enable hardware independence and testability:
+
+- **KoboDevice**: Concrete implementation for actual Kobo hardware
+- **MockDevice**: Mock implementation in `test_mocks.rs` for testing without hardware
+- **Device trait**: Abstracts device-specific functionality (model, dimensions, DPI, frontlight capabilities, etc.)
+
+**Benefits:**
+- Enables unit testing without requiring actual Kobo hardware
+- Allows future support for other device types through the trait interface
+- Separates hardware-specific logic from UI/application code
+
+**Usage:**
+```rust
+use plato_core::Device;
+
+// In production
+let device = KoboDevice::new(&product, &model_number);
+
+// In tests
+let mock = MockDevice::new(Model::Forma);
+```
+
+### Battery Error Type (2026-04-20)
+
+The `Battery` trait now uses a custom `BatteryError` type via `thiserror` instead of `anyhow::Error`:
+
+- **BatteryError**: Library-level error type with descriptive variants
+  - `CapacityReadError`: Failed to read battery capacity
+  - `StatusReadError`: Failed to read battery status
+  - `IoError`: Wrapped I/O errors with automatic conversion
+
+**Benefits:**
+- Follows AGENTS.md guidance: use `thiserror` for library error types, `anyhow` for binaries
+- Provides type-safe error handling for battery operations
+- Clearer error messages for debugging
+
+**Usage:**
+```rust
+use plato_core::battery::{Battery, BatteryError, KoboBattery};
+
+let mut battery = KoboBattery::new()?;
+match battery.capacity() {
+    Ok(capacities) => { /* ... */ }
+    Err(BatteryError::CapacityReadError(msg)) => { /* ... */ }
+    Err(e) => { /* ... */ }
+}
+```
+
 ## Communication
 
 - **Ask questions** — if you have any questions or doubts, don't hesitate to ask. It's better to clarify requirements than to make incorrect assumptions
