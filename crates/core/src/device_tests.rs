@@ -2,8 +2,8 @@ use super::*;
 
 #[test]
 fn test_device_canonical_rotation() {
-    let forma = Device::new("frost", "377");
-    let aura_one = Device::new("daylight", "373");
+    let forma = KoboDevice::new("frost", "377");
+    let aura_one = KoboDevice::new("daylight", "373");
     for n in 0..4 {
         assert_eq!(forma.from_canonical(forma.to_canonical(n)), n);
     }

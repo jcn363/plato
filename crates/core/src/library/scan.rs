@@ -77,7 +77,12 @@ impl Library {
                         if skip_files
                             || query
                                 .as_ref()
-                                .map(|q| relat.to_str().map(|s| !q.is_simple_match(s)).unwrap_or(true))
+                                .map(|q| {
+                                    relat
+                                        .to_str()
+                                        .map(|s| !q.is_simple_match(s))
+                                        .unwrap_or(true)
+                                })
                                 .unwrap_or(false)
                         {
                             continue;

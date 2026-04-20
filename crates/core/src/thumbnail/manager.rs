@@ -40,7 +40,8 @@ impl ThumbnailConfig {
         enabled: bool,
     ) -> ThumbnailResult<Self> {
         // Validate worker count
-        if !(crate::thumbnail::MIN_WORKER_COUNT..=crate::thumbnail::MAX_WORKER_COUNT).contains(&worker_count)
+        if !(crate::thumbnail::MIN_WORKER_COUNT..=crate::thumbnail::MAX_WORKER_COUNT)
+            .contains(&worker_count)
         {
             return Err(ThumbnailError::configuration(format!(
                 "worker count must be between {} and {}",
@@ -50,7 +51,8 @@ impl ThumbnailConfig {
         }
 
         // Validate cache size
-        if !(crate::thumbnail::MIN_CACHE_SIZE..=crate::thumbnail::MAX_CACHE_SIZE).contains(&cache_size)
+        if !(crate::thumbnail::MIN_CACHE_SIZE..=crate::thumbnail::MAX_CACHE_SIZE)
+            .contains(&cache_size)
         {
             return Err(ThumbnailError::configuration(format!(
                 "cache size must be between {} and {}",

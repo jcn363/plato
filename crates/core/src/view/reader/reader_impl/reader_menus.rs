@@ -103,7 +103,8 @@ impl Reader {
             .info
             .reader
             .as_ref()
-            .map(|r| !r.page_names.is_empty()).unwrap_or(false);
+            .map(|r| !r.page_names.is_empty())
+            .unwrap_or(false);
         super::reader_settings::toggle_selection_menu(
             &mut self.children,
             self.current_page,

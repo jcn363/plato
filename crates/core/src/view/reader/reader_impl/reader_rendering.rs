@@ -40,9 +40,7 @@ pub(crate) fn scaling_factor(
             let scale_y = (rect.height() as f32 - 2.0 * margin_width as f32) / dims.1;
             scale_x.min(scale_y)
         }
-        ZoomMode::FitToWidth => {
-            (rect.width() as f32 - 2.0 * margin_width as f32) / dims.0
-        }
+        ZoomMode::FitToWidth => (rect.width() as f32 - 2.0 * margin_width as f32) / dims.0,
         _ => 1.0,
     }
 }

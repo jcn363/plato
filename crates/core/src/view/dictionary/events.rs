@@ -315,26 +315,26 @@ impl View for Dictionary {
         }
         let mut index = 7;
         if self.len() >= 9 && self.children[8].is::<Keyboard>() {
-                let kb_rect = crate::rect![
+            let kb_rect = crate::rect![
+                rect.min.x,
+                rect.max.y - (small_height + 3 * big_height) + big_thickness,
+                rect.max.x,
+                rect.max.y - small_height - small_thickness
+            ];
+            self.children[8].resize(kb_rect, hub, rq, context);
+            let kb_rect = *self.children[8].rect();
+            self.children[7].resize(
+                crate::rect![
                     rect.min.x,
-                    rect.max.y - (small_height + 3 * big_height) + big_thickness,
+                    kb_rect.min.y - thickness,
                     rect.max.x,
-                    rect.max.y - small_height - small_thickness
-                ];
-                self.children[8].resize(kb_rect, hub, rq, context);
-                let kb_rect = *self.children[8].rect();
-                self.children[7].resize(
-                    crate::rect![
-                        rect.min.x,
-                        kb_rect.min.y - thickness,
-                        rect.max.x,
-                        kb_rect.min.y
-                    ],
-                    hub,
-                    rq,
-                    context,
-                );
-                index = 9;
+                    kb_rect.min.y
+                ],
+                hub,
+                rq,
+                context,
+            );
+            index = 9;
         }
 
         for i in index..self.children.len() {

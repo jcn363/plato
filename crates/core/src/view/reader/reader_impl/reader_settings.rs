@@ -677,10 +677,7 @@ pub(crate) fn toggle_title_menu(
     let id = ViewId::TitleMenu;
 
     let mut title_menu = Menu::new(rect, id, MenuKind::DropDown, entries, context);
-    if let Some(entry) = title_menu
-        .child_mut(1)
-        .downcast_mut::<MenuEntry>()
-    {
+    if let Some(entry) = title_menu.child_mut(1).downcast_mut::<MenuEntry>() {
         entry.set_disabled(zoom_mode != ZoomMode::FitToWidth, rq);
     }
 

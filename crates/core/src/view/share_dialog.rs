@@ -106,8 +106,7 @@ impl ShareDialog {
         }
 
         // Add cancel button at bottom
-        let cancel_width =
-            font.plan(LABEL_CANCEL, Some(max_button_width), None).width + padding;
+        let cancel_width = font.plan(LABEL_CANCEL, Some(max_button_width), None).width + padding;
         let rect_cancel = rect![
             rect.max.x - cancel_width - padding,
             rect.max.y - button_height - padding,

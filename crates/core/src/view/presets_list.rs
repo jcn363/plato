@@ -88,8 +88,13 @@ impl PresetsList {
                 x + preset_width,
                 self.rect.max.y
             ];
-            let kind =
-                Self::determine_preset_kind(position, max_per_line, item_index, presets_count, presets);
+            let kind = Self::determine_preset_kind(
+                position,
+                max_per_line,
+                item_index,
+                presets_count,
+                presets,
+            );
             let preset = Preset::new(preset_rect, kind);
             children.push(Box::new(preset) as Box<dyn View>);
             item_index += 1;

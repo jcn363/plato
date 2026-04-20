@@ -82,19 +82,13 @@ impl Library {
                     if e.downcast_ref::<IoError>().map(|e| e.kind()) != Some(ErrorKind::NotFound) {
                         bail!(e);
                     } else {
-                        Ok(IndexMap::with_capacity_and_hasher(
-                            0,
-                            FxBuildHasher,
-                        ))
+                        Ok(IndexMap::with_capacity_and_hasher(0, FxBuildHasher))
                     }
                 }
                 Ok(v) => Ok(v),
             }
         } else {
-            Ok(IndexMap::with_capacity_and_hasher(
-                0,
-                FxBuildHasher,
-            ))
+            Ok(IndexMap::with_capacity_and_hasher(0, FxBuildHasher))
         }
     }
 

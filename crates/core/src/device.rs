@@ -41,6 +41,35 @@ pub enum Orientation {
     Landscape,
 }
 
+/// Device trait for hardware abstraction.
+/// Enables testability and hardware independence.
+pub trait Device {
+    fn model(&self) -> Model;
+    fn proto(&self) -> TouchProto;
+    fn dims(&self) -> (u32, u32);
+    fn dpi(&self) -> u16;
+    fn color_samples(&self) -> usize;
+    fn frontlight_kind(&self) -> FrontlightKind;
+    fn has_natural_light(&self) -> bool;
+    fn has_lightsensor(&self) -> bool;
+    fn has_gyroscope(&self) -> bool;
+    fn has_page_turn_buttons(&self) -> bool;
+    fn has_power_cover(&self) -> bool;
+    fn has_removable_storage(&self) -> bool;
+    fn should_invert_buttons(&self, rotation: i8) -> bool;
+    fn orientation(&self, rotation: i8) -> Orientation;
+    fn mark(&self) -> u8;
+    fn should_mirror_axes(&self, rotation: i8) -> (bool, bool);
+    fn mirroring_scheme(&self) -> (i8, i8);
+    fn should_swap_axes(&self, rotation: i8) -> bool;
+    fn swapping_scheme(&self) -> i8;
+    fn startup_rotation(&self) -> i8;
+    fn to_canonical(&self, n: i8) -> i8;
+    fn from_canonical(&self, n: i8) -> i8;
+    fn transformed_rotation(&self, n: i8) -> i8;
+    fn transformed_gyroscope_rotation(&self, n: i8) -> i8;
+}
+
 impl fmt::Display for Model {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -77,7 +106,7 @@ impl fmt::Display for Model {
 }
 
 #[derive(Debug)]
-pub struct Device {
+pub struct KoboDevice {
     pub model: Model,
     pub proto: TouchProto,
     pub dims: (u32, u32),
@@ -91,8 +120,8 @@ pub enum FrontlightKind {
     Premixed,
 }
 
-impl Device {
-    pub fn new(product: &str, model_number: &str) -> Device {
+impl KoboDevice {
+    pub fn new(product: &str, model_number: &str) -> KoboDevice {
         match product {
             "kraken" => Self::create_device(Model::Glo, TouchProto::Single, (758, 1024), 212),
             "pixie" => Self::create_device(Model::Mini, TouchProto::Single, (600, 800), 200),
@@ -168,8 +197,8 @@ impl Device {
         }
     }
 
-    fn create_device(model: Model, proto: TouchProto, dims: (u32, u32), dpi: u16) -> Device {
-        Device {
+    fn create_device(model: Model, proto: TouchProto, dims: (u32, u32), dpi: u16) -> KoboDevice {
+        KoboDevice {
             model,
             proto,
             dims,
@@ -185,13 +214,13 @@ impl Device {
         proto: TouchProto,
         dims: (u32, u32),
         dpi: u16,
-    ) -> Device {
+    ) -> KoboDevice {
         let model = if model_number == check_value {
             model_if_match
         } else {
             model_if_not_match
         };
-        Device {
+        KoboDevice {
             model,
             proto,
             dims,
@@ -415,11 +444,110 @@ impl Device {
     }
 }
 
+// Device trait implementation for testing abstraction
+impl Device for KoboDevice {
+    fn model(&self) -> Model {
+        self.model
+    }
+
+    fn proto(&self) -> TouchProto {
+        self.proto
+    }
+
+    fn dims(&self) -> (u32, u32) {
+        self.dims
+    }
+
+    fn dpi(&self) -> u16 {
+        self.dpi
+    }
+
+    fn color_samples(&self) -> usize {
+        self.color_samples()
+    }
+
+    fn frontlight_kind(&self) -> FrontlightKind {
+        self.frontlight_kind()
+    }
+
+    fn has_natural_light(&self) -> bool {
+        self.has_natural_light()
+    }
+
+    fn has_lightsensor(&self) -> bool {
+        self.has_lightsensor()
+    }
+
+    fn has_gyroscope(&self) -> bool {
+        self.has_gyroscope()
+    }
+
+    fn has_page_turn_buttons(&self) -> bool {
+        self.has_page_turn_buttons()
+    }
+
+    fn has_power_cover(&self) -> bool {
+        self.has_power_cover()
+    }
+
+    fn has_removable_storage(&self) -> bool {
+        self.has_removable_storage()
+    }
+
+    fn should_invert_buttons(&self, rotation: i8) -> bool {
+        self.should_invert_buttons(rotation)
+    }
+
+    fn orientation(&self, rotation: i8) -> Orientation {
+        self.orientation(rotation)
+    }
+
+    fn mark(&self) -> u8 {
+        self.mark()
+    }
+
+    fn should_mirror_axes(&self, rotation: i8) -> (bool, bool) {
+        self.should_mirror_axes(rotation)
+    }
+
+    fn mirroring_scheme(&self) -> (i8, i8) {
+        self.mirroring_scheme()
+    }
+
+    fn should_swap_axes(&self, rotation: i8) -> bool {
+        self.should_swap_axes(rotation)
+    }
+
+    fn swapping_scheme(&self) -> i8 {
+        self.swapping_scheme()
+    }
+
+    fn startup_rotation(&self) -> i8 {
+        self.startup_rotation()
+    }
+
+    fn to_canonical(&self, n: i8) -> i8 {
+        self.to_canonical(n)
+    }
+
+    fn from_canonical(&self, n: i8) -> i8 {
+        self.from_canonical(n)
+    }
+
+    fn transformed_rotation(&self, n: i8) -> i8 {
+        self.transformed_rotation(n)
+    }
+
+    fn transformed_gyroscope_rotation(&self, n: i8) -> i8 {
+        self.transformed_gyroscope_rotation(n)
+    }
+}
+
 lazy_static! {
-    pub static ref CURRENT_DEVICE: Device = {
+    pub static ref CURRENT_DEVICE: KoboDevice = {
         let product = env::var("PRODUCT").unwrap_or_default();
         let model_number = env::var("MODEL_NUMBER").unwrap_or_default();
 
-        Device::new(&product, &model_number)
+        KoboDevice::new(&product, &model_number)
     };
 }

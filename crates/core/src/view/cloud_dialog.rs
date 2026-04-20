@@ -123,8 +123,7 @@ impl CloudDialog {
         children.push(Box::new(config_button));
 
         // Add Cancel button
-        let cancel_width =
-            font.plan(LABEL_CANCEL, Some(max_button_width), None).width + padding;
+        let cancel_width = font.plan(LABEL_CANCEL, Some(max_button_width), None).width + padding;
         let rect_cancel = rect![
             (rect.min.x + rect.max.x - cancel_width) / 2,
             rect.max.y - button_height - padding,

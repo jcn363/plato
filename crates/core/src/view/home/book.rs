@@ -89,13 +89,17 @@ impl View for Book {
                 ));
                 true
             }
-            Event::Gesture(GestureEvent::MultiTap(centers)) if self.rect.includes(centers[0]) && self.rect.includes(centers[1]) => {
+            Event::Gesture(GestureEvent::MultiTap(centers))
+                if self.rect.includes(centers[0]) && self.rect.includes(centers[1]) =>
+            {
                 self.selected = !self.selected;
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 hub.send(Event::ToggleBookSelection(self.index)).ok();
                 true
             }
-            Event::RefreshBookPreview(ref path, ref preview_path) if self.info.file.path == *path => {
+            Event::RefreshBookPreview(ref path, ref preview_path)
+                if self.info.file.path == *path =>
+            {
                 self.preview_path = preview_path.clone();
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true

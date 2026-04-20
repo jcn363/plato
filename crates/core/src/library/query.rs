@@ -92,10 +92,7 @@ impl Library {
                     self.modified_reading_states.remove(&fp);
                 }
                 SimpleStatus::Reading | SimpleStatus::Finished => {
-                    let reader_info = self
-                        .reading_states
-                        .entry(fp)
-                        .or_default();
+                    let reader_info = self.reading_states.entry(fp).or_default();
                     reader_info.finished = status == SimpleStatus::Finished;
                     self.modified_reading_states.insert(fp);
                 }

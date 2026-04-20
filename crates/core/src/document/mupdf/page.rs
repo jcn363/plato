@@ -45,10 +45,7 @@ impl Page {
     /// Get the page dimensions (width, height).
     pub fn dims(&self) -> (f32, f32) {
         let bounds = self.bound();
-        (
-            bounds.x1 - bounds.x0,
-            bounds.y1 - bounds.y0,
-        )
+        (bounds.x1 - bounds.x0, bounds.y1 - bounds.y0)
     }
 
     /// Get the page width.

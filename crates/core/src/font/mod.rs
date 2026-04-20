@@ -202,8 +202,7 @@ impl FontFamily {
             {
                 if font.family_name().as_deref() == Some(family_name) {
                     styles.insert(
-                        font.style_name()
-                            .unwrap_or_else(|| "Regular".to_string()),
+                        font.style_name().unwrap_or_else(|| "Regular".to_string()),
                         path.to_path_buf(),
                     );
                 }
