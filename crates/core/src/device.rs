@@ -65,7 +65,7 @@ pub trait Device {
     fn swapping_scheme(&self) -> i8;
     fn startup_rotation(&self) -> i8;
     fn to_canonical(&self, n: i8) -> i8;
-    fn from_canonical(&self, n: i8) -> i8;
+    fn canonical_to_device(&self, n: i8) -> i8;
     fn transformed_rotation(&self, n: i8) -> i8;
     fn transformed_gyroscope_rotation(&self, n: i8) -> i8;
 }
@@ -419,7 +419,7 @@ impl KoboDevice {
 
     // Return a device dependent written rotation value given
     // the device independent rotation value *n*.
-    pub fn from_canonical(&self, n: i8) -> i8 {
+    pub fn canonical_to_device(&self, n: i8) -> i8 {
         let (_, dir) = self.mirroring_scheme();
         (self.startup_rotation() + (4 + dir * n) % 4) % 4
     }
@@ -530,8 +530,8 @@ impl Device for KoboDevice {
         self.to_canonical(n)
     }
 
-    fn from_canonical(&self, n: i8) -> i8 {
-        self.from_canonical(n)
+    fn canonical_to_device(&self, n: i8) -> i8 {
+        self.canonical_to_device(n)
     }
 
     fn transformed_rotation(&self, n: i8) -> i8 {

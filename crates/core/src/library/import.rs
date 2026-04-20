@@ -1,10 +1,10 @@
 use crate::document::file_kind;
+use crate::helpers::walkdir_visible;
 use crate::log_error;
 use crate::settings::ExternalStorageSettings;
 use anyhow::Error;
 use std::fs;
 use std::path::PathBuf;
-use walkdir::WalkDir;
 
 use super::types::Library;
 
@@ -25,11 +25,7 @@ impl Library {
         let mut imported = 0;
         let allowed_kinds = &self.import_settings.allowed_kinds;
 
-        for entry in WalkDir::new(external_path)
-            .min_depth(1)
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
+        for entry in walkdir_visible(external_path) {
             let path = entry.path();
             if path.is_file() {
                 if let Some(kind) = file_kind(path) {
@@ -71,11 +67,7 @@ impl Library {
         // Pre-allocate with estimated capacity to reduce reallocations
         let mut files = Vec::with_capacity(64);
 
-        for entry in WalkDir::new(external_path)
-            .min_depth(1)
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
+        for entry in walkdir_visible(external_path) {
             let path = entry.path();
             if path.is_file() {
                 if let Some(kind) = file_kind(path) {

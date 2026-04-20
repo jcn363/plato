@@ -178,6 +178,37 @@ Dependencies flow downward; lower layers don't depend on higher layers.
 - Path validation to prevent directory traversal
 - No execution of embedded scripts (PDF JavaScript disabled)
 - Sandboxed document parsing where possible
+- Validator crate for complex validation scenarios (email formats, string length, numeric ranges)
+
+## Code Quality Standards (AGENTS.md Compliance)
+
+### DRY (Don't Repeat Yourself)
+- Common patterns extracted to shared helpers (e.g., `walkdir_visible` in helpers.rs)
+- No code duplication across files
+- Constants defined in single authoritative location
+
+### Input Validation
+- All public APIs validate inputs before processing
+- Early failure with clear error messages
+- Path existence checks before file operations
+- String non-empty validation where required
+
+### Error Handling
+- `anyhow` for application-level error handling (binaries, top-level logic)
+- `thiserror` for library-level error types (battery module)
+- Consistent error context with `.with_context()`
+- No `unwrap()` in production code (only in tests)
+
+### Modular Design
+- No source file exceeds 1000 lines
+- No function exceeds 50 lines
+- Clear separation of concerns (parsing, rendering, I/O)
+- Traits for testability where appropriate
+
+### Documentation
+- Stub implementations documented with rationale (e.g., "Not supported on Kobo e-readers")
+- Architecture decisions documented with trade-offs
+- Module-level documentation in `mod.rs` files
 
 ## Testing Strategy
 

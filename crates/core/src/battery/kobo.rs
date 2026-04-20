@@ -52,20 +52,47 @@ impl KoboBattery {
             BATTERY_INTERFACES
                 .iter()
                 .find(|bi| Path::new(bi).exists())
-                .ok_or_else(|| BatteryError::CapacityReadError("battery path missing".to_string()))?,
+                .ok_or_else(|| {
+                    BatteryError::CapacityReadError("battery path missing".to_string())
+                })?,
         );
-        let capacity = File::open(base.join(BATTERY_CAPACITY))
-            .map_err(|e| BatteryError::CapacityReadError(format!("can't open battery capacity file {}: {}", base.join(BATTERY_CAPACITY).display(), e)))?;
-        let status = File::open(base.join(BATTERY_STATUS))
-            .map_err(|e| BatteryError::StatusReadError(format!("can't open battery status file {}: {}", base.join(BATTERY_STATUS).display(), e)))?;
+        let capacity = File::open(base.join(BATTERY_CAPACITY)).map_err(|e| {
+            BatteryError::CapacityReadError(format!(
+                "can't open battery capacity file {}: {}",
+                base.join(BATTERY_CAPACITY).display(),
+                e
+            ))
+        })?;
+        let status = File::open(base.join(BATTERY_STATUS)).map_err(|e| {
+            BatteryError::StatusReadError(format!(
+                "can't open battery status file {}: {}",
+                base.join(BATTERY_STATUS).display(),
+                e
+            ))
+        })?;
         let power_cover = if CURRENT_DEVICE.has_power_cover() {
             let base = Path::new(POWER_COVER_INTERFACE);
-            let capacity = File::open(base.join(POWER_COVER_CAPACITY))
-                .map_err(|e| BatteryError::CapacityReadError(format!("can't open power cover capacity file {}: {}", base.join(POWER_COVER_CAPACITY).display(), e)))?;
-            let status = File::open(base.join(POWER_COVER_STATUS))
-                .map_err(|e| BatteryError::StatusReadError(format!("can't open power cover status file {}: {}", base.join(POWER_COVER_STATUS).display(), e)))?;
-            let connected = File::open(base.join(POWER_COVER_CONNECTED))
-                .map_err(|e| BatteryError::CapacityReadError(format!("can't open power cover connected file {}: {}", base.join(POWER_COVER_CONNECTED).display(), e)))?;
+            let capacity = File::open(base.join(POWER_COVER_CAPACITY)).map_err(|e| {
+                BatteryError::CapacityReadError(format!(
+                    "can't open power cover capacity file {}: {}",
+                    base.join(POWER_COVER_CAPACITY).display(),
+                    e
+                ))
+            })?;
+            let status = File::open(base.join(POWER_COVER_STATUS)).map_err(|e| {
+                BatteryError::StatusReadError(format!(
+                    "can't open power cover status file {}: {}",
+                    base.join(POWER_COVER_STATUS).display(),
+                    e
+                ))
+            })?;
+            let connected = File::open(base.join(POWER_COVER_CONNECTED)).map_err(|e| {
+                BatteryError::CapacityReadError(format!(
+                    "can't open power cover connected file {}: {}",
+                    base.join(POWER_COVER_CONNECTED).display(),
+                    e
+                ))
+            })?;
             Some(PowerCover {
                 capacity,
                 status,

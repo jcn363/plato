@@ -35,7 +35,7 @@ pub use self::types::{GlyphPlan, RenderPlan};
 // ===========================================================================
 
 use crate::device::CURRENT_DEVICE;
-use crate::helpers::IsHidden;
+use crate::helpers::walkdir_visible;
 use crate::{log_error, log_warn};
 use anyhow::{format_err, Error};
 use bitflags::bitflags;
@@ -45,7 +45,6 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::str;
 use std::sync::LazyLock;
-use walkdir::WalkDir;
 
 // Font sizes in 1/64th of a point
 pub const FONT_SIZES: [u32; 3] = [349, 524, 629];
@@ -152,12 +151,7 @@ pub fn family_names<P: AsRef<Path>>(search_path: P) -> Result<BTreeSet<String>, 
 
     let mut families = BTreeSet::new();
 
-    for entry in WalkDir::new(search_path.as_ref())
-        .min_depth(1)
-        .into_iter()
-        .filter_entry(|e| !e.is_hidden())
-        .filter_map(|e| e.ok())
-    {
+    for entry in walkdir_visible(search_path.as_ref()) {
         let path = entry.path();
         if !glob.is_match(path) {
             continue;
@@ -186,12 +180,7 @@ impl FontFamily {
         let glob = Glob::new("**/*.[ot]tf")?.compile_matcher();
         let mut styles = FxHashMap::default();
 
-        for entry in WalkDir::new(search_path.as_ref())
-            .min_depth(1)
-            .into_iter()
-            .filter_entry(|e| !e.is_hidden())
-            .filter_map(|e| e.ok())
-        {
+        for entry in walkdir_visible(search_path.as_ref()) {
             let path = entry.path();
             if !glob.is_match(path) {
                 continue;

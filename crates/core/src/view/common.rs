@@ -165,7 +165,7 @@ pub fn toggle_main_menu(
                 .map(|n| {
                     EntryKind::RadioButton(
                         (n as i16 * 90).to_string(),
-                        EntryId::Rotate(CURRENT_DEVICE.from_canonical(n)),
+                        EntryId::Rotate(CURRENT_DEVICE.canonical_to_device(n)),
                         n == rotation,
                     )
                 })

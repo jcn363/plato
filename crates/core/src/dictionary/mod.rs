@@ -42,7 +42,12 @@ impl Dictionary {
         word: &str,
         fuzzy: bool,
     ) -> Result<Vec<[String; 2]>, errors::DictError> {
-        let mut query = word.to_string();
+        // Input validation: ensure word is not empty
+        let trimmed_word = word.trim();
+        if trimmed_word.is_empty() {
+            return Err(errors::DictError::WordNotFound("empty word".into()));
+        }
+        let mut query = trimmed_word.to_string();
         if !self.metadata.case_sensitive {
             query = query.to_lowercase();
         }

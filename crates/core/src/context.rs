@@ -5,7 +5,7 @@ use crate::font::Fonts;
 use crate::framebuffer::{Display, Framebuffer};
 use crate::frontlight::Frontlight;
 use crate::geom::Rectangle;
-use crate::helpers::{load_json, IsHidden};
+use crate::helpers::{load_json, walkdir_visible};
 use crate::library::Library;
 use crate::lightsensor::LightSensor;
 use crate::log_error;
@@ -25,7 +25,6 @@ use rand_xoshiro::Xoroshiro128Plus;
 use rustc_hash::FxHashMap;
 use std::collections::{BTreeMap, VecDeque};
 use std::path::Path;
-use walkdir::WalkDir;
 
 const KEYBOARD_LAYOUTS_DIRNAME: &str = "keyboard-layouts";
 const DICTIONARIES_DIRNAME: &str = "dictionaries";
@@ -182,14 +181,7 @@ impl Context {
             Ok(g) => g.compile_matcher(),
             Err(_) => return,
         };
-        for entry in WalkDir::new(Path::new(KEYBOARD_LAYOUTS_DIRNAME))
-            .min_depth(1)
-            .into_iter()
-            .filter_entry(|e| !e.is_hidden())
-        {
-            let Ok(entry) = entry else {
-                continue;
-            };
+        for entry in walkdir_visible(Path::new(KEYBOARD_LAYOUTS_DIRNAME)) {
             let path = entry.path();
             if !glob.is_match(path) {
                 continue;
@@ -211,14 +203,7 @@ impl Context {
             Ok(g) => g.compile_matcher(),
             Err(_) => return,
         };
-        for entry in WalkDir::new(Path::new(DICTIONARIES_DIRNAME))
-            .min_depth(1)
-            .into_iter()
-            .filter_entry(|e| !e.is_hidden())
-        {
-            let Ok(entry) = entry else {
-                continue;
-            };
+        for entry in walkdir_visible(Path::new(DICTIONARIES_DIRNAME)) {
             if !glob.is_match(entry.path()) {
                 continue;
             }
@@ -232,8 +217,9 @@ impl Context {
                 let name = dict.short_name().ok().unwrap_or_else(|| {
                     index_path
                         .file_stem()
-                        .map(|s| s.to_string_lossy().into_owned())
-                        .unwrap_or_default()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("unknown")
+                        .to_string()
                 });
                 self.dictionaries.insert(name, dict);
             }

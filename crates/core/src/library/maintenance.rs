@@ -1,4 +1,4 @@
-use crate::helpers::{load_json, save_json, Fingerprint, Fp};
+use crate::helpers::{load_json, save_json, walkdir_visible, Fingerprint, Fp};
 use crate::settings::LibraryMode;
 use crate::{log_error, log_warn};
 use std::fs;
@@ -21,10 +21,7 @@ impl Library {
     }
 
     fn collect_valid_fingerprints(&self) -> rustc_hash::FxHashSet<Fp> {
-        walkdir::WalkDir::new(&self.home)
-            .min_depth(1)
-            .into_iter()
-            .filter_map(|entry| entry.ok())
+        walkdir_visible(&self.home)
             .filter_map(|entry| {
                 if entry.file_type().is_dir() {
                     None

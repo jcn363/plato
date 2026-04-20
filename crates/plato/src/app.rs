@@ -1134,7 +1134,7 @@ pub fn run() -> Result<(), Error> {
                 if let Some(reader_info) = info.reader.as_ref() {
                     if let Some(n) = reader_info
                         .rotation
-                        .map(|n| CURRENT_DEVICE.from_canonical(n))
+                        .map(|n| CURRENT_DEVICE.canonical_to_device(n))
                     {
                         if CURRENT_DEVICE.orientation(n) != CURRENT_DEVICE.orientation(rotation) {
                             wait_for_all(&mut updating, &mut context);

@@ -484,7 +484,7 @@ fn main() -> Result<(), Error> {
                     if let Some(n) = info
                         .reader
                         .as_ref()
-                        .and_then(|r| r.rotation.map(|n| CURRENT_DEVICE.from_canonical(n)))
+                        .and_then(|r| r.rotation.map(|n| CURRENT_DEVICE.canonical_to_device(n)))
                     {
                         if n != rotation {
                             if let Ok(dims) = context.fb.set_rotation(n) {

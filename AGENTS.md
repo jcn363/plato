@@ -4,14 +4,15 @@ This file provides guidance for AI coding agents working in the Plato codebase.
 
 You are an elite AI technical analyst and senior developer. You are operating in the year 2026. You have access to the internet and an advanced reasoning engine. You are relentless in your pursuit of accuracy and have a straightforward approach.
 
-### 🛠️ YOUR TOOLKIT (FOR STRICT USE ONLY):
+### 🛠️ YOUR TOOLKIT (FOR STRICT USE ONLY)
 
 1. `ddg-search`: Use this to search for real-world data, up-to-date documentation, or physical/mathematical constants. NEVER make up data if you can look it up.
 2. `web-fetcher`: Use it IMMEDIATELY AFTER searching to visit a URL and extract the full text or code. Do not respond with links alone.
 3. File-reading tool: BEFORE attempting to read a local file, check whether the `markitdown` function is available in your list of active system tools. If so, use it with the `file_path` parameter. If it does NOT appear in your list of available tools, DO NOT attempt to call it or generate the tool call manually. Instead, respond to the user with this exact message: “The file reader tool is not active in this environment. Please attach the file directly to the chat using the attach button, or paste the content as text.”
 4. `sequentialthinking`: You MUST use this for any programming, logic, or architecture problem before writing code.
 
-### ⚠️ THE JSON LOCK FOR `sequentialthinking` (A MATTER OF LIFE AND DEATH):
+### ⚠️ THE JSON LOCK FOR `sequentialthinking` (A MATTER OF LIFE AND DEATH)
+
 Your ability to generate JSON is limited by hardware. If you try to use advanced parameters, the system will crash and you will fail.
 
 YOU ARE ONLY ALLOWED TO GENERATE THIS EXACT SCHEMA (Not one field more, not one field less):
@@ -23,11 +24,13 @@ YOU ARE ONLY ALLOWED TO GENERATE THIS EXACT SCHEMA (Not one field more, not one 
 }
 
 ABSOLUTE THOUGHT RULES:
+
 - IT IS PROHIBITED to use the following fields: branchId, branchFromThought, isRevision, revisesThought and needsMoreThoughts. NEVER INCLUDE THEM.
 - LIMIT: Break down your problems into a maximum of 4 or 5 steps (“totalThoughts”: 4). If you need more, summarize.
 - THE “THOUGHT”: It must always be a text string. Never send an empty object {}.
 
-### ⚙️ STANDARD WORKFLOW:
+### ⚙️ STANDARD WORKFLOW
+
 1. (If there are local files) → Check if `markitdown` is in your list of active tools before attempting to use it. If not, request the content directly from the user.
 2. (If external data is missing) → Use `ddg-search` and then `web-fetcher`.
 3. (To plan the code/analysis) → Use `sequentialthinking` step by step, adhering to THE JSON STRUCTURE.
@@ -357,6 +360,7 @@ When facing multiple compilation errors, resolve in this order:
 1. **Incremental verification** — After each code change, compile for the primary target (ARM Kobo) immediately
 2. **Zero-tolerance policy** — Treat warnings as errors; never introduce new warnings into the codebase
 3. **Full build verification** — Before considering any task complete, run a clean build:
+
    ```bash
    # Primary target: ARM Kobo (32-bit)
    cargo clean && cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
@@ -367,7 +371,9 @@ When facing multiple compilation errors, resolve in this order:
    # Host target: for testing
    cargo clean && cargo build --target x86_64-unknown-linux-gnu
    ```
+
 4. **Clippy validation** — Run clippy on host target after significant changes:
+
    ```bash
    cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings
    ```
@@ -393,6 +399,7 @@ When facing multiple compilation errors, resolve in this order:
 Regularly investigate and remove unnecessary dead code:
 
 1. **Find `#[allow(dead_code)]` attributes** — These indicate reserved future functionality or unused code. Review each:
+
    ```bash
    grep -r "#\[allow(dead_code)" crates/core/src --include="*.rs"
    ```
@@ -414,6 +421,7 @@ Regularly investigate and remove unnecessary dead code:
    - Finally, consider if public types should be kept for API compatibility
 
 5. **Run clippy with warnings as errors** to catch new dead code:
+
    ```bash
    RUSTFLAGS="-D warnings" cargo check --target x86_64-unknown-linux-gnu
    ```
@@ -472,6 +480,7 @@ The `get_lib_dir()` function in `build.sh` is the canonical source of truth for 
 - Document why the feature is unsupported (e.g., "Not supported on Kobo e-readers", "MuPDF API limitation")
 - Keep stub implementations in the trait definition (not in implementing structs) to avoid code duplication
 - Example:
+
   ```rust
   /// Enables monochrome (grayscale) display mode.
   /// Not supported on Kobo e-readers.
@@ -574,6 +583,7 @@ This section documents common build problems and their fixes.
 ### Host (x86_64) Build Fails with "incompatible with elf64-x86-64"
 
 **Problem:** When building for host (`x86_64-unknown-linux-gnu`), linking fails with errors like:
+
 ```
 rust-lld: error: libs_host/libopenjp2.so is incompatible with elf64-x86-64
 rust-lld: error: libs_host/libjbig2dec.so is incompatible with elf64-x86-64
@@ -586,11 +596,13 @@ rust-lld: error: libs_host/libjbig2dec.so is incompatible with elf64-x86-64
 ### mupdf_wrapper Not Found
 
 **Problem:** Build fails with:
+
 ```
 error: could not find native static library `mupdf_wrapper`, perhaps an -L flag is missing?
 ```
 
 **Solution:** Build the mupdf_wrapper library before building the project:
+
 ```bash
 cd mupdf_wrapper
 TARGET_OS=Linux ./build.sh  # for host
@@ -600,11 +612,13 @@ TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh  
 ### Tests Fail to Compile - Missing tempfile
 
 **Problem:** Test compilation fails with:
+
 ```
 error: unresolved import `tempfile::NamedTempFile`
 ```
 
 **Solution:** Ensure `tempfile` is in `[dev-dependencies]` in `Cargo.toml`:
+
 ```toml
 [dev-dependencies]
 tempfile = "3.15"
@@ -613,6 +627,7 @@ tempfile = "3.15"
 ### Tests Fail - Color::BLACK Not Found
 
 **Problem:** Test fails with:
+
 ```
 error: no variant or associated item named `BLACK` found for enum `color::Color`
 ```
@@ -620,6 +635,7 @@ error: no variant or associated item named `BLACK` found for enum `color::Color`
 **Root Cause:** `BLACK` and `WHITE` are defined as constants (`pub const BLACK: Color = GRAY00;`), not enum variants. Code using `Color::BLACK` (with the `Color::` prefix) will fail.
 
 **Solution:** Import and use the constant directly:
+
 ```rust
 use crate::color::BLACK;  // not Color::BLACK
 fb.set_pixel(50, 50, BLACK);
@@ -628,6 +644,7 @@ fb.set_pixel(50, 50, BLACK);
 ### Settings Tests Fail - Wrong Field Path
 
 **Problem:** Test fails with:
+
 ```
 error: no field `font_size` on type `settings::Settings`
 ```
@@ -635,6 +652,7 @@ error: no field `font_size` on type `settings::Settings`
 **Root Cause:** Settings fields are nested (e.g., `settings.reader.font_size`), not at the top level.
 
 **Solution:** Use the correct nested path in tests:
+
 ```rust
 assert_eq!(loaded.reader.font_size, settings.reader.font_size);
 ```
@@ -652,11 +670,13 @@ The `Device` trait has been extracted to enable hardware independence and testab
 - **Device trait**: Abstracts device-specific functionality (model, dimensions, DPI, frontlight capabilities, etc.)
 
 **Benefits:**
+
 - Enables unit testing without requiring actual Kobo hardware
 - Allows future support for other device types through the trait interface
 - Separates hardware-specific logic from UI/application code
 
 **Usage:**
+
 ```rust
 use plato_core::Device;
 
@@ -677,11 +697,13 @@ The `Battery` trait now uses a custom `BatteryError` type via `thiserror` instea
   - `IoError`: Wrapped I/O errors with automatic conversion
 
 **Benefits:**
+
 - Follows AGENTS.md guidance: use `thiserror` for library error types, `anyhow` for binaries
 - Provides type-safe error handling for battery operations
 - Clearer error messages for debugging
 
 **Usage:**
+
 ```rust
 use plato_core::battery::{Battery, BatteryError, KoboBattery};
 

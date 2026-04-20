@@ -400,6 +400,10 @@ pub fn open<P: AsRef<Path>>(path: P) -> Option<Box<dyn Document>> {
 }
 
 pub fn open_html(html: &str) -> Result<Box<dyn Document>, Error> {
+    // Input validation: ensure HTML is not empty
+    if html.trim().is_empty() {
+        return Err(format_err!("HTML content cannot be empty"));
+    }
     let doc = HtmlDocument::new_from_memory(html);
     Ok(Box::new(doc) as Box<dyn Document>)
 }

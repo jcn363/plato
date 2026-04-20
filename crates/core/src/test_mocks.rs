@@ -443,7 +443,7 @@ impl Device for MockDevice {
         (4 + dir * (n - self.startup_rotation())) % 4
     }
 
-    fn from_canonical(&self, n: i8) -> i8 {
+    fn canonical_to_device(&self, n: i8) -> i8 {
         let (_, dir) = self.mirroring_scheme();
         (self.startup_rotation() + (4 + dir * n) % 4) % 4
     }

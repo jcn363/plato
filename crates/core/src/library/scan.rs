@@ -1,5 +1,5 @@
 use crate::document::file_kind;
-use crate::helpers::{Fingerprint, Fp, IsHidden};
+use crate::helpers::{walkdir_visible, Fingerprint, Fp, IsHidden};
 use crate::log_info;
 use crate::metadata::BookQuery;
 use crate::metadata::{extract_metadata_from_document, sort, FileInfo, Info};
@@ -146,14 +146,7 @@ impl Library {
             return;
         }
 
-        for entry in WalkDir::new(&self.home)
-            .min_depth(1)
-            .into_iter()
-            .filter_entry(|e| !e.is_hidden())
-        {
-            let Ok(entry) = entry else {
-                continue;
-            };
+        for entry in walkdir_visible(&self.home) {
             if entry.file_type().is_dir() {
                 continue;
             }
