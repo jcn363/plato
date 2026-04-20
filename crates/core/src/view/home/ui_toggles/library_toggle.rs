@@ -112,6 +112,10 @@ impl Home {
                 "Sort by Date".to_string(),
                 EntryId::Sort(crate::metadata::SortMethod::Date),
             ),
+            EntryKind::Command(
+                "Sort by Manual Order".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Manual),
+            ),
             EntryKind::Separator,
             EntryKind::SubMenu(
                 "Filter by Format".to_string(),

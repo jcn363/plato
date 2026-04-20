@@ -100,6 +100,10 @@ impl Home {
                 "Sort by Size".to_string(),
                 EntryId::Sort(crate::metadata::SortMethod::Size),
             ),
+            EntryKind::Command(
+                "Sort by Manual Order".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Manual),
+            ),
         ];
 
         Menu::new(rect, ViewId::SortMenu, MenuKind::DropDown, entries, context)
