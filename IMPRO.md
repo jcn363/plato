@@ -264,7 +264,7 @@ After codebase analysis (2026-04-20), these are all either:
 - Cloud sync (external services)
 
 ### Future Enhancements 📋
-- Drag-to-reorder collections
+- Drag-to-reorder collections (IN PROGRESS - Phase 1 done)
 - Voice navigation
 
 ---
@@ -315,6 +315,7 @@ All items have been verified and the codebase is clean:
 | **Import organization** | ✅ Complete | All files pass fmt check |
 | **Builder patterns** | ✅ Complete | Applied where needed |
 | **RAII/Drop impls** | ✅ Complete | Types properly implement Drop |
+| **Drag-to-reorder** | ✅ Phase 1 | Manual sort + manual_order field |
 
 ### ✅ Passed Checks
 - **Formatting**: `cargo fmt -- --check` passes with no issues
