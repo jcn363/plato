@@ -29,7 +29,7 @@ impl ThumbnailWorker {
                 let result = self.process_request(&request);
 
                 // Send result back to requester
-                if let Err(_) = request.response_tx.send(result) {
+                if request.response_tx.send(result).is_err() {
                     // Log error but continue processing other requests
                     eprintln!("Failed to send thumbnail generation result");
                 }

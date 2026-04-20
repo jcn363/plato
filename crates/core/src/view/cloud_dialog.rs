@@ -71,7 +71,7 @@ impl CloudDialog {
         } else {
             "Cloud Providers".to_string()
         };
-        let title_width = font.plan(&title, None, None).width as i32;
+        let title_width = font.plan(&title, None, None).width;
         let rect_title = rect![
             (rect.min.x + rect.max.x - title_width) / 2,
             rect.min.y + padding,
@@ -107,7 +107,7 @@ impl CloudDialog {
         // Add Configure button
         let config_width = font
             .plan(LABEL_CONFIGURE, Some(max_button_width), None)
-            .width as i32
+            .width
             + padding;
         let rect_config = rect![
             (rect.min.x + rect.max.x - config_width) / 2,
@@ -124,7 +124,7 @@ impl CloudDialog {
 
         // Add Cancel button
         let cancel_width =
-            font.plan(LABEL_CANCEL, Some(max_button_width), None).width as i32 + padding;
+            font.plan(LABEL_CANCEL, Some(max_button_width), None).width + padding;
         let rect_cancel = rect![
             (rect.min.x + rect.max.x - cancel_width) / 2,
             rect.max.y - button_height - padding,

@@ -28,7 +28,7 @@ pub fn handle_event(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) -> bool {
-    if view.len() > 0 {
+    if !view.is_empty() {
         let mut captured = false;
 
         if view.might_skip(evt) {
@@ -61,6 +61,7 @@ pub fn handle_event(
 // We render from bottom to top. For a view to render it has to either appear in `ids` or intersect
 // one of the rectangles in `bgs`. When we're about to render a view, if `wait` is true, we'll wait
 // for all the updates in `updating` that intersect with the view.
+#[allow(clippy::too_many_arguments)]
 pub fn render(
     view: &dyn View,
     wait: bool,
@@ -73,7 +74,7 @@ pub fn render(
 ) {
     let mut render_rects = Vec::new();
 
-    if view.len() == 0 || view.is_background() {
+    if view.is_empty() || view.is_background() {
         for rect in ids
             .get(&view.id())
             .cloned()

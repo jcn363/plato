@@ -235,6 +235,7 @@ impl Sketch {
 }
 
 #[inline]
+#[allow(clippy::too_many_arguments)]
 fn draw_segment(
     pixmap: &mut Pixmap,
     ts: &mut TouchState,

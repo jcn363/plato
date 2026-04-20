@@ -241,7 +241,7 @@ impl View for MarginCropper {
         fb.draw_rectangle_outline(
             &self.frame,
             &BorderSpec {
-                thickness: thickness as u16,
+                thickness,
                 color: foreground(theme::is_dark_mode()),
             },
         );
@@ -267,7 +267,7 @@ impl View for MarginCropper {
                     &button_rect,
                     &CornerSpec::Uniform(button_radius),
                     &BorderSpec {
-                        thickness: thickness as u16,
+                        thickness,
                         color: foreground(theme::is_dark_mode()),
                     },
                     &background(theme::is_dark_mode()),

@@ -6,6 +6,7 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
 use crate::input::{DeviceEvent, FingerStatus};
 use crate::theme;
+use std::path::{Path, PathBuf};
 
 use crate::unit::scale_by_dpi;
 use crate::view::button::Button;
@@ -16,7 +17,6 @@ use crate::view::{Align, Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
-use std::path::PathBuf;
 
 const WARNING_FILE_SIZE: u64 = 30;
 const PADDING: i32 = 10;
@@ -214,7 +214,7 @@ Max: 30MB, 500 pages. Keep battery charged."
 
     fn show_redaction_menu(
         &mut self,
-        file_path: &PathBuf,
+        file_path: &Path,
         total_pages: usize,
         rq: &mut RenderQueue,
         context: &mut Context,
@@ -233,7 +233,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         for page in 0..total_pages.min(50) {
             entries.push(EntryKind::Command(
                 format!("Page {}", page + 1),
-                EntryId::OpenRedactionEditor(file_path.clone(), page),
+                EntryId::OpenRedactionEditor(file_path.to_path_buf(), page),
             ));
         }
 
@@ -275,6 +275,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
+    #[allow(clippy::ptr_arg)]
     fn process_redaction(&mut self, file_path: &PathBuf, page: usize) -> Result<PathBuf, Error> {
         use crate::document::pdf_manipulator::{RedactionEditor, RedactionRegion};
 
@@ -351,10 +352,7 @@ Max: 30MB, 500 pages. Keep battery charged."
             }
             "redact_page" => {
                 use crate::document::pdf_manipulator::RedactionEditor;
-                let editor = match RedactionEditor::new(file_path) {
-                    Ok(e) => e,
-                    Err(e) => return Err(e),
-                };
+                let editor = RedactionEditor::new(file_path)?;
                 self.selected_file = Some(file_path.clone());
                 self.show_redaction_menu(file_path, editor.page_count(), rq, context)?;
                 return Ok(());
@@ -368,10 +366,7 @@ Max: 30MB, 500 pages. Keep battery charged."
             }
             "extract_resources" => {
                 use crate::document::pdf_manipulator::ResourceExtractor;
-                let extractor = match ResourceExtractor::new(file_path) {
-                    Ok(e) => e,
-                    Err(e) => return Err(e),
-                };
+                let extractor = ResourceExtractor::new(file_path)?;
                 match extractor.list_resources() {
                     Ok(summary) => {
                         let msg = if summary.is_pdf_a {
@@ -499,7 +494,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         if let Ok(dir_iter) = std::fs::read_dir(&home_dir) {
             for entry in dir_iter.flatten() {
                 let path = entry.path();
-                if path.is_file() && path.extension().map_or(false, |ext| ext == "pdf") {
+                if path.is_file() && path.extension().map(|ext| ext == "pdf").unwrap_or(false) {
                     if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
                         entries.push(EntryKind::Command(
                             format!("📄 {}", name),
@@ -596,7 +591,7 @@ impl View for PdfManipulatorView {
                     let file_path_cloned = file_path.clone();
                     let _page_index_val = *page_index;
                     self.mode = ManipulationMode::SelectRedactionPage;
-                    if let Some(total_pages) = self.manipulator.page_count(&file_path_cloned).ok() {
+                    if let Ok(total_pages) = self.manipulator.page_count(&file_path_cloned) {
                         self.show_redaction_menu(&file_path_cloned, total_pages, rq, context)
                             .ok();
                     }
@@ -614,7 +609,7 @@ impl View for PdfManipulatorView {
                 return true;
             }
             Event::Select(EntryId::PdfManipulate(path, action)) => {
-                if let Err(e) = self.process_manipulation(&path, action, hub, bus, rq, context) {
+                if let Err(e) = self.process_manipulation(path, action, hub, bus, rq, context) {
                     bus.push_back(Event::Render(format!("Error: {}", e)));
                 }
                 return true;

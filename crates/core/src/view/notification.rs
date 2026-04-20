@@ -183,7 +183,7 @@ impl View for Notification {
         let x_height = font.x_heights.0 as i32;
         let dark = crate::theme::is_dark_mode();
 
-        let dx = (self.rect.width() as i32 - plan.width) as i32 / 2;
+        let dx = (self.rect.width() as i32 - plan.width) / 2;
         let dy = (self.rect.height() as i32 - x_height) / 2;
         let pt = pt!(self.rect.min.x + dx, self.rect.max.y - dy);
 

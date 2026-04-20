@@ -17,7 +17,7 @@ use crate::view::{Event, Hub, RenderData, RenderQueue, View, ViewId};
 fn locate_by_id_in_vec(children: &[Box<dyn View>], id: ViewId) -> Option<usize> {
     children
         .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == id))
+        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
 }
 
 /// Helper to toggle a dialog view with common logic.

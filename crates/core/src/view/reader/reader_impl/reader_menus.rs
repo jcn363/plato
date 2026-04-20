@@ -103,7 +103,7 @@ impl Reader {
             .info
             .reader
             .as_ref()
-            .map_or(false, |r| !r.page_names.is_empty());
+            .map(|r| !r.page_names.is_empty()).unwrap_or(false);
         super::reader_settings::toggle_selection_menu(
             &mut self.children,
             self.current_page,
@@ -135,12 +135,14 @@ impl Reader {
             .info
             .reader
             .as_ref()
-            .map_or(false, |r| !r.annotations.is_empty());
+            .map(|r| !r.annotations.is_empty())
+            .unwrap_or(false);
         let has_bookmarks = self
             .info
             .reader
             .as_ref()
-            .map_or(false, |r| !r.bookmarks.is_empty());
+            .map(|r| !r.bookmarks.is_empty())
+            .unwrap_or(false);
         super::reader_settings::toggle_title_menu(
             &mut self.children,
             rect,
@@ -320,7 +322,7 @@ impl Reader {
                     r.screen_margin_width
                 }
             })
-            .unwrap_or_else(|| {
+            .unwrap_or({
                 if self.reflowable {
                     context.settings.reader.margin_width
                 } else {

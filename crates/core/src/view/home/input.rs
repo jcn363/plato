@@ -471,7 +471,7 @@ impl HomeInputExt for Home {
                 true
             }
             Event::GoTo(location) => {
-                self.go_to_page(location as usize, hub, rq, context);
+                self.go_to_page(location, hub, rq, context);
                 true
             }
             Event::Chapter(dir) => {

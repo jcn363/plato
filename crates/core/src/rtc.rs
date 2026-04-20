@@ -42,7 +42,7 @@ pub struct RtcWkalrm {
 
 impl RtcTime {
     fn year(&self) -> i32 {
-        1900 + self.tm_year as i32
+        1900 + self.tm_year
     }
 }
 

@@ -317,7 +317,8 @@ pub(crate) fn toggle_page_menu(
     let has_name = info
         .reader
         .as_ref()
-        .map_or(false, |r| r.page_names.contains_key(&current_page));
+        .map(|r| r.page_names.contains_key(&current_page))
+        .unwrap_or(false);
 
     let mut entries = vec![EntryKind::Command("Name".to_string(), EntryId::SetPageName)];
     if has_name {
@@ -477,6 +478,7 @@ pub(crate) fn toggle_annotation_menu(
 }
 
 /// Toggle selection menu for text selection actions
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn toggle_selection_menu(
     children: &mut Vec<Box<dyn View>>,
     current_page: usize,
@@ -549,6 +551,7 @@ pub(crate) fn toggle_selection_menu(
 }
 
 /// Toggle title menu for document-level settings and navigation
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn toggle_title_menu(
     children: &mut Vec<Box<dyn View>>,
     rect: Rectangle,
@@ -674,10 +677,12 @@ pub(crate) fn toggle_title_menu(
     let id = ViewId::TitleMenu;
 
     let mut title_menu = Menu::new(rect, id, MenuKind::DropDown, entries, context);
-    title_menu
+    if let Some(entry) = title_menu
         .child_mut(1)
         .downcast_mut::<MenuEntry>()
-        .map(|entry| entry.set_disabled(zoom_mode != ZoomMode::FitToWidth, rq));
+    {
+        entry.set_disabled(zoom_mode != ZoomMode::FitToWidth, rq);
+    }
 
     toggle_menu_vec(id, |_| title_menu, children, enable, rq, context);
 }

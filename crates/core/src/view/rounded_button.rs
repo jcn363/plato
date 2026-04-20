@@ -93,7 +93,7 @@ impl View for RoundedButton {
             &self.rect,
             &CornerSpec::Uniform(button_radius),
             &BorderSpec {
-                thickness: thickness as u16,
+                thickness,
                 color: scheme[1],
             },
             &scheme[0],

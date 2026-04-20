@@ -5,14 +5,14 @@ use rustc_hash::FxHashMap;
 
 pub type PropertyMap = FxHashMap<String, String>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct StyleSheet {
     pub rules: Vec<Rule>,
 }
 
 impl StyleSheet {
     pub fn new() -> Self {
-        StyleSheet { rules: Vec::new() }
+        Self::default()
     }
 
     pub fn append(&mut self, other: &mut Self, sort: bool) {

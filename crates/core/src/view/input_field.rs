@@ -257,7 +257,7 @@ impl View for InputField {
                 true
             }
             Event::Focus(id_opt) => {
-                let focused = id_opt.map_or(false, |id| id == self.view_id);
+                let focused = id_opt.map(|id| id == self.view_id).unwrap_or(false);
                 if self.focused != focused {
                     self.focused = focused;
                     rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
@@ -296,16 +296,12 @@ impl View for InputField {
                 rq.add(RenderData::no_wait(self.id, self.rect, UpdateMode::Gui));
                 true
             }
-            Event::Select(EntryId::SetInputText(view_id, ref text)) => {
-                if self.view_id == view_id {
-                    self.set_text(text, true, rq, context);
-                    if !self.focused {
-                        bus.push_back(Event::Submit(self.view_id, self.text.clone()));
-                    }
-                    true
-                } else {
-                    false
+            Event::Select(EntryId::SetInputText(view_id, ref text)) if self.view_id == view_id => {
+                self.set_text(text, true, rq, context);
+                if !self.focused {
+                    bus.push_back(Event::Submit(self.view_id, self.text.clone()));
                 }
+                true
             }
             _ => false,
         }

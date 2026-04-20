@@ -44,7 +44,7 @@ impl Library {
                         if skip_files {
                             continue;
                         }
-                        if query.map_or(true, |q| q.is_match(info)) {
+                        if query.map(|q| q.is_match(info)).unwrap_or(true) {
                             files.push(info.clone());
                         }
                     }
@@ -77,13 +77,13 @@ impl Library {
                         if skip_files
                             || query
                                 .as_ref()
-                                .map(|q| relat.to_str().map_or(true, |s| !q.is_simple_match(s)))
+                                .map(|q| relat.to_str().map(|s| !q.is_simple_match(s)).unwrap_or(true))
                                 .unwrap_or(false)
                         {
                             continue;
                         }
 
-                        let kind = file_kind(&path).unwrap_or_default();
+                        let kind = file_kind(path).unwrap_or_default();
                         let Ok(md) = entry.metadata() else {
                             continue;
                         };
@@ -126,7 +126,7 @@ impl Library {
         let (files, _) = self.list(parent, query, false);
 
         for (i, info) in files.iter().enumerate() {
-            if &info.file.path == current_path {
+            if info.file.path == current_path {
                 if i + 1 < files.len() {
                     return Some(files[i + 1].clone());
                 }

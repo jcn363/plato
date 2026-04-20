@@ -200,10 +200,9 @@ impl FontFamily {
                 .open(path)
                 .map_err(|e| log_error!("Can't open '{}': {:#}.", path.display(), e))
             {
-                if font.family_name().as_deref() == Some(&family_name) {
+                if font.family_name().as_deref() == Some(family_name) {
                     styles.insert(
                         font.style_name()
-                            .map(String::from)
                             .unwrap_or_else(|| "Regular".to_string()),
                         path.to_path_buf(),
                     );

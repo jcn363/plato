@@ -46,8 +46,8 @@ impl Page {
     pub fn dims(&self) -> (f32, f32) {
         let bounds = self.bound();
         (
-            (bounds.x1 - bounds.x0) as f32,
-            (bounds.y1 - bounds.y0) as f32,
+            bounds.x1 - bounds.x0,
+            bounds.y1 - bounds.y0,
         )
     }
 

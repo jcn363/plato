@@ -95,6 +95,7 @@ impl Home {
     }
 
     /// Add address bar if enabled in settings
+    #[allow(clippy::too_many_arguments)]
     pub fn add_address_bar_if_enabled(
         children: &mut Vec<Box<dyn View>>,
         context: &mut Context,
@@ -132,6 +133,8 @@ impl Home {
     }
 
     /// Add navigation bar if enabled in settings
+    #[allow(clippy::ptr_arg)]
+    #[allow(clippy::too_many_arguments)]
     pub fn add_navigation_bar_if_enabled(
         children: &mut Vec<Box<dyn View>>,
         context: &mut Context,
@@ -255,8 +258,9 @@ impl Home {
     }
 
     /// Resize top bar
+    #[allow(clippy::too_many_arguments)]
     pub fn resize_top_bar(
-        children: &mut Vec<Box<dyn View>>,
+        children: &mut [Box<dyn View>],
         rect: Rectangle,
         small_height: i32,
         small_thickness: i32,
@@ -283,6 +287,8 @@ impl Home {
     }
 
     /// Resize address bar if enabled
+    #[allow(clippy::ptr_arg)]
+    #[allow(clippy::too_many_arguments)]
     pub fn resize_address_bar_if_enabled(
         children: &mut Vec<Box<dyn View>>,
         context: &mut Context,
@@ -323,8 +329,9 @@ impl Home {
     }
 
     /// Resize navigation bar if enabled
+    #[allow(clippy::too_many_arguments)]
     pub fn resize_navigation_bar_if_enabled(
-        children: &mut Vec<Box<dyn View>>,
+        children: &mut [Box<dyn View>],
         context: &mut Context,
         rect: Rectangle,
         y_min: i32,
@@ -369,7 +376,7 @@ impl Home {
 
     /// Resize bottom bar
     pub fn resize_bottom_bar(
-        children: &mut Vec<Box<dyn View>>,
+        children: &mut [Box<dyn View>],
         rect: Rectangle,
         small_height: i32,
         thickness: i32,
@@ -389,8 +396,9 @@ impl Home {
     }
 
     /// Resize keyboard and search bar
+    #[allow(clippy::too_many_arguments)]
     pub fn resize_keyboard_and_search_bar(
-        children: &mut Vec<Box<dyn View>>,
+        children: &mut [Box<dyn View>],
         rect: Rectangle,
         bottom_bar_index: usize,
         small_height: i32,
@@ -422,8 +430,9 @@ impl Home {
     }
 
     /// Resize shelf
+    #[allow(clippy::too_many_arguments)]
     pub fn resize_shelf(
-        children: &mut Vec<Box<dyn View>>,
+        children: &mut [Box<dyn View>],
         rect: Rectangle,
         shelf_min_y: i32,
         shelf_max_y: i32,
@@ -437,6 +446,7 @@ impl Home {
     }
 
     /// Resize floating windows
+    #[allow(clippy::ptr_arg)]
     pub fn resize_floating_windows(
         children: &mut Vec<Box<dyn View>>,
         rect: Rectangle,
@@ -445,15 +455,15 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        for i in bottom_bar_index + 2..children.len() {
-            let child_rect = *children[i].rect();
+        for child in children.iter_mut().skip(bottom_bar_index + 2) {
+            let child_rect = *child.rect();
             let new_rect = rect![
                 child_rect.min.x,
                 child_rect.min.y,
                 child_rect.max.x.min(rect.max.x),
                 child_rect.max.y.min(rect.max.y)
             ];
-            children[i].resize(new_rect, hub, rq, context);
+            child.resize(new_rect, hub, rq, context);
         }
     }
 }

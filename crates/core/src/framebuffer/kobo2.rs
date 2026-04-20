@@ -466,12 +466,12 @@ impl Framebuffer for KoboFramebuffer2 {
 
     #[inline]
     fn width(&self) -> u32 {
-        self.var_info.xres
+        self.var_info.width
     }
 
     #[inline]
     fn height(&self) -> u32 {
-        self.var_info.yres
+        self.var_info.height
     }
 }
 

@@ -261,7 +261,7 @@ impl HtmlDocument {
                             .unwrap_or_else(|_| spine_dir.join(href))
                             .to_str()
                         {
-                            if let Ok(buf) = (&mut self.parent).fetch(name) {
+                            if let Ok(buf) = self.parent.fetch(name) {
                                 if let Ok(text) = String::from_utf8(buf) {
                                     let mut css = CssParser::new(&text).parse();
                                     inner_css.append(&mut css, false);

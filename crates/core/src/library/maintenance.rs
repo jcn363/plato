@@ -88,7 +88,6 @@ impl Library {
             match load_json(&path) {
                 Err(e) => {
                     log_error!("Can't reload database: {:#}.", e);
-                    return;
                 }
                 Ok(v) => {
                     self.db = v;

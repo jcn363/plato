@@ -106,7 +106,7 @@ impl View for Intermission {
 
                 if let Some(mut doc) = open("icons/dodecahedron.svg") {
                     if let Some((width, height)) = doc.dims(0) {
-                        let scale = (plan.width as f32 / width.max(height) as f32) / 4.0;
+                        let scale = (plan.width as f32 / width.max(height)) / 4.0;
                         if let Some((pixmap, _)) = doc.pixmap(Location::Exact(0), scale, 1) {
                             let dx = (self.rect.width() as i32 - pixmap.width as i32) / 2;
                             let dy = dy + 2 * x_height;

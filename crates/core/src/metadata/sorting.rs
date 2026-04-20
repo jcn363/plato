@@ -170,9 +170,9 @@ pub fn sort_year(i1: &Info, i2: &Info) -> Ordering {
 
 pub fn sort_series(i1: &Info, i2: &Info) -> Ordering {
     i1.series.cmp(&i2.series).then_with(|| {
-        usize::from_str_radix(&i1.number, 10)
+        i1.number.parse::<usize>()
             .ok()
-            .zip(usize::from_str_radix(&i2.number, 10).ok())
+            .zip(i2.number.parse::<usize>().ok())
             .map_or_else(|| i1.number.cmp(&i2.number), |(a, b)| a.cmp(&b))
     })
 }

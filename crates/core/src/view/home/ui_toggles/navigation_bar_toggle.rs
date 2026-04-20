@@ -32,21 +32,11 @@ impl Default for NavigationBarToggleConfig {
 }
 
 /// Navigation bar toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct NavigationBarToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: NavigationBarToggleConfig,
-}
-
-impl Default for NavigationBarToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: NavigationBarToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {
@@ -58,7 +48,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.navigation_bar.is_some());
+        let should_enable = enable.unwrap_or(self.navigation_bar.is_none());
 
         if should_enable {
             self.show_navigation_bar(rq, context);

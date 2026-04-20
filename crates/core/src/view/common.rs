@@ -98,7 +98,7 @@ pub fn rlocate<T: View>(view: &dyn View) -> Option<usize> {
 pub fn locate_by_id(view: &dyn View, id: ViewId) -> Option<usize> {
     view.children()
         .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == id))
+        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
 }
 
 /// Add a menu to a view's children and queue it for rendering.
@@ -321,7 +321,7 @@ pub fn toggle_battery_menu(
                 .zip(context.battery.capacity().ok())
             {
                 Some((status, capacity)) => {
-                    for (_i, (s, c)) in status.iter().zip(capacity.iter()).enumerate() {
+                    for (s, c) in status.iter().zip(capacity.iter()) {
                         entries.push(EntryKind::Message(format!("{:?} {}%", s, c), None));
                     }
                 }

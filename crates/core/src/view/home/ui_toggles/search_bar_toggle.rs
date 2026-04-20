@@ -32,21 +32,11 @@ impl Default for SearchBarToggleConfig {
 }
 
 /// Search bar toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SearchBarToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: SearchBarToggleConfig,
-}
-
-impl Default for SearchBarToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: SearchBarToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {
@@ -59,7 +49,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.search_bar.is_some());
+        let should_enable = enable.unwrap_or(self.search_bar.is_none());
 
         if should_enable {
             self.show_search_bar(rq, context);
@@ -143,7 +133,7 @@ impl Home {
     ) -> bool {
         match event {
             Event::Submit(ViewId::SearchBar, text) => {
-                self.handle_search_bar_submit(&text, hub, rq, context);
+                self.handle_search_bar_submit(text, hub, rq, context);
                 true
             }
             Event::Close(ViewId::SearchBar) => {

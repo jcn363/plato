@@ -40,8 +40,7 @@ impl ThumbnailConfig {
         enabled: bool,
     ) -> ThumbnailResult<Self> {
         // Validate worker count
-        if worker_count < crate::thumbnail::MIN_WORKER_COUNT
-            || worker_count > crate::thumbnail::MAX_WORKER_COUNT
+        if !(crate::thumbnail::MIN_WORKER_COUNT..=crate::thumbnail::MAX_WORKER_COUNT).contains(&worker_count)
         {
             return Err(ThumbnailError::configuration(format!(
                 "worker count must be between {} and {}",
@@ -51,8 +50,7 @@ impl ThumbnailConfig {
         }
 
         // Validate cache size
-        if cache_size < crate::thumbnail::MIN_CACHE_SIZE
-            || cache_size > crate::thumbnail::MAX_CACHE_SIZE
+        if !(crate::thumbnail::MIN_CACHE_SIZE..=crate::thumbnail::MAX_CACHE_SIZE).contains(&cache_size)
         {
             return Err(ThumbnailError::configuration(format!(
                 "cache size must be between {} and {}",
@@ -193,7 +191,7 @@ impl ThumbnailManager {
             response_tx,
         );
 
-        if let Err(_) = self.request_sender.send(request) {
+        if self.request_sender.send(request).is_err() {
             // Remove from pending if submission failed
             self.pending_requests.remove(&file_path);
             return Err(ThumbnailError::Channel);

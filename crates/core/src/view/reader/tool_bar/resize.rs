@@ -260,7 +260,7 @@ pub(super) fn resize_common_children(
 }
 
 pub(super) fn update_margin_width(
-    children: &mut Vec<Box<dyn View>>,
+    children: &mut [Box<dyn View>],
     margin_width: i32,
     rq: &mut RenderQueue,
     reflowable: bool,
@@ -272,7 +272,7 @@ pub(super) fn update_margin_width(
 }
 
 pub(super) fn update_font_family(
-    children: &mut Vec<Box<dyn View>>,
+    children: &mut [Box<dyn View>],
     font_family: String,
     rq: &mut RenderQueue,
 ) {
@@ -282,7 +282,7 @@ pub(super) fn update_font_family(
 }
 
 pub(super) fn update_line_height(
-    children: &mut Vec<Box<dyn View>>,
+    children: &mut [Box<dyn View>],
     line_height: f32,
     rq: &mut RenderQueue,
 ) {
@@ -292,7 +292,7 @@ pub(super) fn update_line_height(
 }
 
 pub(super) fn update_text_align_icon(
-    children: &mut Vec<Box<dyn View>>,
+    children: &mut [Box<dyn View>],
     text_align: TextAlign,
     rq: &mut RenderQueue,
 ) {
@@ -307,7 +307,7 @@ pub(super) fn update_text_align_icon(
 }
 
 pub(super) fn update_font_size_slider(
-    children: &mut Vec<Box<dyn View>>,
+    children: &mut [Box<dyn View>],
     font_size: f32,
     rq: &mut RenderQueue,
 ) {
@@ -318,7 +318,7 @@ pub(super) fn update_font_size_slider(
 }
 
 pub(super) fn update_contrast_exponent_slider(
-    children: &mut Vec<Box<dyn View>>,
+    children: &mut [Box<dyn View>],
     exponent: f32,
     rq: &mut RenderQueue,
 ) {
@@ -329,7 +329,7 @@ pub(super) fn update_contrast_exponent_slider(
 }
 
 pub(super) fn update_contrast_gray_slider(
-    children: &mut Vec<Box<dyn View>>,
+    children: &mut [Box<dyn View>],
     gray: f32,
     rq: &mut RenderQueue,
 ) {

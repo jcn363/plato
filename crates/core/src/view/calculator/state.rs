@@ -157,7 +157,7 @@ impl Calculator {
 
         let mut kb_rect = rect![
             rect.min.x,
-            rect.max.y - (small_height + 3 * big_height) as i32 + big_thickness,
+            rect.max.y - (small_height + 3 * big_height) + big_thickness,
             rect.max.x,
             rect.max.y - small_height - small_thickness
         ];

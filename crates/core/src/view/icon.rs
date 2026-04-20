@@ -69,7 +69,7 @@ pub static ICONS_PIXMAPS: LazyLock<FxHashMap<&'static str, Pixmap>> = LazyLock::
     .iter()
     .cloned()
     {
-        let path = dir.join(&format!("{}.svg", name));
+        let path = dir.join(format!("{}.svg", name));
         let doc = PdfOpener::new()
             .and_then(|o| o.open(path))
             .expect("failed to open icon");

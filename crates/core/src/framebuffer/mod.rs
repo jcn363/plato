@@ -313,7 +313,7 @@ pub trait Framebuffer {
                 let px = x + pt.x as u32;
                 let py = y + pt.y as u32;
                 let alpha = (255.0 - pixmap.get_pixel(x, y).gray() as f32) / 255.0;
-                self.set_blended_pixel(px as u32, py as u32, color, alpha);
+                self.set_blended_pixel(px, py, color, alpha);
             }
         }
     }
@@ -433,10 +433,10 @@ pub trait Framebuffer {
     }
 
     fn draw_triangle(&mut self, triangle: &[Point], color: Color) {
-        let mut x_min = ::std::i32::MAX;
-        let mut x_max = ::std::i32::MIN;
-        let mut y_min = ::std::i32::MAX;
-        let mut y_max = ::std::i32::MIN;
+        let mut x_min = i32::MAX;
+        let mut x_max = i32::MIN;
+        let mut y_min = i32::MAX;
+        let mut y_max = i32::MIN;
 
         for p in triangle.iter() {
             if p.x < x_min {
@@ -478,7 +478,7 @@ pub trait Framebuffer {
                 let inside = ac.cross(ap).is_sign_positive() != s_ab
                     && bc.cross(bp).is_sign_positive() == s_ab;
 
-                let mut dmin = ::std::f32::MAX;
+                let mut dmin = f32::MAX;
                 let mut nearest = None;
 
                 for &(u, v) in &[(a, b), (b, c), (a, c)] {

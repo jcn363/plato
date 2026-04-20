@@ -194,7 +194,7 @@ impl Framebuffer for Pixmap {
         } else {
             for y in 0..height {
                 let row_offset = ((rect.min.y + y) * self.width as i32 + rect.min.x) as usize
-                    * self.samples as usize;
+                    * self.samples;
                 for x in 0..width as usize {
                     let addr = row_offset + x * self.samples;
                     for c in self.data[addr..addr + self.samples].iter_mut() {

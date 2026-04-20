@@ -145,7 +145,7 @@ impl View for CodeArea {
                     x = self.rect.min.x + padding;
                 }
                 if y >= rect.min.y {
-                    let plan = font.plan(&c.to_string(), None, None);
+                    let plan = font.plan(c.to_string(), None, None);
                     font.render(fb, color[1], &plan, pt!(x, y));
                 }
                 x += char_width;

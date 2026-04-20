@@ -95,7 +95,7 @@ impl Library {
                     let reader_info = self
                         .reading_states
                         .entry(fp)
-                        .or_insert_with(ReaderInfo::default);
+                        .or_default();
                     reader_info.finished = status == SimpleStatus::Finished;
                     self.modified_reading_states.insert(fp);
                 }

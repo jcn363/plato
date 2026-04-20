@@ -51,13 +51,13 @@ pub struct Engine {
     pub dpi: u16,
 }
 
+#[allow(clippy::new_without_default)]
 impl Engine {
     pub fn new() -> Engine {
         let margin =
             Edge::uniform(mm_to_px(DEFAULT_MARGIN_WIDTH as f32, DEFAULT_DPI).round() as i32);
         let line_height = DEFAULT_LINE_HEIGHT;
-
-        Engine {
+        Self {
             _fonts: None,
             min_font_size: DEFAULT_MIN_FONT_SIZE,
             hyphen_penalty: HYPHEN_PENALTY,
@@ -151,6 +151,7 @@ impl Engine {
     ///
     /// Traverses the DOM tree and generates draw commands for each element.
     /// This is the main layout engine entry point.
+    #[allow(clippy::too_many_arguments)]
     pub fn build_display_list(
         &mut self,
         node: NodeRef,
@@ -188,6 +189,8 @@ impl Engine {
     /// - Element nodes: Applies CSS rules, computes layout, recurses on children
     /// - Block elements: Creates layout rectangles with proper margins
     /// - Inline elements: Flows text within line boxes
+    #[allow(clippy::only_used_in_recursion)]
+    #[allow(clippy::too_many_arguments)]
     fn build_display_list_recursive(
         &mut self,
         node: NodeRef,

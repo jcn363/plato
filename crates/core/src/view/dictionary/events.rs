@@ -314,11 +314,10 @@ impl View for Dictionary {
             );
         }
         let mut index = 7;
-        if self.len() >= 9 {
-            if self.children[8].is::<Keyboard>() {
+        if self.len() >= 9 && self.children[8].is::<Keyboard>() {
                 let kb_rect = crate::rect![
                     rect.min.x,
-                    rect.max.y - (small_height + 3 * big_height) as i32 + big_thickness,
+                    rect.max.y - (small_height + 3 * big_height) + big_thickness,
                     rect.max.x,
                     rect.max.y - small_height - small_thickness
                 ];
@@ -336,7 +335,6 @@ impl View for Dictionary {
                     context,
                 );
                 index = 9;
-            }
         }
 
         for i in index..self.children.len() {

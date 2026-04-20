@@ -131,6 +131,7 @@ impl SearchReplaceView {
         children.push(Box::new(title_label) as Box<dyn View>);
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn add_search_fields(
         children: &mut Vec<Box<dyn View>>,
         rect: &Rectangle,
@@ -168,6 +169,7 @@ impl SearchReplaceView {
         children.push(Box::new(search_input) as Box<dyn View>);
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn add_replace_fields(
         children: &mut Vec<Box<dyn View>>,
         rect: &Rectangle,

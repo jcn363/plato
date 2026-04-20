@@ -147,7 +147,7 @@ impl Shelf {
             .settings
             .libraries
             .get(context.settings.selected_library)
-            .and_then(|l| Some(l.thumbnail_previews))
+            .map(|l| l.thumbnail_previews)
             .unwrap_or(false)
         {
             return None;

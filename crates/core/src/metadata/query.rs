@@ -227,6 +227,6 @@ impl BookQuery {
 
     #[inline]
     pub fn is_simple_match(&self, text: &str) -> bool {
-        self.free.as_ref().map_or(true, |q| q.is_match(text))
+        self.free.as_ref().map(|q| q.is_match(text)).unwrap_or(true)
     }
 }

@@ -381,11 +381,11 @@ impl View for CoverEditorView {
             if let Some(ref img) = self.current_image {
                 let (target_w, target_h) = self.cover_editor.get_cover_dimensions();
                 let scaled = img.resize_to_fill(
-                    target_w as u32,
-                    target_h as u32,
+                    target_w,
+                    target_h,
                     image::imageops::FilterType::Lanczos3,
                 );
-                if let Some(pixmap) = Pixmap::from_dynamic_image(&scaled).ok() {
+                if let Ok(pixmap) = Pixmap::from_dynamic_image(&scaled) {
                     let x0 = self.rect.min.x + (self.rect.width() as i32 - pixmap.width as i32) / 2;
                     let y0 = self.rect.min.y + 100;
 

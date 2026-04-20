@@ -111,7 +111,7 @@ impl Dialog {
                 .sans_serif
                 .regular
                 .plan(LABEL_VALIDATE, Some(max_button_width), None);
-        plan_validate.width.max(plan_cancel.map_or(0, |p| p.width)) as i32 + padding
+        plan_validate.width.max(plan_cancel.map_or(0, |p| p.width)) + padding
     }
 
     fn add_cancel_button(
@@ -224,7 +224,7 @@ impl View for Dialog {
             let x_height = font.x_heights.0 as i32;
             let padding = font.em() as i32;
             let button_width =
-                plan_validate.width.max(plan_cancel.map_or(0, |p| p.width)) as i32 + padding;
+                plan_validate.width.max(plan_cancel.map_or(0, |p| p.width)) + padding;
             (x_height, padding, button_width)
         };
         let button_height = 4 * x_height;

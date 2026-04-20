@@ -16,13 +16,13 @@ use std::path::Path;
 use std::ptr;
 use std::slice;
 
-impl Into<MxcfbRect> for Rectangle {
-    fn into(self) -> MxcfbRect {
+impl From<Rectangle> for MxcfbRect {
+    fn from(rect: Rectangle) -> Self {
         MxcfbRect {
-            top: self.min.y as u32,
-            left: self.min.x as u32,
-            width: self.width(),
-            height: self.height(),
+            top: rect.min.y as u32,
+            left: rect.min.x as u32,
+            width: rect.width(),
+            height: rect.height(),
         }
     }
 }
@@ -459,12 +459,12 @@ impl Framebuffer for KoboFramebuffer1 {
 
     #[inline]
     fn width(&self) -> u32 {
-        self.var_info.xres
+        self.var_info.width
     }
 
     #[inline]
     fn height(&self) -> u32 {
-        self.var_info.yres
+        self.var_info.height
     }
 }
 
@@ -549,9 +549,9 @@ fn get_pixel_rgb_32(fb: &KoboFramebuffer1, x: u32, y: u32) -> [u8; 3] {
     unsafe {
         let spot = fb.frame.offset(addr) as *mut u8;
         [
-            *spot.offset(fb.red_index as isize),
-            *spot.offset(fb.green_index as isize),
-            *spot.offset(fb.blue_index as isize),
+            *spot.add(fb.red_index),
+            *spot.add(fb.green_index),
+            *spot.add(fb.blue_index),
         ]
     }
 }

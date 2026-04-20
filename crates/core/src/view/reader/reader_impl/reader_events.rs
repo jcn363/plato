@@ -18,15 +18,12 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &Context,
     ) {
-        match device_event {
-            DeviceEvent::Button { code, status, .. } => {
-                if status == ButtonStatus::Pressed {
-                    self.held_buttons.insert(code);
-                } else {
-                    self.held_buttons.remove(&code);
-                }
+        if let DeviceEvent::Button { code, status, .. } = device_event {
+            if status == ButtonStatus::Pressed {
+                self.held_buttons.insert(code);
+            } else {
+                self.held_buttons.remove(&code);
             }
-            _ => {}
         }
         self.queue_partial_update(rq);
     }

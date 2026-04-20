@@ -461,6 +461,7 @@ fn initialize_single_touch_packet(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn handle_abs_event(
     evt: InputEvent,
     id: &mut i32,
@@ -511,7 +512,7 @@ fn handle_syn_event(
     proto: TouchProto,
     ty: &Sender<DeviceEvent>,
 ) {
-    let tv_sec = evt.time.tv_sec as i64;
+    let tv_sec = evt.time.tv_sec;
     if (tv_sec - *last_activity).abs() >= 60 {
         *last_activity = tv_sec;
         ty.send(DeviceEvent::UserActivity).ok();
@@ -519,7 +520,7 @@ fn handle_syn_event(
 
     if proto == TouchProto::MultiB {
         fingers.retain(|other_id, other_position| {
-            packets.contains_key(&other_id)
+            packets.contains_key(other_id)
                 || ty
                     .send(DeviceEvent::Finger {
                         id: *other_id,
@@ -571,6 +572,7 @@ fn handle_syn_event(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn handle_key_event(
     evt: InputEvent,
     button_scheme: &mut ButtonScheme,

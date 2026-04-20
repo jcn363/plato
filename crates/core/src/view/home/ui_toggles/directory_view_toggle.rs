@@ -148,7 +148,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.directory_view.is_some());
+        let should_enable = enable.unwrap_or(self.directory_view.is_none());
 
         if should_enable {
             self.show_directory_view(rq, context);

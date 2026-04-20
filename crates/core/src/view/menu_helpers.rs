@@ -19,7 +19,7 @@ pub fn toggle_menu_vec<F>(
 {
     if let Some(index) = children
         .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == id))
+        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
     {
         if let Some(true) = enable {
             return;
@@ -78,7 +78,7 @@ pub fn toggle_menu_with<F>(
     if let Some(index) = view
         .children()
         .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == id))
+        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
     {
         if let Some(true) = enable {
             return;
@@ -135,7 +135,7 @@ pub fn toggle_menu_ctx<F>(
     if let Some(index) = view
         .children()
         .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == id))
+        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
     {
         if let Some(true) = enable {
             return;
@@ -195,7 +195,7 @@ pub fn toggle_menu_item<F, T>(
     if let Some(index) = view
         .children()
         .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == id))
+        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
     {
         if let Some(true) = enable {
             return;
@@ -250,7 +250,7 @@ pub fn toggle_menu_self<F>(
     if let Some(index) = view
         .children()
         .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == id))
+        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
     {
         if let Some(true) = enable {
             return;
@@ -275,7 +275,7 @@ pub fn remove_view_by_id(view: &mut dyn View, id: ViewId, rq: &mut RenderQueue) 
     if let Some(index) = view
         .children()
         .iter()
-        .position(|c| c.view_id().map_or(false, |i| i == id))
+        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
     {
         let rect = overlapping_rectangle(view.child(index));
         rq.add(RenderData::expose(rect, UpdateMode::Gui));

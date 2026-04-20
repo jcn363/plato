@@ -153,10 +153,10 @@ impl Library {
 
     fn copy_metadata(&self, fp: &Fp, other: &Library) -> Result<(), Error> {
         let rsp_src = self.reading_state_path(*fp);
-        fs::copy(&rsp_src, &other.reading_state_path(*fp)).ok();
+        fs::copy(&rsp_src, other.reading_state_path(*fp)).ok();
 
         let tpp_src = self.thumbnail_preview_path(*fp);
-        fs::copy(&tpp_src, &other.thumbnail_preview_path(*fp)).ok();
+        fs::copy(&tpp_src, other.thumbnail_preview_path(*fp)).ok();
         Ok(())
     }
 
@@ -245,10 +245,10 @@ impl Library {
 
     fn move_metadata(&self, fp: &Fp, other: &Library) -> Result<(), Error> {
         let rsp_src = self.reading_state_path(*fp);
-        fs::rename(&rsp_src, &other.reading_state_path(*fp)).ok();
+        fs::rename(&rsp_src, other.reading_state_path(*fp)).ok();
 
         let tpp_src = self.thumbnail_preview_path(*fp);
-        fs::rename(&tpp_src, &other.thumbnail_preview_path(*fp)).ok();
+        fs::rename(&tpp_src, other.thumbnail_preview_path(*fp)).ok();
         Ok(())
     }
 

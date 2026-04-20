@@ -30,21 +30,11 @@ impl Default for MenuToggleConfig {
 }
 
 /// Menu toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MenuToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: MenuToggleConfig,
-}
-
-impl Default for MenuToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: MenuToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {
@@ -56,7 +46,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.sort_menu.is_some());
+        let should_enable = enable.unwrap_or(self.sort_menu.is_none());
 
         if should_enable {
             self.show_sort_menu(rect, rq, context);
@@ -124,7 +114,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.book_menu.is_some());
+        let should_enable = enable.unwrap_or(self.book_menu.is_none());
 
         if should_enable {
             self.show_book_menu(index, rect, rq, context);

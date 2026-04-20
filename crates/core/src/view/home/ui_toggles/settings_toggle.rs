@@ -18,6 +18,7 @@ pub struct SettingsToggleConfig {
     pub animation_duration: u32,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for SettingsToggleConfig {
     fn default() -> Self {
         Self {
@@ -35,7 +36,7 @@ pub struct SettingsToggleState {
     pub _active: bool,
     pub config: SettingsToggleConfig,
 }
-
+#[allow(clippy::derivable_impls)]
 impl Default for SettingsToggleState {
     fn default() -> Self {
         Self {
@@ -55,7 +56,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.settings_menu.is_some());
+        let should_enable = enable.unwrap_or(self.settings_menu.is_none());
 
         if should_enable {
             self.show_settings_menu(rq, context);

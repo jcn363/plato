@@ -30,6 +30,7 @@ pub struct DrawState {
     pub center_table: bool,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for DrawState {
     fn default() -> Self {
         DrawState {
@@ -134,45 +135,30 @@ pub enum ListStyleType {
     None,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
 pub enum Direction {
     Ltr,
     Rtl,
+    #[default]
     Auto,
 }
 
-impl Default for Direction {
-    fn default() -> Self {
-        Direction::Auto
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
 pub enum TextTransform {
+    #[default]
     None,
     Uppercase,
     Lowercase,
     Capitalize,
 }
 
-impl Default for TextTransform {
-    fn default() -> Self {
-        TextTransform::None
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Default)]
 pub enum TextDecoration {
+    #[default]
     None,
     Underline,
     Overline,
     LineThrough,
-}
-
-impl Default for TextDecoration {
-    fn default() -> Self {
-        TextDecoration::None
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -181,6 +167,7 @@ pub enum TabSize {
     Length(i32),
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TabSize {
     fn default() -> Self {
         TabSize::Number(8)
@@ -193,13 +180,13 @@ pub struct ChildArtifact {
     pub rects: Vec<Option<Rectangle>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SiblingStyle {
     pub padding: Edge,
     pub margin: Edge,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct LineStats {
     pub width: i32,
     pub merged_width: i32,
@@ -207,43 +194,12 @@ pub struct LineStats {
     pub started: bool,
 }
 
-impl Default for LineStats {
-    fn default() -> Self {
-        LineStats {
-            width: 0,
-            merged_width: 0,
-            glues_count: 0,
-            started: false,
-        }
-    }
-}
-
-impl Default for SiblingStyle {
-    fn default() -> Self {
-        SiblingStyle {
-            padding: Edge::default(),
-            margin: Edge::default(),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct LoopContext {
     pub index: usize,
     pub sibling_style: SiblingStyle,
     pub is_first: bool,
     pub is_last: bool,
-}
-
-impl Default for LoopContext {
-    fn default() -> Self {
-        LoopContext {
-            index: 0,
-            sibling_style: SiblingStyle::default(),
-            is_first: false,
-            is_last: false,
-        }
-    }
 }
 
 impl Default for StyleData {

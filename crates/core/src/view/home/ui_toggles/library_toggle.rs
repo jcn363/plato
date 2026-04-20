@@ -29,21 +29,11 @@ impl Default for LibraryToggleConfig {
 }
 
 /// Library toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct LibraryToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: LibraryToggleConfig,
-}
-
-impl Default for LibraryToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: LibraryToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {
@@ -55,7 +45,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.library_menu.is_some());
+        let should_enable = enable.unwrap_or(self.library_menu.is_none());
 
         if should_enable {
             self.show_library_menu(rq, context);

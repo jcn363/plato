@@ -71,9 +71,9 @@ impl Reader {
                 if self.children[index].is::<SearchBar>() {
                     let sb_rect = rect![
                         rect.min.x,
-                        rect.max.y - (3 * big_height + 2 * small_height) as i32 + big_thickness,
+                        rect.max.y - (3 * big_height + 2 * small_height) + big_thickness,
                         rect.max.x,
-                        rect.max.y - (3 * big_height + small_height) as i32 - small_thickness
+                        rect.max.y - (3 * big_height + small_height) - small_thickness
                     ];
                     self.children[index].resize(sb_rect, hub, rq, context);
                     self.children[index - 1].resize(
@@ -92,7 +92,7 @@ impl Reader {
                 if self.children[index].is::<Keyboard>() {
                     let kb_rect = rect![
                         rect.min.x,
-                        rect.max.y - (small_height + 3 * big_height) as i32 + big_thickness,
+                        rect.max.y - (small_height + 3 * big_height) + big_thickness,
                         rect.max.x,
                         rect.max.y - small_height - small_thickness
                     ];
@@ -151,7 +151,7 @@ impl Reader {
                         3 * big_height
                     } else {
                         small_height
-                    } as i32;
+                    };
 
                     let y_max = self.children[index + 1].rect().min.y;
                     let bar_rect = rect![

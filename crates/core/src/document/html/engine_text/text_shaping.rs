@@ -106,9 +106,8 @@ impl TextShaper {
     /// Simple text shaping implementation
     fn simple_shape(&self, text: &str) -> Vec<GlyphInfo> {
         let mut glyphs = Vec::new();
-        let mut cluster = 0;
 
-        for ch in text.chars() {
+        for (cluster, ch) in text.chars().enumerate() {
             let glyph_id = self.get_glyph_id(ch);
             let advance = self.get_glyph_advance(glyph_id);
 
@@ -118,10 +117,8 @@ impl TextShaper {
                 y_advance: 0.0,
                 x_offset: 0.0,
                 y_offset: 0.0,
-                cluster,
+                cluster: cluster as u32,
             });
-
-            cluster += 1;
         }
 
         glyphs

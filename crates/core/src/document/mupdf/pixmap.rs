@@ -20,13 +20,13 @@ impl Pixmap {
     /// Get the pixmap width.
     #[inline]
     pub fn width(&self) -> i32 {
-        unsafe { (*self.pixmap).w }
+        unsafe { (*self.pixmap).width }
     }
 
     /// Get the pixmap height.
     #[inline]
     pub fn height(&self) -> i32 {
-        unsafe { (*self.pixmap).h }
+        unsafe { (*self.pixmap).height }
     }
 
     /// Get the number of components (samples per pixel).

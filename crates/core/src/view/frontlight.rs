@@ -107,7 +107,7 @@ impl FrontlightWindow {
                     .iter()
                     .map(|t| font.plan(t, None, None).width)
                     .max()
-                    .unwrap_or(0) as i32
+                    .unwrap_or(0)
             };
 
             for (index, slider_id) in [SliderId::LightIntensity, SliderId::LightWarmth]
@@ -172,7 +172,7 @@ impl FrontlightWindow {
                 .iter()
                 .map(|t| font.plan(t, None, None).width)
                 .max()
-                .unwrap_or(0) as i32
+                .unwrap_or(0)
         };
 
         let button_height = 4 * x_height;
@@ -318,7 +318,7 @@ impl View for FrontlightWindow {
                 context
                     .settings
                     .frontlight_presets
-                    .sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+                    .sort_by_key(|a| a.timestamp);
                 if context.settings.frontlight_presets.len() == 1 {
                     self.toggle_presets(true, rq, context);
                 } else {
@@ -462,7 +462,7 @@ impl View for FrontlightWindow {
                     .iter()
                     .map(|t| font.plan(t, None, None).width)
                     .max()
-                    .unwrap_or(0) as i32
+                    .unwrap_or(0)
             };
             for i in 0..2usize {
                 let min_y = rect.min.y + (i + 1) as i32 * small_height;
@@ -513,7 +513,7 @@ impl View for FrontlightWindow {
                 .iter()
                 .map(|t| font.plan(t, None, None).width)
                 .max()
-                .unwrap_or(0) as i32
+                .unwrap_or(0)
         };
 
         let button_height = 4 * x_height;

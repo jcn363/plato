@@ -72,6 +72,7 @@ impl Home {
     }
 
     /// Toggle select directory dialog
+    #[allow(clippy::ptr_arg)]
     pub fn toggle_select_directory(
         &mut self,
         path: &PathBuf,

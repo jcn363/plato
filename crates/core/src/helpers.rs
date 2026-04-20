@@ -107,7 +107,6 @@ where
     let reader = BufReader::new(file);
     serde_json::from_reader(reader)
         .with_context(|| format!("can't parse JSON from {}", path.as_ref().display()))
-        .map_err(Into::into)
 }
 
 pub fn save_json<T, P: AsRef<Path>>(data: &T, path: P) -> Result<(), Error>
@@ -125,7 +124,6 @@ where
         .with_context(|| format!("can't finalize JSON file {}", path.as_ref().display()))?
         .sync_all()
         .with_context(|| format!("can't sync JSON file to disk {}", path.as_ref().display()))
-        .map_err(Into::into)
 }
 
 pub fn load_toml<T, P: AsRef<Path>>(path: P) -> Result<T, Error>
@@ -136,7 +134,6 @@ where
         .with_context(|| format!("can't read file {}", path.as_ref().display()))?;
     toml::from_str(&s)
         .with_context(|| format!("can't parse TOML content from {}", path.as_ref().display()))
-        .map_err(Into::into)
 }
 
 pub fn save_toml<T, P: AsRef<Path>>(data: &T, path: P) -> Result<(), Error>
@@ -150,7 +147,6 @@ where
         .with_context(|| format!("can't write to temp file {}", tmp_path.display()))?;
     fs::rename(&tmp_path, path)
         .with_context(|| format!("can't rename temp file to {}", path.display()))
-        .map_err(Into::into)
 }
 
 pub trait Fingerprint {
@@ -307,6 +303,7 @@ impl IsHidden for DirEntry {
     fn is_hidden(&self) -> bool {
         self.file_name()
             .to_str()
-            .map_or(false, |s| s.starts_with('.'))
+            .map(|s| s.starts_with('.'))
+            .unwrap_or(false)
     }
 }

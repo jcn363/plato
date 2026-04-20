@@ -143,7 +143,7 @@ impl TextLayoutEngine {
                 text: word.clone(),
                 plan: crate::font::RenderPlan::default(),
                 font_features: None,
-                font_kind: self.config.font_kind.clone(),
+                font_kind: self.config.font_kind,
                 font_style: crate::document::html::layout::FontStyle::Normal,
                 font_weight: crate::document::html::layout::FontWeight::Normal,
                 font_size: self.config.font_size as u32,

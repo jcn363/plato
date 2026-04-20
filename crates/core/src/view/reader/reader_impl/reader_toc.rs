@@ -158,7 +158,7 @@ impl ReaderTocManager {
                     // Check if this is the last chapter or if next chapter starts after current page
                     let is_last_chapter = i == self.toc_entries.len() - 1;
                     let next_chapter_starts_after = if !is_last_chapter {
-                        self.toc_entries[i + 1].page.map_or(false, |p| p > page)
+                        self.toc_entries[i + 1].page.map(|p| p > page).unwrap_or(false)
                     } else {
                         true
                     };

@@ -171,6 +171,7 @@ impl Home {
         ))
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn create_home(
         id: Id,
         rect: Rectangle,

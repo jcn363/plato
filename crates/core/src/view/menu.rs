@@ -282,6 +282,7 @@ impl Menu {
         (x_min, x_max)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn build_menu_children(
         entries: &[EntryKind],
         x_min: i32,

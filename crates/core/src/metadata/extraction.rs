@@ -179,7 +179,6 @@ pub fn file_name_from_info(info: &Info) -> String {
     base = format!("{}.{}", base, info.file.kind);
     base.replace("..", ".")
         .replace('/', " ")
-        .replace('?', "")
-        .replace('!', "")
+        .replace(['?', '!'], "")
         .replace(':', "")
 }

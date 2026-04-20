@@ -220,6 +220,7 @@ impl Reader {
         ))
     }
 
+    #[allow(clippy::type_complexity)]
     fn open_document(info: &Info) -> Option<(Arc<Mutex<Box<dyn Document>>>, usize, bool)> {
         let doc = match crate::document::open(&info.file.path) {
             Some(d) => d,
@@ -325,6 +326,7 @@ impl Reader {
         ))
     }
 
+    #[allow(clippy::type_complexity)]
     fn open_html_document(
         html: &str,
     ) -> Result<(Arc<Mutex<Box<dyn Document>>>, usize, bool), Error> {

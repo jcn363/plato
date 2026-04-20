@@ -109,8 +109,8 @@ pub fn parse_inline_material(value: &str, em: f32, rem: f32, dpi: u16) -> Vec<In
     let count = split.clone().count();
     let mut inlines = Vec::with_capacity(count);
     for decl in split {
-        let tokens: Vec<&str> = decl.trim().split_whitespace().collect();
-        match tokens.get(0).cloned() {
+        let tokens: Vec<&str> = decl.split_whitespace().collect();
+        match tokens.first().cloned() {
             Some("glue") => {
                 let width = tokens
                     .get(1)
@@ -159,7 +159,7 @@ pub fn parse_inline_material(value: &str, em: f32, rem: f32, dpi: u16) -> Vec<In
 pub fn parse_font_kind(value: &str) -> Option<FontKind> {
     value
         .split(',')
-        .last()
+        .next_back()
         .map(str::trim)
         .and_then(|v| match v {
             "serif" => Some(FontKind::Serif),
@@ -383,6 +383,7 @@ fn parse_edge_length(value: &str, em: f32, rem: f32, width: i32, auto_value: i32
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn parse_edge(
     top_edge: Option<&str>,
     right_edge: Option<&str>,
@@ -447,10 +448,8 @@ pub fn parse_text_decoration(value: &str) -> Option<super::layout::TextDecoratio
 pub fn parse_tab_size(value: &str, em: f32, dpi: u16) -> Option<super::layout::TabSize> {
     if let Ok(n) = value.parse::<i32>() {
         Some(super::layout::TabSize::Number(n))
-    } else if let Some(n) = parse_length(value, em, em, dpi) {
-        Some(super::layout::TabSize::Length(n))
     } else {
-        None
+        parse_length(value, em, em, dpi).map(super::layout::TabSize::Length)
     }
 }
 
@@ -470,7 +469,7 @@ pub fn parse_line_height(value: &str, em: f32, rem: f32, dpi: u16) -> Option<i32
         percent
             .parse::<f32>()
             .ok()
-            .map(|v| pt_to_px(v / 100.0 * em as f32, dpi).round() as i32)
+            .map(|v| pt_to_px(v / 100.0 * em, dpi).round() as i32)
     } else if value.ends_with(|c: char| !c.is_ascii_alphabetic()) {
         value
             .parse::<f32>()

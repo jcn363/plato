@@ -88,6 +88,11 @@ pub trait View: Downcast {
         self.children().len()
     }
 
+    #[inline]
+    fn is_empty(&self) -> bool {
+        self.children().is_empty()
+    }
+
     fn might_skip(&self, _evt: &Event) -> bool {
         false
     }

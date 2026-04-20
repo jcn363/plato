@@ -229,7 +229,7 @@ impl Info {
             .path
             .file_stem()
             .map(|s| s.to_string_lossy().into_owned())
-            .unwrap_or_else(|| String::new())
+            .unwrap_or_default()
     }
 
     pub fn title(&self) -> String {

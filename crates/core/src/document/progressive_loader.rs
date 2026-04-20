@@ -180,7 +180,7 @@ impl ProgressiveDocLoader {
             }
         }
 
-        let size_bytes = (800 * 1200 * 1) as usize;
+        let size_bytes = (800 * 1200) as usize;
         self.ensure_cache_space(size_bytes);
 
         let page = self.doc.load_page(page_idx)?;

@@ -142,6 +142,14 @@ pub struct XmlTree {
     nodes: Vec<Node>,
 }
 
+impl Default for XmlTree {
+    fn default() -> Self {
+        Self {
+            nodes: vec![Node::default()],
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Node {
     data: NodeData,
@@ -181,9 +189,7 @@ pub struct NodeMut<'a> {
 
 impl XmlTree {
     pub fn new() -> Self {
-        XmlTree {
-            nodes: vec![Node::default()],
-        }
+        Self::default()
     }
 
     fn node(&self, id: NodeId) -> &Node {

@@ -25,21 +25,11 @@ pub struct DirectoriesBar {
     current_page: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct Page<'a> {
     start_index: usize,
     end_index: usize,
     lines: Vec<Line<'a>>,
-}
-
-impl<'a> Default for Page<'a> {
-    fn default() -> Page<'a> {
-        Page {
-            start_index: 0,
-            end_index: 0,
-            lines: Vec::new(),
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -50,21 +40,11 @@ struct Layout {
     max_lines: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct Line<'a> {
     width: i32,
     labels_count: usize,
     items: Vec<Item<'a>>,
-}
-
-impl<'a> Default for Line<'a> {
-    fn default() -> Line<'a> {
-        Line {
-            width: 0,
-            labels_count: 0,
-            items: Vec::new(),
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -189,12 +169,12 @@ impl DirectoriesBar {
         self.pages.clear();
         self.selection_page = None;
         let mut start_index = 0;
-        let mut font = font_from_style(fonts, &NORMAL_STYLE, get_device_dpi());
+        let font = font_from_style(fonts, &NORMAL_STYLE, get_device_dpi());
 
         loop {
             let mut has_selection = false;
             let (children, end_index) = {
-                let page = self.make_page(start_index, layout, directories, &mut font);
+                let page = self.make_page(start_index, layout, directories, font);
                 let children = self.make_children(
                     &page,
                     layout,
@@ -226,7 +206,7 @@ impl DirectoriesBar {
 
         self.current_page = self
             .selection_page
-            .unwrap_or_else(|| (previous_position * self.pages.len() as f32) as usize);
+            .unwrap_or((previous_position * self.pages.len() as f32) as usize);
     }
 
     fn make_page<'a>(
@@ -286,6 +266,7 @@ impl DirectoriesBar {
         line
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn build_lines_from_directories<'a>(
         &self,
         start_index: usize,

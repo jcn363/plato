@@ -41,8 +41,7 @@ pub(crate) fn scaling_factor(
             scale_x.min(scale_y)
         }
         ZoomMode::FitToWidth => {
-            let scale_x = (rect.width() as f32 - 2.0 * margin_width as f32) / dims.0;
-            scale_x
+            (rect.width() as f32 - 2.0 * margin_width as f32) / dims.0
         }
         _ => 1.0,
     }
@@ -170,6 +169,7 @@ pub(crate) fn selection_rect(
 ///
 /// # Returns
 /// Adjusted page offset, or None if margins are out of bounds
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn calculate_margin_offset(
     offset: Point,
     pixmap_width: u32,

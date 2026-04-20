@@ -108,28 +108,18 @@ impl HomeSettings {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum FirstColumn {
+    #[default]
     TitleAndAuthor,
     FileName,
 }
 
-impl Default for FirstColumn {
-    fn default() -> Self {
-        Self::TitleAndAuthor
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum SecondColumn {
+    #[default]
     Progress,
     Year,
-}
-
-impl Default for SecondColumn {
-    fn default() -> Self {
-        Self::Progress
-    }
 }

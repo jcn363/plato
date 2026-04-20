@@ -49,7 +49,7 @@ impl PresetsList {
         let x_height = font.x_heights.0 as i32;
         let preset_height = 4 * x_height;
         let padding = font.em() as i32;
-        let preset_width = font.plan(&presets[0].name(), None, None).width + padding;
+        let preset_width = font.plan(presets[0].name(), None, None).width + padding;
         let max_per_line = (rect.width() as i32 + padding) / (preset_width + padding);
         (preset_width, preset_height, max_per_line)
     }
@@ -78,9 +78,8 @@ impl PresetsList {
         let presets_count = presets.len() as i32;
         let mut children = Vec::with_capacity(max_per_line as usize);
         let mut item_index = 0;
-        let index = 0;
 
-        while index < presets_count {
+        while item_index < presets_count {
             let position = item_index % max_per_line;
             let x = self.rect.min.x + dx + position * (preset_width + preset_width / 4);
             let preset_rect = rect![
@@ -90,12 +89,12 @@ impl PresetsList {
                 self.rect.max.y
             ];
             let kind =
-                Self::determine_preset_kind(position, max_per_line, index, presets_count, presets);
+                Self::determine_preset_kind(position, max_per_line, item_index, presets_count, presets);
             let preset = Preset::new(preset_rect, kind);
             children.push(Box::new(preset) as Box<dyn View>);
             item_index += 1;
 
-            if item_index % max_per_line == 0 || index == presets_count {
+            if item_index % max_per_line == 0 || item_index == presets_count {
                 self.pages.push(children);
                 children = Vec::with_capacity(max_per_line as usize);
             }

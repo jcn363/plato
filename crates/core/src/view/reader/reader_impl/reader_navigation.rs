@@ -188,8 +188,8 @@ impl Reader {
         rq: &mut RenderQueue,
         _context: &mut Context,
     ) {
-        self.view_port.page_offset.y = (self.view_port.page_offset.y + delta.y as i32).max(0);
-        self.view_port.page_offset.x = (self.view_port.page_offset.x + delta.x as i32).max(0);
+        self.view_port.page_offset.y = (self.view_port.page_offset.y + delta.y).max(0);
+        self.view_port.page_offset.x = (self.view_port.page_offset.x + delta.x).max(0);
         self.queue_partial_update(rq);
     }
 

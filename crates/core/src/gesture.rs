@@ -663,8 +663,8 @@ fn interpret_segment(sp: &[Point], tap_jitter: f32) -> GestureEvent {
         let np = p - n;
         let ds = np.length();
         if ds > d / 5.0 {
-            let g = (np.x as f32 / np.y as f32).abs();
-            if g < 0.5 || g > 2.0 {
+            let g = (np.x / np.y).abs();
+            if !(0.5..=2.0).contains(&g) {
                 GestureEvent::Arrow {
                     dir: np.dir(),
                     start: a,
@@ -679,7 +679,7 @@ fn interpret_segment(sp: &[Point], tap_jitter: f32) -> GestureEvent {
             }
         } else {
             let g = (ab.x as f32 / ab.y as f32).abs();
-            if g < 0.5 || g > 2.0 {
+            if !(0.5..=2.0).contains(&g) {
                 GestureEvent::Swipe {
                     start: a,
                     end: b,

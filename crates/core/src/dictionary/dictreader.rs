@@ -282,7 +282,6 @@ impl<B: Read + Seek> DictReaderDz<B> {
         let chunks_from_header = &fextra[10usize..(10 + chunk_count * 2) as usize];
 
         for index in (0..chunks_from_header.len()).filter(|i| (i % 2) == 0) {
-            let index = index;
             let compressed_len =
                 LittleEndian::read_u16(&chunks_from_header[index..(index + 2)]) as usize;
             chunk_offsets.push(end_compressed_data);

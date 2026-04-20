@@ -258,10 +258,13 @@ impl Reader {
             return;
         }
         if let Some(index) = locate_by_id(self, ViewId::TitleMenu) {
-            self.child_mut(index)
+            if let Some(entry) = self
+                .child_mut(index)
                 .child_mut(1)
                 .downcast_mut::<MenuEntry>()
-                .map(|entry| entry.set_disabled(zoom_mode != ZoomMode::FitToWidth, rq));
+            {
+                entry.set_disabled(zoom_mode != ZoomMode::FitToWidth, rq);
+            }
         }
         reader_settings::update_zoom_mode(
             &mut self.view_port.zoom_mode,
@@ -318,8 +321,7 @@ impl Reader {
                 scale_x.min(scale_y)
             }
             ZoomMode::FitToWidth => {
-                let scale_x = (rect.width() as f32 - 2.0 * margin_width as f32) / dims.0;
-                scale_x
+                (rect.width() as f32 - 2.0 * margin_width as f32) / dims.0
             }
             _ => 1.0,
         }

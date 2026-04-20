@@ -30,21 +30,11 @@ impl Default for ShelfViewToggleConfig {
 }
 
 /// Shelf view toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ShelfViewToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: ShelfViewToggleConfig,
-}
-
-impl Default for ShelfViewToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: ShelfViewToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {
@@ -56,7 +46,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.shelf.is_some());
+        let should_enable = enable.unwrap_or(self.shelf.is_none());
 
         if should_enable {
             self.show_shelf_view(rq, context);

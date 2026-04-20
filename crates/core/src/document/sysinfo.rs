@@ -129,9 +129,9 @@ fn append_ip_address(buf: &mut String) {
 
 fn append_storage_info(buf: &mut String) {
     if let Ok(info) = statvfs::statvfs(INTERNAL_CARD_ROOT) {
-        let fbs = info.fragment_size() as u64;
-        let free = info.blocks_free() as u64 * fbs;
-        let total = info.blocks() as u64 * fbs;
+        let fbs = info.fragment_size();
+        let free = info.blocks_free() * fbs;
+        let total = info.blocks() * fbs;
         buf.push_str("\t\t\t<tr>\n");
         buf.push_str("\t\t\t\t<td>Storage (Free / Total)</td>\n");
         buf.push_str(&format!(
@@ -191,7 +191,7 @@ fn append_hwconfig_info(buf: &mut String) {
     buf.push_str("\t\t\t<tr class=\"sep\"></tr>\n");
 
     let output = Command::new("/bin/ntx_hwconfig")
-        .args(&["-s", "/dev/mmcblk0"])
+        .args(["-s", "/dev/mmcblk0"])
         .output()
         .map_err(|e| log_error!("Can't execute command: {:#}.", e))
         .ok();

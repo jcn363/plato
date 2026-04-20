@@ -149,7 +149,7 @@ impl Dictionary {
 
             let mut kb_rect = crate::rect![
                 self.rect.min.x,
-                self.rect.max.y - (small_height + 3 * big_height) as i32 + big_thickness,
+                self.rect.max.y - (small_height + 3 * big_height) + big_thickness,
                 self.rect.max.x,
                 self.rect.max.y - small_height - small_thickness
             ];

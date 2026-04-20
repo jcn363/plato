@@ -32,21 +32,11 @@ impl Default for GoToPageToggleConfig {
 }
 
 /// Go to page toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct GoToPageToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: GoToPageToggleConfig,
-}
-
-impl Default for GoToPageToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: GoToPageToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {
@@ -58,7 +48,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.go_to_page.is_some());
+        let should_enable = enable.unwrap_or(self.go_to_page.is_none());
 
         if should_enable {
             self.show_go_to_page(rq, context);
@@ -149,7 +139,7 @@ impl Home {
     ) -> bool {
         match event {
             Event::Submit(ViewId::GoToPageInput, text) => {
-                self.handle_go_to_page_submit(&text, hub, rq, context);
+                self.handle_go_to_page_submit(text, hub, rq, context);
                 true
             }
             Event::Close(ViewId::GoToPage) => {

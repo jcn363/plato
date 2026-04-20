@@ -67,7 +67,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.keyboard.is_some());
+        let should_enable = enable.unwrap_or(self.keyboard.is_none());
 
         if should_enable {
             self.show_keyboard(rq, context);
@@ -173,7 +173,7 @@ impl Home {
     ) -> bool {
         match event {
             Event::Submit(ViewId::Keyboard, text) => {
-                self.handle_keyboard_submit(&text, hub, rq, context);
+                self.handle_keyboard_submit(text, hub, rq, context);
                 true
             }
             Event::Close(ViewId::Keyboard) => {

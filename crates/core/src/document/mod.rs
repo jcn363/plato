@@ -376,8 +376,7 @@ pub fn asciify(name: &str) -> String {
         .replace('Œ', "Oe")
         .replace('æ', "ae")
         .replace('Æ', "Ae")
-        .replace('—', "-")
-        .replace('–', "-")
+        .replace(['—', '–'], "-")
         .replace('’', "'")
 }
 

@@ -46,7 +46,8 @@ impl Battery {
         // Only refresh if cache expired or values changed significantly
         let should_refresh = self
             .cached_at
-            .map_or(true, |cached| cached.elapsed() >= CACHE_DURATION);
+            .map(|cached| cached.elapsed() >= CACHE_DURATION)
+            .unwrap_or(true);
 
         if should_refresh {
             self.capacity = context.battery.capacity().map_or(self.capacity, |v| v[0]);
@@ -127,7 +128,7 @@ impl View for Battery {
         );
 
         pt += pt!(
-            batt_width - border_thickness as i32,
+            batt_width - border_thickness,
             (batt_height - bump_height) / 2
         );
         let bump_rect = rect![pt, pt + pt!(bump_width, bump_height)];

@@ -15,7 +15,7 @@ impl PluginSystem {
     pub fn new(settings: &PluginSettings) -> PluginSystem {
         let mut system = PluginSystem {
             settings: settings.clone(),
-            plugins: FxHashMap::with_hasher(FxBuildHasher::default()),
+            plugins: FxHashMap::with_hasher(FxBuildHasher),
         };
 
         if settings.enabled {
@@ -303,6 +303,7 @@ impl PluginSystem {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for PluginSystem {
     fn default() -> Self {
         PluginSystem::new(&PluginSettings::default())

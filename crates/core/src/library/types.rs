@@ -84,7 +84,7 @@ impl Library {
                     } else {
                         Ok(IndexMap::with_capacity_and_hasher(
                             0,
-                            FxBuildHasher::default(),
+                            FxBuildHasher,
                         ))
                     }
                 }
@@ -93,7 +93,7 @@ impl Library {
         } else {
             Ok(IndexMap::with_capacity_and_hasher(
                 0,
-                FxBuildHasher::default(),
+                FxBuildHasher,
             ))
         }
     }
@@ -200,7 +200,7 @@ impl Library {
                 .metadata()
                 .ok()
                 .and_then(|md| md.fingerprint(self.fat32_epoch).ok())
-                .unwrap_or_else(|| Fp(0))
+                .unwrap_or(Fp(0))
         })
     }
 

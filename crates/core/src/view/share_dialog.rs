@@ -63,7 +63,7 @@ impl ShareDialog {
 
         // Calculate dialog dimensions
         let button_count = 3i32; // Email, Cloud, Export
-        let dialog_width = max_button_width.max(title_plan.width as i32) + 4 * padding;
+        let dialog_width = max_button_width.max(title_plan.width) + 4 * padding;
         let dialog_height =
             button_height * (button_count + 1) + (button_count + 3) * padding + x_height;
 
@@ -107,7 +107,7 @@ impl ShareDialog {
 
         // Add cancel button at bottom
         let cancel_width =
-            font.plan(LABEL_CANCEL, Some(max_button_width), None).width as i32 + padding;
+            font.plan(LABEL_CANCEL, Some(max_button_width), None).width + padding;
         let rect_cancel = rect![
             rect.max.x - cancel_width - padding,
             rect.max.y - button_height - padding,

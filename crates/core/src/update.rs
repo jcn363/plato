@@ -51,7 +51,7 @@ impl UpdateChecker {
 
     fn parse_version(version: &str) -> (u32, u32, u32) {
         let parts: Vec<&str> = version.trim_start_matches('v').split('.').collect();
-        let major = parts.get(0).and_then(|v| v.parse().ok()).unwrap_or(0);
+        let major = parts.first().and_then(|v| v.parse().ok()).unwrap_or(0);
         let minor = parts.get(1).and_then(|v| v.parse().ok()).unwrap_or(0);
         let patch = parts.get(2).and_then(|v| v.parse().ok()).unwrap_or(0);
         (major, minor, patch)

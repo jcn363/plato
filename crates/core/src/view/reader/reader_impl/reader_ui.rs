@@ -129,7 +129,7 @@ impl Reader {
     /// Handle open
     pub fn handle_open(
         &mut self,
-        _file: &Box<crate::metadata::Info>,
+        _file: &crate::metadata::Info,
         _hub: &Hub,
         rq: &mut RenderQueue,
         _context: &mut Context,

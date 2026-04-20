@@ -59,13 +59,13 @@ impl NavigationBar {
             .first()
             .and_then(|child| child.downcast_ref::<DirectoriesBar>())
             .map(|dirs_bar| dirs_bar.path.clone())
-            .unwrap_or_else(PathBuf::default);
+            .unwrap_or_default();
         let mut last = self
             .children
             .last()
             .and_then(|child| child.downcast_ref::<DirectoriesBar>())
             .map(|dirs_bar| dirs_bar.path.clone())
-            .unwrap_or_else(PathBuf::default);
+            .unwrap_or_default();
 
         // Remove the trailing children.
         if let Some((leftovers_count, ancestor)) = last
@@ -133,7 +133,8 @@ impl NavigationBar {
                 if self
                     .children
                     .get(index)
-                    .map_or(true, |child| child.is::<Filler>())
+                    .map(|child| child.is::<Filler>())
+                    .unwrap_or(true)
                 {
                     let rect = rect![self.rect.min.x, y_max - height, self.rect.max.x, y_max];
                     self.children
@@ -186,7 +187,7 @@ impl NavigationBar {
         }
 
         // Remove the extra separator.
-        if self.children.len() % 2 == 0 {
+        if self.children.len().is_multiple_of(2) {
             self.children.remove(0);
         }
 
@@ -201,7 +202,7 @@ impl NavigationBar {
         index = self.children.len() - 1;
 
         loop {
-            if index % 2 == 0 {
+            if index.is_multiple_of(2) {
                 let Some(dirs_bar) = self.children[index].downcast_mut::<DirectoriesBar>() else {
                     break;
                 };
@@ -254,7 +255,7 @@ impl NavigationBar {
         let dpi = crate::unit::get_device_dpi();
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let min_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32 - thickness;
-        let bars_count = (self.children.len() + 1) / 2;
+        let bars_count = self.children.len().div_ceil(2);
         let mut values = vec![0; bars_count];
 
         for (i, value) in values.iter_mut().enumerate().take(bars_count) {

@@ -32,21 +32,11 @@ impl Default for AddressBarToggleConfig {
 }
 
 /// Address bar toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AddressBarToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: AddressBarToggleConfig,
-}
-
-impl Default for AddressBarToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: AddressBarToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {
@@ -58,7 +48,7 @@ impl Home {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) {
-        let should_enable = enable.unwrap_or(!self.address_bar.is_some());
+        let should_enable = enable.unwrap_or(self.address_bar.is_none());
 
         if should_enable {
             self.show_address_bar(rq, context);
@@ -146,7 +136,7 @@ impl Home {
     ) -> bool {
         match event {
             Event::Submit(ViewId::AddressBarInput, text) => {
-                self.handle_address_bar_submit(&text, hub, rq, context);
+                self.handle_address_bar_submit(text, hub, rq, context);
                 true
             }
             Event::Close(ViewId::AddressBar) => {

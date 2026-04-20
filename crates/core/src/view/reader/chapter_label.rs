@@ -71,7 +71,7 @@ impl View for ChapterLabel {
             let max_width = self.rect.width().saturating_sub(2 * padding as u32) as i32;
             let max_progress_width = max_width - font.ellipsis.width;
             let progress_plan = font.plan(
-                &format!(" ({:.1}%)", 100.0 * self.progress),
+                format!(" ({:.1}%)", 100.0 * self.progress),
                 Some(max_progress_width),
                 None,
             );

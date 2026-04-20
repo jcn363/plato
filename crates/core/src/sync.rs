@@ -390,7 +390,7 @@ fn merge_json(local: &str, remote: &str) -> String {
 
     // Pre-allocate merged vector with estimated capacity to reduce reallocations
     let mut merged = Vec::with_capacity(32);
-    let mut seen = HashSet::with_hasher(FxBuildHasher::default());
+    let mut seen = HashSet::with_hasher(FxBuildHasher);
 
     let empty = Vec::new();
     let local_items = local_val.as_array().unwrap_or(&empty);
@@ -458,7 +458,7 @@ fn fetch_kobocloud_sync_status(device_id: &str) -> Result<serde_json::Value, Err
         });
 
         let response = client
-            .post(&format!("{}/syncStatus", api_url))
+            .post(format!("{}/syncStatus", api_url))
             .json(&device_info)
             .send()
             .map_err(|e| format_err!("KoboCloud sync failed: {}", e))?;
@@ -548,7 +548,7 @@ fn upload_to_kobocloud(_device_id: &str, upload_data: &serde_json::Value) -> Res
         let client = reqwest::blocking::Client::new();
 
         client
-            .post(&format!("{}/sync", api_url))
+            .post(format!("{}/sync", api_url))
             .json(upload_data)
             .send()
             .map_err(|e| format_err!("KoboCloud upload failed: {}", e))?;
