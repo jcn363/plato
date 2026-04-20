@@ -166,7 +166,6 @@ impl Clone for ThumbnailWorkerPool {
 mod tests {
     use super::*;
     use std::sync::mpsc;
-    use tempfile::NamedTempFile;
 
     fn create_test_request() -> (ThumbnailRequest, mpsc::Receiver<ThumbnailResult<PathBuf>>) {
         let (tx, rx) = mpsc::channel();

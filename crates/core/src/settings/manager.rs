@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_config_manager_save_and_load() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().unwrap();
         let manager = ConfigManager::with_path(temp_file.path());
 
         let settings = Settings::default();

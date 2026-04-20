@@ -199,7 +199,6 @@ pub fn validate_library_path<P: AsRef<Path>>(path: P) -> Result<PathBuf, Error> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_validate_path_empty() {
