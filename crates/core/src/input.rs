@@ -162,6 +162,7 @@ impl ButtonCode {
     }
 }
 
+#[inline]
 fn resolve_button_direction(
     mut direction: LinearDir,
     rotation: i8,
@@ -265,8 +266,8 @@ pub fn raw_events(paths: Vec<String>) -> (Sender<InputEvent>, Receiver<InputEven
 }
 
 pub fn parse_raw_events(paths: &[String], tx: &Sender<InputEvent>) -> Result<(), Error> {
-    let mut files = Vec::new();
-    let mut pfds = Vec::new();
+    let mut files = Vec::with_capacity(paths.len());
+    let mut pfds = Vec::with_capacity(paths.len());
 
     for path in paths.iter() {
         let file = File::open(path).with_context(|| format!("can't open input file {}", path))?;
@@ -465,6 +466,7 @@ pub fn parse_device_events(
     }
 }
 
+#[inline]
 fn initialize_touch_codes(proto: TouchProto) -> TouchCodes {
     match proto {
         TouchProto::Single => SINGLE_TOUCH_CODES,
@@ -474,6 +476,7 @@ fn initialize_touch_codes(proto: TouchProto) -> TouchCodes {
     }
 }
 
+#[inline]
 fn initialize_single_touch_packet(
     proto: TouchProto,
     id: i32,
@@ -552,6 +555,7 @@ fn handle_syn_event(
     }
 }
 
+#[inline]
 fn retain_multi_b_fingers(
     fingers: &mut FxHashMap<i32, Point>,
     packets: &FxHashMap<i32, TouchState>,
@@ -595,6 +599,7 @@ fn handle_finger_state_changes(
     }
 }
 
+#[inline]
 fn send_finger_event(
     ty: &Sender<DeviceEvent>,
     id: i32,
@@ -602,12 +607,15 @@ fn send_finger_event(
     status: FingerStatus,
     position: Point,
 ) {
-    if ty.send(DeviceEvent::Finger {
-        id,
-        time: seconds(time),
-        status,
-        position,
-    }).is_err() {
+    if ty
+        .send(DeviceEvent::Finger {
+            id,
+            time: seconds(time),
+            status,
+            position,
+        })
+        .is_err()
+    {
         log_error!("Failed to send finger event");
     }
 }
@@ -652,11 +660,14 @@ fn handle_key_event(
         }
     } else if evt.code != BTN_TOUCH {
         if let Some(button_status) = ButtonStatus::try_from_raw(evt.value) {
-            if ty.send(DeviceEvent::Button {
-                time: seconds(evt.time),
-                code: ButtonCode::from_raw(evt.code, *rotation, *button_scheme),
-                status: button_status,
-            }).is_err() {
+            if ty
+                .send(DeviceEvent::Button {
+                    time: seconds(evt.time),
+                    code: ButtonCode::from_raw(evt.code, *rotation, *button_scheme),
+                    status: button_status,
+                })
+                .is_err()
+            {
                 log_error!("Failed to send button event");
             }
         }
