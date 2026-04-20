@@ -1,6 +1,7 @@
 use crate::device::CURRENT_DEVICE;
 use crate::framebuffer::Display;
 use crate::geom::{LinearDir, Point};
+use crate::log_error;
 use crate::settings::ButtonScheme;
 use anyhow::{Context, Error};
 use rustc_hash::FxHashMap;
@@ -37,8 +38,6 @@ pub const MSC_RAW_GSENSOR_PORTRAIT_DOWN: i32 = 0x17;
 pub const MSC_RAW_GSENSOR_PORTRAIT_UP: i32 = 0x18;
 pub const MSC_RAW_GSENSOR_LANDSCAPE_RIGHT: i32 = 0x19;
 pub const MSC_RAW_GSENSOR_LANDSCAPE_LEFT: i32 = 0x1a;
-// pub const MSC_RAW_GSENSOR_BACK: i32 = 0x1b;
-// pub const MSC_RAW_GSENSOR_FRONT: i32 = 0x1c;
 
 // The indices of this clockwise ordering of the sensor values match the Forma's rotation values.
 pub const GYROSCOPE_ROTATIONS: [i32; 4] = [
@@ -252,6 +251,13 @@ pub fn seconds(time: libc::timeval) -> f64 {
 }
 
 pub fn raw_events(paths: Vec<String>) -> (Sender<InputEvent>, Receiver<InputEvent>) {
+    // Input validation: ensure paths vector is not empty
+    if paths.is_empty() {
+        log_error!("Cannot create raw events: paths vector is empty");
+        let (tx, rx) = mpsc::channel();
+        return (tx, rx);
+    }
+
     let (tx, rx) = mpsc::channel();
     let tx2 = tx.clone();
     thread::spawn(move || parse_raw_events(&paths, &tx));
@@ -307,7 +313,10 @@ pub fn usb_events() -> Receiver<DeviceEvent> {
 }
 
 fn parse_usb_events(tx: &Sender<DeviceEvent>) {
-    let path = CString::new("/tmp/nickel-hardware-status").expect("CString contains null byte");
+    let path = match CString::new("/tmp/nickel-hardware-status") {
+        Ok(p) => p,
+        Err(_) => return,
+    };
     // SAFETY: CString is valid and null-terminated. libc::open opens a FIFO with valid flags.
     let fd = unsafe { libc::open(path.as_ptr(), libc::O_NONBLOCK | libc::O_RDWR) };
 
@@ -331,7 +340,10 @@ fn parse_usb_events(tx: &Sender<DeviceEvent>) {
             break;
         }
 
-        let buf = CString::new(vec![1; BUF_LEN]).expect("CString contains null byte");
+        let buf = match CString::new(vec![1; BUF_LEN]) {
+            Ok(b) => b,
+            Err(_) => break,
+        };
         let c_buf = buf.into_raw();
 
         if pfd.revents & libc::POLLIN != 0 {
@@ -341,23 +353,27 @@ fn parse_usb_events(tx: &Sender<DeviceEvent>) {
             let buf = unsafe { CString::from_raw(c_buf) };
             if n > 0 {
                 if let Ok(s) = buf.to_str() {
-                    for msg in s[..n as usize].lines() {
-                        if msg == "usb plug add" {
-                            tx.send(DeviceEvent::Plug(PowerSource::Host)).ok();
-                        } else if msg == "usb plug remove" {
-                            tx.send(DeviceEvent::Unplug(PowerSource::Host)).ok();
-                        } else if msg == "usb ac add" {
-                            tx.send(DeviceEvent::Plug(PowerSource::Wall)).ok();
-                        } else if msg == "usb ac remove" {
-                            tx.send(DeviceEvent::Unplug(PowerSource::Wall)).ok();
-                        } else if msg.starts_with("network bound") {
-                            tx.send(DeviceEvent::NetUp).ok();
-                        }
-                    }
+                    handle_usb_messages(s, n as usize, tx);
                 }
             } else {
                 break;
             }
+        }
+    }
+}
+
+fn handle_usb_messages(s: &str, len: usize, tx: &Sender<DeviceEvent>) {
+    for msg in s[..len].lines() {
+        if msg == "usb plug add" {
+            tx.send(DeviceEvent::Plug(PowerSource::Host)).ok();
+        } else if msg == "usb plug remove" {
+            tx.send(DeviceEvent::Unplug(PowerSource::Host)).ok();
+        } else if msg == "usb ac add" {
+            tx.send(DeviceEvent::Plug(PowerSource::Wall)).ok();
+        } else if msg == "usb ac remove" {
+            tx.send(DeviceEvent::Unplug(PowerSource::Wall)).ok();
+        } else if msg.starts_with("network bound") {
+            tx.send(DeviceEvent::NetUp).ok();
         }
     }
 }
@@ -367,6 +383,13 @@ pub fn device_events(
     display: Display,
     button_scheme: ButtonScheme,
 ) -> Receiver<DeviceEvent> {
+    // Input validation: ensure display dimensions are valid
+    if display.dims.0 == 0 || display.dims.1 == 0 {
+        log_error!("Invalid display dimensions: {:?}", display.dims);
+        let (_ty, ry) = mpsc::channel();
+        return ry;
+    }
+
     let (ty, ry) = mpsc::channel();
     thread::spawn(move || parse_device_events(&rx, &ty, display, button_scheme));
     ry
@@ -519,56 +542,73 @@ fn handle_syn_event(
     }
 
     if proto == TouchProto::MultiB {
-        fingers.retain(|other_id, other_position| {
-            packets.contains_key(other_id)
-                || ty
-                    .send(DeviceEvent::Finger {
-                        id: *other_id,
-                        time: seconds(evt.time),
-                        status: FingerStatus::Up,
-                        position: *other_position,
-                    })
-                    .is_err()
-        });
+        retain_multi_b_fingers(fingers, packets, evt.time, ty);
     }
 
+    handle_finger_state_changes(fingers, packets, evt.time, ty);
+
+    if proto != TouchProto::Single {
+        packets.clear();
+    }
+}
+
+fn retain_multi_b_fingers(
+    fingers: &mut FxHashMap<i32, Point>,
+    packets: &FxHashMap<i32, TouchState>,
+    time: libc::timeval,
+    ty: &Sender<DeviceEvent>,
+) {
+    fingers.retain(|other_id, other_position| {
+        packets.contains_key(other_id)
+            || ty
+                .send(DeviceEvent::Finger {
+                    id: *other_id,
+                    time: seconds(time),
+                    status: FingerStatus::Up,
+                    position: *other_position,
+                })
+                .is_err()
+    });
+}
+
+fn handle_finger_state_changes(
+    fingers: &mut FxHashMap<i32, Point>,
+    packets: &FxHashMap<i32, TouchState>,
+    time: libc::timeval,
+    ty: &Sender<DeviceEvent>,
+) {
     for (&id, state) in packets.iter() {
         if let Some(&pos) = fingers.get(&id) {
             if state.pressure > 0 {
                 if state.position != pos {
-                    ty.send(DeviceEvent::Finger {
-                        id,
-                        time: seconds(evt.time),
-                        status: FingerStatus::Motion,
-                        position: state.position,
-                    })
-                    .expect("send failed");
+                    send_finger_event(ty, id, time, FingerStatus::Motion, state.position);
                     fingers.insert(id, state.position);
                 }
             } else {
-                ty.send(DeviceEvent::Finger {
-                    id,
-                    time: seconds(evt.time),
-                    status: FingerStatus::Up,
-                    position: state.position,
-                })
-                .expect("send failed");
+                send_finger_event(ty, id, time, FingerStatus::Up, state.position);
                 fingers.remove(&id);
             }
         } else if state.pressure > 0 {
-            ty.send(DeviceEvent::Finger {
-                id,
-                time: seconds(evt.time),
-                status: FingerStatus::Down,
-                position: state.position,
-            })
-            .expect("send failed");
+            send_finger_event(ty, id, time, FingerStatus::Down, state.position);
             fingers.insert(id, state.position);
         }
     }
+}
 
-    if proto != TouchProto::Single {
-        packets.clear();
+fn send_finger_event(
+    ty: &Sender<DeviceEvent>,
+    id: i32,
+    time: libc::timeval,
+    status: FingerStatus,
+    position: Point,
+) {
+    if ty.send(DeviceEvent::Finger {
+        id,
+        time: seconds(time),
+        status,
+        position,
+    }).is_err() {
+        log_error!("Failed to send finger event");
     }
 }
 
@@ -612,12 +652,13 @@ fn handle_key_event(
         }
     } else if evt.code != BTN_TOUCH {
         if let Some(button_status) = ButtonStatus::try_from_raw(evt.value) {
-            ty.send(DeviceEvent::Button {
+            if ty.send(DeviceEvent::Button {
                 time: seconds(evt.time),
                 code: ButtonCode::from_raw(evt.code, *rotation, *button_scheme),
                 status: button_status,
-            })
-            .expect("send failed");
+            }).is_err() {
+                log_error!("Failed to send button event");
+            }
         }
     }
 }
