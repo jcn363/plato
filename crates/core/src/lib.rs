@@ -1,4 +1,4 @@
-#![allow(clippy::all)]
+#![warn(clippy::all)]
 
 #[macro_use]
 pub mod geom;

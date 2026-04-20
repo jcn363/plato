@@ -8,6 +8,12 @@ pub struct FakeBattery {
     status: Status,
 }
 
+impl Default for FakeBattery {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FakeBattery {
     pub fn new() -> FakeBattery {
         FakeBattery {

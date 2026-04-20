@@ -83,20 +83,20 @@ impl PrivRectangle {
     }
 }
 
-impl Into<PrivRectangle> for PrivBoundary {
-    fn into(self) -> PrivRectangle {
+impl From<PrivBoundary> for PrivRectangle {
+    fn from(val: PrivBoundary) -> Self {
         PrivRectangle {
-            min: PrivPoint::new(self.min.x.floor() as i32, self.min.y.floor() as i32),
-            max: PrivPoint::new(self.max.x.ceil() as i32, self.max.y.ceil() as i32),
+            min: PrivPoint::new(val.min.x.floor() as i32, val.min.y.floor() as i32),
+            max: PrivPoint::new(val.max.x.ceil() as i32, val.max.y.ceil() as i32),
         }
     }
 }
 
-impl Into<PrivBoundary> for PrivRectangle {
-    fn into(self) -> PrivBoundary {
+impl From<PrivRectangle> for PrivBoundary {
+    fn from(val: PrivRectangle) -> Self {
         PrivBoundary {
-            min: PrivVec2::new(self.min.x as f32, self.min.y as f32),
-            max: PrivVec2::new(self.max.x as f32, self.max.y as f32),
+            min: PrivVec2::new(val.min.x as f32, val.min.y as f32),
+            max: PrivVec2::new(val.max.x as f32, val.max.y as f32),
         }
     }
 }

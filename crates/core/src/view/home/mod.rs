@@ -39,63 +39,6 @@
 //! - Metadata editing
 //! - Quick access to recent documents
 //!
-//! ## Known Limitations & TODOs
-//!
-//! ### Size and Complexity
-//! The Home view at 2,690 lines handles many concerns:
-//! - View hierarchy management (child views)
-//! - Event routing to child views
-//! - Library/document model management
-//! - File system operations (list, rename, delete)
-//! - Search and filter logic
-//! - Thumbnail caching and rendering
-//!
-//! **TODO (Phase 5)**: Consider splitting into:
-//! - `home_core.rs` - Data model and state management
-//! - `home_library.rs` - Library operations
-//! - `home_ui.rs` - UI layout and rendering
-//! - `home_input.rs` - Event handling
-//!
-//! ### Performance Issues
-//! - Thumbnail generation is synchronous (blocking UI)
-//! - Large libraries (1000+ books) can be slow to scroll
-//! - Search filtering is linear (O(n)) across all documents
-//!
-//! **Note**: These optimizations were evaluated and deferred due to device constraints.
-//! Lazy loading and async operations add complexity that may outweigh benefits on limited RAM.
-//!
-//! ### Type Duplication
-//! Fixed: ViewId-based helper function now correctly matches views by ViewId
-//! instead of attempting to match by generic Id type.
-//! See `home_utils::find_child_index_by_view_id()`.
-//!
-//! ## Testing
-//!
-//! Home view is challenging to test because:
-//! 1. Heavy File system operations (directory listing, file I/O)
-//! 2. Requires actual document library fixtures
-//! 3. Complex event routing and state management
-//!
-//! **Current approach**: Integration tests with fixture directories.
-//! Consider: Mocking Library and FileSystem interfaces.
-//!
-//! ## Future Improvements
-//!
-//! **Short Term** (10-15 hours):
-//! - Async thumbnail generation (off-main thread)
-//! - Indexed search (faster filtering)
-//! - Better memory management for large libraries
-//!
-//! **Medium Term** (20-30 hours):
-//! - Split into sub-modules for better maintainability
-//! - Create ViewModel abstraction for Library operations
-//! - Plugin support for custom book sources
-//!
-//! **Long Term** (40+ hours):
-//! - Cloud library integration
-//! - Advanced filtering and tagging system
-//! - Reading statistics and recommendations
-
 mod address_bar;
 mod book;
 mod bottom_bar;

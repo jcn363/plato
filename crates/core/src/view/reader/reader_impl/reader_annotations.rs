@@ -8,7 +8,7 @@ use crate::framebuffer::UpdateMode;
 use crate::geom::{Point, Rectangle};
 use crate::metadata::{Annotation, Info};
 use crate::unit::{mm_to_px, scale_by_dpi};
-use crate::view::{Hub, RenderData, RenderQueue, View};
+use crate::view::{Hub, Id, RenderData, RenderQueue, View};
 use crate::view::notification::Notification;
 use chrono::Local;
 

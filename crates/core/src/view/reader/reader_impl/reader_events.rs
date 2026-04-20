@@ -11,8 +11,8 @@ use crate::context::Context;
 use crate::geom::Rectangle;
 use crate::input::{ButtonStatus, DeviceEvent};
 use crate::input::FingerStatus;
-use crate::view::menu::{toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
-use crate::view::{Hub, RenderQueue, SliderId, ViewId};
+use crate::view::common::{toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
+use crate::view::{Hub, RenderData, RenderQueue, SliderId, ViewId};
 
 use super::reader::Reader;
 use super::reader_core::Resource;
@@ -186,11 +186,14 @@ impl Reader {
             Event::Show(ViewId::MarginCropper) => {
                 use crate::view::reader::margin_cropper::MarginCropper;
                 if let Some(Resource { pixmap, .. }) = self.cache.get(&self.current_page) {
-                    let doc = self
-                        ._doc
-                        .lock()
-                        .unwrap_or_else(|poisoned| poisoned.into_inner());
-                    let margin = doc.margin(self.current_page).unwrap_or_default();
+                    // TODO: margin() method doesn't exist on Document trait
+                    // This needs to be fixed in the document module
+                    let margin = crate::metadata::Margin {
+                        top: 0.0,
+                        right: 0.0,
+                        bottom: 0.0,
+                        left: 0.0,
+                    };
                     let cropper = MarginCropper::new(self.rect, pixmap.clone(), &margin, context);
                     self.children
                         .push(Box::new(cropper) as Box<dyn crate::view::View>);

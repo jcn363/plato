@@ -216,9 +216,9 @@ impl PdfDocument {
             };
             vec.push(TocEntry {
                 title: title.to_string(),
-                location: location,
+                location,
                 index: current_index,
-                children: children,
+                children,
                 page: Some(page_num),
                 level: 0,
             });

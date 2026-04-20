@@ -128,9 +128,9 @@ impl Default for Point {
     }
 }
 
-impl Into<(f32, f32)> for Point {
-    fn into(self) -> (f32, f32) {
-        (self.x as f32, self.y as f32)
+impl From<Point> for (f32, f32) {
+    fn from(val: Point) -> Self {
+        (val.x as f32, val.y as f32)
     }
 }
 

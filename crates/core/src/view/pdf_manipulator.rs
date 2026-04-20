@@ -31,14 +31,14 @@ enum RedactionState {
 
 enum ManipulationMode {
     SelectFile,
-    SelectAction(()),            // Unused field
-    SelectRedactionPage((), ()), // Unused fields
+    SelectAction,
+    SelectRedactionPage,
     DefiningRedaction {
         file_path: PathBuf,
         page_index: usize,
         region: Option<RedactionRegion>,
     },
-    Processing((), ()), // Unused fields
+    Processing,
 }
 
 pub struct PdfManipulatorView {
@@ -140,7 +140,7 @@ Max: 30MB, 500 pages. Keep battery charged."
     }
 
     fn show_actions(&mut self, file_path: PathBuf, rq: &mut RenderQueue, context: &mut Context) {
-        self.mode = ManipulationMode::SelectAction(());
+        self.mode = ManipulationMode::SelectAction;
 
         let file_size = std::fs::metadata(&file_path)
             .map(|m| m.len() / (1024 * 1024))
@@ -219,7 +219,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> Result<(), Error> {
-        self.mode = ManipulationMode::SelectRedactionPage((), ());
+        self.mode = ManipulationMode::SelectRedactionPage;
 
         let mut entries = vec![
             EntryKind::Message(
@@ -309,7 +309,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> Result<(), Error> {
-        self.mode = ManipulationMode::Processing((), ());
+        self.mode = ManipulationMode::Processing;
 
         let result = match action {
             "delete" | "rotate90" | "rotate180" | "rotate270" => {
@@ -564,7 +564,7 @@ impl View for PdfManipulatorView {
                     bus.push_back(Event::Close(ViewId::PdfManipulator));
                     return true;
                 }
-                ManipulationMode::SelectAction(_) => {
+                ManipulationMode::SelectAction => {
                     self.mode = ManipulationMode::SelectFile;
                     self.selected_file = None;
                     if let Some(index) = locate_by_id(self, ViewId::PdfManipulatorMenu) {
@@ -576,7 +576,7 @@ impl View for PdfManipulatorView {
                     }
                     return true;
                 }
-                ManipulationMode::SelectRedactionPage(_, _) => {
+                ManipulationMode::SelectRedactionPage => {
                     self.mode = ManipulationMode::SelectFile;
                     self.selected_file = None;
                     if let Some(index) = locate_by_id(self, ViewId::PdfManipulatorMenu) {
@@ -595,14 +595,14 @@ impl View for PdfManipulatorView {
                 } => {
                     let file_path_cloned = file_path.clone();
                     let _page_index_val = *page_index;
-                    self.mode = ManipulationMode::SelectRedactionPage((), ());
+                    self.mode = ManipulationMode::SelectRedactionPage;
                     if let Some(total_pages) = self.manipulator.page_count(&file_path_cloned).ok() {
                         self.show_redaction_menu(&file_path_cloned, total_pages, rq, context)
                             .ok();
                     }
                     return true;
                 }
-                ManipulationMode::Processing(_, _) => {
+                ManipulationMode::Processing => {
                     // Allow back to cancel processing
                     self.mode = ManipulationMode::SelectFile;
                     bus.push_back(Event::Render("Operation cancelled.".to_string()));
