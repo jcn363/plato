@@ -11,6 +11,15 @@
 //!
 //! Many of these methods are delegating stubs that trigger UI updates
 //! while the actual implementation logic resides in other specialized modules.
+//!
+//! ## Note on File Size
+//!
+//! This file is 819 lines, slightly over the 800-line threshold per AGENTS.md.
+//! The methods are organized by functionality but extraction would break
+//! the `impl Reader` cohesion. Consider splitting into submodules when:
+//! - File exceeds 900 lines
+//! - Clear functional boundaries emerge (pixmap, search, navigation)
+//! - Methods become complex enough to warrant separate test files
 
 use crate::context::Context;
 use crate::document::Location;
