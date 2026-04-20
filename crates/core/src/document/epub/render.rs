@@ -32,19 +32,19 @@ impl EpubDocument {
                 || display_list[1].first().map(|dc| offset < dc.offset()) == Some(true)
             {
                 return 0;
-            } else if display_list[display_list.len() - 1]
+            }
+            if display_list[display_list.len() - 1]
                 .first()
                 .map(|dc| offset >= dc.offset())
                 == Some(true)
             {
                 return display_list.len() - 1;
-            } else {
-                for i in 1..display_list.len() - 1 {
-                    if display_list[i].first().map(|dc| offset >= dc.offset()) == Some(true)
-                        && display_list[i + 1].first().map(|dc| offset < dc.offset()) == Some(true)
-                    {
-                        return i;
-                    }
+            }
+            for i in 1..display_list.len() - 1 {
+                if display_list[i].first().map(|dc| offset >= dc.offset()) == Some(true)
+                    && display_list[i + 1].first().map(|dc| offset < dc.offset()) == Some(true)
+                {
+                    return i;
                 }
             }
             0

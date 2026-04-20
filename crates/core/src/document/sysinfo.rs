@@ -199,7 +199,7 @@ fn append_hwconfig_info(buf: &mut String) {
     let mut map = FxHashMap::default();
 
     if let Some(stdout) = output.and_then(|output| String::from_utf8(output.stdout).ok()) {
-        if let Ok(re) = Regex::new(r#"\[\d+\]\s+(?P<key>[^=]+)='(?P<value>[^']+)'"#) {
+        if let Ok(re) = Regex::new(r"\[\d+\]\s+(?P<key>[^=]+)='(?P<value>[^']+)'") {
             for caps in re.captures_iter(&stdout) {
                 map.insert(caps["key"].to_string(), caps["value"].to_string());
             }

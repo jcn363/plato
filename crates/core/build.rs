@@ -14,7 +14,7 @@ fn main() {
     if target == "arm-unknown-linux-gnueabihf" {
         println!("cargo:rustc-env=PKG_CONFIG_ALLOW_CROSS=1");
         println!("cargo:rustc-link-search=target/mupdf_wrapper/Kobo");
-        println!("cargo:rustc-link-search={}", lib_dir);
+        println!("cargo:rustc-link-search={lib_dir}");
         println!("cargo:rustc-link-lib=dylib=stdc++");
         println!("cargo:rustc-link-lib=mupdf_wrapper");
         println!("cargo:rustc-link-lib=freetype");
@@ -23,7 +23,7 @@ fn main() {
     } else if target == "aarch64-unknown-linux-gnu" {
         println!("cargo:rustc-env=PKG_CONFIG_ALLOW_CROSS=1");
         println!("cargo:rustc-link-search=target/mupdf_wrapper/Kobo");
-        println!("cargo:rustc-link-search={}", lib_dir);
+        println!("cargo:rustc-link-search={lib_dir}");
         println!("cargo:rustc-link-lib=dylib=stdc++");
         println!("cargo:rustc-link-lib=mupdf_wrapper");
         println!("cargo:rustc-link-lib=freetype");
@@ -37,7 +37,7 @@ fn main() {
                 // The libs_host directory contains ARM libraries for cross-compilation
                 let system_lib_path = "/lib/x86_64-linux-gnu";
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/Linux");
-                println!("cargo:rustc-link-search={}", system_lib_path);
+                println!("cargo:rustc-link-search={system_lib_path}");
                 println!("cargo:rustc-link-lib=dylib=stdc++");
                 println!("cargo:rustc-link-lib=mupdf");
                 println!("cargo:rustc-link-lib=mujs");
@@ -51,7 +51,7 @@ fn main() {
             }
             "macos" => {
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/Darwin");
-                println!("cargo:rustc-link-search={}", lib_dir);
+                println!("cargo:rustc-link-search={lib_dir}");
                 println!("cargo:rustc-link-lib=dylib=c++");
                 println!("cargo:rustc-link-lib=mupdf");
                 println!("cargo:rustc-link-lib=z");
@@ -62,7 +62,7 @@ fn main() {
                 println!("cargo:rustc-link-lib=openjp2");
                 println!("cargo:rustc-link-lib=jbig2dec");
             }
-            _ => panic!("Unsupported platform: {}", target_os),
+            _ => panic!("Unsupported platform: {target_os}"),
         }
     }
 

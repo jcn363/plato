@@ -52,7 +52,7 @@ impl<'a> XmlParser<'a> {
         while !self.eof() {
             self.advance_while(|&c| c.is_xml_whitespace());
             match self.next() {
-                Some('>') | Some('/') | None => break,
+                Some('>' | '/') | None => break,
                 _ => {
                     let offset = self.offset;
                     self.advance_while(|&c| c != '=');

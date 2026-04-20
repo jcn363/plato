@@ -132,9 +132,8 @@ pub fn surface_area(dist: f32, angle: f32) -> f32 {
     if dist.abs() > HALF_PIXEL_DIAGONAL {
         if dist.is_sign_positive() {
             return 0.0;
-        } else {
-            return 1.0;
         }
+        return 1.0;
     }
     // If the boundary is parallel to the pixel's diagonals then the area is proportional to `dist²`.
     // If the boundary is parallel to the pixel's sides then the area is proportional to `dist`.

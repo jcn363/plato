@@ -233,9 +233,8 @@ impl XmlTree {
                         first_id = Some(next.id);
                     }
                     break;
-                } else {
-                    known_ids.insert(s.id);
                 }
+                known_ids.insert(s.id);
             }
 
             for s in n.next_siblings() {
@@ -244,9 +243,8 @@ impl XmlTree {
                         last_id = Some(prev.id);
                     }
                     break;
-                } else {
-                    known_ids.insert(s.id);
                 }
+                known_ids.insert(s.id);
             }
 
             if first_id.is_some() || last_id.is_some() {
