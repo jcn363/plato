@@ -231,10 +231,24 @@ impl HomeInputExt for Home {
                 self.toggle_rename_document(Some(false), hub, rq, context);
                 true
             }
-            Event::Select(EntryId::Sort(sort_method)) => {
+            Event::Select(EntryId::Sort(ref sort_method)) => {
                 let selected_library = context.settings.selected_library;
-                context.settings.libraries[selected_library].sort_method = sort_method;
-                self.set_sort_method(sort_method, hub, rq, context);
+                context.settings.libraries[selected_library].sort_method = *sort_method;
+                self.set_sort_method(*sort_method, hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::ToggleReorderMode) => {
+                self.reorder_mode = !self.reorder_mode;
+                if self.reorder_mode {
+                    context.settings.libraries[context.settings.selected_library].sort_method =
+                        crate::metadata::SortMethod::Manual;
+                    self.set_sort_method(crate::metadata::SortMethod::Manual, hub, rq, context);
+                }
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
+            Event::Select(EntryId::SetManualOrder(ref _path, ref _order)) => {
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }
             Event::Select(EntryId::ReverseOrder) => {

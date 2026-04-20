@@ -47,6 +47,7 @@ pub struct Home {
     pub background_fetchers: FxHashMap<u32, Fetcher>,
     pub batch_mode: bool,
     pub batch_selected: FxHashSet<usize>,
+    pub reorder_mode: bool,
     // UI toggle fields for modularized components
     pub keyboard: Option<Box<dyn View>>,
     pub address_bar: Option<Box<dyn View>>,

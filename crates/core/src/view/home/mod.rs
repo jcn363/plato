@@ -201,6 +201,7 @@ impl Home {
             background_fetchers: FxHashMap::default(),
             batch_mode: false,
             batch_selected: FxHashSet::default(),
+            reorder_mode: false,
             keyboard: None,
             address_bar: None,
             navigation_bar: None,
