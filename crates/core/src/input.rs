@@ -538,7 +538,8 @@ fn handle_syn_event(
     proto: TouchProto,
     ty: &Sender<DeviceEvent>,
 ) {
-    let tv_sec = evt.time.tv_sec;
+    #[allow(clippy::unnecessary_cast)]
+    let tv_sec = evt.time.tv_sec as i64;
     if (tv_sec - *last_activity).abs() >= 60 {
         *last_activity = tv_sec;
         ty.send(DeviceEvent::UserActivity).ok();
