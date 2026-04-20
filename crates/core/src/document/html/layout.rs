@@ -30,7 +30,6 @@ pub struct DrawState {
     pub center_table: bool,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for DrawState {
     fn default() -> Self {
         DrawState {
@@ -167,7 +166,6 @@ pub enum TabSize {
     Length(i32),
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for TabSize {
     fn default() -> Self {
         TabSize::Number(8)

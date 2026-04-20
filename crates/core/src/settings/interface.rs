@@ -79,7 +79,6 @@ pub struct HomeSettings {
     pub max_trash_size: u64,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for HomeSettings {
     fn default() -> Self {
         HomeSettings {

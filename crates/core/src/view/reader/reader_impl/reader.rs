@@ -158,9 +158,6 @@ use super::reader_core::{
 use super::reader_rendering;
 use super::reader_toc::ReaderTocManager;
 
-pub const _HIGHLIGHT_DRIFT: f32 = 0.1;
-pub const _ANNOTATION_DRIFT: f32 = 0.05;
-
 // ===========================================================================
 // Type Definitions
 // ===========================================================================

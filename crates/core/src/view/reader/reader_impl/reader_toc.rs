@@ -190,7 +190,6 @@ impl ReaderTocManager {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for ReaderTocManager {
     fn default() -> Self {
         Self::new()

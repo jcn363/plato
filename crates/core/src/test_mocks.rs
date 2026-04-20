@@ -23,7 +23,7 @@
 
 use crate::battery::{Battery, BatteryError, Status};
 use crate::color::Color;
-use crate::device::{Device, FrontlightKind, Model, Orientation};
+use crate::device::{Device, FrontlightKind, KoboDevice, Model, Orientation};
 use crate::document::BoundedText;
 use crate::document::{Document, Location, TocEntry};
 use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
@@ -152,7 +152,6 @@ impl MockFrontlight {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for MockFrontlight {
     fn default() -> Self {
         Self::new()
@@ -219,39 +218,10 @@ pub struct MockDevice {
 impl MockDevice {
     /// Create a new mock device with given model
     pub fn new(model: Model) -> Self {
-        let (dims, dpi) = match model {
-            Model::LibraColour => ((1264, 1680), 300),
-            Model::ClaraColour => ((1072, 1448), 300),
-            Model::ClaraBW => ((1072, 1448), 300),
-            Model::Elipsa2E => ((1404, 1872), 227),
-            Model::Clara2E => ((1072, 1448), 300),
-            Model::Libra2 => ((1264, 1680), 300),
-            Model::Sage => ((1440, 1920), 300),
-            Model::Elipsa => ((1404, 1872), 227),
-            Model::Nia => ((758, 1024), 212),
-            Model::LibraH2O => ((1264, 1680), 300),
-            Model::Forma32GB => ((1440, 1920), 300),
-            Model::Forma => ((1440, 1920), 300),
-            Model::ClaraHD => ((1072, 1448), 300),
-            Model::AuraH2OEd2V2 => ((1080, 1440), 265),
-            Model::AuraH2OEd2V1 => ((1080, 1440), 265),
-            Model::AuraEd2V2 => ((758, 1024), 212),
-            Model::AuraEd2V1 => ((758, 1024), 212),
-            Model::AuraONELimEd => ((1404, 1872), 300),
-            Model::AuraONE => ((1404, 1872), 300),
-            Model::Touch2 => ((600, 800), 167),
-            Model::GloHD => ((1072, 1448), 300),
-            Model::AuraH2O => ((1080, 1440), 265),
-            Model::Aura => ((758, 1024), 212),
-            Model::AuraHD => ((1080, 1440), 265),
-            Model::Mini => ((600, 800), 200),
-            Model::Glo => ((758, 1024), 212),
-            Model::TouchC => ((600, 800), 167),
-            Model::TouchAB => ((600, 800), 167),
-        };
+        let (dims, dpi, proto) = KoboDevice::device_specs(model);
         Self {
             model,
-            proto: TouchProto::MultiB,
+            proto,
             dims,
             dpi,
         }

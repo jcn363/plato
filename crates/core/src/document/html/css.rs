@@ -59,7 +59,6 @@ pub enum Combinator {
     SubsequentSibling,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for Selector {
     fn default() -> Self {
         Selector {
@@ -68,7 +67,6 @@ impl Default for Selector {
         }
     }
 }
-#[allow(clippy::derivable_impls)]
 impl Default for SimpleSelector {
     fn default() -> Self {
         SimpleSelector {

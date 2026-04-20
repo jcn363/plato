@@ -83,7 +83,6 @@ pub struct FzTextOptions {
     pub clip: FzRect,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for FzTextOptions {
     fn default() -> Self {
         FzTextOptions {
@@ -104,7 +103,6 @@ pub struct FzMatrix {
     pub e: libc::c_float,
     pub f: libc::c_float,
 }
-#[allow(clippy::derivable_impls)]
 impl Default for FzMatrix {
     fn default() -> FzMatrix {
         FzMatrix {
@@ -158,7 +156,6 @@ pub struct FzLocation {
     pub page: libc::c_int,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for FzRect {
     fn default() -> Self {
         // SAFETY: All-zero bit pattern is valid for this type.
@@ -166,7 +163,6 @@ impl Default for FzRect {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for FzWriteOptions {
     fn default() -> Self {
         // SAFETY: All-zero bit pattern is valid for this type.
@@ -510,7 +506,6 @@ pub struct FzOutline {
     pub b: libc::c_uint,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for FzOutline {
     fn default() -> Self {
         // SAFETY: All-zero bit pattern is valid for this type.

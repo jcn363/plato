@@ -39,7 +39,6 @@ impl Buffer {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for Buffer {
     fn default() -> Self {
         Self::new()

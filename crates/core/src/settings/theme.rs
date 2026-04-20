@@ -28,7 +28,6 @@ impl TimeOfDay {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for TimeOfDay {
     fn default() -> Self {
         Self { hour: 6, minute: 0 }
@@ -42,7 +41,6 @@ pub struct ThemeSchedule {
     pub dark_end: TimeOfDay,
     pub enabled: bool,
 }
-#[allow(clippy::derivable_impls)]
 impl Default for ThemeSchedule {
     fn default() -> Self {
         Self {

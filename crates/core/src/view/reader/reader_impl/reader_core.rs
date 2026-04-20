@@ -61,7 +61,6 @@ pub struct Contrast {
     pub exponent: f32,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for Contrast {
     fn default() -> Self {
         Contrast {
@@ -134,7 +133,6 @@ pub struct ViewPort {
     pub margin_width: i32,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for ViewPort {
     fn default() -> Self {
         ViewPort {

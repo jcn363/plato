@@ -18,7 +18,6 @@ pub struct SettingsToggleConfig {
     pub animation_duration: u32,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for SettingsToggleConfig {
     fn default() -> Self {
         Self {
@@ -30,21 +29,11 @@ impl Default for SettingsToggleConfig {
 }
 
 /// Settings toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SettingsToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: SettingsToggleConfig,
-}
-#[allow(clippy::derivable_impls)]
-impl Default for SettingsToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: SettingsToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {

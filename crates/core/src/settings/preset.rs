@@ -14,7 +14,6 @@ pub struct LightPreset {
     pub frontlight_levels: LightLevels,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for LightPreset {
     fn default() -> Self {
         let now = Local::now();

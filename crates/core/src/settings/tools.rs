@@ -32,7 +32,6 @@ pub struct Pen {
     pub max_speed: f32,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for Pen {
     fn default() -> Self {
         Pen {
@@ -45,7 +44,7 @@ impl Default for Pen {
         }
     }
 }
-#[allow(clippy::derivable_impls)]
+
 impl Default for SketchSettings {
     fn default() -> Self {
         SketchSettings {
@@ -55,7 +54,6 @@ impl Default for SketchSettings {
         }
     }
 }
-#[allow(clippy::derivable_impls)]
 impl Default for CalculatorSettings {
     fn default() -> Self {
         CalculatorSettings {

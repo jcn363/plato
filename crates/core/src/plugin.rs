@@ -303,7 +303,6 @@ impl PluginSystem {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for PluginSystem {
     fn default() -> Self {
         PluginSystem::new(&PluginSettings::default())

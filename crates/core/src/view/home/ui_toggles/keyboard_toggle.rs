@@ -28,7 +28,6 @@ pub enum KeyboardPosition {
     Floating,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for KeyboardToggleConfig {
     fn default() -> Self {
         Self {
@@ -40,22 +39,11 @@ impl Default for KeyboardToggleConfig {
 }
 
 /// Keyboard toggle state
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct KeyboardToggleState {
     pub _visible: bool,
     pub _active: bool,
     pub config: KeyboardToggleConfig,
-}
-
-#[allow(clippy::derivable_impls)]
-impl Default for KeyboardToggleState {
-    fn default() -> Self {
-        Self {
-            _visible: false,
-            _active: false,
-            config: KeyboardToggleConfig::default(),
-        }
-    }
 }
 
 impl Home {

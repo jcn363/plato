@@ -7,7 +7,6 @@ pub struct FakeBattery {
     status: Status,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for FakeBattery {
     fn default() -> Self {
         Self::new()

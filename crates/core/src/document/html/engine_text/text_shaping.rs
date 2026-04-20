@@ -24,7 +24,6 @@ pub enum TextDirection {
     BottomToTop,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for TextShapingConfig {
     fn default() -> Self {
         Self {

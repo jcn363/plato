@@ -140,7 +140,6 @@ impl PluginRegistry {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for PluginRegistry {
     fn default() -> Self {
         Self::new()

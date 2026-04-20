@@ -17,7 +17,6 @@ pub struct ThumbnailConfig {
     pub enabled: bool,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for ThumbnailConfig {
     fn default() -> Self {
         Self {

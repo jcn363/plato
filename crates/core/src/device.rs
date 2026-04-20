@@ -228,6 +228,39 @@ impl KoboDevice {
         }
     }
 
+    pub(crate) fn device_specs(model: Model) -> ((u32, u32), u16, TouchProto) {
+        match model {
+            Model::LibraColour => ((1264, 1680), 300, TouchProto::MultiB),
+            Model::ClaraColour => ((1072, 1448), 300, TouchProto::MultiB),
+            Model::ClaraBW => ((1072, 1448), 300, TouchProto::MultiB),
+            Model::Elipsa2E => ((1404, 1872), 227, TouchProto::MultiC),
+            Model::Clara2E => ((1072, 1448), 300, TouchProto::MultiB),
+            Model::Libra2 => ((1264, 1680), 300, TouchProto::MultiC),
+            Model::Sage => ((1440, 1920), 300, TouchProto::MultiC),
+            Model::Elipsa => ((1404, 1872), 227, TouchProto::MultiC),
+            Model::Nia => ((758, 1024), 212, TouchProto::MultiA),
+            Model::LibraH2O => ((1264, 1680), 300, TouchProto::MultiB),
+            Model::Forma32GB => ((1440, 1920), 300, TouchProto::MultiB),
+            Model::Forma => ((1440, 1920), 300, TouchProto::MultiB),
+            Model::ClaraHD => ((1072, 1448), 300, TouchProto::MultiB),
+            Model::AuraH2OEd2V2 => ((1080, 1440), 265, TouchProto::MultiB),
+            Model::AuraH2OEd2V1 => ((1080, 1440), 265, TouchProto::MultiB),
+            Model::AuraEd2V2 => ((758, 1024), 212, TouchProto::MultiA),
+            Model::AuraEd2V1 => ((758, 1024), 212, TouchProto::MultiA),
+            Model::AuraONELimEd => ((1404, 1872), 300, TouchProto::MultiA),
+            Model::AuraONE => ((1404, 1872), 300, TouchProto::MultiA),
+            Model::Touch2 => ((600, 800), 167, TouchProto::MultiA),
+            Model::GloHD => ((1072, 1448), 300, TouchProto::MultiA),
+            Model::AuraH2O => ((1080, 1440), 265, TouchProto::MultiA),
+            Model::Aura => ((758, 1024), 212, TouchProto::MultiA),
+            Model::AuraHD => ((1080, 1440), 265, TouchProto::Single),
+            Model::Mini => ((600, 800), 200, TouchProto::Single),
+            Model::Glo => ((758, 1024), 212, TouchProto::Single),
+            Model::TouchC => ((600, 800), 167, TouchProto::Single),
+            Model::TouchAB => ((600, 800), 167, TouchProto::Single),
+        }
+    }
+
     #[inline]
     pub fn color_samples(&self) -> usize {
         match self.model {

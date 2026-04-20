@@ -121,7 +121,6 @@ impl ReaderInfo {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for ReaderInfo {
     fn default() -> Self {
         ReaderInfo {
@@ -151,7 +150,6 @@ impl Default for ReaderInfo {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for Info {
     fn default() -> Self {
         Info {
