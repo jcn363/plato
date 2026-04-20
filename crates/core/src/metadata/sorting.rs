@@ -20,6 +20,7 @@ pub enum SortMethod {
     Kind,
     FileName,
     FilePath,
+    Manual,
 }
 
 impl SortMethod {
@@ -32,6 +33,7 @@ impl SortMethod {
                 | SortMethod::Kind
                 | SortMethod::FileName
                 | SortMethod::FilePath
+                | SortMethod::Manual
         )
     }
 
@@ -58,6 +60,7 @@ impl SortMethod {
             SortMethod::Pages => "Pages Count",
             SortMethod::FileName => "File Name",
             SortMethod::FilePath => "File Path",
+            SortMethod::Manual => "Manual Order",
         }
     }
 
@@ -93,6 +96,7 @@ pub fn sorter(sort_method: SortMethod) -> fn(&Info, &Info) -> Ordering {
         SortMethod::Pages => sort_pages,
         SortMethod::FileName => sort_filename,
         SortMethod::FilePath => sort_filepath,
+        SortMethod::Manual => sort_manual,
     }
 }
 
@@ -198,6 +202,12 @@ pub fn sort_filepath(i1: &Info, i2: &Info) -> Ordering {
     let path1 = i1.file.path.to_str().unwrap_or("");
     let path2 = i2.file.path.to_str().unwrap_or("");
     natural_cmp(path1, path2)
+}
+
+pub fn sort_manual(i1: &Info, i2: &Info) -> Ordering {
+    let order1 = i1.manual_order.unwrap_or(usize::MAX);
+    let order2 = i2.manual_order.unwrap_or(usize::MAX);
+    order1.cmp(&order2)
 }
 
 fn natural_cmp(a: &str, b: &str) -> Ordering {

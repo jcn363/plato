@@ -52,6 +52,8 @@ pub struct Info {
     pub simple_toc: Option<Vec<SimpleTocEntry>>,
     #[serde(with = "datetime_format")]
     pub added: NaiveDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub manual_order: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -173,6 +175,7 @@ impl Default for Info {
             toc: None,
             simple_toc: None,
             added: Local::now().naive_local(),
+            manual_order: None,
         }
     }
 }
