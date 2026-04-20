@@ -368,6 +368,12 @@ impl HumanSize for u64 {
     }
 }
 
+impl HumanSize for u32 {
+    fn human_size(&self) -> String {
+        (*self as u64).human_size()
+    }
+}
+
 pub fn asciify(name: &str) -> String {
     name.nfkd()
         .filter(|&c| !is_combining_mark(c))

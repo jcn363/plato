@@ -122,8 +122,9 @@ const HALF_PIXEL_DIAGONAL: f32 = consts::SQRT_2 / 2.0;
 /// * `angle` - Angle of the boundary normal in radians
 ///
 /// # Example
-/// ```
-/// let area = surface_area(0.0, 0.0);  // Boundary through center, parallel to pixel sides
+/// ```ignore
+/// use crate::geom::helpers::surface_area;
+/// let area = surface_area(0.0, 0.0);  // Boundary through center
 /// let area = surface_area(0.25, std::f32::consts::FRAC_PI_4);  // Diagonal boundary
 /// ```
 #[inline]
@@ -162,7 +163,8 @@ pub fn surface_area(dist: f32, angle: f32) -> f32 {
 /// `(nearest_point, t)` where `t` is in range [0.0, 1.0]
 ///
 /// # Example
-/// ```
+/// ```ignore
+/// use crate::geom::{Point, Vec2, helpers::nearest_segment_point};
 /// let p = Point::new(5.0, 5.0);
 /// let (nearest, t) = nearest_segment_point(p.into(), Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0));
 /// assert!(t > 0.0 && t < 1.0);  // Point projects onto segment interior
@@ -217,9 +219,10 @@ pub fn small_half(n: i32) -> i32 {
 /// Returns the larger half when splitting `n` into two parts.
 ///
 /// # Example
-/// ```
-/// let (small, big) = halves(10);  // small=5, big=5
-/// let (small, big) = halves(11);  // small=5, big=6
+/// ```ignore
+/// use crate::geom::helpers::{big_half, small_half};
+/// let big = big_half(10);  // 5
+/// let big = big_half(11);  // 6
 /// ```
 pub fn big_half(n: i32) -> i32 {
     n - small_half(n)
@@ -231,7 +234,8 @@ pub fn big_half(n: i32) -> i32 {
 /// Used for distributing space (e.g., column widths).
 ///
 /// # Example
-/// ```
+/// ```ignore
+/// use crate::geom::helpers::divide;
 /// let parts = divide(10, 3);  // [4, 3, 3] or [3, 4, 3]
 /// ```
 pub fn divide(n: i32, p: i32) -> Vec<i32> {

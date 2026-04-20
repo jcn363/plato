@@ -41,6 +41,8 @@ fn main() {
                 println!("cargo:rustc-link-lib=dylib=stdc++");
                 println!("cargo:rustc-link-lib=mupdf");
                 println!("cargo:rustc-link-lib=mujs");
+                println!("cargo:rustc-link-lib=freetype");
+                println!("cargo:rustc-link-lib=harfbuzz");
                 println!("cargo:rustc-link-lib=z");
                 println!("cargo:rustc-link-lib=bz2");
                 println!("cargo:rustc-link-lib=jpeg");

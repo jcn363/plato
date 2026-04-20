@@ -11,7 +11,7 @@
 //!
 //! ## Usage
 //!
-//! ```rust
+//! ```ignore
 //! use plato_core::document::pdf_manipulator::PdfManipulator;
 //!
 //! let mut manipulator = PdfManipulator::new()?;

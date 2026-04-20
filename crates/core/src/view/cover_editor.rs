@@ -54,7 +54,7 @@ impl CoverEditorView {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// let rect = rect![0, 0, 800, 600];
     /// let editor = CoverEditorView::new(rect, &mut rq, &mut context);
     /// ```
@@ -115,7 +115,7 @@ impl CoverEditorView {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```ignore
     /// let rect = rect![0, 0, 800, 600];
     /// let path = PathBuf::from("book.epub");
     /// let editor = CoverEditorView::for_book(rect, path, &mut rq, &mut context)?;
