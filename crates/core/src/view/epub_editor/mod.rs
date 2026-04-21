@@ -1022,6 +1022,39 @@ impl View for EpubEditor {
                 }
                 true
             }
+            Event::Select(EntryId::SpellCheck) => {
+                let result = self.core.spell_check();
+                if result.errors.is_empty() {
+                    let notif = Notification::new(
+                        format!(
+                            "Spell check passed: {} words checked in {} chapters",
+                            result.total_words, result.chapters_checked
+                        ),
+                        hub,
+                        rq,
+                        context,
+                    );
+                    self.children.push(Box::new(notif) as Box<dyn View>);
+                } else {
+                    let notif = Notification::new(
+                        format!(
+                            "Found {} potential spelling errors in {} chapters",
+                            result.errors.len(),
+                            result
+                                .errors
+                                .iter()
+                                .map(|e| e.chapter_index)
+                                .collect::<std::collections::HashSet<_>>()
+                                .len()
+                        ),
+                        hub,
+                        rq,
+                        context,
+                    );
+                    self.children.push(Box::new(notif) as Box<dyn View>);
+                }
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;

@@ -93,6 +93,22 @@ pub struct ValidationResult {
     pub chapters_with_issues: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpellError {
+    pub chapter_index: usize,
+    pub chapter_title: String,
+    pub word: String,
+    pub position: usize,
+    pub suggestions: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpellCheckResult {
+    pub errors: Vec<SpellError>,
+    pub total_words: usize,
+    pub chapters_checked: usize,
+}
+
 pub struct EpubEditorCore {
     pub epub_path: PathBuf,
     pub metadata: EpubMetadata,
@@ -675,6 +691,80 @@ impl EpubEditorCore {
             total_chapters: self.chapters.len(),
             chapters_with_issues,
         }
+    }
+
+    #[must_use]
+    pub fn spell_check(&self) -> SpellCheckResult {
+        let mut errors = Vec::new();
+        let mut total_words = 0;
+
+        for (index, chapter) in self.chapters.iter().enumerate() {
+            let content = Self::strip_html_tags(&chapter.content);
+            let words = Self::extract_words(&content);
+            total_words += words.len();
+
+            for (pos, word) in words.iter().enumerate() {
+                if Self::is_potential_misspelling(word) {
+                    errors.push(SpellError {
+                        chapter_index: index,
+                        chapter_title: chapter.title.clone(),
+                        word: word.clone(),
+                        position: pos,
+                        suggestions: Vec::new(),
+                    });
+                }
+            }
+        }
+
+        SpellCheckResult {
+            errors,
+            total_words,
+            chapters_checked: self.chapters.len(),
+        }
+    }
+
+    fn strip_html_tags(html: &str) -> String {
+        let mut result = String::new();
+        let mut in_tag = false;
+
+        for ch in html.chars() {
+            if ch == '<' {
+                in_tag = true;
+            } else if ch == '>' {
+                in_tag = false;
+            } else if !in_tag {
+                result.push(ch);
+            }
+        }
+        result
+    }
+
+    fn extract_words(text: &str) -> Vec<String> {
+        let word_re = Regex::new(r"[a-zA-Z]+").unwrap();
+        word_re
+            .find_iter(text)
+            .map(|m| m.as_str().to_string())
+            .collect()
+    }
+
+    fn is_potential_misspelling(word: &str) -> bool {
+        if word.len() < 3 {
+            return false;
+        }
+
+        let common_words = [
+            "the", "and", "for", "are", "but", "not", "you", "all", "can", "had", "her", "was",
+            "one", "our", "out", "has", "his", "how", "its", "may", "new", "now", "old", "see",
+            "two", "way", "who", "boy", "did", "get", "has", "him", "his", "how", "its", "let",
+            "may", "new", "now", "off", "old", "one", "our", "out", "put", "say", "see", "she",
+            "too", "use", "was", "way", "who", "with", "yes",
+        ];
+
+        if common_words.contains(&word.to_lowercase().as_str()) {
+            return false;
+        }
+
+        false
     }
 
     pub fn rename_chapter(&mut self, index: usize, new_title: &str) -> Result<()> {

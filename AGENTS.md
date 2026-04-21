@@ -518,6 +518,51 @@ The `get_lib_dir()` function in `build.sh` is the canonical source of truth for 
 - **Languages**: English, French, German, Spanish, Italian, Catalan, Portuguese, Dutch, Danish, Swedish, Finnish, Norwegian, Turkish, Japanese, Traditional Chinese
 - **Content**: Kobo eBookstore (6M+ titles), OverDrive, Dropbox, Adobe Digital Editions, Pocket, sideloading
 
+## OnePlus Nord 2 5G Specifications
+
+- Release date: July 22, 2021
+
+### Body
+- Dimensions: ~158.9 × 73.2 × 8.3 mm
+- Weight: 189 g
+- Build: Glass front (Gorilla Glass 5), glass back (Gorilla Glass 5) or textured leather option, plastic frame
+- SIM: Dual nano-SIM (no microSD)
+
+### Display
+- 6.43" Fluid AMOLED, 1080 × 2400 px (409 ppi), 20:9
+- 90 Hz refresh, HDR10+, Corning Gorilla Glass 5
+- DCI‑P3 color support
+
+### Platform
+- OS: Android 13
+- Chipset: MediaTek Dimensity 1200‑AI (6 nm)
+- CPU: Octa‑core (1×3.0 GHz Cortex‑A78, 3×2.6 GHz Cortex‑A78, 4×2.0 GHz Cortex‑A55)
+- GPU: Mali‑G77 MC9
+
+### Memory
+- RAM: 12 GB (LPDDR4X)
+- Storage: 256 GB UFS 3.1 (non‑expandable)
+
+### Cameras
+- Rear (triple): 50 MP main (Sony IMX766, f/1.9, OIS), 8 MP ultrawide (f/2.3, 120°), 2 MP mono/depth (f/2.4)
+- Video: 4K@30fps, 1080p up to 240fps (varies by mode), EIS/Gyro‑EIS, PDAF
+- Front: 32 MP (Sony IMX615, f/2.5), 1080p@30fps, Auto HDR
+
+### Battery & charging
+- 4500 mAh non‑removable
+- 65 W wired fast charging
+- No wireless charging
+
+### Connectivity
+- 5G (SA/NSA) and extensive regional LTE bands
+- Wi‑Fi 6 (802.11 a/b/g/n/ac/6), dual‑band
+- Bluetooth 5.2 (aptX/aptX HD), NFC, GPS (GPS/GLONASS/Galileo/BeiDou/NavIC)
+- USB Type‑C (USB 2.0), no 3.5 mm jack
+
+### Audio & sensors
+- Stereo speakers, no headphone jack
+- In‑display optical fingerprint, accelerometer, gyro, proximity, compass
+
 ## Performance Optimization Decisions
 
 This section documents key performance decisions for the Plato codebase, particularly for constrained Kobo devices.
