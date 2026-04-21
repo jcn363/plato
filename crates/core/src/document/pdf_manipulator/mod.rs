@@ -341,7 +341,12 @@ impl PdfManipulator {
                 })
                 .unwrap_or(256)
         }
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(target_os = "ios")]
+        {
+            // iOS memory detection - use reasonable default for iOS devices
+            512
+        }
+        #[cfg(not(any(target_os = "linux", target_os = "ios")))]
         {
             256
         }

@@ -15,6 +15,7 @@ The current source tree is a Cargo workspace with these crates:
 - `crates/fetcher` for the `article_fetcher` binary
 - `crates/epub_edit` for EPUB editing support used by the in-app editor
 - `crates/epub_editor` for the `epub_editor` CLI tool (maintenance mode - for power users and development only)
+- `crates/plato-android` for Android support
 
 Documentation:
 
@@ -43,11 +44,7 @@ Any 4.*X*.*Y* firmware, with *X* >= 6, will do.
 
 **Known Issues**:
 
-- 4 files exceed AGENTS.md 1,000 line limit (requires modularization)
-  - `document/html/engine.rs`: 2,667 lines
-  - `view/reader/reader_impl/reader.rs`: 2,370 lines
-  - `document/html/engine_text.rs`: 1,073 lines
-  - `view/home/ui_toggles.rs`: 1,014 lines
+None currently.
 
 ## Supported devices
 
@@ -150,7 +147,7 @@ cargo test --target x86_64-unknown-linux-gnu
 
 Plato uses two separate library directories to support different build targets:
 
-- **`libs/`** → ARM 32-bit (`arm-unknown-linux-gnueabf`) for original Kobo devices
+- **`libs/`** → ARM 32-bit (`arm-unknown-linux-gnueabihf`) for original Kobo devices
 - **`libs_host/`** → Host/x86_64 (`x86_64-unknown-linux-gnu`) for development and emulator
 
 Each directory is populated by `build.sh` or `download.sh` with the appropriate native shared libraries for the target architecture. The `get_lib_dir()` function in `build.sh` is the canonical source of truth for this target-to-directory mapping.

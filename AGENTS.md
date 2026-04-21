@@ -4,7 +4,7 @@ This file provides guidance for AI coding agents working in the Plato codebase.
 
 You are an elite AI technical analyst and senior developer. You are operating in the year 2026. You have access to the internet and an advanced reasoning engine. You are relentless in your pursuit of accuracy and have a straightforward approach.
 
-### 🛠️ YOUR TOOLKIT (FOR STRICT USE ONLY)
+## 🛠️ YOUR TOOLKIT (FOR STRICT USE ONLY)
 
 1. `ddg-search`: Use this to search for real-world data, up-to-date documentation, or physical/mathematical constants. NEVER make up data if you can look it up.
 2. `web-fetcher`: Use it IMMEDIATELY AFTER searching to visit a URL and extract the full text or code. Do not respond with links alone.
@@ -48,6 +48,8 @@ Plato is a document reader for Kobo e-readers, written in Rust. It's a Cargo wor
 - **crates/importer** — Document importer tool
 - **crates/fetcher** — Article fetcher from online sources
 - **crates/epub_edit** — EPUB editing library
+- **crates/epub_editor** — EPUB editing CLI tool
+- **crates/plato-android** — Android support
 
 ## Build & Run Commands
 
@@ -523,43 +525,51 @@ The `get_lib_dir()` function in `build.sh` is the canonical source of truth for 
 - Release date: July 22, 2021
 
 ### Body
+
 - Dimensions: ~158.9 × 73.2 × 8.3 mm
 - Weight: 189 g
 - Build: Glass front (Gorilla Glass 5), glass back (Gorilla Glass 5) or textured leather option, plastic frame
 - SIM: Dual nano-SIM (no microSD)
 
 ### Display
+
 - 6.43" Fluid AMOLED, 1080 × 2400 px (409 ppi), 20:9
 - 90 Hz refresh, HDR10+, Corning Gorilla Glass 5
 - DCI‑P3 color support
 
 ### Platform
+
 - OS: Android 13
 - Chipset: MediaTek Dimensity 1200‑AI (6 nm)
 - CPU: Octa‑core (1×3.0 GHz Cortex‑A78, 3×2.6 GHz Cortex‑A78, 4×2.0 GHz Cortex‑A55)
 - GPU: Mali‑G77 MC9
 
 ### Memory
+
 - RAM: 12 GB (LPDDR4X)
 - Storage: 256 GB UFS 3.1 (non‑expandable)
 
 ### Cameras
+
 - Rear (triple): 50 MP main (Sony IMX766, f/1.9, OIS), 8 MP ultrawide (f/2.3, 120°), 2 MP mono/depth (f/2.4)
 - Video: 4K@30fps, 1080p up to 240fps (varies by mode), EIS/Gyro‑EIS, PDAF
 - Front: 32 MP (Sony IMX615, f/2.5), 1080p@30fps, Auto HDR
 
 ### Battery & charging
+
 - 4500 mAh non‑removable
 - 65 W wired fast charging
 - No wireless charging
 
 ### Connectivity
+
 - 5G (SA/NSA) and extensive regional LTE bands
 - Wi‑Fi 6 (802.11 a/b/g/n/ac/6), dual‑band
 - Bluetooth 5.2 (aptX/aptX HD), NFC, GPS (GPS/GLONASS/Galileo/BeiDou/NavIC)
 - USB Type‑C (USB 2.0), no 3.5 mm jack
 
 ### Audio & sensors
+
 - Stereo speakers, no headphone jack
 - In‑display optical fingerprint, accelerometer, gyro, proximity, compass
 
@@ -629,7 +639,7 @@ This section documents common build problems and their fixes.
 
 **Problem:** When building for host (`x86_64-unknown-linux-gnu`), linking fails with errors like:
 
-```
+```text
 rust-lld: error: libs_host/libopenjp2.so is incompatible with elf64-x86-64
 rust-lld: error: libs_host/libjbig2dec.so is incompatible with elf64-x86-64
 ```
@@ -642,7 +652,7 @@ rust-lld: error: libs_host/libjbig2dec.so is incompatible with elf64-x86-64
 
 **Problem:** Build fails with:
 
-```
+```text
 error: could not find native static library `mupdf_wrapper`, perhaps an -L flag is missing?
 ```
 
@@ -658,7 +668,7 @@ TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh  
 
 **Problem:** Test compilation fails with:
 
-```
+```text
 error: unresolved import `tempfile::NamedTempFile`
 ```
 
@@ -673,7 +683,7 @@ tempfile = "3.15"
 
 **Problem:** Test fails with:
 
-```
+```text
 error: no variant or associated item named `BLACK` found for enum `color::Color`
 ```
 
@@ -690,7 +700,7 @@ fb.set_pixel(50, 50, BLACK);
 
 **Problem:** Test fails with:
 
-```
+```text
 error: no field `font_size` on type `settings::Settings`
 ```
 

@@ -11,25 +11,27 @@ cd plato
 
 ## Plato
 
-#### Preliminary
+### Preliminary
 
 Install the appropriate [compiler toolchain](https://drive.google.com/drive/folders/1YT6x2X070-cg_E8iWvNUUrWg5-t_YcV0) (the binaries of the `bin` directory need to be in your path).
 
 Install the required dependencies: `wget`, `curl`, `git`, `pkg-config`, `unzip`, `jq`, `patchelf`.
 
 Install *rustup*:
+
 ```sh
 curl https://sh.rustup.rs -sSf | sh
 ```
 
 Install the appropriate targets:
+
 ```sh
 rustup target add arm-unknown-linux-gnueabihf
 rustup target add aarch64-unknown-linux-gnu
 rustup target add x86_64-unknown-linux-gnu
 ```
 
-The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `crates/importer`, `crates/fetcher`, `crates/epub_edit`, and `crates/epub_editor`.
+The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `crates/importer`, `crates/fetcher`, `crates/epub_edit`, `crates/epub_editor`, and `crates/plato-android`.
 
 ## Build Phase
 
@@ -38,6 +40,7 @@ The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `c
 ```
 
 This script will:
+
 1. Check for required tools (cargo, rustc, cross-compiler)
 2. Handle thirdparty libraries (download or build)
 3. Ensure necessary symlinks are in the library directory
@@ -45,21 +48,25 @@ This script will:
 5. Run `cargo fmt` and `cargo clippy --workspace` (with target-specific exclusions)
 6. Build the workspace crates (optionally skipping the emulator for ARM)
 
-#### Common Options:
+### Common Options
+
 - `--no-clean`: Skip `cargo clean`
 - `--no-clippy`: Skip `cargo clippy`
 - `--no-fmt`: Skip `cargo fmt`
 - `-j JOBS`: Number of parallel jobs (default: number of CPU cores)
 
-#### Target:
+### Target
+
 - `arm` (default), `arm64`, `host`
 
-#### Method:
+### Method
+
 - `fast` (default): Download pre-compiled libraries
 - `slow`: Build libraries from source
 - `skip`: Use existing libraries
 
 Example:
+
 ```bash
 ./build.sh --no-clean arm skip
 ```
@@ -110,6 +117,7 @@ Install the required dependencies: *MuPDF 1.27.0*, *DjVuLibre*, *FreeType*, *Har
 Install one additional dependency: *SDL2*.
 
 You can then run the emulator with:
+
 ```bash
 ./run-emulator.sh
 ```
@@ -138,6 +146,7 @@ cargo test overlaping --target x86_64-unknown-linux-gnu
 ### Importer
 
 You can install the importer with:
+
 ```bash
 ./install-importer.sh
 ```

@@ -4,7 +4,7 @@
 //! linking with the MuPDF library. These are external static arrays that reference
 //! font data embedded in the library.
 
-#[cfg(all(not(target_os = "ios"), any(not(target_os = "linux"), target_arch = "arm")))]
+#[cfg(any(not(target_os = "linux"), target_arch = "arm"))]
 #[link(name = "mupdf")]
 extern "C" {
     // Based on the outputs of:
@@ -171,7 +171,7 @@ extern "C" {
     pub static _binary_NotoSerifYezidi_Regular_otf: [libc::c_uchar; 8664];
 }
 
-#[cfg(all(not(target_os = "ios"), target_os = "linux", not(target_arch = "arm")))]
+#[cfg(all(target_os = "linux", not(target_arch = "arm")))]
 #[link(name = "mupdf")]
 extern "C" {
     pub static _binary_resources_fonts_droid_DroidSansFallback_ttf_start: [libc::c_uchar; 3556308];
