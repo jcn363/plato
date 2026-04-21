@@ -33,17 +33,6 @@ jobs:
       with:
         targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
-    - name: Add iOS Rust targets
-      run: |
-        rustup target add aarch64-apple-ios
-        rustup target add aarch64-apple-ios-sim
-        rustup target add x86_64-apple-ios
-
-    - name: Install Xcode Command Line Tools
-      run: |
-        xcode-select --install
-        sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-
     - name: Build native dependencies for iOS
       run: |
         cd thirdparty
