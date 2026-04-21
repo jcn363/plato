@@ -101,6 +101,27 @@ fn main() {
                 println!("cargo:rustc-link-lib=openjp2");
                 println!("cargo:rustc-link-lib=jbig2dec");
             }
+            "ios" => {
+                println!("cargo:rustc-link-search=target/mupdf_wrapper/iOS-universal");
+                println!("cargo:rustc-link-lib=static=c++");
+                println!("cargo:rustc-link-lib=static=mupdf_wrapper");
+                println!("cargo:rustc-link-lib=static=mupdf");
+                println!("cargo:rustc-link-lib=static=mupdf-third");
+                println!("cargo:rustc-link-lib=static=freetype");
+                println!("cargo:rustc-link-lib=static=harfbuzz");
+                println!("cargo:rustc-link-lib=static=gumbo");
+                println!("cargo:rustc-link-lib=static=z");
+                println!("cargo:rustc-link-lib=static=bz2");
+                println!("cargo:rustc-link-lib=static=png16");
+                println!("cargo:rustc-link-lib=static=jpeg");
+                println!("cargo:rustc-link-lib=static=openjp2");
+                println!("cargo:rustc-link-lib=static=jbig2dec");
+                println!("cargo:rustc-link-lib=framework=CoreGraphics");
+                println!("cargo:rustc-link-lib=framework=CoreText");
+                println!("cargo:rustc-link-lib=framework=Foundation");
+                println!("cargo:rustc-link-lib=framework=UIKit");
+                return;
+            }
             _ => panic!("Unsupported platform: {target_os}"),
         }
     }
