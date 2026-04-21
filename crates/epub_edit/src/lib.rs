@@ -134,6 +134,14 @@ pub struct CSSInfo {
     pub media_type: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Bookmark {
+    pub chapter_index: usize,
+    pub chapter_title: String,
+    pub position: usize,
+    pub note: Option<String>,
+}
+
 const MAX_HISTORY_SIZE: usize = 50;
 
 pub struct EpubEditorCore {
@@ -143,6 +151,7 @@ pub struct EpubEditorCore {
     pub temp_dir: PathBuf,
     pub undo_stack: Vec<UndoAction>,
     pub redo_stack: Vec<UndoAction>,
+    pub bookmarks: Vec<Bookmark>,
 }
 
 impl EpubEditorCore {
@@ -166,6 +175,7 @@ impl EpubEditorCore {
             temp_dir,
             undo_stack: Vec::new(),
             redo_stack: Vec::new(),
+            bookmarks: Vec::new(),
         };
 
         editor.extract()?;
@@ -541,6 +551,29 @@ impl EpubEditorCore {
     pub fn clear_history(&mut self) {
         self.undo_stack.clear();
         self.redo_stack.clear();
+    }
+
+    pub fn add_bookmark(&mut self, index: usize, position: usize, note: Option<String>) {
+        if index < self.chapters.len() {
+            let bookmark = Bookmark {
+                chapter_index: index,
+                chapter_title: self.chapters[index].title.clone(),
+                position,
+                note,
+            };
+            self.bookmarks.push(bookmark);
+        }
+    }
+
+    pub fn remove_bookmark(&mut self, index: usize) {
+        if index < self.bookmarks.len() {
+            self.bookmarks.remove(index);
+        }
+    }
+
+    #[must_use]
+    pub fn list_bookmarks(&self) -> Vec<Bookmark> {
+        self.bookmarks.clone()
     }
 
     #[must_use]

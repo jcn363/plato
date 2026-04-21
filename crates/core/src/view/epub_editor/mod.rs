@@ -1188,6 +1188,22 @@ impl View for EpubEditor {
                 self.children.push(Box::new(notif) as Box<dyn View>);
                 true
             }
+            Event::Select(EntryId::AddBookmark) => {
+                if let EditorState::EditingChapter { index } = self.state {
+                    self.core.add_bookmark(index, 0, None);
+                    let notif = Notification::new(
+                        format!(
+                            "Bookmark added for chapter: {}",
+                            self.core.chapters[index].title
+                        ),
+                        hub,
+                        rq,
+                        context,
+                    );
+                    self.children.push(Box::new(notif) as Box<dyn View>);
+                }
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;
