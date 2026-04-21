@@ -24,6 +24,7 @@
 /plato-*.zip
 /thirdparty/*/*
 !/thirdparty/*/*kobo*
+!/thirdparty/*/build-ios.sh
 .codex
 .metadata.json
 bacon-ls.log
