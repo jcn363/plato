@@ -53,6 +53,14 @@ lto = "thin"
 strip = true
 opt-level = 3
 
+[profile.release-ios]
+inherits = "release"
+codegen-units = 4
+lto = "thin"
+strip = true
+opt-level = 3
+panic = "abort"
+
 [profile.release-embedded]
 inherits = "release"
 codegen-units = 4
