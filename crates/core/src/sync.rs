@@ -55,11 +55,7 @@ impl BackgroundSync {
         Ok(())
     }
 
-    pub #[cfg(target_os = "ios")]
-        {
-            // iOS manages WiFi automatically
-        }
-        fn disable_wifi() -> Result<(), Error> {
+    pub fn disable_wifi() -> Result<(), Error> {
         #[cfg(target_os = "linux")]
         {
             Command::new("sh")
@@ -67,6 +63,10 @@ impl BackgroundSync {
                 .arg("connmanctl disable wifi")
                 .output()
                 .map_err(|e| format_err!("Failed to disable WiFi: {}", e))?;
+        }
+        #[cfg(target_os = "ios")]
+        {
+            // iOS manages WiFi automatically
         }
         Ok(())
     }
