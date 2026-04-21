@@ -1,4 +1,4 @@
-use anyhow::{format_err, Context, Result};
+use anyhow::{bail, format_err, Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
@@ -66,6 +66,8 @@ pub struct EpubChapter {
 pub enum UndoAction {
     Metadata(EpubMetadata),
     Chapter(usize, String),
+    RenameChapter(usize, String),
+    ReorderChapters(usize, usize),
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -420,6 +422,22 @@ impl EpubEditorCore {
                         fs::write(&file_path, &chapter.content)?;
                     }
                 }
+                UndoAction::RenameChapter(index, old_title) => {
+                    if index < self.chapters.len() {
+                        let current = self.chapters[index].title.clone();
+                        self.redo_stack
+                            .push(UndoAction::RenameChapter(index, current));
+                        self.chapters[index].title = old_title;
+                    }
+                }
+                UndoAction::ReorderChapters(from_index, to_index) => {
+                    if from_index < self.chapters.len() && to_index < self.chapters.len() {
+                        let chapter = self.chapters.remove(from_index);
+                        self.chapters.insert(to_index, chapter);
+                        self.redo_stack
+                            .push(UndoAction::ReorderChapters(to_index, from_index));
+                    }
+                }
             }
             Ok(true)
         } else {
@@ -449,6 +467,22 @@ impl EpubEditorCore {
                         let chapter = &self.chapters[index];
                         let file_path = self.temp_dir.join(&chapter.href);
                         fs::write(&file_path, &chapter.content)?;
+                    }
+                }
+                UndoAction::RenameChapter(index, new_title) => {
+                    if index < self.chapters.len() {
+                        let current = self.chapters[index].title.clone();
+                        self.undo_stack
+                            .push(UndoAction::RenameChapter(index, current));
+                        self.chapters[index].title = new_title;
+                    }
+                }
+                UndoAction::ReorderChapters(from_index, to_index) => {
+                    if from_index < self.chapters.len() && to_index < self.chapters.len() {
+                        let chapter = self.chapters.remove(from_index);
+                        self.chapters.insert(to_index, chapter);
+                        self.undo_stack
+                            .push(UndoAction::ReorderChapters(to_index, from_index));
                     }
                 }
             }
@@ -641,6 +675,50 @@ impl EpubEditorCore {
             total_chapters: self.chapters.len(),
             chapters_with_issues,
         }
+    }
+
+    pub fn rename_chapter(&mut self, index: usize, new_title: &str) -> Result<()> {
+        if index >= self.chapters.len() {
+            bail!("Chapter index out of bounds");
+        }
+        let old_title = self.chapters[index].title.clone();
+        self.chapters[index].title = new_title.to_string();
+        self.undo_stack
+            .push(UndoAction::RenameChapter(index, old_title));
+        self.redo_stack.clear();
+        let chapter = &self.chapters[index];
+        let file_path = self.temp_dir.join(&chapter.href);
+        let content = chapter.content.clone();
+        fs::write(&file_path, &content)?;
+        Ok(())
+    }
+
+    pub fn delete_chapter(&mut self, index: usize) -> Result<()> {
+        if index >= self.chapters.len() {
+            bail!("Chapter index out of bounds");
+        }
+        let chapter = self.chapters.remove(index);
+        self.undo_stack
+            .push(UndoAction::Chapter(index, chapter.content.clone()));
+        self.redo_stack.clear();
+        let file_path = self.temp_dir.join(&chapter.href);
+        fs::remove_file(&file_path)?;
+        Ok(())
+    }
+
+    pub fn reorder_chapters(&mut self, from_index: usize, to_index: usize) -> Result<()> {
+        if from_index >= self.chapters.len() || to_index >= self.chapters.len() {
+            bail!("Chapter index out of bounds");
+        }
+        if from_index == to_index {
+            return Ok(());
+        }
+        let chapter = self.chapters.remove(from_index);
+        self.chapters.insert(to_index, chapter);
+        self.undo_stack
+            .push(UndoAction::ReorderChapters(from_index, to_index));
+        self.redo_stack.clear();
+        Ok(())
     }
 
     fn validate_chapter_content(

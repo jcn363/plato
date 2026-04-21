@@ -932,6 +932,96 @@ impl View for EpubEditor {
                 }
                 true
             }
+            Event::Select(EntryId::RenameChapter) => {
+                if let EditorState::EditingChapter { index: _ } = self.state {
+                    let notif = Notification::new(
+                        "Chapter rename feature - UI input needed".to_string(),
+                        hub,
+                        rq,
+                        context,
+                    );
+                    self.children.push(Box::new(notif) as Box<dyn View>);
+                }
+                true
+            }
+            Event::Select(EntryId::DeleteChapter) => {
+                if let EditorState::EditingChapter { index } = self.state {
+                    match self.core.delete_chapter(index) {
+                        Ok(_) => {
+                            self.modified = true;
+                            let notif =
+                                Notification::new("Chapter deleted".to_string(), hub, rq, context);
+                            self.children.push(Box::new(notif) as Box<dyn View>);
+                        }
+                        Err(e) => {
+                            let notif = Notification::new(
+                                format!("Error deleting chapter: {}", e),
+                                hub,
+                                rq,
+                                context,
+                            );
+                            self.children.push(Box::new(notif) as Box<dyn View>);
+                        }
+                    }
+                }
+                true
+            }
+            Event::Select(EntryId::MoveChapterUp) => {
+                if let EditorState::EditingChapter { index } = self.state {
+                    if index > 0 {
+                        match self.core.reorder_chapters(index, index - 1) {
+                            Ok(_) => {
+                                self.modified = true;
+                                let notif = Notification::new(
+                                    "Chapter moved up".to_string(),
+                                    hub,
+                                    rq,
+                                    context,
+                                );
+                                self.children.push(Box::new(notif) as Box<dyn View>);
+                            }
+                            Err(e) => {
+                                let notif = Notification::new(
+                                    format!("Error moving chapter: {}", e),
+                                    hub,
+                                    rq,
+                                    context,
+                                );
+                                self.children.push(Box::new(notif) as Box<dyn View>);
+                            }
+                        }
+                    }
+                }
+                true
+            }
+            Event::Select(EntryId::MoveChapterDown) => {
+                if let EditorState::EditingChapter { index } = self.state {
+                    if index < self.core.chapters.len() - 1 {
+                        match self.core.reorder_chapters(index, index + 1) {
+                            Ok(_) => {
+                                self.modified = true;
+                                let notif = Notification::new(
+                                    "Chapter moved down".to_string(),
+                                    hub,
+                                    rq,
+                                    context,
+                                );
+                                self.children.push(Box::new(notif) as Box<dyn View>);
+                            }
+                            Err(e) => {
+                                let notif = Notification::new(
+                                    format!("Error moving chapter: {}", e),
+                                    hub,
+                                    rq,
+                                    context,
+                                );
+                                self.children.push(Box::new(notif) as Box<dyn View>);
+                            }
+                        }
+                    }
+                }
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;
