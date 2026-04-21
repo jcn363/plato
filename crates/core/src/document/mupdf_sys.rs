@@ -170,7 +170,9 @@ impl Default for FzWriteOptions {
     }
 }
 
+#[cfg(not(target_os = "ios"))]
 #[link(name = "mupdf")]
+#[cfg(not(target_os = "ios"))]
 #[link(name = "mupdf_wrapper", kind = "static")]
 extern "C" {
     pub fn mp_open_document(ctx: *mut FzContext, path: *const libc::c_char) -> *mut FzDocument;
