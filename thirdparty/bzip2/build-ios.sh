@@ -15,29 +15,32 @@ export IOS_AR=$(xcrun --sdk iphoneos --find ar)
 # Build for iOS device (ARM64)
 echo "Building bzip2 for iOS device (ARM64)..."
 BUILD_DIR=../target/bzip2/iOS/arm64
-mkdir -p $BUILD_DIR
+mkdir -p $BUILD_DIR/lib
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 make clean || true
-make CC="$IOS_CC" CFLAGS="$CFLAGS"
-cp libbz2.a $BUILD_DIR/
+make CC="$IOS_CC" CFLAGS="$CFLAGS" -n
+make CC="$IOS_CC" CFLAGS="$CFLAGS" libbz2.a
+cp libbz2.a $BUILD_DIR/lib/
 
 # Build for iOS simulator (ARM64)
 echo "Building bzip2 for iOS simulator (ARM64)..."
 BUILD_DIR=../target/bzip2/iOS-sim/arm64
-mkdir -p $BUILD_DIR
+mkdir -p $BUILD_DIR/lib
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 make clean || true
-make CC="$IOS_CC" CFLAGS="$CFLAGS"
-cp libbz2.a $BUILD_DIR/
+make CC="$IOS_CC" CFLAGS="$CFLAGS" -n
+make CC="$IOS_CC" CFLAGS="$CFLAGS" libbz2.a
+cp libbz2.a $BUILD_DIR/lib/
 
 # Build for iOS simulator (x86_64)
 echo "Building bzip2 for iOS simulator (x86_64)..."
 BUILD_DIR=../target/bzip2/iOS-sim/x86_64
-mkdir -p $BUILD_DIR
+mkdir -p $BUILD_DIR/lib
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 make clean || true
-make CC="$IOS_CC" CFLAGS="$CFLAGS"
-cp libbz2.a $BUILD_DIR/
+make CC="$IOS_CC" CFLAGS="$CFLAGS" -n
+make CC="$IOS_CC" CFLAGS="$CFLAGS" libbz2.a
+cp libbz2.a $BUILD_DIR/lib/
 
 # Create universal library (device + simulator)
 echo "Creating universal bzip2 library..."
