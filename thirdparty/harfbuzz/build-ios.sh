@@ -20,43 +20,58 @@ PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 echo "Building harfbuzz for iOS device (ARM64)..."
 BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/iOS/arm64
 mkdir -p $BUILD_DIR
+CMAKE_BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/build-arm64
+rm -rf $CMAKE_BUILD_DIR || true
+mkdir -p $CMAKE_BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
-cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
+cd $CMAKE_BUILD_DIR
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
+cd -
 
 # Build for iOS simulator (ARM64)
 echo "Building harfbuzz for iOS simulator (ARM64)..."
 BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/iOS-sim/arm64
 mkdir -p $BUILD_DIR
+CMAKE_BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/build-sim-arm64
+rm -rf $CMAKE_BUILD_DIR || true
+mkdir -p $CMAKE_BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
-cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
+cd $CMAKE_BUILD_DIR
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
+cd -
 
 # Build for iOS simulator (x86_64)
 echo "Building harfbuzz for iOS simulator (x86_64)..."
 BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/iOS-sim/x86_64
 mkdir -p $BUILD_DIR
+CMAKE_BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/build-sim-x86_64
+rm -rf $CMAKE_BUILD_DIR || true
+mkdir -p $CMAKE_BUILD_DIR
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
-cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
+cd $CMAKE_BUILD_DIR
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
+cd -
 
 # Create universal library (device + simulator)
 echo "Creating universal harfbuzz library..."
