@@ -98,6 +98,10 @@ pub fn sys_info_as_html() -> String {
     // Memory info (Linux only)
     #[cfg(target_os = "linux")]
     append_memory_info(&mut buf);
+    #[cfg(target_os = "ios")]
+    {
+        // iOS memory info not yet implemented
+    }
 
     // CPU info
     append_cpu_info(&mut buf);
@@ -128,17 +132,28 @@ fn append_ip_address(buf: &mut String) {
 }
 
 fn append_storage_info(buf: &mut String) {
-    if let Ok(info) = statvfs::statvfs(INTERNAL_CARD_ROOT) {
-        let fbs = info.fragment_size();
-        let free = info.blocks_free() * fbs;
-        let total = info.blocks() * fbs;
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(info) = statvfs::statvfs(INTERNAL_CARD_ROOT) {
+            let fbs = info.fragment_size();
+            let free = info.blocks_free() * fbs;
+            let total = info.blocks() * fbs;
+            buf.push_str("\t\t\t<tr>\n");
+            buf.push_str("\t\t\t\t<td>Storage (Free / Total)</td>\n");
+            buf.push_str(&format!(
+                "\t\t\t\t<td>{} / {}</td>\n",
+                free.human_size(),
+                total.human_size()
+            ));
+            buf.push_str("\t\t\t</tr>\n");
+        }
+    }
+    #[cfg(target_os = "ios")]
+    {
+        // iOS storage info - use Foundation framework
         buf.push_str("\t\t\t<tr>\n");
-        buf.push_str("\t\t\t\t<td>Storage (Free / Total)</td>\n");
-        buf.push_str(&format!(
-            "\t\t\t\t<td>{} / {}</td>\n",
-            free.human_size(),
-            total.human_size()
-        ));
+        buf.push_str("\t\t\t\t<td>Storage</td>\n");
+        buf.push_str("\t\t\t\t<td>Available on iOS</td>\n");
         buf.push_str("\t\t\t</tr>\n");
     }
 }

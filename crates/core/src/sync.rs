@@ -31,6 +31,11 @@ impl BackgroundSync {
                 return status.contains("CONNECTED");
             }
         }
+        #[cfg(target_os = "ios")]
+        {
+            // iOS manages WiFi automatically, assume connected for sync
+            return true;
+        }
         false
     }
 
@@ -43,10 +48,18 @@ impl BackgroundSync {
                 .output()
                 .map_err(|e| format_err!("Failed to enable WiFi: {}", e))?;
         }
+        #[cfg(target_os = "ios")]
+        {
+            // iOS manages WiFi automatically
+        }
         Ok(())
     }
 
-    pub fn disable_wifi() -> Result<(), Error> {
+    pub #[cfg(target_os = "ios")]
+        {
+            // iOS manages WiFi automatically
+        }
+        fn disable_wifi() -> Result<(), Error> {
         #[cfg(target_os = "linux")]
         {
             Command::new("sh")
@@ -222,6 +235,11 @@ fn sync_with_webdav(
             log_info!("WebDAV: Connected to server, sync available");
         }
     }
+    #[cfg(target_os = "ios")]
+    {
+        // WebDAV sync not yet implemented for iOS
+        log_info!("WebDAV sync not available on iOS");
+    }
 
     Ok(())
 }
@@ -256,7 +274,7 @@ pub fn list_webdav_files(
                 if !href.ends_with("/") && !href.contains(".metadata.json") {
                     let filename = std::path::Path::new(href)
                         .file_name()
-                        .and_then(|n| n.to_str())
+                        .and_then(|f| f.to_str())
                         .unwrap_or("")
                         .to_string();
                     if !filename.is_empty() {
@@ -268,9 +286,11 @@ pub fn list_webdav_files(
 
         Ok(files)
     }
-
-    #[cfg(not(target_os = "linux"))]
-    Ok(Vec::new())
+    #[cfg(target_os = "ios")]
+    {
+        // WebDAV not yet implemented for iOS
+        Ok(vec![])
+    }
 }
 
 pub fn download_from_webdav(
@@ -287,6 +307,10 @@ pub fn download_from_webdav(
 
         run_curl_command(&full_url, username, password, &["-o", &local_path_str])
             .map_err(|e| format_err!("Download failed: {}", e))?;
+    }
+    #[cfg(target_os = "ios")]
+    {
+        // WebDAV download not yet implemented for iOS
     }
 
     Ok(())
@@ -306,6 +330,10 @@ pub fn upload_to_webdav(
 
         run_curl_command(&full_url, username, password, &["-T", &local_path_str])
             .map_err(|e| format_err!("Upload failed: {}", e))?;
+    }
+    #[cfg(target_os = "ios")]
+    {
+        // WebDAV upload not yet implemented for iOS
     }
 
     Ok(())
@@ -358,6 +386,10 @@ pub fn sync_annotations_with_webdav(
             }
         }
     }
+    #[cfg(target_os = "ios")]
+    {
+        // WebDAV annotations sync not yet implemented for iOS
+    }
     Ok(())
 }
 
@@ -376,8 +408,11 @@ fn fetch_remote_file(
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     }
-
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "ios")]
+    {
+        Ok(String::new())
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "ios")))]
     Ok(String::new())
 }
 
@@ -441,6 +476,10 @@ pub fn sync_reading_progress_with_webdav(
             }
         }
     }
+    #[cfg(target_os = "ios")]
+    {
+        // Reading progress sync not yet implemented for iOS
+    }
     Ok(())
 }
 
@@ -472,8 +511,11 @@ fn fetch_kobocloud_sync_status(device_id: &str) -> Result<serde_json::Value, Err
 
         Ok(sync_data)
     }
-
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "ios")]
+    {
+        Err(format_err!("KoboCloud sync not available on iOS"))
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "ios")))]
     Err(format_err!("KoboCloud sync only available on Linux"))
 }
 
@@ -552,8 +594,11 @@ fn upload_to_kobocloud(_device_id: &str, upload_data: &serde_json::Value) -> Res
             .send()
             .map_err(|e| format_err!("KoboCloud upload failed: {}", e))?;
     }
-
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "ios")]
+    {
+        return Err(format_err!("KoboCloud sync not available on iOS"));
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "ios")))]
     {
         return Err(format_err!("KoboCloud sync only available on Linux"));
     }
