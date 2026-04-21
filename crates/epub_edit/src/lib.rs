@@ -109,6 +109,15 @@ pub struct SpellCheckResult {
     pub chapters_checked: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChapterStatistics {
+    pub chapter_index: usize,
+    pub chapter_title: String,
+    pub word_count: usize,
+    pub character_count: usize,
+    pub paragraph_count: usize,
+}
+
 pub struct EpubEditorCore {
     pub epub_path: PathBuf,
     pub metadata: EpubMetadata,
@@ -721,6 +730,34 @@ impl EpubEditorCore {
             total_words,
             chapters_checked: self.chapters.len(),
         }
+    }
+
+    #[must_use]
+    pub fn get_chapter_statistics(&self, index: usize) -> Option<ChapterStatistics> {
+        if index >= self.chapters.len() {
+            return None;
+        }
+        let chapter = &self.chapters[index];
+        let content = Self::strip_html_tags(&chapter.content);
+        let words = Self::extract_words(&content);
+        let paragraphs = content.split('\n').filter(|p| !p.trim().is_empty()).count();
+
+        Some(ChapterStatistics {
+            chapter_index: index,
+            chapter_title: chapter.title.clone(),
+            word_count: words.len(),
+            character_count: content.chars().count(),
+            paragraph_count: paragraphs,
+        })
+    }
+
+    #[must_use]
+    pub fn get_all_chapters_statistics(&self) -> Vec<ChapterStatistics> {
+        self.chapters
+            .iter()
+            .enumerate()
+            .filter_map(|(index, _)| self.get_chapter_statistics(index))
+            .collect()
     }
 
     fn strip_html_tags(html: &str) -> String {

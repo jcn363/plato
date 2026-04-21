@@ -1096,6 +1096,26 @@ impl View for EpubEditor {
                 }
                 true
             }
+            Event::Select(EntryId::ChapterStatistics) => {
+                if let EditorState::EditingChapter { index } = self.state {
+                    if let Some(stats) = self.core.get_chapter_statistics(index) {
+                        let notif = Notification::new(
+                            format!(
+                                "Chapter {}: {} words, {} characters, {} paragraphs",
+                                stats.chapter_title,
+                                stats.word_count,
+                                stats.character_count,
+                                stats.paragraph_count
+                            ),
+                            hub,
+                            rq,
+                            context,
+                        );
+                        self.children.push(Box::new(notif) as Box<dyn View>);
+                    }
+                }
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;
