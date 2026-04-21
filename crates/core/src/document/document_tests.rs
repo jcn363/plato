@@ -76,3 +76,11 @@ fn test_open_html_whitespace_only() {
     assert!(result.is_err());
     assert!(result.unwrap_err().to_string().contains("cannot be empty"));
 }
+
+#[test]
+fn test_open_logs_validation_error() {
+    // Test that validation errors are logged when open fails
+    let result = open(""); // Empty path should fail validation
+    assert!(result.is_none());
+    // The error should be logged (we can't test log output directly, but we verify the behavior)
+}

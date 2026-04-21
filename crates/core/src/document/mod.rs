@@ -394,7 +394,8 @@ pub fn asciify(name: &str) -> String {
 
 pub fn open<P: AsRef<Path>>(path: P) -> Option<Box<dyn Document>> {
     // Validate path before attempting to open
-    if validate_path(&path, "document path").is_err() {
+    if let Err(e) = validate_path(&path, "document path") {
+        log_error!("Failed to open document {}: {}", path.as_ref().display(), e);
         return None;
     }
     file_kind(path.as_ref()).and_then(|k| match k.as_ref() {
