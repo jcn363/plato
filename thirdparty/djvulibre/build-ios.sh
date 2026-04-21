@@ -25,8 +25,8 @@ export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
-# Remove pre-built macOS object files
-rm -f libdjvu/.libs/*.dylib-master.o || true
+# Remove pre-built macOS object files and .libs directory
+rm -rf libdjvu/.libs || true
 ./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static LIBS=""
 make clean || true
 make -j$(sysctl -n hw.ncpu)
@@ -41,8 +41,8 @@ export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=1
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
-# Remove pre-built macOS object files
-rm -f libdjvu/.libs/*.dylib-master.o || true
+# Remove pre-built macOS object files and .libs directory
+rm -rf libdjvu/.libs || true
 ./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static LIBS=""
 make clean || true
 make -j$(sysctl -n hw.ncpu)
@@ -57,6 +57,8 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
+# Remove pre-built macOS object files
+rm -f libdjvu/.libs/*.dylib-master.o || true
 ./configure --prefix=$BUILD_DIR --host=x86_64-apple-darwin --enable-static LIBS=""
 make clean || true
 make -j$(sysctl -n hw.ncpu)
