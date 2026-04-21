@@ -20,7 +20,7 @@ cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
 export PKG_CONFIG_PATH=""
-../../configure --static --prefix=$(pwd) --host=arm-apple-darwin --with-freetype=yes --with-fontconfig=no
+../../../harfbuzz/configure --static --prefix=$(pwd) --host=arm-apple-darwin --with-freetype=yes --with-fontconfig=no
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 cd ../../..

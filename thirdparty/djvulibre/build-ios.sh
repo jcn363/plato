@@ -19,7 +19,7 @@ mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
-../../configure --static --prefix=$(pwd) --host=arm-apple-darwin
+../../../djvulibre/configure --static --prefix=$(pwd) --host=arm-apple-darwin
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 cd ../../..

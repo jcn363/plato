@@ -24,7 +24,7 @@ BUILD_DIR=../target/zlib/iOS/arm64
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
-../../configure --static --prefix=$(pwd)
+../../../zlib/configure --static --prefix=$(pwd)
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 cd ../../..
@@ -35,7 +35,7 @@ BUILD_DIR=../target/zlib/iOS-sim/arm64
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
-../../configure --static --prefix=$(pwd)
+../../../zlib/configure --static --prefix=$(pwd)
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 cd ../../..
@@ -46,7 +46,7 @@ BUILD_DIR=../target/zlib/iOS-sim/x86_64
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
-../../configure --static --prefix=$(pwd)
+../../../zlib/configure --static --prefix=$(pwd)
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 cd ../../..
