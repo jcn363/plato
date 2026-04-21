@@ -45,13 +45,14 @@ export PKG_CONFIG_PATH=""
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal harfbuzz library..."
-mkdir -p ../target/harfbuzz/iOS-universal/lib
+mkdir -p ../target/harfbuzz/iOS-device/lib
+mkdir -p ../target/harfbuzz/iOS-simulator/lib
 lipo -create \
-  ../target/harfbuzz/iOS/arm64/lib/libharfbuzz.a \
   ../target/harfbuzz/iOS-sim/arm64/lib/libharfbuzz.a \
   ../target/harfbuzz/iOS-sim/x86_64/lib/libharfbuzz.a \
-  -output ../target/harfbuzz/iOS-universal/lib/libharfbuzz.a || echo "Some architectures may have failed"
+  -output ../target/harfbuzz/iOS-simulator/lib/libharfbuzz.a || echo "Some simulator architectures may have failed"
+cp ../target/harfbuzz/iOS/arm64/lib/libharfbuzz.a ../target/harfbuzz/iOS-device/lib/
 
 echo "harfbuzz built successfully for iOS."

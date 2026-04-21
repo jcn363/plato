@@ -42,13 +42,14 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal djvulibre library..."
-mkdir -p ../target/djvulibre/iOS-universal/lib
+mkdir -p ../target/djvulibre/iOS-device/lib
+mkdir -p ../target/djvulibre/iOS-simulator/lib
 lipo -create \
-  ../target/djvulibre/iOS/arm64/lib/libdjvulibre.a \
   ../target/djvulibre/iOS-sim/arm64/lib/libdjvulibre.a \
   ../target/djvulibre/iOS-sim/x86_64/lib/libdjvulibre.a \
-  -output ../target/djvulibre/iOS-universal/lib/libdjvulibre.a || echo "Some architectures may have failed"
+  -output ../target/djvulibre/iOS-simulator/lib/libdjvulibre.a || echo "Some simulator architectures may have failed"
+cp ../target/djvulibre/iOS/arm64/lib/libdjvulibre.a ../target/djvulibre/iOS-device/lib/
 
 echo "djvulibre built successfully for iOS."

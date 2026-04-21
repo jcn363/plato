@@ -42,13 +42,14 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal jbig2dec library..."
-mkdir -p ../target/jbig2dec/iOS-universal/lib
+mkdir -p ../target/jbig2dec/iOS-device/lib
+mkdir -p ../target/jbig2dec/iOS-simulator/lib
 lipo -create \
-  ../target/jbig2dec/iOS/arm64/lib/libjbig2dec.a \
   ../target/jbig2dec/iOS-sim/arm64/lib/libjbig2dec.a \
   ../target/jbig2dec/iOS-sim/x86_64/lib/libjbig2dec.a \
-  -output ../target/jbig2dec/iOS-universal/lib/libjbig2dec.a || echo "Some architectures may have failed"
+  -output ../target/jbig2dec/iOS-simulator/lib/libjbig2dec.a || echo "Some simulator architectures may have failed"
+cp ../target/jbig2dec/iOS/arm64/lib/libjbig2dec.a ../target/jbig2dec/iOS-device/lib/
 
 echo "jbig2dec built successfully for iOS."

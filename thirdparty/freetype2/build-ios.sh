@@ -42,13 +42,14 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal freetype2 library..."
-mkdir -p ../target/freetype2/iOS-universal/lib
+mkdir -p ../target/freetype2/iOS-device/lib
+mkdir -p ../target/freetype2/iOS-simulator/lib
 lipo -create \
-  ../target/freetype2/iOS/arm64/lib/libfreetype.a \
   ../target/freetype2/iOS-sim/arm64/lib/libfreetype.a \
   ../target/freetype2/iOS-sim/x86_64/lib/libfreetype.a \
-  -output ../target/freetype2/iOS-universal/lib/libfreetype.a || echo "Some architectures may have failed"
+  -output ../target/freetype2/iOS-simulator/lib/libfreetype.a || echo "Some simulator architectures may have failed"
+cp ../target/freetype2/iOS/arm64/lib/libfreetype.a ../target/freetype2/iOS-device/lib/
 
 echo "freetype2 built successfully for iOS."

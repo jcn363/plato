@@ -42,13 +42,14 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal libjpeg library..."
-mkdir -p ../target/libjpeg/iOS-universal/lib
+mkdir -p ../target/libjpeg/iOS-device/lib
+mkdir -p ../target/libjpeg/iOS-simulator/lib
 lipo -create \
-  ../target/libjpeg/iOS/arm64/lib/libjpeg.a \
   ../target/libjpeg/iOS-sim/arm64/lib/libjpeg.a \
   ../target/libjpeg/iOS-sim/x86_64/lib/libjpeg.a \
-  -output ../target/libjpeg/iOS-universal/lib/libjpeg.a || echo "Some architectures may have failed"
+  -output ../target/libjpeg/iOS-simulator/lib/libjpeg.a || echo "Some simulator architectures may have failed"
+cp ../target/libjpeg/iOS/arm64/lib/libjpeg.a ../target/libjpeg/iOS-device/lib/
 
 echo "libjpeg built successfully for iOS."

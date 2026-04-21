@@ -42,13 +42,14 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal libpng library..."
-mkdir -p ../target/libpng/iOS-universal/lib
+mkdir -p ../target/libpng/iOS-device/lib
+mkdir -p ../target/libpng/iOS-simulator/lib
 lipo -create \
-  ../target/libpng/iOS/arm64/lib/libpng16.a \
   ../target/libpng/iOS-sim/arm64/lib/libpng16.a \
   ../target/libpng/iOS-sim/x86_64/lib/libpng16.a \
-  -output ../target/libpng/iOS-universal/lib/libpng16.a || echo "Some architectures may have failed"
+  -output ../target/libpng/iOS-simulator/lib/libpng16.a || echo "Some simulator architectures may have failed"
+cp ../target/libpng/iOS/arm64/lib/libpng16.a ../target/libpng/iOS-device/lib/
 
 echo "libpng built successfully for iOS."

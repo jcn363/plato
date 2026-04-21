@@ -39,14 +39,15 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 make clean || true
 make -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal mupdf library..."
-mkdir -p ../target/mupdf/iOS-universal/lib
+mkdir -p ../target/mupdf/iOS-device/lib
+mkdir -p ../target/mupdf/iOS-simulator/lib
 lipo -create \
-  ../target/mupdf/iOS/arm64/build/release/libmupdf.a \
   ../target/mupdf/iOS-sim/arm64/build/release/libmupdf.a \
   ../target/mupdf/iOS-sim/x86_64/build/release/libmupdf.a \
-  -output ../target/mupdf/iOS-universal/lib/libmupdf.a || echo "Some architectures may have failed"
+  -output ../target/mupdf/iOS-simulator/lib/libmupdf.a || echo "Some simulator architectures may have failed"
+cp ../target/mupdf/iOS/arm64/build/release/libmupdf.a ../target/mupdf/iOS-device/lib/
 
 # Also create mupdf-third universal library
 lipo -create \

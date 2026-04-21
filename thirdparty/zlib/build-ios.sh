@@ -48,13 +48,14 @@ make clean || true
 make -j$(sysctl -n hw.ncpu)
 cd ..
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal zlib library..."
-mkdir -p ../target/zlib/iOS-universal/lib
+mkdir -p ../target/zlib/iOS-device/lib
+mkdir -p ../target/zlib/iOS-simulator/lib
 lipo -create \
-  ../target/zlib/iOS/arm64/lib/libz.a \
   ../target/zlib/iOS-sim/arm64/lib/libz.a \
   ../target/zlib/iOS-sim/x86_64/lib/libz.a \
-  -output ../target/zlib/iOS-universal/lib/libz.a || echo "Some architectures may have failed"
+  -output ../target/zlib/iOS-simulator/lib/libz.a || echo "Some simulator architectures may have failed"
+cp ../target/zlib/iOS/arm64/lib/libz.a ../target/zlib/iOS-device/lib/
 
 echo "zlib built successfully for iOS."

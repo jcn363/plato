@@ -39,13 +39,14 @@ make clean || true
 make CC="$IOS_CC" CFLAGS="$CFLAGS"
 cp libbz2.a $BUILD_DIR/
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal bzip2 library..."
-mkdir -p ../target/bzip2/iOS-universal/lib
+mkdir -p ../target/bzip2/iOS-device/lib
+mkdir -p ../target/bzip2/iOS-simulator/lib
 lipo -create \
-  ../target/bzip2/iOS/arm64/libbz2.a \
   ../target/bzip2/iOS-sim/arm64/libbz2.a \
   ../target/bzip2/iOS-sim/x86_64/libbz2.a \
-  -output ../target/bzip2/iOS-universal/lib/libbz2.a || echo "Some architectures may have failed"
+  -output ../target/bzip2/iOS-simulator/lib/libbz2.a || echo "Some simulator architectures may have failed"
+cp ../target/bzip2/iOS/arm64/libbz2.a ../target/bzip2/iOS-device/lib/
 
 echo "bzip2 built successfully for iOS."

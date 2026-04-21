@@ -42,13 +42,14 @@ cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 
-# Create universal library
+# Create universal library (device + simulator)
 echo "Creating universal gumbo library..."
-mkdir -p ../target/gumbo/iOS-universal/lib
+mkdir -p ../target/gumbo/iOS-device/lib
+mkdir -p ../target/gumbo/iOS-simulator/lib
 lipo -create \
-  ../target/gumbo/iOS/arm64/lib/libgumbo.a \
   ../target/gumbo/iOS-sim/arm64/lib/libgumbo.a \
   ../target/gumbo/iOS-sim/x86_64/lib/libgumbo.a \
-  -output ../target/gumbo/iOS-universal/lib/libgumbo.a || echo "Some architectures may have failed"
+  -output ../target/gumbo/iOS-simulator/lib/libgumbo.a || echo "Some simulator architectures may have failed"
+cp ../target/gumbo/iOS/arm64/lib/libgumbo.a ../target/gumbo/iOS-device/lib/
 
 echo "gumbo built successfully for iOS."
