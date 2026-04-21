@@ -155,10 +155,13 @@ pub fn family_names<P: AsRef<Path>>(search_path: P) -> Result<BTreeSet<String>, 
         if !glob.is_match(path) {
             continue;
         }
-        if let Ok(font) = opener
-            .open(path)
-            .map_err(|e| log_error!("Can't open '{}': {:#}.", path.display(), e))
-        {
+        if let Ok(font) = opener.open(path).map_err(|e| {
+            log_error!(
+                "Failed to load font '{}': {}. Please ensure the font file exists and is valid.",
+                path.display(),
+                e
+            )
+        }) {
             if let Some(family_name) = font.family_name() {
                 families.insert(family_name.to_string());
             } else {
@@ -186,7 +189,7 @@ impl FontFamily {
             }
             if let Ok(font) = opener
                 .open(path)
-                .map_err(|e| log_error!("Can't open '{}': {:#}.", path.display(), e))
+                .map_err(|e| log_error!("Failed to load font '{}': {}. Please ensure the font file exists and is valid.", path.display(), e))
             {
                 if font.family_name().as_deref() == Some(family_name) {
                     styles.insert(

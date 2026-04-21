@@ -400,11 +400,23 @@ pub fn open<P: AsRef<Path>>(path: P) -> Option<Box<dyn Document>> {
     }
     file_kind(path.as_ref()).and_then(|k| match k.as_ref() {
         "epub" => EpubDocument::new(&path)
-            .map_err(|e| log_error!("{}: {:#}.", path.as_ref().display(), e))
+            .map_err(|e| {
+                log_error!(
+                    "Failed to open EPUB {}: {}. Please check the file is not corrupted.",
+                    path.as_ref().display(),
+                    e
+                )
+            })
             .map(|d| Box::new(d) as Box<dyn Document>)
             .ok(),
         "html" | "htm" => HtmlDocument::new(&path)
-            .map_err(|e| log_error!("{}: {:#}.", path.as_ref().display(), e))
+            .map_err(|e| {
+                log_error!(
+                    "Failed to open HTML {}: {}. Please check the file is valid.",
+                    path.as_ref().display(),
+                    e
+                )
+            })
             .map(|d| Box::new(d) as Box<dyn Document>)
             .ok(),
         _ => PdfOpener::new().and_then(|mut o| {
