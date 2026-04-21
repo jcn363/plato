@@ -22,7 +22,10 @@ BUILD_DIR=$PROJECT_ROOT/target/djvulibre/iOS/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
-./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static
+unset PKG_CONFIG
+unset PKG_CONFIG_PATH
+unset PKG_CONFIG_LIBDIR
+./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static LIBS=""
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
@@ -33,7 +36,10 @@ BUILD_DIR=$PROJECT_ROOT/target/djvulibre/iOS-sim/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static
+unset PKG_CONFIG
+unset PKG_CONFIG_PATH
+unset PKG_CONFIG_LIBDIR
+./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static LIBS=""
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
@@ -44,7 +50,10 @@ BUILD_DIR=$PROJECT_ROOT/target/djvulibre/iOS-sim/x86_64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-./configure --prefix=$BUILD_DIR --host=x86_64-apple-darwin --enable-static
+unset PKG_CONFIG
+unset PKG_CONFIG_PATH
+unset PKG_CONFIG_LIBDIR
+./configure --prefix=$BUILD_DIR --host=x86_64-apple-darwin --enable-static LIBS=""
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
