@@ -19,8 +19,8 @@ mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
-make -C ../../../mupdf clean || true
-make -C ../../../mupdf -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
+make -C ../../../thirdparty/mupdf clean || true
+make -C ../../../thirdparty/mupdf -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
 cd ../../..
 
 # Build for iOS simulator (ARM64)
@@ -30,8 +30,8 @@ mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-make -C ../../ clean || true
-make -C ../../ -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
+make -C ../../../thirdparty/mupdf clean || true
+make -C ../../../thirdparty/mupdf -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
 cd ../../..
 
 # Build for iOS simulator (x86_64)
@@ -41,8 +41,8 @@ mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-make -C ../../ clean || true
-make -C ../../ -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
+make -C ../../../thirdparty/mupdf clean || true
+make -C ../../../thirdparty/mupdf -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
 cd ../../..
 
 # Create universal library
