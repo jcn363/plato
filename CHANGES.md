@@ -73,9 +73,13 @@ All 9 WIP module managers now integrated and active:
 - Added metadata editing view with fields for title, author, language, identifier, publisher, date
 - Added chapter navigation buttons (Previous/Next) for seamless editing
 - Added visual indicators (asterisk) for modified chapters in chapter list
-- Added `get_text()` method to InputField for text retrieval
-- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata
+- Added advanced search/replace options: regex support, case-sensitive toggle, whole-word toggle
+- Added SearchOptions struct to epub_edit library for search/replace configuration
+- Added toggle buttons (Regex, Case, Whole) to SearchReplaceView UI
+- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord
 - Added ViewIds: EditMetadataTitle, EditMetadataAuthor, EditMetadataLanguage, EditMetadataIdentifier, EditMetadataPublisher, EditMetadataDate
+- Updated search_in_chapter, replace_in_chapter, replace_all_in_document, search_all_chapters to support SearchOptions
+- Updated all search/replace calls in epub_editor.rs to pass SearchOptions from UI
 
 ### UI Components ✅
 

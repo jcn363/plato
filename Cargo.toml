@@ -33,29 +33,29 @@ zip = "8.5.1"
 [profile.release-minsized]
 inherits = "release"
 panic = "abort"
-codegen-units = 1
+codegen-units = 4
 opt-level = "z"
-lto = true
+lto = "thin"
 strip = true
 
 [profile.release-arm]
 inherits = "release"
-codegen-units = 1
-lto = true
+codegen-units = 4
+lto = "thin"
 strip = true
 opt-level = 3
 
 [profile.release-arm64]
 inherits = "release"
-codegen-units = 1
-lto = true
+codegen-units = 4
+lto = "thin"
 strip = true
 opt-level = 3
 
 [profile.release-embedded]
 inherits = "release"
-codegen-units = 1
-lto = "fat"
+codegen-units = 4
+lto = "thin"
 opt-level = "s"
 strip = true
 debug = false
@@ -67,6 +67,7 @@ codegen-units = 16
 [profile.dev]
 opt-level = 0
 debug = true
+incremental = true
 
 [profile.bench]
 inherits = "release"

@@ -68,6 +68,13 @@ pub enum UndoAction {
     Chapter(usize, String),
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SearchOptions {
+    pub use_regex: bool,
+    pub case_sensitive: bool,
+    pub whole_word: bool,
+}
+
 pub struct EpubEditorCore {
     pub epub_path: PathBuf,
     pub metadata: EpubMetadata,
@@ -436,17 +443,55 @@ impl EpubEditorCore {
     }
 
     #[must_use]
-    pub fn search_in_chapter(&self, index: usize, query: &str) -> Vec<(usize, usize)> {
+    pub fn search_in_chapter(
+        &self,
+        index: usize,
+        query: &str,
+        options: SearchOptions,
+    ) -> Vec<(usize, usize)> {
         if index >= self.chapters.len() || query.is_empty() {
             return Vec::new();
         }
         let content = &self.chapters[index].content;
+        let search_content = if options.case_sensitive {
+            content
+        } else {
+            &content.to_lowercase()
+        };
+        let search_query = if options.case_sensitive {
+            query
+        } else {
+            &query.to_lowercase()
+        };
         let mut matches = Vec::new();
         let mut start = 0;
-        while let Some(pos) = content[start..].find(query) {
-            let abs_pos = start + pos;
-            matches.push((abs_pos, abs_pos + query.len()));
-            start = abs_pos + 1;
+
+        if options.use_regex {
+            if let Ok(re) = Regex::new(search_query) {
+                for mat in re.find_iter(search_content) {
+                    matches.push((mat.start(), mat.end()));
+                }
+            }
+        } else {
+            while let Some(pos) = search_content[start..].find(search_query) {
+                let abs_pos = start + pos;
+                if options.whole_word {
+                    let before = if abs_pos > 0 {
+                        search_content.chars().nth(abs_pos - 1)
+                    } else {
+                        None
+                    };
+                    let after = search_content.chars().nth(abs_pos + search_query.len());
+                    let is_word_boundary = before.map_or(true, |c| !c.is_alphanumeric())
+                        && after.map_or(true, |c| !c.is_alphanumeric());
+                    if is_word_boundary {
+                        matches.push((abs_pos, abs_pos + search_query.len()));
+                    }
+                } else {
+                    matches.push((abs_pos, abs_pos + search_query.len()));
+                }
+                start = abs_pos + 1;
+            }
         }
         matches
     }
@@ -456,18 +501,64 @@ impl EpubEditorCore {
         index: usize,
         search: &str,
         replace: &str,
+        options: SearchOptions,
     ) -> Result<usize> {
         if index >= self.chapters.len() || search.is_empty() {
             return Ok(0);
         }
         let old_content = self.chapters[index].content.clone();
-        let count = old_content.matches(search).count();
+        let (search_content, search_query) = if options.case_sensitive {
+            (old_content.clone(), search.to_string())
+        } else {
+            (old_content.to_lowercase(), search.to_lowercase())
+        };
+
+        let count = if options.use_regex {
+            if let Ok(re) = Regex::new(&search_query) {
+                re.find_iter(&search_content).count()
+            } else {
+                return Ok(0);
+            }
+        } else if options.whole_word {
+            let mut c = 0;
+            let mut start = 0;
+            while let Some(pos) = search_content[start..].find(&search_query) {
+                let abs_pos = start + pos;
+                let before = if abs_pos > 0 {
+                    search_content.chars().nth(abs_pos - 1)
+                } else {
+                    None
+                };
+                let after = search_content.chars().nth(abs_pos + search_query.len());
+                let is_word_boundary = before.map_or(true, |c| !c.is_alphanumeric())
+                    && after.map_or(true, |c| !c.is_alphanumeric());
+                if is_word_boundary {
+                    c += 1;
+                }
+                start = abs_pos + 1;
+            }
+            c
+        } else {
+            search_content.matches(&search_query).count()
+        };
+
         if count == 0 {
             return Ok(0);
         }
-        let new_content = old_content.replace(search, replace);
+
+        let original_content = self.chapters[index].content.clone();
+        let new_content = if options.use_regex {
+            if let Ok(re) = Regex::new(&search_query) {
+                re.replace_all(&old_content, replace).to_string()
+            } else {
+                old_content
+            }
+        } else {
+            old_content.replace(search, replace)
+        };
+
         self.undo_stack
-            .push(UndoAction::Chapter(index, old_content));
+            .push(UndoAction::Chapter(index, original_content));
         self.redo_stack.clear();
         self.chapters[index].content = new_content.clone();
         let chapter = &self.chapters[index];
@@ -482,35 +573,40 @@ impl EpubEditorCore {
     ///
     /// Returns an error if:
     /// * Writing any chapter content to file fails during replacement
-    pub fn replace_all_in_document(&mut self, search: &str, replace: &str) -> Result<usize> {
+    pub fn replace_all_in_document(
+        &mut self,
+        search: &str,
+        replace: &str,
+        options: SearchOptions,
+    ) -> Result<usize> {
         if search.is_empty() {
             return Ok(0);
         }
         let mut total = 0;
         for i in 0..self.chapters.len() {
-            let count = self.replace_in_chapter(i, search, replace)?;
+            let count = self.replace_in_chapter(i, search, replace, options)?;
             total += count;
         }
         Ok(total)
     }
 
     #[must_use]
-    pub fn search_all_chapters(&self, query: &str) -> Vec<(usize, Vec<(usize, usize)>)> {
+    pub fn search_all_chapters(
+        &self,
+        query: &str,
+        options: SearchOptions,
+    ) -> Vec<(usize, Vec<(usize, usize)>)> {
         if query.is_empty() {
             return Vec::new();
         }
-        self.chapters
-            .iter()
-            .enumerate()
-            .filter_map(|(i, _)| {
-                let matches = self.search_in_chapter(i, query);
-                if matches.is_empty() {
-                    None
-                } else {
-                    Some((i, matches))
-                }
-            })
-            .collect()
+        let mut results = Vec::new();
+        for i in 0..self.chapters.len() {
+            let matches = self.search_in_chapter(i, query, options);
+            if !matches.is_empty() {
+                results.push((i, matches));
+            }
+        }
+        results
     }
 
     /// Saves the EPUB file with all modifications applied.

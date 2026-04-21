@@ -478,7 +478,23 @@ impl EpubEditor {
                 return;
             }
             if let EditorState::EditingChapter { index } = self.state {
-                let matches = self.core.search_in_chapter(index, &state.search_text);
+                let options = self
+                    .children
+                    .iter()
+                    .find(|c| c.is::<SearchReplaceView>())
+                    .and_then(|v| v.downcast_ref::<SearchReplaceView>())
+                    .map(|sr| {
+                        let (use_regex, case_sensitive, whole_word) = sr.get_search_options();
+                        epub_edit::SearchOptions {
+                            use_regex,
+                            case_sensitive,
+                            whole_word,
+                        }
+                    })
+                    .unwrap_or_default();
+                let matches = self
+                    .core
+                    .search_in_chapter(index, &state.search_text, options);
                 if let Some(view) = self
                     .children
                     .iter_mut()
@@ -498,12 +514,28 @@ impl EpubEditor {
                 return;
             }
             let search_text = state.search_text.clone();
+            let options = self
+                .children
+                .iter()
+                .find(|c| c.is::<SearchReplaceView>())
+                .and_then(|v| v.downcast_ref::<SearchReplaceView>())
+                .map(|sr| {
+                    let (use_regex, case_sensitive, whole_word) = sr.get_search_options();
+                    epub_edit::SearchOptions {
+                        use_regex,
+                        case_sensitive,
+                        whole_word,
+                    }
+                })
+                .unwrap_or_default();
             if let EditorState::EditingChapter { index } = self.state {
                 let _old_content = self.core.chapters[index].content.clone();
-                match self
-                    .core
-                    .replace_in_chapter(index, &search_text, &state.replace_text)
-                {
+                match self.core.replace_in_chapter(
+                    index,
+                    &search_text,
+                    &state.replace_text,
+                    options,
+                ) {
                     Ok(count) => {
                         if count > 0 {
                             self.modified = true;
@@ -515,7 +547,7 @@ impl EpubEditor {
                                 context,
                             );
                             self.children.push(Box::new(notif) as Box<dyn View>);
-                            let matches = self.core.search_in_chapter(index, &search_text);
+                            let matches = self.core.search_in_chapter(index, &search_text, options);
                             if let Some(view) = self
                                 .children
                                 .iter_mut()
@@ -533,7 +565,7 @@ impl EpubEditor {
                     }
                     Err(e) => {
                         let notif =
-                            Notification::new(format!("Replace error: {}", e), hub, rq, context);
+                            Notification::new(format!("Error replacing: {}", e), hub, rq, context);
                         self.children.push(Box::new(notif) as Box<dyn View>);
                     }
                 }
@@ -612,6 +644,45 @@ impl View for EpubEditor {
                 if let EditorState::EditingChapter { index } = self.state {
                     if index + 1 < self.core.chapters.len() {
                         self.show_edit_view(index + 1, hub, rq, context);
+                    }
+                }
+                true
+            }
+            Event::Select(EntryId::ToggleRegex) => {
+                if let Some(sr) = self
+                    .children
+                    .iter_mut()
+                    .find(|c| c.is::<SearchReplaceView>())
+                {
+                    if let Some(view) = sr.downcast_mut::<SearchReplaceView>() {
+                        view.toggle_regex();
+                        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                    }
+                }
+                true
+            }
+            Event::Select(EntryId::ToggleCaseSensitive) => {
+                if let Some(sr) = self
+                    .children
+                    .iter_mut()
+                    .find(|c| c.is::<SearchReplaceView>())
+                {
+                    if let Some(view) = sr.downcast_mut::<SearchReplaceView>() {
+                        view.toggle_case_sensitive();
+                        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                    }
+                }
+                true
+            }
+            Event::Select(EntryId::ToggleWholeWord) => {
+                if let Some(sr) = self
+                    .children
+                    .iter_mut()
+                    .find(|c| c.is::<SearchReplaceView>())
+                {
+                    if let Some(view) = sr.downcast_mut::<SearchReplaceView>() {
+                        view.toggle_whole_word();
+                        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                     }
                 }
                 true
@@ -773,10 +844,25 @@ impl View for EpubEditor {
                         self.children.push(Box::new(notif) as Box<dyn View>);
                         return true;
                     }
-                    match self
-                        .core
-                        .replace_all_in_document(&state.search_text, &state.replace_text)
-                    {
+                    let options = self
+                        .children
+                        .iter()
+                        .find(|c| c.is::<SearchReplaceView>())
+                        .and_then(|v| v.downcast_ref::<SearchReplaceView>())
+                        .map(|sr| {
+                            let (use_regex, case_sensitive, whole_word) = sr.get_search_options();
+                            epub_edit::SearchOptions {
+                                use_regex,
+                                case_sensitive,
+                                whole_word,
+                            }
+                        })
+                        .unwrap_or_default();
+                    match self.core.replace_all_in_document(
+                        &state.search_text,
+                        &state.replace_text,
+                        options,
+                    ) {
                         Ok(count) => {
                             if count > 0 {
                                 self.modified = true;

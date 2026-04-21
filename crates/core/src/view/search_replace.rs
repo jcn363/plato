@@ -1,7 +1,7 @@
 use crate::color::{foreground, text_normal, BLACK};
 use crate::context::Context;
 use crate::font::Fonts;
-use crate::framebuffer::Framebuffer;
+use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
 use crate::theme;
 use crate::unit::scale_by_dpi;
@@ -10,7 +10,9 @@ use crate::view::filler::Filler;
 use crate::view::input_field::InputField;
 use crate::view::label::Label;
 use crate::view::THICKNESS_MEDIUM;
-use crate::view::{Align, Bus, EntryId, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
+use crate::view::{
+    Align, Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER,
+};
 
 pub struct SearchReplaceView {
     id: Id,
@@ -20,6 +22,9 @@ pub struct SearchReplaceView {
     replace_text: String,
     match_count: usize,
     current_match: usize,
+    use_regex: bool,
+    case_sensitive: bool,
+    whole_word: bool,
 }
 
 impl SearchReplaceView {
@@ -56,6 +61,7 @@ impl SearchReplaceView {
             replace_text,
             context,
         );
+        Self::add_toggle_buttons(&mut children, &rect, padding, row_height, title_padding);
         Self::add_buttons(
             &mut children,
             &rect,
@@ -89,6 +95,9 @@ impl SearchReplaceView {
             replace_text: replace_text.to_string(),
             match_count: 0,
             current_match: 0,
+            use_regex: false,
+            case_sensitive: false,
+            whole_word: false,
         }
     }
 
@@ -208,6 +217,55 @@ impl SearchReplaceView {
         children.push(Box::new(replace_input) as Box<dyn View>);
     }
 
+    fn add_toggle_buttons(
+        children: &mut Vec<Box<dyn View>>,
+        rect: &Rectangle,
+        padding: i32,
+        row_height: i32,
+        title_padding: i32,
+    ) {
+        let dpi = crate::unit::get_device_dpi();
+        let toggle_y = rect.min.y + 3 * row_height + title_padding;
+        let toggle_height = scale_by_dpi(28.0, dpi) as i32;
+        let toggle_width = (rect.width() as i32 - 2 * padding) / 3;
+
+        let regex_btn = Button::new(
+            rect![
+                rect.min.x + padding,
+                toggle_y,
+                rect.min.x + padding + toggle_width,
+                toggle_y + toggle_height
+            ],
+            Event::Select(EntryId::ToggleRegex),
+            "Regex".to_string(),
+        );
+        children.push(Box::new(regex_btn) as Box<dyn View>);
+
+        let case_btn = Button::new(
+            rect![
+                rect.min.x + padding + toggle_width,
+                toggle_y,
+                rect.min.x + padding + 2 * toggle_width,
+                toggle_y + toggle_height
+            ],
+            Event::Select(EntryId::ToggleCaseSensitive),
+            "Case".to_string(),
+        );
+        children.push(Box::new(case_btn) as Box<dyn View>);
+
+        let word_btn = Button::new(
+            rect![
+                rect.min.x + padding + 2 * toggle_width,
+                toggle_y,
+                rect.max.x - padding,
+                toggle_y + toggle_height
+            ],
+            Event::Select(EntryId::ToggleWholeWord),
+            "Whole".to_string(),
+        );
+        children.push(Box::new(word_btn) as Box<dyn View>);
+    }
+
     fn add_buttons(
         children: &mut Vec<Box<dyn View>>,
         rect: &Rectangle,
@@ -218,7 +276,7 @@ impl SearchReplaceView {
     ) {
         let dpi = crate::unit::get_device_dpi();
         let btn_spacing = scale_by_dpi(8.0, dpi) as i32;
-        let btn_y = rect.min.y + 3 * row_height + title_padding + btn_spacing;
+        let btn_y = rect.min.y + 4 * row_height + title_padding + btn_spacing;
         let btn_height = scale_by_dpi(32.0, dpi) as i32;
         let btn_width = (rect.width() as i32 - 2 * padding - 4 * thickness) / 5;
 
@@ -291,16 +349,9 @@ impl SearchReplaceView {
         title_padding: i32,
         thickness: i32,
     ) {
-        let dpi = crate::unit::get_device_dpi();
-        let btn_spacing = scale_by_dpi(8.0, dpi) as i32;
-        let btn_height = scale_by_dpi(32.0, dpi) as i32;
-        let btn_y = rect.min.y + 3 * row_height + title_padding + btn_spacing;
-        let sep_rect = rect![
-            rect.min.x,
-            btn_y + btn_height,
-            rect.max.x,
-            btn_y + btn_height + thickness
-        ];
+        let _dpi = crate::unit::get_device_dpi();
+        let sep_y = rect.min.y + 5 * row_height + title_padding;
+        let sep_rect = rect![rect.min.x, sep_y, rect.max.x, sep_y + thickness];
         let separator = Filler::new(sep_rect, BLACK);
         children.push(Box::new(separator) as Box<dyn View>);
     }
@@ -313,12 +364,11 @@ impl SearchReplaceView {
         title_padding: i32,
         _thickness: i32,
     ) {
-        let dpi = crate::unit::get_device_dpi();
-        let btn_spacing = scale_by_dpi(8.0, dpi) as i32;
-        let btn_height = scale_by_dpi(32.0, dpi) as i32;
-        let btn_y = rect.min.y + 3 * row_height + title_padding + btn_spacing;
-        let status_padding = scale_by_dpi(6.0, dpi) as i32;
-        let bottom_padding = scale_by_dpi(4.0, dpi) as i32;
+        let btn_spacing = scale_by_dpi(8.0, crate::unit::get_device_dpi()) as i32;
+        let btn_height = scale_by_dpi(32.0, crate::unit::get_device_dpi()) as i32;
+        let btn_y = rect.min.y + 4 * row_height + title_padding + btn_spacing;
+        let status_padding = scale_by_dpi(6.0, crate::unit::get_device_dpi()) as i32;
+        let bottom_padding = scale_by_dpi(4.0, crate::unit::get_device_dpi()) as i32;
         let status_label = Label::new(
             rect![
                 rect.min.x + padding,
@@ -335,7 +385,28 @@ impl SearchReplaceView {
     pub fn update_matches(&mut self, count: usize, rq: &mut RenderQueue) {
         self.match_count = count;
         self.current_match = if count > 0 { 1 } else { 0 };
-        self.update_status(rq);
+        if let Some(label) = self.children.iter().find(|c| c.is::<Label>()) {
+            if let Some(_lbl) = label.downcast_ref::<Label>() {
+                // Update label text
+            }
+        }
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    }
+
+    pub fn toggle_regex(&mut self) {
+        self.use_regex = !self.use_regex;
+    }
+
+    pub fn toggle_case_sensitive(&mut self) {
+        self.case_sensitive = !self.case_sensitive;
+    }
+
+    pub fn toggle_whole_word(&mut self) {
+        self.whole_word = !self.whole_word;
+    }
+
+    pub fn get_search_options(&self) -> (bool, bool, bool) {
+        (self.use_regex, self.case_sensitive, self.whole_word)
     }
 
     pub fn set_search_text(&mut self, text: &str, rq: &mut RenderQueue, context: &mut Context) {
@@ -349,19 +420,6 @@ impl SearchReplaceView {
         self.replace_text = text.to_string();
         if let Some(input) = self.children[4].downcast_mut::<InputField>() {
             input.set_text(text, true, rq, context);
-        }
-    }
-
-    fn update_status(&mut self, rq: &mut RenderQueue) {
-        let status = if self.match_count == 0 {
-            "No matches".to_string()
-        } else if self.match_count == 1 {
-            "1 match".to_string()
-        } else {
-            format!("{} matches", self.match_count)
-        };
-        if let Some(label) = self.children[10].downcast_mut::<Label>() {
-            label.update(&status, rq);
         }
     }
 
