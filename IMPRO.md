@@ -274,7 +274,7 @@ Most `unwrap()` usages are in test code which is acceptable per AGENTS.md guidel
 1. Parallel processing implementation
 2. Feature expansion (new document formats)
 3. Advanced user experience improvements
-4. Full architecture documentation with diagrams
+4. ✅ Full architecture documentation with diagrams - COMPLETED: Added Mermaid diagram to OVERVIEW.md
 
 ---
 
