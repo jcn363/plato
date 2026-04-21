@@ -220,7 +220,7 @@ impl SearchReplaceView {
         let btn_spacing = scale_by_dpi(8.0, dpi) as i32;
         let btn_y = rect.min.y + 3 * row_height + title_padding + btn_spacing;
         let btn_height = scale_by_dpi(32.0, dpi) as i32;
-        let btn_width = (rect.width() as i32 - 2 * padding - 3 * thickness) / 4;
+        let btn_width = (rect.width() as i32 - 2 * padding - 4 * thickness) / 5;
 
         let prev_btn = Button::new(
             rect![
@@ -258,9 +258,21 @@ impl SearchReplaceView {
         );
         children.push(Box::new(replace_ch_btn) as Box<dyn View>);
 
-        let close_btn = Button::new(
+        let replace_all_btn = Button::new(
             rect![
                 rect.min.x + padding + 3 * btn_width + 3 * thickness,
+                btn_y,
+                rect.min.x + padding + 4 * btn_width + 3 * thickness,
+                btn_y + btn_height
+            ],
+            Event::Select(EntryId::ReplaceInDocument),
+            "All".to_string(),
+        );
+        children.push(Box::new(replace_all_btn) as Box<dyn View>);
+
+        let close_btn = Button::new(
+            rect![
+                rect.min.x + padding + 4 * btn_width + 4 * thickness,
                 btn_y,
                 rect.max.x - padding,
                 btn_y + btn_height

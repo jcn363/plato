@@ -12,6 +12,7 @@ use crate::impl_view_boilerplate;
 use crate::log_error;
 use crate::theme;
 use crate::unit::scale_by_dpi;
+use crate::view::button::Button;
 use crate::view::common::toggle_main_menu;
 use crate::view::filler::Filler;
 use crate::view::icon::Icon;
@@ -24,9 +25,10 @@ use crate::view::search_replace::SearchReplaceView;
 use crate::view::top_bar::TopBar;
 use crate::view::SMALL_BAR_HEIGHT;
 use crate::view::THICKNESS_MEDIUM;
-use crate::view::{Align, EntryId, EntryKind, ViewId};
-use crate::view::{Bus, Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{Id, ID_FEEDER};
+use crate::view::{
+    Align, Bus, EntryId, EntryKind, Event, Hub, Id, RenderData, RenderQueue, View, ViewId,
+    ID_FEEDER,
+};
 use anyhow::Error;
 use epub_edit::EpubEditorCore;
 
@@ -46,6 +48,7 @@ pub struct EpubEditor {
     core: EpubEditorCore,
     state: EditorState,
     modified: bool,
+    modified_chapters: Vec<usize>,
     search_replace: Option<SearchReplaceState>,
 }
 
@@ -107,6 +110,17 @@ impl EpubEditor {
             search_rect,
             Event::Select(EntryId::SearchReplace),
         )));
+        let metadata_rect = rect![
+            rect.max.x - 2 * side,
+            rect.min.y,
+            rect.max.x - side,
+            rect.min.y + side
+        ];
+        top_bar.children_mut().push(Box::new(Icon::new(
+            "info",
+            metadata_rect,
+            Event::Select(EntryId::EditMetadata),
+        )));
         children.push(Box::new(top_bar) as Box<dyn View>);
 
         let separator = Filler::new(
@@ -129,6 +143,7 @@ impl EpubEditor {
             core,
             state: EditorState::ChapterList,
             modified: false,
+            modified_chapters: Vec::new(),
             search_replace: None,
         };
 
@@ -155,7 +170,12 @@ impl EpubEditor {
             .iter()
             .enumerate()
             .map(|(i, chapter)| {
-                EntryKind::Command(chapter.title.clone(), EntryId::SelectChapter(i))
+                let title = if self.modified_chapters.contains(&i) {
+                    format!("* {}", chapter.title)
+                } else {
+                    chapter.title.clone()
+                };
+                EntryKind::Command(title, EntryId::SelectChapter(i))
             })
             .collect();
 
@@ -177,6 +197,84 @@ impl EpubEditor {
         );
         rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
         self.children.push(Box::new(menu) as Box<dyn View>);
+    }
+
+    fn show_metadata_edit_view(&mut self, _hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
+        self.children
+            .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
+
+        let dpi = crate::unit::get_device_dpi();
+        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
+        let row_height = scale_by_dpi(40.0, dpi) as i32;
+        let padding = scale_by_dpi(10.0, dpi) as i32;
+        let label_width = scale_by_dpi(80.0, dpi) as i32;
+
+        let mut y = self.rect.min.y + small_height + 10;
+        let meta = &self.core.metadata;
+
+        let fields = vec![
+            ("Title", meta.title.clone(), ViewId::EditMetadataTitle),
+            ("Author", meta.author.clone(), ViewId::EditMetadataAuthor),
+            (
+                "Language",
+                meta.language.clone(),
+                ViewId::EditMetadataLanguage,
+            ),
+            (
+                "Identifier",
+                meta.identifier.clone(),
+                ViewId::EditMetadataIdentifier,
+            ),
+            (
+                "Publisher",
+                meta.publisher.clone().unwrap_or_default(),
+                ViewId::EditMetadataPublisher,
+            ),
+            (
+                "Date",
+                meta.date.clone().unwrap_or_default(),
+                ViewId::EditMetadataDate,
+            ),
+        ];
+
+        for (label, value, view_id) in fields {
+            let label_rect = rect![
+                self.rect.min.x + padding,
+                y,
+                self.rect.min.x + padding + label_width,
+                y + row_height
+            ];
+            let label_view = Label::new(label_rect, label.to_string(), Align::Left(0));
+            self.children.push(Box::new(label_view) as Box<dyn View>);
+
+            let input_rect = rect![
+                self.rect.min.x + padding + label_width,
+                y,
+                self.rect.max.x - padding,
+                y + row_height
+            ];
+            let input = InputField::new(input_rect, view_id)
+                .border(true)
+                .text(&value, context);
+            self.children.push(Box::new(input) as Box<dyn View>);
+
+            y += row_height + padding;
+        }
+
+        let save_rect = rect![
+            self.rect.min.x + padding,
+            y,
+            self.rect.min.x + padding + scale_by_dpi(100.0, dpi) as i32,
+            y + row_height
+        ];
+        let save_btn = Button::new(
+            save_rect,
+            Event::Select(EntryId::SaveMetadata),
+            "Save".to_string(),
+        );
+        self.children.push(Box::new(save_btn) as Box<dyn View>);
+
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
     fn show_save_dialog(&mut self, _hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
@@ -227,9 +325,10 @@ impl EpubEditor {
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
         let (small_thickness, _) = halves(thickness);
+        let row_height = scale_by_dpi(32.0, dpi) as i32;
 
         let chapter = &self.core.chapters[index];
-        let content: String = chapter.content.chars().take(5000).collect();
+        let content = chapter.content.clone();
 
         let title_label = Label::new(
             rect![
@@ -263,6 +362,31 @@ impl EpubEditor {
         let separator = Filler::new(sep_rect, crate::color::foreground(theme::is_dark_mode()));
         self.children.push(Box::new(separator) as Box<dyn View>);
 
+        let nav_btn_width = (self.rect.width() as i32) / 2;
+        let prev_btn = Button::new(
+            rect![
+                self.rect.min.x,
+                self.rect.max.y - small_height - small_thickness - row_height,
+                self.rect.min.x + nav_btn_width,
+                self.rect.max.y - small_height - small_thickness
+            ],
+            Event::Select(EntryId::PreviousChapter),
+            "Previous".to_string(),
+        );
+        self.children.push(Box::new(prev_btn) as Box<dyn View>);
+
+        let next_btn = Button::new(
+            rect![
+                self.rect.min.x + nav_btn_width,
+                self.rect.max.y - small_height - small_thickness - row_height,
+                self.rect.max.x,
+                self.rect.max.y - small_height - small_thickness
+            ],
+            Event::Select(EntryId::NextChapter),
+            "Next".to_string(),
+        );
+        self.children.push(Box::new(next_btn) as Box<dyn View>);
+
         let kb_rect = rect![
             self.rect.min.x,
             self.rect.max.y - small_height,
@@ -289,6 +413,9 @@ impl EpubEditor {
             return false;
         }
         self.modified = true;
+        if !self.modified_chapters.contains(&index) {
+            self.modified_chapters.push(index);
+        }
         true
     }
 
@@ -417,11 +544,7 @@ impl EpubEditor {
     fn update_input_field(&mut self, rq: &mut RenderQueue, context: &mut Context) {
         if let EditorState::EditingChapter { index } = self.state {
             if index < self.core.chapters.len() {
-                let content: String = self.core.chapters[index]
-                    .content
-                    .chars()
-                    .take(5000)
-                    .collect();
+                let content = self.core.chapters[index].content.clone();
                 if let Some(view) = self.children.iter_mut().find(|c| c.is::<InputField>()) {
                     if let Some(input) = view.downcast_mut::<InputField>() {
                         input.set_text(&content, true, rq, context);
@@ -473,6 +596,79 @@ impl View for EpubEditor {
                 self.show_edit_view(*i, hub, rq, context);
                 true
             }
+            Event::Select(EntryId::EditMetadata) => {
+                self.show_metadata_edit_view(hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::PreviousChapter) => {
+                if let EditorState::EditingChapter { index } = self.state {
+                    if index > 0 {
+                        self.show_edit_view(index - 1, hub, rq, context);
+                    }
+                }
+                true
+            }
+            Event::Select(EntryId::NextChapter) => {
+                if let EditorState::EditingChapter { index } = self.state {
+                    if index + 1 < self.core.chapters.len() {
+                        self.show_edit_view(index + 1, hub, rq, context);
+                    }
+                }
+                true
+            }
+            Event::Select(EntryId::SaveMetadata) => {
+                let mut new_meta = self.core.metadata.clone();
+                if let Some(view) = self.children.iter().find(|c| c.is::<InputField>()) {
+                    if let Some(input) = view.downcast_ref::<InputField>() {
+                        if input.view_id() == Some(ViewId::EditMetadataTitle) {
+                            new_meta.title = input.get_text().to_string();
+                        }
+                    }
+                }
+                if let Some(view) = self.children.iter().find(|c| {
+                    c.is::<InputField>() && c.view_id() == Some(ViewId::EditMetadataAuthor)
+                }) {
+                    if let Some(input) = view.downcast_ref::<InputField>() {
+                        new_meta.author = input.get_text().to_string();
+                    }
+                }
+                if let Some(view) = self.children.iter().find(|c| {
+                    c.is::<InputField>() && c.view_id() == Some(ViewId::EditMetadataLanguage)
+                }) {
+                    if let Some(input) = view.downcast_ref::<InputField>() {
+                        new_meta.language = input.get_text().to_string();
+                    }
+                }
+                if let Some(view) = self.children.iter().find(|c| {
+                    c.is::<InputField>() && c.view_id() == Some(ViewId::EditMetadataIdentifier)
+                }) {
+                    if let Some(input) = view.downcast_ref::<InputField>() {
+                        new_meta.identifier = input.get_text().to_string();
+                    }
+                }
+                if let Some(view) = self.children.iter().find(|c| {
+                    c.is::<InputField>() && c.view_id() == Some(ViewId::EditMetadataPublisher)
+                }) {
+                    if let Some(input) = view.downcast_ref::<InputField>() {
+                        new_meta.publisher = Some(input.get_text().to_string());
+                    }
+                }
+                if let Some(view) = self
+                    .children
+                    .iter()
+                    .find(|c| c.is::<InputField>() && c.view_id() == Some(ViewId::EditMetadataDate))
+                {
+                    if let Some(input) = view.downcast_ref::<InputField>() {
+                        new_meta.date = Some(input.get_text().to_string());
+                    }
+                }
+                self.core.set_metadata(new_meta);
+                self.modified = true;
+                let notif = Notification::new("Metadata updated".to_string(), hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
+                self.show_chapter_list(hub, rq, context);
+                true
+            }
             Event::Select(EntryId::Save) => {
                 if let Err(e) = self.core.save() {
                     let notif = Notification::new(format!("Error saving: {}", e), hub, rq, context);
@@ -482,10 +678,12 @@ impl View for EpubEditor {
                     self.children.push(Box::new(notif) as Box<dyn View>);
                 }
                 self.modified = false;
+                self.modified_chapters.clear();
                 false
             }
             Event::Select(EntryId::Discard) => {
                 self.modified = false;
+                self.modified_chapters.clear();
                 false
             }
             Event::Submit(ViewId::EditNoteInput, text) => {
@@ -557,6 +755,62 @@ impl View for EpubEditor {
                     }
                 }
                 self.do_replace_in_chapter(hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::ReplaceInDocument) => {
+                if let Some(state) = self.search_replace.as_mut() {
+                    if let Some(view) = self.children.iter().find(|c| c.is::<SearchReplaceView>()) {
+                        if let Some(sr_view) = view.downcast_ref::<SearchReplaceView>() {
+                            state.search_text = sr_view.get_search_text().to_string();
+                            state.replace_text = sr_view.get_replace_text().to_string();
+                        }
+                    }
+                }
+                if let Some(state) = &self.search_replace {
+                    if state.search_text.is_empty() {
+                        let notif =
+                            Notification::new("Search text is empty".to_string(), hub, rq, context);
+                        self.children.push(Box::new(notif) as Box<dyn View>);
+                        return true;
+                    }
+                    match self
+                        .core
+                        .replace_all_in_document(&state.search_text, &state.replace_text)
+                    {
+                        Ok(count) => {
+                            if count > 0 {
+                                self.modified = true;
+                                let notif = Notification::new(
+                                    format!("Replaced {} occurrence(s) in document", count),
+                                    hub,
+                                    rq,
+                                    context,
+                                );
+                                self.children.push(Box::new(notif) as Box<dyn View>);
+                                if let EditorState::EditingChapter { index: _ } = self.state {
+                                    self.update_input_field(rq, context);
+                                }
+                            } else {
+                                let notif = Notification::new(
+                                    "No matches found in document".to_string(),
+                                    hub,
+                                    rq,
+                                    context,
+                                );
+                                self.children.push(Box::new(notif) as Box<dyn View>);
+                            }
+                        }
+                        Err(e) => {
+                            let notif = Notification::new(
+                                format!("Replace error: {}", e),
+                                hub,
+                                rq,
+                                context,
+                            );
+                            self.children.push(Box::new(notif) as Box<dyn View>);
+                        }
+                    }
+                }
                 true
             }
             Event::Select(EntryId::CloseSearchReplace) => {

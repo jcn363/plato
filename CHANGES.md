@@ -6,51 +6,51 @@ Implementation of reserved UI features and migration from FFI font dependencies 
 
 ## Current Status
 
-| Item | Status |
-|------|--------|
-| All reserved UI features | ✅ Implemented |
-| Font migration (FFI → Rust) | ✅ Complete |
-| ARM target build | ✅ Clean |
-| Dead code warnings | ✅ Zero actionable warnings |
-| Manager integrations | ✅ All 9 managers wired up |
+| Item                        | Status                      |
+|-----------------------------|-----------------------------|
+| All reserved UI features    | ✅ Implemented              |
+| Font migration (FFI → Rust) | ✅ Complete                 |
+| ARM target build            | ✅ Clean                    |
+| Dead code warnings          | ✅ Zero actionable warnings |
+| Manager integrations        | ✅ All 9 managers wired up  |
 
 ## Completed Features
 
 ### UI Dialogs ✅
 
-| Dialog | Features |
-|--------|----------|
-| **AboutDialog** | App version (0.9.38), license (GPL-3.0), repository URL |
-| **ShareDialog** | Email, Cloud (Dropbox/Drive), Export with timestamp |
+| Dialog               | Features                                                  |
+|----------------------|-----------------------------------------------------------|
+| **AboutDialog**      | App version (0.9.38), license (GPL-3.0), repository URL   |
+| **ShareDialog**      | Email, Cloud (Dropbox/Drive), Export with timestamp       |
 | **SystemInfoDialog** | Library statistics (books, reading time, completion rate) |
-| **EmailDialog** | Email composition with recipient/subject fields |
-| **CloudDialog** | Provider selection with OAuth guidance |
+| **EmailDialog**      | Email composition with recipient/subject fields           |
+| **CloudDialog**      | Provider selection with OAuth guidance                    |
 
 ### Settings System ✅
 
-| Handler | Functionality |
-|---------|---------------|
-| **FontSettings** | Cycles font size (8.0-24.0) |
-| **DisplaySettings** | Toggles zoom mode |
+| Handler                | Functionality                             |
+|------------------------|-------------------------------------------|
+| **FontSettings**       | Cycles font size (8.0-24.0)               |
+| **DisplaySettings**    | Toggles zoom mode                         |
 | **NavigationSettings** | Cycles scroll mode (Screen→Page→Vertical) |
-| **AnnotationSettings** | Cycles text alignment |
-| **SearchSettings** | Adjusts margin width (0-20) |
+| **AnnotationSettings** | Cycles text alignment                     |
+| **SearchSettings**     | Adjusts margin width (0-20)               |
 
 ### Manager Integration Summary ✅
 
 All 9 WIP module managers now integrated and active:
 
-| Manager | Purpose | Integration Point |
-|---------|---------|-------------------|
-| `ReaderAnnotationManager` | Annotation rendering | `render_page()` highlights |
-| `ReaderDialogManager` | Info dialogs | `handle_show_annotations()` |
-| `ReaderInputHandler` | Input processing | `handle_device_event()` |
-| `ReaderRenderCache` | Cache statistics | `get_render_cache_stats()` |
-| `ReaderRenderEngine` | Viewport management | `update_render_viewport()` |
-| `ReaderSearchHandler` | Search operations | `search()` state management |
-| `ReaderSettingsManager` | Settings menu | `show_settings_menu()` |
-| `ReaderStateManager` | Page tracking | `go_to_page()` updates |
-| `ReaderTocManager` | Chapter navigation | `go_to_chapter()` |
+| Manager                   | Purpose              | Integration Point           |
+|---------------------------|----------------------|-----------------------------|
+| `ReaderAnnotationManager` | Annotation rendering | `render_page()` highlights  |
+| `ReaderDialogManager`     | Info dialogs         | `handle_show_annotations()` |
+| `ReaderInputHandler`      | Input processing     | `handle_device_event()`     |
+| `ReaderRenderCache`       | Cache statistics     | `get_render_cache_stats()`  |
+| `ReaderRenderEngine`      | Viewport management  | `update_render_viewport()`  |
+| `ReaderSearchHandler`     | Search operations    | `search()` state management |
+| `ReaderSettingsManager`   | Settings menu        | `show_settings_menu()`      |
+| `ReaderStateManager`      | Page tracking        | `go_to_page()` updates      |
+| `ReaderTocManager`        | Chapter navigation   | `go_to_chapter()`           |
 
 **Note**: All `#[allow(dead_code)]` attributes removed from Reader struct manager fields.
 
@@ -58,13 +58,24 @@ All 9 WIP module managers now integrated and active:
 
 ### Implementation Phases ✅ COMPLETE
 
-| Phase | Description | Commit |
-|-------|-------------|--------|
-| **Phase 1** | Annotation System Integration - Replaced `_annotations` with `annotation_manager` | `96eb50b` |
-| **Phase 2** | WIP Module Integration - Added all 9 manager fields to Reader struct | `bb797bb` |
-| **Phase 3** | Manager Wiring - All 9 managers integrated into Reader functionality | `44f51b4`, `3784adb` |
+| Phase       | Description                                                                       | Commit               |
+|-------------|-----------------------------------------------------------------------------------|----------------------|
+| **Phase 1** | Annotation System Integration - Replaced `_annotations` with `annotation_manager` | `96eb50b`            |
+| **Phase 2** | WIP Module Integration - Added all 9 manager fields to Reader struct              | `bb797bb`            |
+| **Phase 3** | Manager Wiring - All 9 managers integrated into Reader functionality              | `44f51b4`, `3784adb` |
 
 ## Recent Updates (April 2026)
+
+### EPUB Editor GUI Improvements ✅
+
+- Removed 5000 character content truncation for full chapter loading
+- Added bulk "Replace All in Document" functionality with dedicated button
+- Added metadata editing view with fields for title, author, language, identifier, publisher, date
+- Added chapter navigation buttons (Previous/Next) for seamless editing
+- Added visual indicators (asterisk) for modified chapters in chapter list
+- Added `get_text()` method to InputField for text retrieval
+- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata
+- Added ViewIds: EditMetadataTitle, EditMetadataAuthor, EditMetadataLanguage, EditMetadataIdentifier, EditMetadataPublisher, EditMetadataDate
 
 ### UI Components ✅
 
