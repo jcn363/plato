@@ -10,7 +10,8 @@ download_lib() {
 	url=$2
 	echo "Downloading ${name}..."
 	if [ -d "$name" ]; then
-		git ls-files -o --directory -z "$name" | xargs -0 rm -rf
+		# Remove all files except .gitignore
+		find "$name" -mindepth 1 -maxdepth 1 ! -name '.gitignore' -exec rm -rf {} + 2>/dev/null || true
 	else
 		mkdir "$name"
 	fi
