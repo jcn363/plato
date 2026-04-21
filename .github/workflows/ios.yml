@@ -36,12 +36,10 @@ jobs:
     - name: Build native dependencies for iOS
       run: |
         echo "Building native libraries for iOS..."
-        echo "This step currently requires manual implementation"
-        echo "Native libraries needed: mupdf, freetype, harfbuzz, gumbo, zlib, bzip2, libpng, libjpeg, openjpeg, jbig2dec"
-        echo "See build-ios.sh and mupdf_wrapper/build-ios.sh for reference"
-        # TODO: Implement native library build for iOS
-        # cd thirdparty && ./build-ios.sh
-        # cd ../mupdf_wrapper && ./build-ios.sh
+        chmod +x build-ios.sh
+        chmod +x thirdparty/build-ios.sh
+        chmod +x mupdf_wrapper/build-ios.sh
+        ./build-ios.sh universal
 
     - name: Build Rust core for iOS device
       run: |
