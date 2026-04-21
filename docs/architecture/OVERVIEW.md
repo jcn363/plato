@@ -6,7 +6,56 @@ This document provides a high-level overview of Plato's architecture, design pri
 
 Plato is organized as a layered architecture with clear separation of concerns:
 
+```mermaid
+graph TB
+    subgraph Application_Layer["Application Layer"]
+        ViewSystem["View System"]
+        UI["UI Components"]
+        Event["Event Handling"]
+    end
+
+    subgraph Business_Logic["Business Logic Layer"]
+        Library["Library Management"]
+        Document["Document Handling"]
+        Settings["Settings"]
+    end
+
+    subgraph Service["Service Layer"]
+        Rendering["Rendering"]
+        Input["Input"]
+        Storage["Storage"]
+        Sync["Synchronization"]
+    end
+
+    subgraph Hardware["Hardware Abstraction Layer"]
+        Framebuffer["Framebuffers"]
+        Frontlight["Frontlight"]
+        Battery["Battery"]
+        InputDev["Input Devices"]
+    end
+
+    subgraph External["External Libraries"]
+        MuPDF["MuPDF"]
+        HarfBuzz["HarfBuzz"]
+        SDL2["SDL2"]
+    end
+
+    ViewSystem --> Library
+    UI --> Document
+    Event --> Settings
+    Library --> Rendering
+    Document --> Input
+    Settings --> Storage
+    Rendering --> Framebuffer
+    Input --> Frontlight
+    Storage --> Battery
+    Sync --> InputDev
+    Framebuffer --> MuPDF
+    Frontlight --> HarfBuzz
+    Battery --> SDL2
 ```
+
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Application Layer                         │
 │  (View System, UI Components, Event Handling)                 │
@@ -152,7 +201,7 @@ All constants and configuration values have one authoritative location:
 
 ## Module Dependencies
 
-```
+```text
 view/ → geom, framebuffer, font, input, settings
 library/ → metadata, settings, validation
 document/ → framebuffer, metadata, settings

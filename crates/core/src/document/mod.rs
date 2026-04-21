@@ -89,6 +89,9 @@ pub mod sysinfo;
 
 mod mupdf_sys;
 
+#[cfg(test)]
+mod document_tests;
+
 use self::epub::EpubDocument;
 use self::html::HtmlDocument;
 use self::pdf::PdfOpener;
@@ -96,6 +99,7 @@ use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir, Point};
 use crate::log_error;
 use crate::metadata::{Annotation, TextAlign};
+use crate::validation::validate_path;
 use anyhow::{format_err, Context, Error};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -329,6 +333,8 @@ pub fn file_kind<P: AsRef<Path>>(path: P) -> Option<String> {
 }
 
 pub fn guess_kind<P: AsRef<Path>>(path: P) -> Result<&'static str, Error> {
+    // Validate path before attempting to open
+    validate_path(&path, "document path")?;
     let file = File::open(path.as_ref())
         .with_context(|| format!("can't open file {}", path.as_ref().display()))?;
     let mut magic = [0; 4];
@@ -387,6 +393,10 @@ pub fn asciify(name: &str) -> String {
 }
 
 pub fn open<P: AsRef<Path>>(path: P) -> Option<Box<dyn Document>> {
+    // Validate path before attempting to open
+    if validate_path(&path, "document path").is_err() {
+        return None;
+    }
     file_kind(path.as_ref()).and_then(|k| match k.as_ref() {
         "epub" => EpubDocument::new(&path)
             .map_err(|e| log_error!("{}: {:#}.", path.as_ref().display(), e))
