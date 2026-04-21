@@ -1143,6 +1143,25 @@ impl View for EpubEditor {
                 }
                 true
             }
+            Event::Select(EntryId::ListImages) => {
+                let images = self.core.list_images();
+                let notif = Notification::new(
+                    format!(
+                        "Found {} images across {} chapters",
+                        images.len(),
+                        images
+                            .iter()
+                            .map(|i| i.chapter_index)
+                            .collect::<std::collections::HashSet<_>>()
+                            .len()
+                    ),
+                    hub,
+                    rq,
+                    context,
+                );
+                self.children.push(Box::new(notif) as Box<dyn View>);
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;

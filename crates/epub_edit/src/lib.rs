@@ -118,6 +118,14 @@ pub struct ChapterStatistics {
     pub paragraph_count: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImageInfo {
+    pub chapter_index: usize,
+    pub chapter_title: String,
+    pub src: String,
+    pub alt: Option<String>,
+}
+
 pub struct EpubEditorCore {
     pub epub_path: PathBuf,
     pub metadata: EpubMetadata,
@@ -787,6 +795,34 @@ impl EpubEditorCore {
             )
         })?;
         Ok(())
+    }
+
+    #[must_use]
+    pub fn list_images(&self) -> Vec<ImageInfo> {
+        let mut images = Vec::new();
+        let img_re = Regex::new(r#"<img[^>]+src=["']([^"']+)["'][^>]*>"#).unwrap();
+
+        for (index, chapter) in self.chapters.iter().enumerate() {
+            for cap in img_re.captures_iter(&chapter.content) {
+                let src = cap
+                    .get(1)
+                    .map(|m| m.as_str().to_string())
+                    .unwrap_or_default();
+                let alt = Regex::new(r#"alt=["']([^"']*)["']"#)
+                    .unwrap()
+                    .captures(&cap[0])
+                    .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
+
+                images.push(ImageInfo {
+                    chapter_index: index,
+                    chapter_title: chapter.title.clone(),
+                    src,
+                    alt,
+                });
+            }
+        }
+
+        images
     }
 
     fn strip_html_tags(html: &str) -> String {

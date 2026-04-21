@@ -81,13 +81,15 @@ All 9 WIP module managers now integrated and active:
 - Added export/import: export chapter to text file, import chapter from text file
 - Added chapter statistics: word count, character count, paragraph count per chapter
 - Added table of contents management: generate and update TOC from chapter list
+- Added image management: detect and list all images in EPUB with chapter locations
 - Added SearchOptions struct to epub_edit library for search/replace configuration
 - Added ValidationIssue and ValidationResult structs for content validation
 - Added SpellError and SpellCheckResult structs for spell checking
 - Added ChapterStatistics struct for chapter statistics
+- Added ImageInfo struct for image management
 - Added UndoAction variants: RenameChapter, ReorderChapters for chapter management
 - Added toggle buttons (Regex, Case, Whole) to SearchReplaceView UI
-- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord, ValidateContent, RenameChapter, DeleteChapter, MoveChapterUp, MoveChapterDown, SpellCheck, ExportChapter, ImportChapter, ChapterStatistics, GenerateTOC
+- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord, ValidateContent, RenameChapter, DeleteChapter, MoveChapterUp, MoveChapterDown, SpellCheck, ExportChapter, ImportChapter, ChapterStatistics, GenerateTOC, ListImages
 - Added ViewIds: EditMetadataTitle, EditMetadataAuthor, EditMetadataLanguage, EditMetadataIdentifier, EditMetadataPublisher, EditMetadataDate
 - Updated search_in_chapter, replace_in_chapter, replace_all_in_document, search_all_chapters to support SearchOptions
 - Updated all search/replace calls in epub_editor.rs to pass SearchOptions from UI
