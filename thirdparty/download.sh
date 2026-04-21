@@ -9,14 +9,19 @@ download_lib() {
 	name=$1
 	url=$2
 	echo "Downloading ${name}..."
-	if [ -d "$name" ]; then
-		# Remove all files except .gitignore and build-ios.sh
-		find "$name" -mindepth 1 -maxdepth 1 ! -name '.gitignore' ! -name 'build-ios.sh' -exec rm -rf {} + 2>/dev/null || true
-	else
-		mkdir "$name"
+	# Save build-ios.sh if it exists
+	if [ -f "$name/build-ios.sh" ]; then
+		mv "$name/build-ios.sh" "/tmp/${name}-build-ios.sh.bak"
 	fi
+	# Remove directory completely
+	rm -rf "$name"
+	mkdir "$name"
 	curl -L -o "${name}.tgz" "$url"
 	tar -xz --strip-components 1 -C "$name" -f "${name}.tgz" && rm "${name}.tgz"
+	# Restore build-ios.sh if it was saved
+	if [ -f "/tmp/${name}-build-ios.sh.bak" ]; then
+		mv "/tmp/${name}-build-ios.sh.bak" "$name/build-ios.sh"
+	fi
 }
 
 for name in "$@" ; do

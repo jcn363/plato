@@ -26,7 +26,6 @@ export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC 
 ./configure --static --prefix=$BUILD_DIR
 make clean || true
 make -j$(sysctl -n hw.ncpu)
-cd ..
 
 # Build for iOS simulator (ARM64)
 echo "Building zlib for iOS simulator (ARM64)..."
@@ -36,7 +35,6 @@ export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12
 ./configure --static --prefix=$BUILD_DIR
 make clean || true
 make -j$(sysctl -n hw.ncpu)
-cd ..
 
 # Build for iOS simulator (x86_64)
 echo "Building zlib for iOS simulator (x86_64)..."
@@ -46,7 +44,6 @@ export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=1
 ./configure --static --prefix=$BUILD_DIR
 make clean || true
 make -j$(sysctl -n hw.ncpu)
-cd ..
 
 # Create universal library (device + simulator)
 echo "Creating universal zlib library..."
