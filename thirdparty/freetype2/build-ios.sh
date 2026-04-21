@@ -22,7 +22,8 @@ BUILD_DIR=$PROJECT_ROOT/target/freetype2/iOS/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
-./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --without-harfbuzz --enable-static
+export PKG_CONFIG_PATH=""
+./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --without-harfbuzz --without-png --without-brotli --enable-static
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
@@ -33,7 +34,8 @@ BUILD_DIR=$PROJECT_ROOT/target/freetype2/iOS-sim/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --without-harfbuzz --enable-static
+export PKG_CONFIG_PATH=""
+./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --without-harfbuzz --without-png --without-brotli --enable-static
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
@@ -44,7 +46,8 @@ BUILD_DIR=$PROJECT_ROOT/target/freetype2/iOS-sim/x86_64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-./configure --prefix=$BUILD_DIR --host=x86_64-apple-darwin --without-harfbuzz --enable-static
+export PKG_CONFIG_PATH=""
+./configure --prefix=$BUILD_DIR --host=x86_64-apple-darwin --without-harfbuzz --without-png --without-brotli --enable-static
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
