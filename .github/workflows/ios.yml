@@ -33,6 +33,16 @@ jobs:
       with:
         targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
+    - name: Build native dependencies for iOS
+      run: |
+        echo "Building native libraries for iOS..."
+        echo "This step currently requires manual implementation"
+        echo "Native libraries needed: mupdf, freetype, harfbuzz, gumbo, zlib, bzip2, libpng, libjpeg, openjpeg, jbig2dec"
+        echo "See build-ios.sh and mupdf_wrapper/build-ios.sh for reference"
+        # TODO: Implement native library build for iOS
+        # cd thirdparty && ./build-ios.sh
+        # cd ../mupdf_wrapper && ./build-ios.sh
+
     - name: Build Rust core for iOS device
       run: |
         cargo build --target aarch64-apple-ios --release -p plato-core
@@ -62,9 +72,9 @@ jobs:
           target/aarch64-apple-ios/release/libplato_core.a
           target/aarch64-apple-ios-sim/release/libplato_core.a
           target/x86_64-apple-ios/release/libplato_core.a
-          target/universal/libplato_core.a
-        retention-days: 30
-
+          target⚠️uNaeiverliblarylibpld saeptcequresimplemenion
+        retentioNatys:ies needed: mupdf, freetpe,hafbuzz, gumbo, zlib, bzip2, libpng, libjpeg, opnjpg, jbig2ec
+Seebuild-os.sh ndmdf_wrppr/buil-ios.shreferece
     - name: Run tests on host
       run: |
         cargo test --target x86_64-apple-darwin --verbose
