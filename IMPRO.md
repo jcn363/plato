@@ -110,18 +110,20 @@ Per AGENTS.md guidelines, implement changes as follows:
 - **Multi-target validation**: Builds for ARM, ARM64, x86_64
 - **Clippy integration**: Clippy with -D warnings enforced
 
-### Parallel Processing (Low Priority)
+### Parallel Processing (Low Priority) - LIMITED IMPLEMENTATION
 
-- **Implement coarse-grained parallelism**: Add parallel processing for:
-  - Page rendering/compositing (tiling/scanline bands)
-  - PDF/EPUB layout & reflow (per-page work)
-  - Image decoding/scaling (concurrent)
-  - Background tasks (indexing, thumbnails)
-  - I/O pipelining
-- **Thread pool sizing**: Size thread pools to available cores (usually 2-4 on Kobo devices)
-- **Memory limits**: Limit peak memory by streaming and reusing buffers
-- **Priority handling**: Prioritize interactive threads over background work
-- **SIMD exploration**: Evaluate vectorized libraries where applicable
+**Implemented (AGENTS.md compliant):**
+- **Vec pre-allocation**: Added Vec::with_capacity() to reduce reallocations in dictionary lookup, CSS parsing, DOM operations
+- **Caching infrastructure**: Documented existing LazyLock caching (40 instances), page caching, font caching
+- **Algorithmic efficiency**: Documented existing FxHashMap usage, pre-allocated buffers, Cow<str> for strings
+
+**Skipped (requires Rayon/threading, conflicts with AGENTS.md):**
+- Coarse-grained parallelism (page rendering, PDF/EPUB layout, image decoding)
+- Thread pool sizing
+- Priority handling between threads
+- SIMD exploration (requires external libraries)
+
+**Rationale:** AGENTS.md explicitly states "Do not use Rayon for data parallelism. Focus on algorithmic improvements and caching instead." The limited implementation focuses on algorithmic improvements and caching rather than explicit threading.
 
 ### Memory & Battery Optimization ✅
 
@@ -180,23 +182,6 @@ Per AGENTS.md guidelines, implement changes as follows:
 - **Acceptable contexts**: All instances are in acceptable contexts (test code, build scripts, SDL2 initialization, LazyLock regex)
 - **No production issues**: No unwrap() calls in production code that need replacement
 
-### 2026-04-21 Algorithmic Improvements and Caching
-
-- **Vec pre-allocation optimizations**: Added `Vec::with_capacity()` to reduce reallocations in:
-  - Dictionary lookup (dictionary/mod.rs) - pre-allocate based on entry count
-  - CSS selector parsing (document/html/css.rs) - pre-allocate 4 for typical rules
-  - CSS declaration parsing (document/html/css.rs) - pre-allocate 8 for typical rules
-  - CSS stylesheet parsing (document/html/css.rs) - pre-allocate 16 for typical stylesheets
-  - DOM inline wrapping (document/html/dom.rs) - pre-allocate 32 for typical documents
-- **Caching infrastructure**: Codebase already uses extensive LazyLock caching (40 instances across 13 files) for static data and expensive computations
-- **Page caching**: Progressive loader implements page caching with HashMap for efficient document navigation
-- **Font caching**: HTML engine implements font caching with LRU eviction for efficient rendering
-- **Algorithmic efficiency**: Codebase already uses efficient patterns (FxHashMap, pre-allocated buffers, Cow for strings)
-
-### 2026-04-21 Work Session Summary
-
-Completed all High Priority and Medium Priority items from Priority Recommendations, plus all Active Proposals, and started Low Priority items:
-
 **High Priority (Immediate Focus):**
 
 - ✅ Input validation for document/mod.rs public APIs (guess_kind, open)
@@ -229,20 +214,22 @@ Completed all High Priority and Medium Priority items from Priority Recommendati
 - ✅ Feature expansion (new document formats) - Improved error handling with detailed logging
 - ✅ Advanced user experience improvements - Improved error messages with actionable guidance
 - ⏸ Parallel processing implementation - SKIPPED: Conflicts with AGENTS.md guidance
+- **Vec pre-allocation optimizations**: Added `Vec::with_capacity()` to reduce reallocations in:
+  - Dictionary lookup (dictionary/mod.rs) - pre-allocate based on entry count
+  - CSS selector parsing (document/html/css.rs) - pre-allocate 4 for typical rules
+  - CSS declaration parsing (document/html/css.rs) - pre-allocate 8 for typical rules
+  - CSS stylesheet parsing (document/html/css.rs) - pre-allocate 16 for typical stylesheets
+  - DOM inline wrapping (document/html/dom.rs) - pre-allocate 32 for typical documents
+- **Caching infrastructure**: Codebase already uses extensive LazyLock caching (40 instances across 13 files) for static data and expensive computations
+- **Page caching**: Progressive loader implements page caching with HashMap for efficient document navigation
+- **Font caching**: HTML engine implements font caching with LRU eviction for efficient rendering
+- **Algorithmic efficiency**: Codebase already uses efficient patterns (FxHashMap, pre-allocated buffers, Cow for strings)
 
 **Code Quality:**
 
 - cargo fmt: ✅ Pass
 - cargo clippy: ✅ Pass (zero warnings)
 - ARM Kobo build: ✅ Pass
-
-**Files Modified:**
-
-- crates/core/src/document/mod.rs (added validation, improved error logging)
-- crates/core/src/document/document_tests.rs (new test file with 11 tests)
-- crates/core/src/font/mod.rs (improved error messages)
-- docs/architecture/OVERVIEW.md (added Mermaid diagram)
-- IMPRO.md (updated with completion status for all sections)
 
 ---
 
