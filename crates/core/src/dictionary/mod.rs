@@ -58,7 +58,7 @@ impl Dictionary {
                 .collect();
         }
         let entries = self.index.load_and_find(&query, fuzzy, &self.metadata);
-        let mut results = Vec::new();
+        let mut results = Vec::with_capacity(entries.len());
         for entry in entries.into_iter() {
             results.push([
                 entry.original.unwrap_or(entry.headword),

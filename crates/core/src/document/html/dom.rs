@@ -222,7 +222,7 @@ impl XmlTree {
     }
 
     pub fn wrap_lost_inlines(&mut self) {
-        let mut ids = Vec::new();
+        let mut ids = Vec::with_capacity(32); // Pre-allocate for typical document with some lost inlines
         let mut known_ids = FxHashSet::default();
 
         for n in self.root().descendants().filter(|n| n.is_inline()) {

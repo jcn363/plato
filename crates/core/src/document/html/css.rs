@@ -223,7 +223,7 @@ impl<'a> CssParser<'a> {
 
     fn parse_selectors(&mut self) -> Vec<Selector> {
         let mut supported = true;
-        let mut selectors = Vec::new();
+        let mut selectors = Vec::with_capacity(4); // Pre-allocate for typical rule with few selectors
         let mut s = Selector::default();
         let mut selec = SimpleSelector::default();
         let mut comb = Combinator::None;
@@ -398,7 +398,7 @@ impl<'a> CssParser<'a> {
     }
 
     pub fn parse_declarations(&mut self) -> Vec<Declaration> {
-        let mut declarations = Vec::new();
+        let mut declarations = Vec::with_capacity(8); // Pre-allocate for typical rule with few declarations
         let mut d = Declaration::default();
 
         while !self.eof() {
@@ -471,7 +471,7 @@ impl<'a> CssParser<'a> {
     }
 
     pub fn parse(&mut self) -> StyleSheet {
-        let mut rules = Vec::new();
+        let mut rules = Vec::with_capacity(16); // Pre-allocate for typical stylesheet with multiple rules
 
         while !self.eof() {
             self.skip_spaces_and_comments();

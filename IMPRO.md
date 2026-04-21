@@ -180,6 +180,19 @@ Per AGENTS.md guidelines, implement changes as follows:
 - **Acceptable contexts**: All instances are in acceptable contexts (test code, build scripts, SDL2 initialization, LazyLock regex)
 - **No production issues**: No unwrap() calls in production code that need replacement
 
+### 2026-04-21 Algorithmic Improvements and Caching
+
+- **Vec pre-allocation optimizations**: Added `Vec::with_capacity()` to reduce reallocations in:
+  - Dictionary lookup (dictionary/mod.rs) - pre-allocate based on entry count
+  - CSS selector parsing (document/html/css.rs) - pre-allocate 4 for typical rules
+  - CSS declaration parsing (document/html/css.rs) - pre-allocate 8 for typical rules
+  - CSS stylesheet parsing (document/html/css.rs) - pre-allocate 16 for typical stylesheets
+  - DOM inline wrapping (document/html/dom.rs) - pre-allocate 32 for typical documents
+- **Caching infrastructure**: Codebase already uses extensive LazyLock caching (40 instances across 13 files) for static data and expensive computations
+- **Page caching**: Progressive loader implements page caching with HashMap for efficient document navigation
+- **Font caching**: HTML engine implements font caching with LRU eviction for efficient rendering
+- **Algorithmic efficiency**: Codebase already uses efficient patterns (FxHashMap, pre-allocated buffers, Cow for strings)
+
 ### 2026-04-21 Work Session Summary
 
 Completed all High Priority and Medium Priority items from Priority Recommendations, plus all Active Proposals, and started Low Priority items:
