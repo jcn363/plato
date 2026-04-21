@@ -2,6 +2,44 @@ use std::env;
 
 fn main() {
     let target = env::var("TARGET").unwrap();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+
+    // Handle Android target
+    if target_os == "android" {
+        println!("cargo:rerun-if-changed=build.rs");
+        
+        // Link against Android native libraries
+        let android_lib_dir = "target/android";
+        
+        println!("cargo:rustc-link-search=target/mupdf_wrapper/Android");
+        println!("cargo:rustc-link-search={android_lib_dir}/mupdf/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/freetype2/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/harfbuzz/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/gumbo/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/zlib/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/bzip2/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/libpng/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/libjpeg/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/openjpeg/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/jbig2dec/lib");
+        println!("cargo:rustc-link-search={android_lib_dir}/djvulibre/lib");
+        
+        println!("cargo:rustc-link-lib=static=mupdf_wrapper");
+        println!("cargo:rustc-link-lib=static=mupdf");
+        println!("cargo:rustc-link-lib=static=mupdf-third");
+        println!("cargo:rustc-link-lib=static=freetype");
+        println!("cargo:rustc-link-lib=static=harfbuzz");
+        println!("cargo:rustc-link-lib=static=gumbo");
+        println!("cargo:rustc-link-lib=static=z");
+        println!("cargo:rustc-link-lib=static=bz2");
+        println!("cargo:rustc-link-lib=static=png16");
+        println!("cargo:rustc-link-lib=static=jpeg");
+        println!("cargo:rustc-link-lib=static=openjp2");
+        println!("cargo:rustc-link-lib=static=jbig2dec");
+        println!("cargo:rustc-link-lib=static=djvulibre");
+        
+        return;
+    }
 
     // Determine library directory based on target
     let lib_dir = match target.as_str() {
@@ -28,9 +66,8 @@ fn main() {
         println!("cargo:rustc-link-lib=mupdf_wrapper");
         println!("cargo:rustc-link-lib=freetype");
         println!("cargo:rustc-link-lib=harfbuzz");
-        // Handle the Linux and macOS platforms.
+    // Handle the Linux and macOS platforms.
     } else {
-        let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
         match target_os.as_ref() {
             "linux" => {
                 // For x86_64 Linux, link against system libraries from /lib/x86_64-linux-gnu
