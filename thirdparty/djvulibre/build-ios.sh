@@ -21,6 +21,7 @@ export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
 ./configure --static --prefix=$BUILD_DIR --host=arm-apple-darwin
 make clean || true
 make -j$(sysctl -n hw.ncpu)
+make install
 
 # Build for iOS simulator (ARM64)
 echo "Building djvulibre for iOS simulator (ARM64)..."
@@ -31,6 +32,7 @@ export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=1
 ./configure --static --prefix=$BUILD_DIR --host=arm-apple-darwin
 make clean || true
 make -j$(sysctl -n hw.ncpu)
+make install
 
 # Build for iOS simulator (x86_64)
 echo "Building djvulibre for iOS simulator (x86_64)..."
@@ -41,6 +43,7 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 ./configure --static --prefix=$BUILD_DIR --host=x86_64-apple-darwin
 make clean || true
 make -j$(sysctl -n hw.ncpu)
+make install
 
 # Create universal library (device + simulator)
 echo "Creating universal djvulibre library..."
