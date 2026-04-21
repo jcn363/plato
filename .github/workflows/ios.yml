@@ -80,6 +80,7 @@ Seebuild-os.sh ndmdf_wrppr/buil-ios.shreferece
     - name: Summary
       run: |
         echo "## iOS Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Native libraries built for iOS" >> $GITHUB_STEP_SUMMARY
         echo "- ✅ Rust core built for all iOS targets" >> $GITHUB_STEP_SUMMARY
         echo "- ✅ Universal library created" >> $GITHUB_STEP_SUMMARY
         echo "- 📦 Artifacts uploaded for download" >> $GITHUB_STEP_SUMMARY
