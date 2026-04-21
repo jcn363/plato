@@ -33,6 +33,13 @@ jobs:
       with:
         targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
+    - name: Download thirdparty library sources
+      run: |
+        echo "Downloading thirdparty library sources..."
+        cd thirdparty
+        chmod +x download.sh
+        ./download.sh
+
     - name: Build native dependencies for iOS
       run: |
         echo "Building native libraries for iOS..."
