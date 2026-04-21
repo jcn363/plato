@@ -14,7 +14,7 @@ download_lib() {
 	else
 		mkdir "$name"
 	fi
-	wget -q --show-progress -O "${name}.tgz" "$url"
+	curl -L -o "${name}.tgz" "$url"
 	tar -xz --strip-components 1 -C "$name" -f "${name}.tgz" && rm "${name}.tgz"
 }
 
