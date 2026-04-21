@@ -22,6 +22,7 @@ export PKG_CONFIG_PATH=""
 ./configure --static --prefix=$BUILD_DIR --host=arm-apple-darwin --with-freetype=yes --with-fontconfig=no
 make clean || true
 make -j$(sysctl -n hw.ncpu)
+make install
 
 # Build for iOS simulator (ARM64)
 echo "Building harfbuzz for iOS simulator (ARM64)..."
@@ -33,6 +34,7 @@ export PKG_CONFIG_PATH=""
 ./configure --static --prefix=$BUILD_DIR --host=arm-apple-darwin --with-freetype=yes --with-fontconfig=no
 make clean || true
 make -j$(sysctl -n hw.ncpu)
+make install
 
 # Build for iOS simulator (x86_64)
 echo "Building harfbuzz for iOS simulator (x86_64)..."
@@ -44,6 +46,7 @@ export PKG_CONFIG_PATH=""
 ./configure --static --prefix=$BUILD_DIR --host=x86_64-apple-darwin --with-freetype=yes --with-fontconfig=no
 make clean || true
 make -j$(sysctl -n hw.ncpu)
+make install
 
 # Create universal library (device + simulator)
 echo "Creating universal harfbuzz library..."
