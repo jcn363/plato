@@ -1162,6 +1162,13 @@ impl View for EpubEditor {
                 self.children.push(Box::new(notif) as Box<dyn View>);
                 true
             }
+            Event::Select(EntryId::ClearHistory) => {
+                self.core.clear_history();
+                let notif =
+                    Notification::new("Undo/redo history cleared".to_string(), hub, rq, context);
+                self.children.push(Box::new(notif) as Box<dyn View>);
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;

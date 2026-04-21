@@ -126,6 +126,8 @@ pub struct ImageInfo {
     pub alt: Option<String>,
 }
 
+const MAX_HISTORY_SIZE: usize = 50;
+
 pub struct EpubEditorCore {
     pub epub_path: PathBuf,
     pub metadata: EpubMetadata,
@@ -472,6 +474,9 @@ impl EpubEditorCore {
                     }
                 }
             }
+            if self.redo_stack.len() > MAX_HISTORY_SIZE {
+                self.redo_stack.remove(0);
+            }
             Ok(true)
         } else {
             Ok(false)
@@ -523,6 +528,11 @@ impl EpubEditorCore {
         } else {
             Ok(false)
         }
+    }
+
+    pub fn clear_history(&mut self) {
+        self.undo_stack.clear();
+        self.redo_stack.clear();
     }
 
     #[must_use]
