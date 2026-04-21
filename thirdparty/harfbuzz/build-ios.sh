@@ -22,8 +22,10 @@ BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/iOS/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
-export PKG_CONFIG_PATH=""
-./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --with-freetype=yes --with-fontconfig=no --enable-static
+unset PKG_CONFIG
+unset PKG_CONFIG_PATH
+unset PKG_CONFIG_LIBDIR
+cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
@@ -34,8 +36,10 @@ BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/iOS-sim/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-export PKG_CONFIG_PATH=""
-./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --with-freetype=yes --with-fontconfig=no --enable-static
+unset PKG_CONFIG
+unset PKG_CONFIG_PATH
+unset PKG_CONFIG_LIBDIR
+cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
@@ -46,8 +50,10 @@ BUILD_DIR=$PROJECT_ROOT/target/harfbuzz/iOS-sim/x86_64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-export PKG_CONFIG_PATH=""
-./configure --prefix=$BUILD_DIR --host=x86_64-apple-darwin --with-freetype=yes --with-fontconfig=no --enable-static
+unset PKG_CONFIG
+unset PKG_CONFIG_PATH
+unset PKG_CONFIG_LIBDIR
+cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
