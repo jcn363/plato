@@ -75,6 +75,22 @@ pub struct SearchOptions {
     pub whole_word: bool,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ValidationIssue {
+    pub chapter_index: usize,
+    pub chapter_title: String,
+    pub issue_type: String,
+    pub message: String,
+    pub location: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ValidationResult {
+    pub issues: Vec<ValidationIssue>,
+    pub total_chapters: usize,
+    pub chapters_with_issues: usize,
+}
+
 pub struct EpubEditorCore {
     pub epub_path: PathBuf,
     pub metadata: EpubMetadata,
@@ -607,6 +623,137 @@ impl EpubEditorCore {
             }
         }
         results
+    }
+
+    #[must_use]
+    pub fn validate_content(&self) -> ValidationResult {
+        let mut issues = Vec::new();
+        for (index, chapter) in self.chapters.iter().enumerate() {
+            Self::validate_chapter_content(index, chapter, &mut issues);
+        }
+        let chapters_with_issues = issues
+            .iter()
+            .map(|i| i.chapter_index)
+            .collect::<std::collections::HashSet<_>>()
+            .len();
+        ValidationResult {
+            issues,
+            total_chapters: self.chapters.len(),
+            chapters_with_issues,
+        }
+    }
+
+    fn validate_chapter_content(
+        index: usize,
+        chapter: &EpubChapter,
+        issues: &mut Vec<ValidationIssue>,
+    ) {
+        let content = &chapter.content;
+
+        Self::check_html_structure(content, index, chapter, issues);
+        Self::check_broken_links(content, index, chapter, issues);
+        Self::check_missing_images(content, index, chapter, issues);
+    }
+
+    fn check_html_structure(
+        content: &str,
+        index: usize,
+        chapter: &EpubChapter,
+        issues: &mut Vec<ValidationIssue>,
+    ) {
+        let mut tag_stack = Vec::new();
+        let mut in_tag = false;
+        let mut current_tag = String::new();
+
+        for (pos, ch) in content.char_indices() {
+            if ch == '<' {
+                in_tag = true;
+                if !current_tag.is_empty() && !current_tag.starts_with('/') {
+                    tag_stack.push((current_tag.clone(), pos));
+                }
+                current_tag.clear();
+            } else if ch == '>' {
+                in_tag = false;
+                if current_tag.starts_with('/') {
+                    if let Some((tag, _)) = tag_stack.pop() {
+                        let closing_tag = current_tag.trim_start_matches('/');
+                        if tag != closing_tag {
+                            issues.push(ValidationIssue {
+                                chapter_index: index,
+                                chapter_title: chapter.title.clone(),
+                                issue_type: "HTML Structure".to_string(),
+                                message: format!(
+                                    "Mismatched tags: expected </{}>, found </{}>",
+                                    tag, closing_tag
+                                ),
+                                location: Some(format!("Position {}", pos)),
+                            });
+                        }
+                    }
+                }
+                current_tag.clear();
+            } else if in_tag {
+                if ch == ' ' {
+                    in_tag = false;
+                } else {
+                    current_tag.push(ch);
+                }
+            }
+        }
+
+        if !tag_stack.is_empty() {
+            for (tag, pos) in tag_stack {
+                issues.push(ValidationIssue {
+                    chapter_index: index,
+                    chapter_title: chapter.title.clone(),
+                    issue_type: "HTML Structure".to_string(),
+                    message: format!("Unclosed tag: <{}>", tag),
+                    location: Some(format!("Position {}", pos)),
+                });
+            }
+        }
+    }
+
+    fn check_broken_links(
+        content: &str,
+        index: usize,
+        chapter: &EpubChapter,
+        issues: &mut Vec<ValidationIssue>,
+    ) {
+        let href_re = Regex::new(r#"href="([^"]+)""#).unwrap();
+        for mat in href_re.find_iter(content) {
+            let href = &content[mat.start() + 6..mat.end() - 1];
+            if href.is_empty() || href == "#" {
+                issues.push(ValidationIssue {
+                    chapter_index: index,
+                    chapter_title: chapter.title.clone(),
+                    issue_type: "Broken Link".to_string(),
+                    message: format!("Empty or invalid href: {}", href),
+                    location: Some(format!("Position {}", mat.start())),
+                });
+            }
+        }
+    }
+
+    fn check_missing_images(
+        content: &str,
+        index: usize,
+        chapter: &EpubChapter,
+        issues: &mut Vec<ValidationIssue>,
+    ) {
+        let img_re = Regex::new(r#"<img[^>]+src="([^"]+)""#).unwrap();
+        for mat in img_re.find_iter(content) {
+            let src = &content[mat.start() + mat.as_str().find("src=").unwrap() + 5..mat.end() - 1];
+            if src.starts_with("http://") || src.starts_with("https://") {
+                issues.push(ValidationIssue {
+                    chapter_index: index,
+                    chapter_title: chapter.title.clone(),
+                    issue_type: "External Image".to_string(),
+                    message: format!("External image reference: {}", src),
+                    location: Some(format!("Position {}", mat.start())),
+                });
+            }
+        }
     }
 
     /// Saves the EPUB file with all modifications applied.

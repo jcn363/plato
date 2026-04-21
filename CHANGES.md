@@ -75,9 +75,11 @@ All 9 WIP module managers now integrated and active:
 - Added visual indicators (asterisk) for modified chapters in chapter list
 - Added advanced search/replace options: regex support, case-sensitive toggle, whole-word toggle
 - Added search history (last 10 searches) with automatic deduplication
+- Added content validation: HTML structure check, broken link detection, external image detection
 - Added SearchOptions struct to epub_edit library for search/replace configuration
+- Added ValidationIssue and ValidationResult structs for content validation
 - Added toggle buttons (Regex, Case, Whole) to SearchReplaceView UI
-- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord
+- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord, ValidateContent
 - Added ViewIds: EditMetadataTitle, EditMetadataAuthor, EditMetadataLanguage, EditMetadataIdentifier, EditMetadataPublisher, EditMetadataDate
 - Updated search_in_chapter, replace_in_chapter, replace_all_in_document, search_all_chapters to support SearchOptions
 - Updated all search/replace calls in epub_editor.rs to pass SearchOptions from UI

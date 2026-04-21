@@ -904,6 +904,34 @@ impl View for EpubEditor {
                 self.close_search_replace(rq);
                 true
             }
+            Event::Select(EntryId::ValidateContent) => {
+                let result = self.core.validate_content();
+                if result.issues.is_empty() {
+                    let notif = Notification::new(
+                        format!(
+                            "Validation passed: {} chapters checked",
+                            result.total_chapters
+                        ),
+                        hub,
+                        rq,
+                        context,
+                    );
+                    self.children.push(Box::new(notif) as Box<dyn View>);
+                } else {
+                    let notif = Notification::new(
+                        format!(
+                            "Found {} issues in {} chapters",
+                            result.issues.len(),
+                            result.chapters_with_issues
+                        ),
+                        hub,
+                        rq,
+                        context,
+                    );
+                    self.children.push(Box::new(notif) as Box<dyn View>);
+                }
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;
