@@ -576,6 +576,22 @@ impl EpubEditorCore {
         self.bookmarks.clone()
     }
 
+    pub fn replace_all_in_all_chapters(
+        &mut self,
+        query: &str,
+        replacement: &str,
+        options: SearchOptions,
+    ) -> Result<usize> {
+        let mut total_replacements = 0;
+
+        for index in 0..self.chapters.len() {
+            let replacements = self.replace_in_chapter(index, query, replacement, options)?;
+            total_replacements += replacements;
+        }
+
+        Ok(total_replacements)
+    }
+
     #[must_use]
     pub fn search_in_chapter(
         &self,

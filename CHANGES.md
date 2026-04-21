@@ -85,6 +85,7 @@ All 9 WIP module managers now integrated and active:
 - Added undo/redo improvements: history limit (50 actions), clear history method
 - Added CSS styling tools: detect and list all CSS files and inline styles
 - Added bookmark management: add, remove, and list bookmarks with chapter positions
+- Added find and replace across all documents: replace text in all chapters at once
 - Added SearchOptions struct to epub_edit library for search/replace configuration
 - Added ValidationIssue and ValidationResult structs for content validation
 - Added SpellError and SpellCheckResult structs for spell checking
@@ -94,7 +95,7 @@ All 9 WIP module managers now integrated and active:
 - Added Bookmark struct for bookmark management
 - Added UndoAction variants: RenameChapter, ReorderChapters for chapter management
 - Added toggle buttons (Regex, Case, Whole) to SearchReplaceView UI
-- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord, ValidateContent, RenameChapter, DeleteChapter, MoveChapterUp, MoveChapterDown, SpellCheck, ExportChapter, ImportChapter, ChapterStatistics, GenerateTOC, ListImages, ClearHistory, ListCSS, AddBookmark
+- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord, ValidateContent, RenameChapter, DeleteChapter, MoveChapterUp, MoveChapterDown, SpellCheck, ExportChapter, ImportChapter, ChapterStatistics, GenerateTOC, ListImages, ClearHistory, ListCSS, AddBookmark, ReplaceAllInAllDocuments
 - Added ViewIds: EditMetadataTitle, EditMetadataAuthor, EditMetadataLanguage, EditMetadataIdentifier, EditMetadataPublisher, EditMetadataDate
 - Updated search_in_chapter, replace_in_chapter, replace_all_in_document, search_all_chapters to support SearchOptions
 - Updated all search/replace calls in epub_editor.rs to pass SearchOptions from UI

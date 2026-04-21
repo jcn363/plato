@@ -1204,6 +1204,57 @@ impl View for EpubEditor {
                 }
                 true
             }
+            Event::Select(EntryId::ReplaceAllInAllDocuments) => {
+                if let Some(state) = &self.search_replace {
+                    if state.search_text.is_empty() {
+                        let notif =
+                            Notification::new("Search text is empty".to_string(), hub, rq, context);
+                        self.children.push(Box::new(notif) as Box<dyn View>);
+                        return true;
+                    }
+                    let search_text = state.search_text.clone();
+                    let options = self
+                        .children
+                        .iter()
+                        .find(|c| c.is::<SearchReplaceView>())
+                        .and_then(|v| v.downcast_ref::<SearchReplaceView>())
+                        .map(|sr| {
+                            let (use_regex, case_sensitive, whole_word) = sr.get_search_options();
+                            epub_edit::SearchOptions {
+                                use_regex,
+                                case_sensitive,
+                                whole_word,
+                            }
+                        })
+                        .unwrap_or_default();
+                    match self.core.replace_all_in_all_chapters(
+                        &search_text,
+                        &state.replace_text,
+                        options,
+                    ) {
+                        Ok(count) => {
+                            self.modified = true;
+                            let notif = Notification::new(
+                                format!("Replaced {} occurrences across all chapters", count),
+                                hub,
+                                rq,
+                                context,
+                            );
+                            self.children.push(Box::new(notif) as Box<dyn View>);
+                        }
+                        Err(e) => {
+                            let notif = Notification::new(
+                                format!("Error replacing in all chapters: {}", e),
+                                hub,
+                                rq,
+                                context,
+                            );
+                            self.children.push(Box::new(notif) as Box<dyn View>);
+                        }
+                    }
+                }
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;
