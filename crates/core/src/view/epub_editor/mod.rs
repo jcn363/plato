@@ -4,6 +4,8 @@
 //! chapter content directly on their device. It's designed to fix errors
 //! encountered while reading EPUB books.
 
+use std::path::Path;
+
 use crate::color;
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
@@ -1047,6 +1049,45 @@ impl View for EpubEditor {
                                 .collect::<std::collections::HashSet<_>>()
                                 .len()
                         ),
+                        hub,
+                        rq,
+                        context,
+                    );
+                    self.children.push(Box::new(notif) as Box<dyn View>);
+                }
+                true
+            }
+            Event::Select(EntryId::ExportChapter) => {
+                if let EditorState::EditingChapter { index } = self.state {
+                    let export_path = format!("/tmp/chapter_{}.txt", index);
+                    let path = Path::new(&export_path);
+                    match self.core.export_chapter(index, path) {
+                        Ok(_) => {
+                            let notif = Notification::new(
+                                format!("Chapter exported to {}", export_path),
+                                hub,
+                                rq,
+                                context,
+                            );
+                            self.children.push(Box::new(notif) as Box<dyn View>);
+                        }
+                        Err(e) => {
+                            let notif = Notification::new(
+                                format!("Error exporting chapter: {}", e),
+                                hub,
+                                rq,
+                                context,
+                            );
+                            self.children.push(Box::new(notif) as Box<dyn View>);
+                        }
+                    }
+                }
+                true
+            }
+            Event::Select(EntryId::ImportChapter) => {
+                if let EditorState::EditingChapter { index: _ } = self.state {
+                    let notif = Notification::new(
+                        "Chapter import - file path selection needed".to_string(),
                         hub,
                         rq,
                         context,

@@ -811,6 +811,34 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    pub fn export_chapter(&self, index: usize, path: &Path) -> Result<()> {
+        if index >= self.chapters.len() {
+            bail!("Chapter index out of bounds");
+        }
+        let chapter = &self.chapters[index];
+        let content = Self::strip_html_tags(&chapter.content);
+        fs::write(path, &content)
+            .with_context(|| format!("Failed to write chapter export to {}", path.display()))?;
+        Ok(())
+    }
+
+    pub fn import_chapter(&mut self, index: usize, path: &Path) -> Result<()> {
+        if index >= self.chapters.len() {
+            bail!("Chapter index out of bounds");
+        }
+        let content = fs::read_to_string(path)
+            .with_context(|| format!("Failed to read chapter import from {}", path.display()))?;
+        let old_content = self.chapters[index].content.clone();
+        self.chapters[index].content = content;
+        self.undo_stack
+            .push(UndoAction::Chapter(index, old_content));
+        self.redo_stack.clear();
+        let chapter = &self.chapters[index];
+        let file_path = self.temp_dir.join(&chapter.href);
+        fs::write(&file_path, &chapter.content)?;
+        Ok(())
+    }
+
     fn validate_chapter_content(
         index: usize,
         chapter: &EpubChapter,
