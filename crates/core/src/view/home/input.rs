@@ -247,8 +247,8 @@ impl HomeInputExt for Home {
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }
-            Event::Select(EntryId::SetManualOrder(ref _path, ref _order)) => {
-                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+            Event::Select(EntryId::SetManualOrder(ref path, ref order)) => {
+                self.set_manual_order(path, *order, hub, rq, context);
                 true
             }
             Event::Select(EntryId::ReverseOrder) => {

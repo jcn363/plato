@@ -70,6 +70,17 @@ impl SortMethod {
 }
 
 pub fn sort(md: &mut super::info::Metadata, sort_method: SortMethod, reverse_order: bool) {
+    if sort_method == SortMethod::Manual {
+        // Assign sequential manual_order to books without one
+        let mut next_order: usize = 0;
+        for info in md.iter_mut() {
+            if info.manual_order.is_none() {
+                info.manual_order = Some(next_order);
+                next_order += 1;
+            }
+        }
+    }
+
     let sort_fn = sorter(sort_method);
 
     if reverse_order {

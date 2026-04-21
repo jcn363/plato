@@ -19,10 +19,11 @@
 use std::path::{Path, PathBuf};
 use std::process::Child;
 
+use crate::context::Context;
 use crate::geom::Rectangle;
 use crate::metadata::{BookQuery, Metadata, SimpleStatus, SortMethod};
 use crate::settings::{FirstColumn, SecondColumn};
-use crate::view::{Id, View, ViewId};
+use crate::view::{Hub, Id, RenderQueue, View, ViewId};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 /// Trash directory name constant
@@ -48,6 +49,10 @@ pub struct Home {
     pub batch_mode: bool,
     pub batch_selected: FxHashSet<usize>,
     pub reorder_mode: bool,
+    // Drag-and-drop state for manual reordering
+    pub drag_source_index: Option<usize>,
+    pub drag_target_index: Option<usize>,
+    pub is_dragging: bool,
     // UI toggle fields for modularized components
     pub keyboard: Option<Box<dyn View>>,
     pub address_bar: Option<Box<dyn View>>,
@@ -145,6 +150,24 @@ impl Home {
     /// Set the target document
     pub fn set_target_document(&mut self, path: Option<PathBuf>) {
         self.target_document = path;
+    }
+
+    /// Set manual order for a document
+    pub fn set_manual_order(
+        &mut self,
+        path: &Path,
+        order: usize,
+        hub: &Hub,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        // Update the manual_order field in the library
+        let fingerprint = context.library.get_fingerprint(path);
+        if let Some(info) = context.library.db.get_mut(&fingerprint) {
+            info.manual_order = Some(order);
+            // Refresh the visible books to reflect the change
+            self.refresh_visibles(true, true, hub, rq, context);
+        }
     }
 
     /// Get background fetchers
