@@ -126,6 +126,14 @@ pub struct ImageInfo {
     pub alt: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CSSInfo {
+    pub chapter_index: usize,
+    pub chapter_title: String,
+    pub href: String,
+    pub media_type: Option<String>,
+}
+
 const MAX_HISTORY_SIZE: usize = 50;
 
 pub struct EpubEditorCore {
@@ -833,6 +841,46 @@ impl EpubEditorCore {
         }
 
         images
+    }
+
+    #[must_use]
+    pub fn list_css(&self) -> Vec<CSSInfo> {
+        let mut css_files = Vec::new();
+        let link_re =
+            Regex::new(r#"<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>"#)
+                .unwrap();
+        let style_re = Regex::new(r#"<style[^>]*>(.*?)</style>"#).unwrap();
+
+        for (index, chapter) in self.chapters.iter().enumerate() {
+            for cap in link_re.captures_iter(&chapter.content) {
+                let href = cap
+                    .get(1)
+                    .map(|m| m.as_str().to_string())
+                    .unwrap_or_default();
+                let media_type = Regex::new(r#"media=["']([^"']*)["']"#)
+                    .unwrap()
+                    .captures(&cap[0])
+                    .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
+
+                css_files.push(CSSInfo {
+                    chapter_index: index,
+                    chapter_title: chapter.title.clone(),
+                    href,
+                    media_type,
+                });
+            }
+
+            for _cap in style_re.captures_iter(&chapter.content) {
+                css_files.push(CSSInfo {
+                    chapter_index: index,
+                    chapter_title: chapter.title.clone(),
+                    href: format!("inline-style-{}", index),
+                    media_type: Some("inline".to_string()),
+                });
+            }
+        }
+
+        css_files
     }
 
     fn strip_html_tags(html: &str) -> String {

@@ -1169,6 +1169,25 @@ impl View for EpubEditor {
                 self.children.push(Box::new(notif) as Box<dyn View>);
                 true
             }
+            Event::Select(EntryId::ListCSS) => {
+                let css_files = self.core.list_css();
+                let notif = Notification::new(
+                    format!(
+                        "Found {} CSS files across {} chapters",
+                        css_files.len(),
+                        css_files
+                            .iter()
+                            .map(|c| c.chapter_index)
+                            .collect::<std::collections::HashSet<_>>()
+                            .len()
+                    ),
+                    hub,
+                    rq,
+                    context,
+                );
+                self.children.push(Box::new(notif) as Box<dyn View>);
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;
