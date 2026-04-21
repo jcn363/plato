@@ -25,6 +25,7 @@ pub struct SearchReplaceView {
     use_regex: bool,
     case_sensitive: bool,
     whole_word: bool,
+    search_history: Vec<String>,
 }
 
 impl SearchReplaceView {
@@ -98,6 +99,7 @@ impl SearchReplaceView {
             use_regex: false,
             case_sensitive: false,
             whole_word: false,
+            search_history: Vec::new(),
         }
     }
 
@@ -409,8 +411,25 @@ impl SearchReplaceView {
         (self.use_regex, self.case_sensitive, self.whole_word)
     }
 
+    pub fn add_to_search_history(&mut self, text: &str) {
+        if !text.is_empty() {
+            self.search_history.retain(|s| s != text);
+            self.search_history.insert(0, text.to_string());
+            if self.search_history.len() > 10 {
+                self.search_history.truncate(10);
+            }
+        }
+    }
+
+    pub fn get_search_history(&self) -> &[String] {
+        &self.search_history
+    }
+
     pub fn set_search_text(&mut self, text: &str, rq: &mut RenderQueue, context: &mut Context) {
         self.search_text = text.to_string();
+        if !text.is_empty() {
+            self.add_to_search_history(text);
+        }
         if let Some(input) = self.children[2].downcast_mut::<InputField>() {
             input.set_text(text, true, rq, context);
         }
