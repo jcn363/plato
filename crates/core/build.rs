@@ -103,7 +103,6 @@ fn main() {
             }
             "ios" => {
                 println!("cargo:rustc-link-search=target/mupdf_wrapper/iOS-universal");
-                println!("cargo:rustc-link-lib=static=c++");
                 println!("cargo:rustc-link-lib=static=mupdf_wrapper");
                 println!("cargo:rustc-link-lib=static=mupdf");
                 println!("cargo:rustc-link-lib=static=mupdf-third");
@@ -120,6 +119,7 @@ fn main() {
                 println!("cargo:rustc-link-lib=framework=CoreText");
                 println!("cargo:rustc-link-lib=framework=Foundation");
                 println!("cargo:rustc-link-lib=framework=UIKit");
+                println!("cargo:rustc-link-lib=c++");
                 return;
             }
             _ => panic!("Unsupported platform: {target_os}"),
