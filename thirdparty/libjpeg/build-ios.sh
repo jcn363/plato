@@ -16,37 +16,31 @@ export IOS_AR=$(xcrun --sdk iphoneos --find ar)
 echo "Building libjpeg for iOS device (ARM64)..."
 BUILD_DIR=../target/libjpeg/iOS/arm64
 mkdir -p $BUILD_DIR
-cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
-../../../libjpeg/configure --static --prefix=$(pwd) --host=arm-apple-darwin
+./configure --static --prefix=$BUILD_DIR --host=arm-apple-darwin
 make clean || true
 make -j$(sysctl -n hw.ncpu)
-cd ../../..
 
 # Build for iOS simulator (ARM64)
 echo "Building libjpeg for iOS simulator (ARM64)..."
 BUILD_DIR=../target/libjpeg/iOS-sim/arm64
 mkdir -p $BUILD_DIR
-cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-../../../libjpeg/configure --static --prefix=$(pwd) --host=arm-apple-darwin
+./configure --static --prefix=$BUILD_DIR --host=arm-apple-darwin
 make clean || true
 make -j$(sysctl -n hw.ncpu)
-cd ../../..
 
 # Build for iOS simulator (x86_64)
 echo "Building libjpeg for iOS simulator (x86_64)..."
 BUILD_DIR=../target/libjpeg/iOS-sim/x86_64
 mkdir -p $BUILD_DIR
-cd $BUILD_DIR
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-../../../libjpeg/configure --static --prefix=$(pwd) --host=x86_64-apple-darwin
+./configure --static --prefix=$BUILD_DIR --host=x86_64-apple-darwin
 make clean || true
 make -j$(sysctl -n hw.ncpu)
-cd ../../..
 
 # Create universal library
 echo "Creating universal libjpeg library..."
