@@ -22,6 +22,9 @@ BUILD_DIR=$PROJECT_ROOT/target/gumbo/iOS/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
+if [ ! -f ./configure ]; then
+  ./autogen.sh
+fi
 ./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static
 make clean || true
 make -j$(sysctl -n hw.ncpu)
