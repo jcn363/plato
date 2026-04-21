@@ -18,7 +18,7 @@ BUILD_DIR=../target/libjpeg/iOS/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
-./configure --static --prefix=$BUILD_DIR --host=arm-apple-darwin
+./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
@@ -29,7 +29,7 @@ BUILD_DIR=../target/libjpeg/iOS-sim/arm64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-./configure --static --prefix=$BUILD_DIR --host=arm-apple-darwin
+./configure --prefix=$BUILD_DIR --host=arm-apple-darwin --enable-static
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
@@ -40,7 +40,7 @@ BUILD_DIR=../target/libjpeg/iOS-sim/x86_64
 mkdir -p $BUILD_DIR
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
-./configure --static --prefix=$BUILD_DIR --host=x86_64-apple-darwin
+./configure --prefix=$BUILD_DIR --host=x86_64-apple-darwin --enable-static
 make clean || true
 make -j$(sysctl -n hw.ncpu)
 make install
