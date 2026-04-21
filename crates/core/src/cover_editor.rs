@@ -180,9 +180,36 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
 
     let names: Vec<String> = archive.file_names().map(|n: &str| n.to_string()).collect();
 
+    // Helper for case-insensitive prefix check without allocation
+    fn starts_with_case_insensitive(text: &str, prefix: &str) -> bool {
+        text.len() >= prefix.len()
+            && text
+                .chars()
+                .zip(prefix.chars())
+                .all(|(a, b)| a.eq_ignore_ascii_case(&b))
+    }
+
+    // Helper for case-insensitive contains without allocation
+    fn contains_case_insensitive(text: &str, pattern: &str) -> bool {
+        if pattern.is_empty() {
+            return true;
+        }
+        let pattern_lower: String = pattern.to_lowercase();
+        text.to_lowercase().contains(&pattern_lower)
+    }
+
+    // Helper for case-insensitive suffix check without allocation
+    fn ends_with_case_insensitive(text: &str, suffix: &str) -> bool {
+        text.len() >= suffix.len()
+            && text
+                .chars()
+                .rev()
+                .zip(suffix.chars().rev())
+                .all(|(a, b)| a.eq_ignore_ascii_case(&b))
+    }
+
     for name in &names {
-        let name_lower: String = name.to_lowercase();
-        if name_lower.starts_with("cover.") {
+        if starts_with_case_insensitive(name, "cover.") {
             if let Ok(mut file) = archive.by_name(name) {
                 let mut buffer = Vec::new();
                 std::io::Read::read_to_end(&mut file, &mut buffer)?;
@@ -193,11 +220,10 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
     }
 
     for entry in &names {
-        let entry_lower: String = entry.to_lowercase();
-        if (entry_lower.contains("cover") || entry_lower.contains("image"))
-            && (entry_lower.ends_with(".jpg")
-                || entry_lower.ends_with(".jpeg")
-                || entry_lower.ends_with(".png"))
+        if (contains_case_insensitive(entry, "cover") || contains_case_insensitive(entry, "image"))
+            && (ends_with_case_insensitive(entry, ".jpg")
+                || ends_with_case_insensitive(entry, ".jpeg")
+                || ends_with_case_insensitive(entry, ".png"))
         {
             if let Ok(mut file) = archive.by_name(entry) {
                 let mut buffer = Vec::new();

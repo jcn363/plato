@@ -130,15 +130,19 @@ pub fn sort_pages(i1: &Info, i2: &Info) -> Ordering {
 }
 
 pub fn sort_author(i1: &Info, i2: &Info) -> Ordering {
-    let a1 = i1.alphabetic_author().to_lowercase();
-    let a2 = i2.alphabetic_author().to_lowercase();
-    a1.cmp(&a2)
+    let a1 = i1.alphabetic_author();
+    let a2 = i2.alphabetic_author();
+    a1.chars()
+        .map(|c| c.to_ascii_lowercase())
+        .cmp(a2.chars().map(|c| c.to_ascii_lowercase()))
 }
 
 pub fn sort_title(i1: &Info, i2: &Info) -> Ordering {
-    let t1 = i1.alphabetic_title().to_lowercase();
-    let t2 = i2.alphabetic_title().to_lowercase();
-    t1.cmp(&t2)
+    let t1 = i1.alphabetic_title();
+    let t2 = i2.alphabetic_title();
+    t1.chars()
+        .map(|c| c.to_ascii_lowercase())
+        .cmp(t2.chars().map(|c| c.to_ascii_lowercase()))
 }
 
 pub fn sort_status(i1: &Info, i2: &Info) -> Ordering {
@@ -230,12 +234,12 @@ fn natural_cmp(a: &str, b: &str) -> Ordering {
             (Some(&a_digit), Some(&b_digit))
                 if a_digit.is_ascii_digit() && b_digit.is_ascii_digit() =>
             {
-                let mut a_num = String::new();
-                let mut b_num = String::new();
+                let mut a_num = 0u64;
+                let mut b_num = 0u64;
 
                 while let Some(&c) = a_chars.peek() {
                     if c.is_ascii_digit() {
-                        a_num.push(c);
+                        a_num = a_num * 10 + (c as u64 - '0' as u64);
                         a_chars.next();
                     } else {
                         break;
@@ -244,25 +248,20 @@ fn natural_cmp(a: &str, b: &str) -> Ordering {
 
                 while let Some(&c) = b_chars.peek() {
                     if c.is_ascii_digit() {
-                        b_num.push(c);
+                        b_num = b_num * 10 + (c as u64 - '0' as u64);
                         b_chars.next();
                     } else {
                         break;
                     }
                 }
 
-                let a_int: u64 = a_num.parse().unwrap_or(0);
-                let b_int: u64 = b_num.parse().unwrap_or(0);
-
-                match a_int.cmp(&b_int) {
+                match a_num.cmp(&b_num) {
                     Ordering::Equal => continue,
                     other => return other,
                 }
             }
             (Some(a), Some(b)) => {
-                let a_lower: String = a.to_lowercase().to_string();
-                let b_lower: String = b.to_lowercase().to_string();
-                let cmp = a_lower.as_str().cmp(b_lower.as_str());
+                let cmp = a.to_ascii_lowercase().cmp(&b.to_ascii_lowercase());
                 if cmp != Ordering::Equal {
                     return cmp;
                 }

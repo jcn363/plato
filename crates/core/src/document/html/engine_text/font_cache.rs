@@ -52,11 +52,12 @@ pub struct FontCache {
 impl FontCache {
     /// Create a new font cache
     pub fn new(config: FontCacheConfig) -> Self {
+        let max_entries = config.max_entries;
         Self {
             cache: FxHashMap::default(),
             config,
             current_memory: 0,
-            access_order: Vec::new(),
+            access_order: Vec::with_capacity(max_entries),
             cache_hits: 0,
             cache_misses: 0,
             eviction_count: 0,
@@ -144,7 +145,7 @@ impl FontCache {
     /// Cleanup old entries
     fn cleanup(&mut self) {
         let now = std::time::Instant::now();
-        let mut to_remove = Vec::new();
+        let mut to_remove = Vec::with_capacity(self.cache.len() / 4);
 
         // Remove expired entries
         for (glyph_id, entry) in &self.cache {

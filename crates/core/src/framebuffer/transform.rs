@@ -40,6 +40,7 @@ pub static DITHER_G2_DRIFTS: LazyLock<Vec<i8>> = LazyLock::new(|| {
 // The input color is in {0 .. 255}.
 // The output color is in G16.
 // G16 := {17 * i | i ∈ {0 .. 15}}.
+#[inline]
 pub fn transform_dither_g16(x: u32, y: u32, color: Color) -> Color {
     let gray = color.gray();
     // Get the address of the drift value.
@@ -59,6 +60,7 @@ pub fn transform_dither_g16(x: u32, y: u32, color: Color) -> Color {
 // Ordered dithering.
 // The input color is in {0 .. 255}.
 // The output color is in {0, 255}.
+#[inline]
 pub fn transform_dither_g2(x: u32, y: u32, color: Color) -> Color {
     let gray = color.gray();
     // Get the address of the drift value.
@@ -69,6 +71,7 @@ pub fn transform_dither_g2(x: u32, y: u32, color: Color) -> Color {
     Color::Gray(if c < 128 { 0 } else { 255 })
 }
 
+#[inline]
 pub fn transform_identity(_x: u32, _y: u32, color: Color) -> Color {
     color
 }

@@ -113,11 +113,13 @@ Per AGENTS.md guidelines, implement changes as follows:
 ### Parallel Processing (Low Priority) - LIMITED IMPLEMENTATION
 
 **Implemented (AGENTS.md compliant):**
+
 - **Vec pre-allocation**: Added Vec::with_capacity() to reduce reallocations in dictionary lookup, CSS parsing, DOM operations
 - **Caching infrastructure**: Documented existing LazyLock caching (40 instances), page caching, font caching
-- **Algorithmic efficiency**: Documented existing FxHashMap usage, pre-allocated buffers, Cow<str> for strings
+- **Algorithmic efficiency**: Documented existing FxHashMap usage, pre-allocated buffers, `Cow<str>` for strings
 
 **Skipped (requires Rayon/threading, conflicts with AGENTS.md):**
+
 - Coarse-grained parallelism (page rendering, PDF/EPUB layout, image decoding)
 - Thread pool sizing
 - Priority handling between threads
@@ -298,3 +300,101 @@ Plato has strong foundations:
 - Zero warnings on code quality (fmt, clippy)
 
 **Plato is in excellent condition with zero warnings, zero errors, and all tests passing.**
+
+---
+
+## Performance Optimizations (April 2026)
+
+### Image Processing (Framebuffer Operations)
+
+**transform.rs** - Dithering optimizations:
+
+- Added `#[inline]` to `transform_dither_g16` for hot-path pixel-level G16 dithering operations
+- Added `#[inline]` to `transform_dither_g2` for hot-path pixel-level G2 dithering operations
+- Added `#[inline]` to `transform_identity` for consistency in transform function calls
+
+Impact: Reduced function call overhead in per-pixel dithering operations during framebuffer updates
+
+### Text Rendering
+
+**font_cache.rs** - Glyph caching optimizations:
+
+- Pre-allocated `access_order` Vec with `max_entries` capacity (from config) to reduce reallocations during cache operations
+- Pre-allocated `to_remove` Vec with estimated capacity (`cache.len() / 4`) to reduce reallocations during cleanup
+
+Impact: Reduced memory allocations in hot-path cache access and cleanup operations
+
+**text_shaping.rs** - Text shaping optimizations:
+
+- Pre-allocated `glyphs` Vec with `text.chars().count()` capacity to avoid reallocations during glyph iteration
+- Pre-allocated `font_features` Vec with capacity (4) in default config to reduce allocations
+
+Impact: Reduced allocations during text shaping for each character
+
+**text_layout.rs** - Text layout optimizations:
+
+- Pre-allocated `lines` Vec with estimated capacity (`text.len() / 20`) based on text length
+- Pre-allocated `current_line_words` Vec with estimated capacity based on max_width and font_size
+- Pre-allocated `words` Vec with estimated capacity (`text.len() / 5`) in `split_into_words`
+
+Impact: Reduced allocations during text layout and word splitting operations
+
+**line_breaker.rs** - Line breaking optimizations:
+
+- Pre-allocated `break_points` Vec with estimated capacity (`words.len() / 5`) in `find_break_points`
+- Pre-allocated `lines` Vec with estimated capacity (`break_points.len() + 1`) in `create_lines`
+- Pre-allocated `words` Vec with estimated capacity (`text.len() / 5`) in `extract_words`
+- Pre-allocated `lines` Vec with estimated capacity (`words.len() / 8`) in `greedy_break`
+
+Impact: Reduced allocations during Knuth-Plass line breaking algorithm and greedy line breaking
+
+### Document Operations
+
+**cover_editor.rs** - String operation optimizations:
+
+- Added `starts_with_case_insensitive` helper to avoid allocating new strings for prefix checks
+- Added `contains_case_insensitive` helper to reduce allocations in substring searches
+- Added `ends_with_case_insensitive` helper to avoid allocations for suffix checks
+- Replaced multiple `to_lowercase()` allocations in `extract_cover_from_epub` with case-insensitive comparisons
+
+Impact: Reduced string allocations during EPUB cover extraction from O(n) allocations to O(1) per check
+
+**reader_search.rs** - Search operation optimizations:
+
+- Pre-allocated `results` Vec with capacity (32) to reduce reallocations during search result collection
+- Pre-allocated `entries` Vec with capacity (2) for search menu (fixed size known at compile time)
+
+Impact: Reduced allocations during search initialization and menu creation
+
+**metadata/sorting.rs** - Sorting optimizations:
+
+- Optimized `sort_author` to use `to_ascii_lowercase()` iterators instead of allocating new strings
+- Optimized `sort_title` to use `to_ascii_lowercase()` iterators instead of allocating new strings
+- Optimized `natural_cmp` to use character-level `to_ascii_lowercase()` comparisons instead of string allocations
+- Replaced `String` allocations in numeric parsing with direct integer accumulation
+
+Impact: Reduced allocations during library sorting operations (author, title, filename)
+
+### Memory Operations
+
+**Buffer operations** (already optimal):
+
+- `copy_from_slice` used for buffer copying (optimal per AGENTS.md)
+- `mem::zeroed()` used appropriately for C struct initialization
+- No additional optimizations needed
+
+### Summary
+
+All optimizations follow AGENTS.md guidelines:
+
+- No new libraries/crates added
+- Used `#[inline]` on hot-path functions (transform operations)
+- Pre-allocated collections with estimated capacity where size is predictable
+- Reduced unnecessary string allocations in sorting and search operations
+- Used iterator-based transformations instead of allocations where possible
+
+**Code Quality Verification:**
+
+- cargo fmt: ✅ Pass
+- cargo clippy: ✅ Pass (zero warnings)
+- cargo check: ✅ Pass

@@ -111,7 +111,12 @@ impl TextLayoutEngine {
 
     /// Split text into words
     fn split_into_words(&self, text: &str) -> Vec<String> {
-        text.split_whitespace().map(|s| s.to_string()).collect()
+        let estimated_words = (text.len() / 5).max(1);
+        let mut words = Vec::with_capacity(estimated_words);
+        for word in text.split_whitespace() {
+            words.push(word.to_string());
+        }
+        words
     }
 
     /// Measure the width of a word

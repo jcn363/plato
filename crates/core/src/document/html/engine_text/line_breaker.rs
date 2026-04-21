@@ -86,7 +86,12 @@ impl LineBreaker {
 
     /// Extract words from text
     fn extract_words(&self, text: &str) -> Vec<String> {
-        text.split_whitespace().map(|s| s.to_string()).collect()
+        let estimated_words = (text.len() / 5).max(1);
+        let mut words = Vec::with_capacity(estimated_words);
+        for word in text.split_whitespace() {
+            words.push(word.to_string());
+        }
+        words
     }
 
     /// Find optimal break points using Knuth-Plass algorithm
@@ -122,7 +127,8 @@ impl LineBreaker {
 
     /// Create lines from words and break points
     fn create_lines(&self, words: &[String], break_points: &[BreakPoint]) -> Vec<Line> {
-        let mut lines = Vec::new();
+        let estimated_lines = break_points.len() + 1;
+        let mut lines = Vec::with_capacity(estimated_lines);
         let mut start = 0;
 
         for break_point in break_points {

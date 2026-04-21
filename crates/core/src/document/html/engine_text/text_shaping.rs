@@ -28,7 +28,7 @@ impl Default for TextShapingConfig {
     fn default() -> Self {
         Self {
             font_size: 12.0,
-            font_features: Vec::new(),
+            font_features: Vec::with_capacity(4),
             script: "Latin".to_string(),
             language: "en".to_string(),
             direction: TextDirection::LeftToRight,
@@ -104,7 +104,7 @@ impl TextShaper {
 
     /// Simple text shaping implementation
     fn simple_shape(&self, text: &str) -> Vec<GlyphInfo> {
-        let mut glyphs = Vec::new();
+        let mut glyphs = Vec::with_capacity(text.chars().count());
 
         for (cluster, ch) in text.chars().enumerate() {
             let glyph_id = self.get_glyph_id(ch);
