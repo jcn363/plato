@@ -39,8 +39,7 @@ jobs:
         chmod +x build-ios.sh || true
         chmod +x thirdparty/build-ios.sh || true
         chmod +x mupdf_wrapper/build-ios.sh || true
-        # Skip native library build for now - requires individual library build-ios.sh scripts
-        echo "Skipping native library build - will fail without MuPDF but will show Rust compilation errors"
+        ./build-ios.sh universal
 
     - name: Build Rust core for iOS device
       run: |
