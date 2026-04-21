@@ -214,6 +214,7 @@ Completed all High Priority and Medium Priority items from Priority Recommendati
 
 - ✅ Full architecture documentation with diagrams - Added Mermaid diagram to OVERVIEW.md
 - ✅ Feature expansion (new document formats) - Improved error handling with detailed logging
+- ✅ Advanced user experience improvements - Improved error messages with actionable guidance
 - ⏸ Parallel processing implementation - SKIPPED: Conflicts with AGENTS.md guidance
 
 **Code Quality:**
@@ -226,6 +227,7 @@ Completed all High Priority and Medium Priority items from Priority Recommendati
 
 - crates/core/src/document/mod.rs (added validation, improved error logging)
 - crates/core/src/document/document_tests.rs (new test file with 11 tests)
+- crates/core/src/font/mod.rs (improved error messages)
 - docs/architecture/OVERVIEW.md (added Mermaid diagram)
 - IMPRO.md (updated with completion status for all sections)
 
@@ -281,7 +283,7 @@ Most `unwrap()` usages are in test code which is acceptable per AGENTS.md guidel
 
 1. ⏸ Parallel processing implementation - SKIPPED: Conflicts with AGENTS.md guidance ("Do not use Rayon for data parallelism. Focus on algorithmic improvements and caching instead.")
 2. ✅ Feature expansion (new document formats) - COMPLETED: Improved error handling in document open function with detailed error logging
-3. Advanced user experience improvements
+3. ✅ Advanced user experience improvements - COMPLETED: Improved user-facing error messages with actionable guidance (EPUB, HTML, font loading)
 4. ✅ Full architecture documentation with diagrams - COMPLETED: Added Mermaid diagram to OVERVIEW.md
 
 ---
