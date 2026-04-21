@@ -26,7 +26,7 @@ cd ../../..
 
 # Build for iOS simulator (ARM64)
 echo "Building freetype2 for iOS simulator (ARM64)..."
-BUILD_DIR=../../../target/freetype2/iOS-sim/arm64
+BUILD_DIR=../target/freetype2/iOS-sim/arm64
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
@@ -38,7 +38,6 @@ cd ../../..
 
 # Build for iOS simulator (x86_64)
 echo "Building freetype2 for iOS simulator (x86_64)..."
-BUILD_DIR=../../../target/freetype2/iOS-sim/x86_64
 BUILD_DIR=../target/freetype2/iOS-sim/x86_64
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
