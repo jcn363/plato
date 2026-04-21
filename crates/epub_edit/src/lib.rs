@@ -760,6 +760,35 @@ impl EpubEditorCore {
             .collect()
     }
 
+    pub fn generate_table_of_contents(&self) -> String {
+        let mut toc = String::new();
+        toc.push_str("<nav epub:type=\"toc\">\n");
+        toc.push_str("  <ol>\n");
+
+        for (_index, chapter) in self.chapters.iter().enumerate() {
+            toc.push_str(&format!(
+                "    <li><a href=\"{}\">{}</a></li>\n",
+                chapter.href, chapter.title
+            ));
+        }
+
+        toc.push_str("  </ol>\n");
+        toc.push_str("</nav>\n");
+        toc
+    }
+
+    pub fn update_table_of_contents(&mut self) -> Result<()> {
+        let toc_content = self.generate_table_of_contents();
+        let toc_path = self.temp_dir.join("toc.xhtml");
+        fs::write(&toc_path, toc_content).with_context(|| {
+            format!(
+                "Failed to write table of contents to {}",
+                toc_path.display()
+            )
+        })?;
+        Ok(())
+    }
+
     fn strip_html_tags(html: &str) -> String {
         let mut result = String::new();
         let mut in_tag = false;

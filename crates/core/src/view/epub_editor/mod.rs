@@ -1116,6 +1116,33 @@ impl View for EpubEditor {
                 }
                 true
             }
+            Event::Select(EntryId::GenerateTOC) => {
+                match self.core.update_table_of_contents() {
+                    Ok(_) => {
+                        self.modified = true;
+                        let notif = Notification::new(
+                            format!(
+                                "Table of contents generated for {} chapters",
+                                self.core.chapters.len()
+                            ),
+                            hub,
+                            rq,
+                            context,
+                        );
+                        self.children.push(Box::new(notif) as Box<dyn View>);
+                    }
+                    Err(e) => {
+                        let notif = Notification::new(
+                            format!("Error generating table of contents: {}", e),
+                            hub,
+                            rq,
+                            context,
+                        );
+                        self.children.push(Box::new(notif) as Box<dyn View>);
+                    }
+                }
+                true
+            }
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;

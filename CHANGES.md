@@ -80,13 +80,14 @@ All 9 WIP module managers now integrated and active:
 - Added spell check: HTML tag stripping, word extraction, common word filtering
 - Added export/import: export chapter to text file, import chapter from text file
 - Added chapter statistics: word count, character count, paragraph count per chapter
+- Added table of contents management: generate and update TOC from chapter list
 - Added SearchOptions struct to epub_edit library for search/replace configuration
 - Added ValidationIssue and ValidationResult structs for content validation
 - Added SpellError and SpellCheckResult structs for spell checking
 - Added ChapterStatistics struct for chapter statistics
 - Added UndoAction variants: RenameChapter, ReorderChapters for chapter management
 - Added toggle buttons (Regex, Case, Whole) to SearchReplaceView UI
-- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord, ValidateContent, RenameChapter, DeleteChapter, MoveChapterUp, MoveChapterDown, SpellCheck, ExportChapter, ImportChapter, ChapterStatistics
+- Added EntryIds: PreviousChapter, NextChapter, EditMetadata, SaveMetadata, ToggleRegex, ToggleCaseSensitive, ToggleWholeWord, ValidateContent, RenameChapter, DeleteChapter, MoveChapterUp, MoveChapterDown, SpellCheck, ExportChapter, ImportChapter, ChapterStatistics, GenerateTOC
 - Added ViewIds: EditMetadataTitle, EditMetadataAuthor, EditMetadataLanguage, EditMetadataIdentifier, EditMetadataPublisher, EditMetadataDate
 - Updated search_in_chapter, replace_in_chapter, replace_all_in_document, search_all_chapters to support SearchOptions
 - Updated all search/replace calls in epub_editor.rs to pass SearchOptions from UI
@@ -150,10 +151,3 @@ All `#[allow(dead_code)]` attributes have been removed from actionable code:
   - Document module: `TextChar.ctx` field (unused MuPDF context reference)
   - HTML engine: Removed 2 unused functions, added missing `is_math_tag()`
 - Build passes with zero errors
-
-**Commits**:
-
-- `1de4711` - Remove 'reserved for future' dead_code: wire up toc, text_excerpt, find_annotation_mut
-- `7fc2258` - Wire up animation system: remove dead_code from animation fields and methods
-- `399797d` - Remove all dead_code attributes from reader module (reader_search.rs, reader_gestures.rs)
-- `fa80f6d` - Remove all remaining dead_code attrs and unused code from core crate
