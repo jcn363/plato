@@ -28,12 +28,10 @@ export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
-cd $CMAKE_BUILD_DIR
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
-make clean || true
-make -j$(sysctl -n hw.ncpu)
-make install
-cd -
+cmake -B $CMAKE_BUILD_DIR -S $SCRIPT_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
+make -C $CMAKE_BUILD_DIR clean || true
+make -C $CMAKE_BUILD_DIR -j$(sysctl -n hw.ncpu)
+make -C $CMAKE_BUILD_DIR install
 
 # Build for iOS simulator (ARM64)
 echo "Building harfbuzz for iOS simulator (ARM64)..."
@@ -47,12 +45,10 @@ export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=1
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
-cd $CMAKE_BUILD_DIR
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
-make clean || true
-make -j$(sysctl -n hw.ncpu)
-make install
-cd -
+cmake -B $CMAKE_BUILD_DIR -S $SCRIPT_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
+make -C $CMAKE_BUILD_DIR clean || true
+make -C $CMAKE_BUILD_DIR -j$(sysctl -n hw.ncpu)
+make -C $CMAKE_BUILD_DIR install
 
 # Build for iOS simulator (x86_64)
 echo "Building harfbuzz for iOS simulator (x86_64)..."
@@ -66,12 +62,10 @@ export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=
 unset PKG_CONFIG
 unset PKG_CONFIG_PATH
 unset PKG_CONFIG_LIBDIR
-cd $CMAKE_BUILD_DIR
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
-make clean || true
-make -j$(sysctl -n hw.ncpu)
-make install
-cd -
+cmake -B $CMAKE_BUILD_DIR -S $SCRIPT_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DCMAKE_OSX_ARCHITECTURES=x86_64 -DCMAKE_OSX_SYSROOT=$IOS_SIM_SDK -DBUILD_SHARED_LIBS=OFF -DHB_HAVE_FREETYPE=OFF -DHB_HAVE_FONTCONFIG=OFF
+make -C $CMAKE_BUILD_DIR clean || true
+make -C $CMAKE_BUILD_DIR -j$(sysctl -n hw.ncpu)
+make -C $CMAKE_BUILD_DIR install
 
 # Create universal library (device + simulator)
 echo "Creating universal harfbuzz library..."
