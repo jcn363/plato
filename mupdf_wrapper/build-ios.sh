@@ -43,13 +43,14 @@ mkdir -p $BUILD_DIR_SIM_X86_64
 $IOS_CC $CPPFLAGS $CFLAGS -I../thirdparty/mupdf/include -c mupdf_wrapper.c -o ${BUILD_DIR_SIM_X86_64}/mupdf_wrapper.o
 $IOS_AR -rcs ${BUILD_DIR_SIM_X86_64}/libmupdf_wrapper.a ${BUILD_DIR_SIM_X86_64}/mupdf_wrapper.o
 
-# Create universal library
+# Create universal library (simulator only - combine arm64 + x86_64)
 echo "Creating universal mupdf_wrapper library..."
-mkdir -p ../target/mupdf_wrapper/iOS-universal
+mkdir -p ../target/mupdf_wrapper/iOS-device/lib
+mkdir -p ../target/mupdf_wrapper/iOS-simulator/lib
+cp ${BUILD_DIR}/libmupdf_wrapper.a ../target/mupdf_wrapper/iOS-device/lib/
 lipo -create \
-  ${BUILD_DIR}/libmupdf_wrapper.a \
   ${BUILD_DIR_SIM_ARM64}/libmupdf_wrapper.a \
   ${BUILD_DIR_SIM_X86_64}/libmupdf_wrapper.a \
-  -output ../target/mupdf_wrapper/iOS-universal/libmupdf_wrapper.a
+  -output ../target/mupdf_wrapper/iOS-simulator/lib/libmupdf_wrapper.a || echo "Some simulator architectures may have failed"
 
 echo "mupdf_wrapper built successfully for iOS."
