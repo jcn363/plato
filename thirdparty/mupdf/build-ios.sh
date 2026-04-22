@@ -15,29 +15,35 @@ export IOS_AR=$(xcrun --sdk iphoneos --find ar)
 # Build for iOS device (ARM64)
 echo "Building mupdf for iOS device (ARM64)..."
 BUILD_DIR=../target/mupdf/iOS/arm64
-mkdir -p $BUILD_DIR
+mkdir -p $BUILD_DIR/build/release
 export CFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SDK -miphoneos-version-min=12.0"
 make clean || true
 make -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" HAVE_GLUT=no HAVE_OPENGL=no libs
+cp build/release/libmupdf.a $BUILD_DIR/build/release/
+cp build/release/libmupdf-third.a $BUILD_DIR/build/release/ 2>/dev/null || true
 
 # Build for iOS simulator (ARM64)
 echo "Building mupdf for iOS simulator (ARM64)..."
 BUILD_DIR=../target/mupdf/iOS-sim/arm64
-mkdir -p $BUILD_DIR
+mkdir -p $BUILD_DIR/build/release
 export CFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch arm64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
 make clean || true
 make -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" HAVE_GLUT=no HAVE_OPENGL=no libs
+cp build/release/libmupdf.a $BUILD_DIR/build/release/
+cp build/release/libmupdf-third.a $BUILD_DIR/build/release/ 2>/dev/null || true
 
 # Build for iOS simulator (x86_64)
 echo "Building mupdf for iOS simulator (x86_64)..."
 BUILD_DIR=../target/mupdf/iOS-sim/x86_64
-mkdir -p $BUILD_DIR
+mkdir -p $BUILD_DIR/build/release
 export CFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0 -fPIC -O2"
 export LDFLAGS="-arch x86_64 -isysroot $IOS_SIM_SDK -mios-simulator-version-min=12.0"
 make clean || true
 make -j$(sysctl -n hw.ncpu) build=release XCFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" HAVE_GLUT=no HAVE_OPENGL=no libs
+cp build/release/libmupdf.a $BUILD_DIR/build/release/
+cp build/release/libmupdf-third.a $BUILD_DIR/build/release/ 2>/dev/null || true
 
 # Create universal library (device + simulator)
 echo "Creating universal mupdf library..."
