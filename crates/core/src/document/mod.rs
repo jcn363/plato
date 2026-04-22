@@ -21,6 +21,7 @@
 //!   - Safe wrappers for PDFPurr
 //!   - Document abstraction, rendering
 //! - **mupdf/**: Legacy MuPDF integration (deprecated, will be removed)
+//! - **mupdf/**: Legacy MuPDF integration (deprecated, will be removed)
 //!
 //! ### Support Modules
 //! - **pdf_manipulator/**: PDF manipulation tools (merge, split, redact)
@@ -47,14 +48,12 @@
 //! │   ├── layout.rs       (Text layout)
 //! │   ├── parse.rs        (HTML parsing)
 //! │   └── engine_text/    (Text processing)
-//! ├── mupdf/              (MuPDF integration)
+//! ├── pdfpurr/            (PDFPurr integration)
 //! │   ├── mod.rs          (Safe wrappers)
-//! │   ├── context.rs      (Context management)
 //! │   ├── document.rs     (Document abstraction)
 //! │   ├── page.rs         (Page abstraction)
 //! │   ├── pixmap.rs       (Pixmap handling)
 //! │   └── text.rs         (Text extraction)
-//! ├── mupdf_sys.rs        (FFI bindings)
 //! ├── pdf_manipulator/    (PDF tools)
 //! │   ├── mod.rs          (PdfManipulator core)
 //! │   ├── redaction.rs    (Redaction editor)
@@ -74,21 +73,17 @@
 //!
 //! ## Dependencies
 //!
-//! - `mupdf` - PDF rendering via MuPDF
+//! - `pdfpurr` - PDF rendering via PDFPurr (pure Rust)
 //! - `html` - HTML/CSS engine
 //! - `framebuffer` - Output rendering
 //! - `metadata` - Document metadata
 
 pub mod epub;
 pub mod html;
-pub mod mupdf;
 pub mod pdf;
-pub mod pdf_manipulator;
 pub mod pdfpurr;
-pub mod progressive_loader;
 pub mod sysinfo;
-
-mod mupdf_sys;
+// pub mod progressive_loader; // TODO: Migrate to PDFPurr API
 
 #[cfg(test)]
 mod document_tests;

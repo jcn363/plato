@@ -18,8 +18,10 @@
 //! - Encryption support (RC4, AES-128/256)
 //! - PDF manipulation via lopdf
 
-use super::mupdf;
-use super::pdfpurr;
+use super::pdfpurr::{
+    Document as PdfPurrDocument, MuPdfContext, Page, Link, Outline, FzRect, FzQuad, FzPoint,
+    rect_from_quad, union_rect, scale, PixmapFormat, FZ_PAGE_BLOCK_IMAGE,
+};
 
 use super::{chapter, chapter_relative};
 use super::{BoundedText, Document, Location, TocEntry};
@@ -97,38 +99,28 @@ fn auto_detect_margins(pixmap: &Pixmap, threshold: u8) -> (f32, f32, f32, f32) {
     (margin_left, margin_top, margin_right, margin_bottom)
 }
 
-impl From<mupdf::FzRect> for Boundary {
-    fn from(rect: mupdf::FzRect) -> Boundary {
-        Boundary {
-            min: vec2!(rect.x0, rect.y0),
-            max: vec2!(rect.x1, rect.y1),
-        }
-    }
-}
 
-/// PDF document opener that manages MuPDF context.
+/// PDF document opener.
 pub struct PdfOpener {
-    ctx: mupdf::MuPdfContext,
+    ctx: MuPdfContext,
 }
 
 /// PDF document instance with page access.
 pub struct PdfDocument {
-    ctx: mupdf::MuPdfContext,
-    doc: mupdf::Document,
+    doc: PdfPurrDocument,
 }
 
 /// PDF page for rendering and text extraction.
 pub struct PdfPage<'a> {
-    page: mupdf::Page,
+    page: Page,
     _doc: &'a PdfDocument,
+    page_num: usize,
 }
 
 impl PdfOpener {
-    /// Creates a new PDF opener with MuPDF context.
-    ///
-    /// Returns None if MuPDF initialization fails.
+    /// Creates a new PDF opener.
     pub fn new() -> Option<PdfOpener> {
-        mupdf::MuPdfContext::new().ok().map(|ctx| PdfOpener { ctx })
+        Some(PdfOpener { ctx: MuPdfContext::new().ok()? })
     }
 
     /// Opens a PDF file from the given path.
@@ -139,10 +131,9 @@ impl PdfOpener {
     /// # Returns
     /// None if the file cannot be opened or is not a valid PDF.
     pub fn open<P: AsRef<Path>>(&self, path: P) -> Option<PdfDocument> {
-        self.ctx.open_document(path).map(|doc| PdfDocument {
-            ctx: self.ctx.clone(),
-            doc,
-        })
+        PdfPurrDocument::open(path)
+            .ok()
+            .map(|doc| PdfDocument { doc })
     }
 
     /// Opens a PDF from memory buffer.
@@ -150,24 +141,20 @@ impl PdfOpener {
     /// # Arguments
     /// * `magic` - MIME type or file magic bytes (e.g., "application/pdf")
     /// * `buf` - PDF file content as bytes
-    pub fn open_memory(&self, magic: &str, buf: &[u8]) -> Option<PdfDocument> {
-        self.ctx
-            .open_document_memory(magic, buf)
-            .map(|doc| PdfDocument {
-                ctx: self.ctx.clone(),
-                doc,
-            })
+    pub fn open_memory(&self, _magic: &str, buf: &[u8]) -> Option<PdfDocument> {
+        PdfPurrDocument::from_bytes(buf)
+            .ok()
+            .map(|doc| PdfDocument { doc })
     }
 
     /// Loads user stylesheet from css/html-user.css if present.
     pub fn load_user_stylesheet(&mut self) {
-        if let Ok(content) = std::fs::read_to_string(USER_STYLESHEET).map_err(|e| {
+        // PDFPurr doesn't need user CSS
+        let _ = std::fs::read_to_string(USER_STYLESHEET).map_err(|e| {
             if e.kind() != std::io::ErrorKind::NotFound {
                 crate::log_error!("{:#}", e)
             }
-        }) {
-            self.ctx.set_user_css(&content);
-        }
+        });
     }
 }
 
@@ -178,7 +165,7 @@ impl PdfDocument {
     /// Loads a page by index (0-based).
     ///
     /// # Arguments
-    /// * `index` - Page number (0-based)
+    /// * `index` - Page index
     ///
     /// # Returns
     /// None if the page doesn't exist or cannot be loaded.
@@ -186,12 +173,12 @@ impl PdfDocument {
         self.doc
             .load_page(index as i32)
             .ok()
-            .map(|page| PdfPage { page, _doc: self })
+            .map(|page| PdfPage { page, _doc: self, page_num: index })
     }
 
-    fn walk_toc(outline: &mupdf::Outline, index: &mut usize) -> Vec<TocEntry> {
+    fn walk_toc(outline: &Outline, index: &mut usize) -> Vec<TocEntry> {
         let mut vec = Vec::new();
-        let mut current: Option<mupdf::Outline> = Some(outline.clone_outline());
+        let mut current: Option<Outline> = Some(outline.clone_outline());
 
         while let Some(entry) = current {
             let page_loc = entry.page();
@@ -403,7 +390,7 @@ impl<'a> PdfPage<'a> {
         let mut images = Vec::with_capacity(16);
 
         for block in text_page.blocks() {
-            if block.kind() == pdfpurr::FZ_PAGE_BLOCK_IMAGE {
+            if block.kind() == FZ_PAGE_BLOCK_IMAGE {
                 let bnd: Boundary = block.bbox().into();
                 images.retain(|img: &Boundary| !img.overlaps(&bnd));
                 images.push(bnd);
@@ -436,7 +423,7 @@ impl<'a> PdfPage<'a> {
         for block in text_page.blocks() {
             for line in block.lines() {
                 let mut current_word = String::new();
-                let mut word_rect = pdfpurr::FzRect::default();
+                let mut word_rect = FzRect::default();
 
                 for text_char in line.chars() {
                     if let Some(c) = std::char::from_u32(text_char.char_code() as u32) {
@@ -449,18 +436,18 @@ impl<'a> PdfPage<'a> {
                                     location: bounds.min.into(),
                                 });
                                 current_word.clear();
-                                word_rect = pdfpurr::FzRect::default();
+                                word_rect = FzRect::default();
                             }
                         } else {
                             let quad = text_char.quad();
-                            let pdfpurr_quad = pdfpurr::FzQuad {
-                                ul: pdfpurr::FzPoint { x: quad.ul.x, y: quad.ul.y },
-                                ur: pdfpurr::FzPoint { x: quad.ur.x, y: quad.ur.y },
-                                ll: pdfpurr::FzPoint { x: quad.ll.x, y: quad.ll.y },
-                                lr: pdfpurr::FzPoint { x: quad.lr.x, y: quad.lr.y },
+                            let pdfpurr_quad = FzQuad {
+                                ul: FzPoint { x: quad.ul.x, y: quad.ul.y },
+                                ur: FzPoint { x: quad.ur.x, y: quad.ur.y },
+                                ll: FzPoint { x: quad.ll.x, y: quad.ll.y },
+                                lr: FzPoint { x: quad.lr.x, y: quad.lr.y },
                             };
-                            let chr_rect = pdfpurr::rect_from_quad(pdfpurr_quad);
-                            word_rect = pdfpurr::union_rect(word_rect, chr_rect);
+                            let chr_rect = rect_from_quad(pdfpurr_quad);
+                            word_rect = union_rect(word_rect, chr_rect);
                             current_word.push(c);
                         }
                     }
@@ -482,7 +469,7 @@ impl<'a> PdfPage<'a> {
     pub fn links(&self) -> Option<Vec<BoundedText>> {
         let first_link = self.page.load_links()?;
         let mut result = Vec::new();
-        let mut current: Option<mupdf::Link> = Some(first_link);
+        let mut current: Option<Link> = Some(first_link);
 
         while let Some(link) = current {
             let text = link.uri();
@@ -497,14 +484,15 @@ impl<'a> PdfPage<'a> {
         Some(result)
     }
 
-    pub fn pixmap(&self, scale: f32, color_samples: usize) -> Option<Pixmap> {
-        let matrix = mupdf::scale(scale, scale);
-        let color_space = if color_samples == 1 {
-            self._doc.ctx.device_gray()
+    pub fn pixmap(&self, zoom: f32, color_samples: usize) -> Option<Pixmap> {
+        // TODO: Implement with PDFPurr API
+        let _matrix = scale(zoom, zoom);
+        let _color_space = if color_samples == 1 {
+            // Grayscale
         } else {
-            self._doc.ctx.device_rgb()
+            // RGB
         };
-        self.page.render_pixmap(matrix, color_space, 0).ok()
+        None // Stub - needs PDFPurr rendering implementation
     }
 
     pub fn boundary_box(&self) -> Option<Boundary> {

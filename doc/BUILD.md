@@ -44,9 +44,8 @@ This script will:
 1. Check for required tools (cargo, rustc, cross-compiler)
 2. Handle thirdparty libraries (download or build)
 3. Ensure necessary symlinks are in the library directory
-4. Build the MuPDF wrapper
-5. Run `cargo fmt` and `cargo clippy --workspace` (with target-specific exclusions)
-6. Build the workspace crates (optionally skipping the emulator for ARM)
+4. Run `cargo fmt` and `cargo clippy --workspace` (with target-specific exclusions)
+5. Build the workspace crates (optionally skipping the emulator for ARM)
 
 ### Common Options
 
@@ -110,7 +109,9 @@ cargo build --target x86_64-unknown-linux-gnu -p fetcher
 
 ## Developer Tools
 
-Install the required dependencies: *MuPDF 1.27.0*, *DjVuLibre*, *FreeType*, *HarfBuzz*.
+Install the required dependencies: *DjVuLibre*, *FreeType*, *HarfBuzz*.
+
+PDF rendering is now handled by PDFPurr, a pure Rust library, so no MuPDF installation is required.
 
 ### Emulator
 

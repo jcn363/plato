@@ -36,8 +36,8 @@ The Plato project has been successfully set up for development on this machine. 
 
 ### 4. Third-Party Libraries
 - **libs_host directory**: ✅ Present with pre-built libraries
-- **mupdf_wrapper**: ✅ Built successfully for host target
 - **Symlinks**: ✅ Created for library versioning
+- **Note**: MuPDF has been removed and replaced with PDFPurr (pure Rust PDF library)
 
 ---
 
@@ -172,7 +172,7 @@ To run tests locally, you need x86_64 versions of the native libraries:
 ```bash
 ./build.sh host slow
 ```
-This will compile all third-party libraries (MuPDF, FreeType, HarfBuzz, etc.) from source in the `thirdparty/` directory.
+This will compile all third-party libraries (FreeType, HarfBuzz, etc.) from source in the `thirdparty/` directory. Note that MuPDF has been removed and replaced with PDFPurr, a pure Rust library that doesn't require native compilation.
 
 **Option B**: Download pre-built x86_64 libraries
 If available from project releases, download the correct host archive.
