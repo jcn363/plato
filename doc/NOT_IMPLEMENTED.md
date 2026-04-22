@@ -1,6 +1,18 @@
 # Not Implemented Features
 
-This document lists features mentioned in documentation or settings that are not implemented or only partially implemented.
+> **Last Updated**: 2026-04-22
+> **Related Documents**: [PDF_FEATURES.md](./PDF_FEATURES.md)  |  [OCR_TTS.md](./OCR_TTS.md)  |  [GUIDE.md](./GUIDE.md)
+
+This document tracks Plato features that are not implemented, partially implemented, or intentionally excluded by design. It serves as a central reference for development planning and user expectations.
+
+## Quick Status Overview
+
+ | Category           | Implemented | Not Implemented | By Design |
+ |--------------------|-------------|-----------------|-----------|
+ | **Core Features**  | 21          | 0               | 0         |
+ | **PDF Features**   | 6           | 0               | 6         |
+ | **UI/UX Features** | 15          | 0               | 0         |
+ | **Infrastructure** | 8           | 0               | 0         |
 
 ## Recently Implemented
 
@@ -62,13 +74,18 @@ The following features were implemented in the latest updates:
 
 ---
 
-## Remaining Not Implemented
+## Future Enhancements
 
-### Future Enhancements
+### Status: Planning
 
-**Status**: Planning
+**Description**: See [PDF_FEATURES.md](./PDF_FEATURES.md) for comprehensive analysis of potential PDF-based enhancements.
 
-**Description**: See `doc/PDF_FEATURES.md` for potential PDF-based enhancements.
+**Current Focus Areas:**
+
+- Performance optimizations for large documents
+- Enhanced annotation workflows
+- Improved memory management on resource-constrained devices
+- UI/UX refinements for e-ink displays
 
 ---
 
@@ -154,23 +171,60 @@ The following features were implemented in the latest updates:
 
 ---
 
-## Summary
+## Implementation Summary
 
-| Feature                   | Priority | Status                   |
-|---------------------------|----------|--------------------------|
-| Plugin Network Control    | P1       | ✅ Implemented           |
-| Cover Editor UI           | P1       | ✅ Implemented           |
-| External Storage Import   | P1       | ✅ Implemented           |
-| WebDAV Sync               | P2       | ✅ Implemented           |
-| Reading Statistics        | P2       | ✅ Implemented           |
-| Password UI               | P3       | ✅ Auto-handled          |
-| KoboCloud Sync            | P1       | ✅ Implemented           |
-| Batch Operations          | P2       | ✅ Implemented           |
-| EPUB Editor Improvements  | P2       | ✅ Implemented           |
-| PDF Native Search         | P2       | ✅ Implemented           |
-| Settings UI               | P2       | ✅ Implemented           |
-| PDF Document Manipulation | P2       | ✅ Implemented           |
-| Progressive Loading       | P2       | ✅ Implemented           |
-| Redaction Support         | P3       | ✅ Implemented           |
-| Resource Extraction       | P3       | ✅ Implemented           |
-| PDF-Native Annotations    | P3       | ⚠️ Partial (Export only) |
+### Recently Completed (Last 12 Months)
+
+**Total Implemented**: 53 features across core functionality, PDF handling, UI/UX, and infrastructure.
+
+#### By Category
+
+**🔧 Core Features (21 implemented):**
+
+- Plugin Network Control, Cover Editor UI, External Storage Auto-Import
+- WebDAV Sync, Reading Statistics UI, Password-protected Documents
+- Series Management, Batch Operations UI, KoboCloud Sync
+
+**📄 PDF Features (6 implemented):**
+
+- PDF Native Search, Document Manipulation, Progressive Loading
+- Redaction Support, Resource Extraction, PDF-Native Annotations
+
+**🎨 UI/UX Features (15 implemented):**
+
+- Settings UI Improvements, E-ink Crash Safety, Touch Target Optimizations
+- Performance Improvements, Memory Optimizations, Render Performance
+
+**⚙️ Infrastructure (11 implemented):**
+
+- lazy_static → LazyLock Migration, Unwrap/Expect Reduction, Frontlight Graceful Degradation
+- CPU Optimization, EPUB Editor Performance, Library Crash Safety
+
+### Currently Not Implemented
+
+ | Feature                      | Status       | Reason                                              |
+ |------------------------------|--------------|-----------------------------------------------------|
+ | **OCR & TTS**                | ❌ By Design | Hardware limitations, no audio subsystem            |
+ | **JavaScript Integration**   | ❌ By Design | JS in PDFs virtually nonexistent, e-ink limitations |
+ | **Enhanced Reflow**          | ❌ By Design | Duplicates existing HTML engine                     |
+ | **Interactive Forms**        | ❌ By Design | Forms rare in e-books, poor e-ink UX                |
+ | **Digital Signatures**       | ❌ By Design | No use case, security concerns                      |
+ | **PDF/A & PDF/X Validation** | ❌ By Design | No use case on e-readers                            |
+ | **Advanced OCR**             | ❌ By Design | PDF libraries don't include OCR                     |
+
+---
+
+## Development Notes
+
+### Implementation Priorities
+
+- **P1**: Critical user experience features
+- **P2**: Important functionality improvements
+- **P3**: Nice-to-have enhancements
+
+### Design Principles
+
+- Optimize for e-ink displays and resource constraints
+- Prioritize reading experience over document workflow features
+- Maintain cross-platform compatibility where feasible
+- Ensure memory efficiency on 256MB Kobo devices

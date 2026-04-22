@@ -199,6 +199,18 @@ Max: 30MB, 500 pages. Keep battery charged."
                 "📋 Read PDF Annotations".to_string(),
                 EntryId::PdfManipulate(file_path.clone(), "read_annotations".to_string()),
             ),
+            EntryKind::Command(
+                "🔍 Search Annotations".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "search_annotations".to_string()),
+            ),
+            EntryKind::Command(
+                "📤 Export to XFDF".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "export_xfdf".to_string()),
+            ),
+            EntryKind::Command(
+                "📥 Import from XFDF".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "import_xfdf".to_string()),
+            ),
         ]);
 
         let menu = crate::view::menu::Menu::new(
@@ -436,6 +448,105 @@ Max: 30MB, 500 pages. Keep battery charged."
                     }
                     Err(e) => {
                         bus.push_back(Event::Render(format!("Error reading annotations: {}", e)));
+                    }
+                }
+                return Ok(());
+            }
+            "search_annotations" => {
+                use crate::document::pdf_manipulator::{PdfAnnotationManager, AnnotationQuery, AnnotationSubtype};
+                let mut manager = match PdfAnnotationManager::new(file_path) {
+                    Ok(m) => m,
+                    Err(e) => {
+                        bus.push_back(Event::Render(format!("Error: {}", e)));
+                        return Ok(());
+                    }
+                };
+                
+                match manager.import_annotations() {
+                    Ok(_) => {
+                        // Search for all highlights
+                        let query = AnnotationQuery::new()
+                            .with_subtype(AnnotationSubtype::Highlight);
+                        
+                        let results = manager.search(&query);
+                        if results.is_empty() {
+                            bus.push_back(Event::Render(
+                                "🔍 No highlights found in PDF".to_string(),
+                            ));
+                        } else {
+                            let msg = format!("🔍 Found {} highlights in PDF", results.len());
+                            bus.push_back(Event::Render(msg));
+                        }
+                    }
+                    Err(e) => {
+                        bus.push_back(Event::Render(format!("Error importing annotations: {}", e)));
+                    }
+                }
+                return Ok(());
+            }
+            "export_xfdf" => {
+                use crate::document::pdf_manipulator::{PdfAnnotationManager, XfdfHandler};
+                let mut manager = match PdfAnnotationManager::new(file_path) {
+                    Ok(m) => m,
+                    Err(e) => {
+                        bus.push_back(Event::Render(format!("Error: {}", e)));
+                        return Ok(());
+                    }
+                };
+                
+                match manager.import_annotations() {
+                    Ok(annotations) => {
+                        let xfdf_path = file_path.with_extension("xfdf");
+                        match XfdfHandler::export_to_xfdf(&annotations, &xfdf_path) {
+                            Ok(_) => {
+                                let msg = format!(
+                                    "✅ Exported to: {}",
+                                    xfdf_path.file_name().unwrap_or_default().to_string_lossy()
+                                );
+                                bus.push_back(Event::Render(msg));
+                            }
+                            Err(e) => {
+                                bus.push_back(Event::Render(format!("XFDF export failed: {}", e)));
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        bus.push_back(Event::Render(format!("Error importing annotations: {}", e)));
+                    }
+                }
+                return Ok(());
+            }
+            "import_xfdf" => {
+                use crate::document::pdf_manipulator::XfdfHandler;
+                let xfdf_path = file_path.with_extension("xfdf");
+                
+                if !xfdf_path.exists() {
+                    bus.push_back(Event::Render(
+                        "❌ No XFDF file found. Export annotations first.".to_string(),
+                    ));
+                    return Ok(());
+                }
+                
+                match std::fs::read_to_string(&xfdf_path) {
+                    Ok(xfdf_content) => {
+                        match XfdfHandler::import_from_xfdf(&xfdf_content) {
+                            Ok(annotations) => {
+                                if annotations.is_empty() {
+                                    bus.push_back(Event::Render(
+                                        "📥 No annotations found in XFDF file".to_string(),
+                                    ));
+                                } else {
+                                    let msg = format!("📥 Imported {} annotations from XFDF", annotations.len());
+                                    bus.push_back(Event::Render(msg));
+                                }
+                            }
+                            Err(e) => {
+                                bus.push_back(Event::Render(format!("XFDF import failed: {}", e)));
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        bus.push_back(Event::Render(format!("Error reading XFDF file: {}", e)));
                     }
                 }
                 return Ok(());

@@ -1,6 +1,26 @@
 # PDF Features for Plato
 
-This document lists PDF features that are currently not implemented or only partially implemented in Plato. PDF rendering is handled by PDFPurr (pure Rust), and PDF manipulation is handled by lopdf (pure Rust). These features could enhance the reading and document management experience.
+> **Last Updated**: 2026-04-22
+> **Related Documents**: [NOT_IMPLEMENTED.md](./NOT_IMPLEMENTED.md)  |  [OCR_TTS.md](./OCR_TTS.md)  |  [BUILD.md](./BUILD.md)
+
+This document catalogs PDF features in Plato, detailing implementation status, technical decisions, and future possibilities. PDF rendering is handled by **PDFPurr** (pure Rust), and PDF manipulation is handled by **lopdf** (pure Rust).
+
+## Quick Reference
+
+ | Feature                                                | Status         | Priority | Implementation Cost |
+ |--------------------------------------------------------|----------------|----------|---------------------|
+ | [PDF-Native Annotations](#1-pdf-native-annotations)    | ✅ Implemented | P3       | 2/10                |
+ | [Document Manipulation](#6-document-manipulation)      | ✅ Implemented | P2       | 3/10                |
+ | [Progressive Loading](#7-progressive-document-loading) | ✅ Implemented | P2       | 4/10                |
+ | [Resource Extraction](#10-resource-extraction)         | ✅ Implemented | P3       | 5/10                |
+ | [Redaction Support](#8-redaction-support)              | ✅ Implemented | P3       | 6/10                |
+ | [Native Text Search](#3-native-text-search)            | ✅ Implemented | P2       | 2/10                |
+ | Interactive Forms                                      | ❌ By Design   | —        | 8/10                |
+ | Digital Signatures                                     | ❌ By Design   | —        | 8/10                |
+ | JavaScript Integration                                 | ❌ By Design   | —        | 9/10                |
+ | Enhanced Reflow                                        | ❌ By Design   | —        | 9/10                |
+ | PDF/A & PDF/X Validation                               | ❌ By Design   | —        | 5/10                |
+ | Advanced OCR                                           | ❌ By Design   | —        | 8/10                |
 
 ## 1. PDF-Native Annotations
 
@@ -32,8 +52,9 @@ This document lists PDF features that are currently not implemented or only part
 - "Export with Annotations" option in PDF Tools menu
 - Creates new PDF file (does not modify original)
 - Exports to `.annotated.pdf` extension
-- Annotation search/filter UI (to be added)
-- XFDF import/export UI (to be added)
+- "Search Annotations" option in PDF Tools menu - searches for specific annotation types (e.g., highlights)
+- "Export to XFDF" option in PDF Tools menu - exports annotations to XFDF format for cross-platform exchange
+- "Import from XFDF" option in PDF Tools menu - imports annotations from XFDF files
 
 **How It Works**:
 
@@ -70,14 +91,14 @@ This document lists PDF features that are currently not implemented or only part
 
 4. **Field Type Complexity**:
 
-| Field Type   | E-ink Suitability                 |
-|--------------|-----------------------------------|
-| Text input   | ⚠️ Poor - keyboard needed         |
-| Checkbox     | ✅ Good - simple tap              |
-| Radio button | ✅ Good - simple tap              |
-| Dropdown     | ✅ Good - menu selection          |
-| Signature    | ❌ Not practical                  |
-| XFA forms    | ❌ Not supported in PDF libraries |
+ | Field Type   | E-ink Suitability                 |
+ |--------------|-----------------------------------|
+ | Text input   | ⚠️ Poor - keyboard needed         |
+ | Checkbox     | ✅ Good - simple tap              |
+ | Radio button | ✅ Good - simple tap              |
+ | Dropdown     | ✅ Good - menu selection          |
+ | Signature    | ❌ Not practical                  |
+ | XFA forms    | ❌ Not supported in PDF libraries |
 
 ### Verdict
 
@@ -277,10 +298,10 @@ Not recommended for Kobo because JS in PDFs is virtually nonexistent in e-books,
 
 ### What Are PDF/A and PDF/X?
 
-| Standard | Purpose             | Typical Users                |
-|----------|---------------------|------------------------------|
-| PDF/A    | Long-term archiving | Archivist, government, legal |
-| PDF/X    | Print production    | Commercial printing          |
+ | Standard | Purpose             | Typical Users                |
+ |----------|---------------------|------------------------------|
+ | PDF/A    | Long-term archiving | Archivist, government, legal |
+ | PDF/X    | Print production    | Commercial printing          |
 
 ### Why will Not be Implemented
 
@@ -296,11 +317,11 @@ Not recommended for Kobo because JS in PDFs is virtually nonexistent in e-books,
 
 3. **Implementation Options**:
 
-| Level  | Cost | Features                   |
-|--------|------|----------------------------|
-| Basic  | 2/10 | Show "This is PDF/A" label |
-| Medium | 5/10 | List conformance levels    |
-| Full   | 8/10 | Full validation details    |
+ | Level  | Cost | Features                   |
+ |--------|------|----------------------------|
+ | Basic  | 2/10 | Show "This is PDF/A" label |
+ | Medium | 5/10 | List conformance levels    |
+ | Full   | 8/10 | Full validation details    |
 
 ### Real Verdict
 
@@ -337,16 +358,30 @@ Same as basic OCR (see `doc/OCR_TTS.md`). Not recommended - PDF libraries don't 
 
 ## Implementation Status Summary
 
-| Feature                | Status         | Notes                                        |
-|------------------------|----------------|----------------------------------------------|
-| Native Text Search     | ✅ Implemented | Available via Settings toggle                |
-| Document Manipulation  | ✅ Implemented | `PdfManipulator` module created              |
-| PDF-Native Annotations | ✅ Implemented | Import, export, search, XFDF support         |
-| Redaction Support      | ✅ Implemented | `RedactionEditor` struct created             |
-| Resource Extraction    | ✅ Implemented | `ResourceExtractor` with image/font counting |
-| PDF Forms              | ❌ By Design   | Forms rare in e-books, poor e-ink UX         |
-| Digital Signatures     | ❌ By Design   | No use case, security concerns               |
-| JavaScript Integration | ❌ By Design   | JS in PDFs is virtually nonexistent          |
-| Enhanced Reflow        | ❌ By Design   | Duplicates existing engine                   |
-| PDF/A Validation       | ❌ By Design   | No use case on e-readers                     |
-| Advanced OCR           | ❌ By Design   | PDF libraries don't include OCR              |
+ | Feature                      | Status         | Implementation Details                 | Notes                                   |
+ |------------------------------|----------------|----------------------------------------|-----------------------------------------|
+ | **Native Text Search**       | ✅ Implemented | PDFPurr integration                    | Available via Settings toggle           |
+ | **Document Manipulation**    | ✅ Implemented | `PdfManipulator` module                | Delete, rotate, extract, merge, reorder |
+ | **PDF-Native Annotations**   | ✅ Implemented | `PdfAnnotationManager` + `XfdfHandler` | Import, export, search, XFDF support    |
+ | **Redaction Support**        | ✅ Implemented | `RedactionEditor` struct               | Mark and permanently remove content     |
+ | **Resource Extraction**      | ✅ Implemented | `ResourceExtractor`                    | Images, fonts, page analysis            |
+ | **Progressive Loading**      | ✅ Implemented | `ProgressiveDocLoader`                 | LRU caching, preloading                 |
+ | **Interactive Forms**        | ❌ By Design   | —                                      | Forms rare in e-books, poor e-ink UX    |
+ | **Digital Signatures**       | ❌ By Design   | —                                      | No use case, security concerns          |
+ | **JavaScript Integration**   | ❌ By Design   | —                                      | JS in PDFs virtually nonexistent        |
+ | **Enhanced Reflow**          | ❌ By Design   | —                                      | Duplicates existing HTML engine         |
+ | **PDF/A & PDF/X Validation** | ❌ By Design   | —                                      | No use case on e-readers                |
+ | **Advanced OCR**             | ❌ By Design   | —                                      | PDF libraries don't include OCR         |
+
+---
+
+## Technical Architecture
+
+**PDF Processing Stack:**
+
+- **Rendering**: [PDFPurr](https://github.com/slintab/pdfpurr) - Pure Rust PDF rendering
+- **Manipulation**: [lopdf](https://github.com/J-F-Liu/lopdf) - Pure Rust PDF operations
+- **Annotations**: Custom implementation with XFDF interoperability
+- **Memory Management**: LRU caching with 256MB Kobo limits
+
+**Design Philosophy**: Prioritize e-ink optimization, memory efficiency, and reading experience over document workflow features.
