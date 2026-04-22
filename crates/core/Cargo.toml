@@ -50,7 +50,7 @@ lru = "0.17.0"
 dashmap = "6.1.0"
 
 # Rust-native font stack (replaces FreeType + HarfBuzz)
-skrifa = "0.42.0"
+skrifa = "0.19.0"
 rustybuzz = "0.20.1"
 ab_glyph = { version = "0.2.32", features = ["variable-fonts"] }
 
