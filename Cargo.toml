@@ -8,9 +8,9 @@ members = [
   'crates/fetcher',
   'crates/epub_edit',
   'crates/epub_editor',
-  'crates/plato-android',
 ]
 exclude = [
+  'crates/plato-android',
 ]
 
 [workspace.package]
