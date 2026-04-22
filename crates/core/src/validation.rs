@@ -18,6 +18,7 @@
 
 use anyhow::{bail, format_err, Error};
 use std::path::{Path, PathBuf};
+use validator::{ValidateEmail, ValidateUrl};
 
 /// Maximum allowed path length for file operations
 pub const MAX_PATH_LENGTH: usize = 4096;
@@ -207,32 +208,24 @@ pub fn validate_library_path<P: AsRef<Path>>(path: P) -> Result<PathBuf, Error> 
     Ok(path_ref.to_path_buf())
 }
 
-/// Validates an email address format
-/// Simple regex-based email validation
+/// Validates an email address format using validator crate
 pub fn validate_email(email: &str, context: &str) -> Result<(), Error> {
-    let email_regex = regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-        .map_err(|_| format_err!("{}: failed to compile email regex", context))?;
-    
-    if !email_regex.is_match(email) {
+    if !email.validate_email() {
         bail!("{}: '{}' is not a valid email address", context, email);
     }
     Ok(())
 }
 
-/// Validates a URL format
-/// Simple regex-based URL validation
+/// Validates a URL format using validator crate
 pub fn validate_url(url: &str, context: &str) -> Result<(), Error> {
-    let url_regex = regex::Regex::new(r"^https?://[^\s/$.?#].[^\s]*$")
-        .map_err(|_| format_err!("{}: failed to compile URL regex", context))?;
-    
-    if !url_regex.is_match(url) {
+    if !url.validate_url() {
         bail!("{}: '{}' is not a valid URL", context, url);
     }
     Ok(())
 }
 
 /// Validates an IP address format (IPv4 or IPv6)
-/// Simple regex-based IP validation
+/// Custom regex-based IP validation (validator crate doesn't provide IP validation)
 pub fn validate_ip(ip: &str, context: &str) -> Result<(), Error> {
     let ipv4_regex = regex::Regex::new(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
         .map_err(|_| format_err!("{}: failed to compile IP regex", context))?;
