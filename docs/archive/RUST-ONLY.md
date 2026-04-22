@@ -6,7 +6,7 @@ This document provides a comprehensive plan to extend Plato from Kobo e-readers 
 
 ## Architecture Summary
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Application Code                          │
 │  (plato-core: document handling, UI, library, settings)          │
@@ -25,12 +25,12 @@ This document provides a comprehensive plan to extend Plato from Kobo e-readers 
 
 ## Key Design Decisions
 
-| Decision | Rationale |
-|----------|-----------|
+| Decision                        | Rationale                                           |
+|---------------------------------|-----------------------------------------------------|
 | Single codebase with `#[cfg()]` | Existing patterns in Plato; simpler than multi-repo |
-| Native Rust rendering | Full control, no SDL2 dependency, true open source |
-| Rust-native alternatives | Avoids proprietary blobs, enables sideloading |
-| Runtime polymorphism (traits) | Already used in Plato; allows platform switching |
+| Native Rust rendering           | Full control, no SDL2 dependency, true open source  |
+| Rust-native alternatives        | Avoids proprietary blobs, enables sideloading       |
+| Runtime polymorphism (traits)   | Already used in Plato; allows platform switching    |
 
 ---
 
@@ -40,13 +40,14 @@ This document provides a comprehensive plan to extend Plato from Kobo e-readers 
 
 **Location:** `crates/core/src/`
 
-| Module | Changes |
-|--------|---------|
-| `device.rs` | Add `Platform` enum: `Kobo`, `IOS`, `Android`; replace `CURRENT_DEVICE` with `CURRENT_PLATFORM` |
-| `framebuffer/mod.rs` | Extend `Framebuffer` trait with mobile-specific methods |
-| `context.rs` | Make platform services generic via trait objects |
+| Module               | Changes                                                                                         |
+|----------------------|-------------------------------------------------------------------------------------------------|
+| `device.rs`          | Add `Platform` enum: `Kobo`, `IOS`, `Android`; replace `CURRENT_DEVICE` with `CURRENT_PLATFORM` |
+| `framebuffer/mod.rs` | Extend `Framebuffer` trait with mobile-specific methods                                         |
+| `context.rs`         | Make platform services generic via trait objects                                                |
 
 **New module:** `crates/core/src/platform/mod.rs`
+
 ```rust
 pub trait PlatformServices {
     fn framebuffer(&self) -> Box<dyn Framebuffer>;
@@ -76,6 +77,7 @@ pub mod platform { /* SDL2 implementation */ }
 ```
 
 Add to `Cargo.toml`:
+
 ```toml
 [target.'cfg(not(any(target_os = "ios", target_os = "android")))'.dependencies]
 sdl2 = "0.37"
@@ -95,10 +97,10 @@ android = "0.1"
 
 ### 2.1 Graphics Stack Migration
 
-| Platform | Primary | Fallback | Crates |
-|----------|--------|----------|--------|
-| iOS | Metal | softbuffer | `metal`, `wgpu`, `softbuffer` |
-| Android | Vulkan | softbuffer | `vulkano`, `wgpu`, `softbuffer` |
+| Platform | Primary | Fallback   | Crates                          |
+|----------|---------|------------|---------------------------------|
+| iOS      | Metal   | softbuffer | `metal`, `wgpu`, `softbuffer`   |
+| Android  | Vulkan  | softbuffer | `vulkano`, `wgpu`, `softbuffer` |
 
 ### 2.2 Implement Mobile Renderers
 
@@ -161,15 +163,16 @@ pub struct AndroidInputSource { /* MotionEvent handling */ }
 
 ### 3.2 Touch & Gesture Support
 
-| Feature | Implementation |
-|---------|----------------|
-| Single tap | Map to tap event |
-| Long press | Map to context menu |
-| Pinch zoom | Scale document view |
-| Swipe | Page turn / scroll |
-| Drag | Selection / annotation |
+| Feature    | Implementation         |
+|------------|------------------------|
+| Single tap | Map to tap event       |
+| Long press | Map to context menu    |
+| Pinch zoom | Scale document view    |
+| Swipe      | Page turn / scroll     |
+| Drag       | Selection / annotation |
 
 **New module:** `crates/core/src/gesture/mod.rs`
+
 - Extend existing `GestureEvent` enum for mobile gestures
 - Add gesture recognizer for iOS/Android touch patterns
 
@@ -179,27 +182,29 @@ pub struct AndroidInputSource { /* MotionEvent handling */ }
 
 ### 4.1 iOS Services (Swift interop via C ABI)
 
-| Service | Implementation |
-|---------|----------------|
-| File access | `NSFileManager` via `ffi_rs` |
-| Battery | `UIDevice.current.batteryLevel` |
-| Notifications | `UNUserNotificationCenter` |
-| Haptics | `UIFeedbackGenerator` |
+| Service       | Implementation                  |
+|---------------|---------------------------------|
+| File access   | `NSFileManager` via `ffi_rs`    |
+| Battery       | `UIDevice.current.batteryLevel` |
+| Notifications | `UNUserNotificationCenter`      |
+| Haptics       | `UIFeedbackGenerator`           |
 
 **New crate:** `crates/plato-ios/`
+
 - Swift UI layer for iOS-specific features
 - Rust core embedded via C bridging
 
 ### 4.2 Android Services (JNI)
 
-| Service | Implementation |
-|---------|----------------|
-| File access | `ContentResolver` via `jni` |
-| Battery | `BatteryManager` |
-| Notifications | `NotificationManager` |
-| Haptics | `Vibrator` |
+| Service       | Implementation              |
+|---------------|-----------------------------|
+| File access   | `ContentResolver` via `jni` |
+| Battery       | `BatteryManager`            |
+| Notifications | `NotificationManager`       |
+| Haptics       | `Vibrator`                  |
 
 **New crate:** `crates/plato-android/`
+
 - Kotlin UI layer for Android-specific features
 - Rust core embedded via JNI
 
@@ -209,12 +214,13 @@ pub struct AndroidInputSource { /* MotionEvent handling */ }
 
 ### 5.1 Font Stack Replacement
 
-| Current | Replacement | Status |
-|---------|-------------|--------|
-| `freetype_sys` | `skrifa` + `ab_glyph` | Production-ready |
+| Current        | Replacement               | Status           |
+|----------------|---------------------------|------------------|
+| `freetype_sys` | `skrifa` + `ab_glyph`     | Production-ready |
 | `harfbuzz_sys` | `harfrust` or `rustybuzz` | Production-ready |
 
 **Migration:**
+
 ```rust
 // Old (C FFI)
 use freetype_sys::*;
@@ -226,17 +232,18 @@ use rustybuzz::UnicodeMapping;
 
 ### 5.2 Graphics Replacement
 
-| Current | Replacement | Status |
-|---------|-------------|--------|
+| Current         | Replacement            | Status           |
+|-----------------|------------------------|------------------|
 | SDL2 (emulator) | `softbuffer` or `wgpu` | Production-ready |
 
 ### 5.3 PDF Handling
 
-| Current | Replacement | Status |
-|---------|-------------|--------|
+| Current               | Replacement                | Status                |
+|-----------------------|----------------------------|-----------------------|
 | `mupdf_sys` + wrapper | `hayro` or `pdfium-render` | Partial (limitations) |
 
 **Note:** Pure Rust PDF libraries lack some MuPDF features. For production:
+
 - **Option A:** Keep MuPDF (LGPL) for PDF, use Rust-native for other formats
 - **Option B:** Use `hayro` with known limitations (no encrypted PDFs)
 - **Option C:** Accept feature gaps for full open-source stack
@@ -244,10 +251,11 @@ use rustybuzz::UnicodeMapping;
 ### 5.4 Dependency Updates
 
 **`Cargo.toml` additions:**
+
 ```toml
 [dependencies]
 # Text rendering (replace FreeType + HarfBuzz)
-skrifa = "0.41"
+skrifa = "0.42.0"
 rustybuzz = "0.20"
 ab_glyph = "0.2"
 
@@ -295,6 +303,7 @@ cargo build --target aarch64-linux-android -p plato-core
 ### 6.3 Native Library Build Scripts
 
 **`build-mobile.sh`:**
+
 ```bash
 #!/bin/bash
 case "$1" in
@@ -313,12 +322,12 @@ esac
 
 ### 7.1 Touch-Optimized Interface
 
-| Component | Changes |
-|-----------|---------|
-| Navigation | Larger touch targets (48dp minimum) |
-| Menu system | Swipe gestures instead of tap |
-| Reading view | Tap zones for page turn |
-| Settings | Scrollable lists with clear labels |
+| Component    | Changes                             |
+|--------------|-------------------------------------|
+| Navigation   | Larger touch targets (48dp minimum) |
+| Menu system  | Swipe gestures instead of tap       |
+| Reading view | Tap zones for page turn             |
+| Settings     | Scrollable lists with clear labels  |
 
 ### 7.2 Responsive Layouts
 
@@ -336,15 +345,16 @@ Existing tests in `crates/core/src/*_tests.rs` remain unchanged - they use mocks
 
 ### 8.2 Platform Tests
 
-| Platform | Test Type | Tool |
-|----------|-----------|------|
-| iOS | UI | Xcode + XCTest |
-| Android | UI | Espresso + Compose Test |
-| Both | Integration | CI emulator runs |
+| Platform | Test Type   | Tool                    |
+|----------|-------------|-------------------------|
+| iOS      | UI          | Xcode + XCTest          |
+| Android  | UI          | Espresso + Compose Test |
+| Both     | Integration | CI emulator runs        |
 
 ### 8.3 Mock Implementations
 
 **`crates/core/src/test_mocks.rs`** - Extend with:
+
 - `MockFramebuffer` (already exists)
 - `MockInputSource`
 - `MockPlatformServices`
@@ -353,29 +363,29 @@ Existing tests in `crates/core/src/*_tests.rs` remain unchanged - they use mocks
 
 ## Phase 9: Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| PDF feature gaps | Medium | Keep MuPDF as optional; document limitations |
-| Graphics performance | Medium | Use wgpu for GPU; softbuffer fallback |
-| iOS App Store rejection | High | Sideload only; no App Store distribution |
-| Android Play Store rejection | Medium | Sideload only; F-Droid compatible |
-| Rust mobile ecosystem maturity | Low | Mature crates available (wgpu, skrifa) |
+| Risk                           | Impact | Mitigation                                   |
+|--------------------------------|--------|----------------------------------------------|
+| PDF feature gaps               | Medium | Keep MuPDF as optional; document limitations |
+| Graphics performance           | Medium | Use wgpu for GPU; softbuffer fallback        |
+| iOS App Store rejection        | High   | Sideload only; no App Store distribution     |
+| Android Play Store rejection   | Medium | Sideload only; F-Droid compatible            |
+| Rust mobile ecosystem maturity | Low    | Mature crates available (wgpu, skrifa)       |
 
 ---
 
 ## Phase 10: Implementation Timeline
 
-| Phase | Duration | Deliverable |
-|-------|----------|--------------|
-| 1. Architecture | 2 weeks | Platform abstraction layer |
-| 2. Rendering | 3 weeks | Metal/Vulkan renderers |
-| 3. Input | 2 weeks | Touch/gesture handling |
-| 4. Platform Services | 3 weeks | iOS/Android services |
-| 5. Library Migration | 4 weeks | Rust-native替换 |
-| 6. Build System | 1 week | iOS/Android builds |
-| 7. UI Adaptations | 2 weeks | Touch-optimized UI |
-| 8. Testing | 2 weeks | Platform tests |
-| **Total** | **~19 weeks** | Full mobile support |
+| Phase                | Duration      | Deliverable                |
+|----------------------|---------------|----------------------------|
+| 1. Architecture      | 2 weeks       | Platform abstraction layer |
+| 2. Rendering         | 3 weeks       | Metal/Vulkan renderers     |
+| 3. Input             | 2 weeks       | Touch/gesture handling     |
+| 4. Platform Services | 3 weeks       | iOS/Android services       |
+| 5. Library Migration | 4 weeks       | Rust-native替换            |
+| 6. Build System      | 1 week        | iOS/Android builds         |
+| 7. UI Adaptations    | 2 weeks       | Touch-optimized UI         |
+| 8. Testing           | 2 weeks       | Platform tests             |
+| **Total**            | **~19 weeks** | Full mobile support        |
 
 ---
 

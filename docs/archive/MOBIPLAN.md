@@ -329,7 +329,7 @@ cargo test --target x86_64-unknown-linux-gnu -p plato-core --lib
 
 **Dependencies Added:**
 ```toml
-skrifa = "0.41"
+skrifa = "0.42.0"
 rustybuzz = "0.20"
 ab_glyph = "0.2"
 ```

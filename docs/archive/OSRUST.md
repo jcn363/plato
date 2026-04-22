@@ -109,7 +109,7 @@ flate2 = "1.0"         # Gzip (Apache-2.0)
 epub_edit = "0.9"       # EPUB editing (MIT)
 
 # Text Rendering  
-skrifa = "0.2"         # Font parsing (MIT)
+skrifa = "0.42.0"         # Font parsing (MIT)
 rustybuzz = "0.13"      # Text shaping (MIT Apache-2.0)
 ab_glyph = "0.2"       # Glyph rasterization (MIT)
 

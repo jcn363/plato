@@ -146,8 +146,10 @@ impl<'a> Page<'a> {
     }
 
     pub fn dims(&self) -> (f32, f32) {
-        // PDFPurr doesn't have a simple dims() method
-        // Use default dimensions for now
+        // Get page dimensions from PDFPurr
+        // PDFPurr stores page dimensions in the page dictionary
+        // For now, use default dimensions - this should be improved
+        // by accessing the PDF's MediaBox directly
         (600.0, 800.0)
     }
 
@@ -169,13 +171,30 @@ impl<'a> Page<'a> {
         }
     }
 
-    pub fn search(&self, _needle: &str) -> Option<Vec<FzQuad>> {
-        // TODO: Implement search using PDFPurr text extraction
-        Some(Vec::new())
+    pub fn search(&self, needle: &str) -> Option<Vec<FzQuad>> {
+        // Basic search implementation using PDFPurr text extraction
+        let page = self.doc.load_page(self.index).ok()?;
+        let text_page = page.to_text_page(None)?;
+        let text = text_page.text();
+        
+        if text.contains(needle) {
+            // Return page-level quad if text is found
+            // Full implementation would need character-level position tracking
+            Some(vec![FzRect {
+                x0: 0.0,
+                y0: 0.0,
+                x1: 600.0,
+                y1: 800.0,
+            }.into()])
+        } else {
+            Some(Vec::new())
+        }
     }
 
     pub fn images(&self) -> Option<Vec<FzRect>> {
-        // TODO: Implement image extraction using PDFPurr
+        // PDFPurr doesn't have a direct image extraction API in version 0.4.0
+        // This would require accessing the PDF's XObject dictionary directly
+        // This is a Phase 4 feature - for now return empty list
         Some(Vec::new())
     }
 
