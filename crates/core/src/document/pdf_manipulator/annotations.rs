@@ -443,8 +443,7 @@ impl PdfAnnotationManager {
     /// Sort annotations by creation date
     pub fn sort_by_date(&mut self, ascending: bool) {
         if ascending {
-            self.annotations
-                .sort_by_key(|a| a.created_at);
+            self.annotations.sort_by_key(|a| a.created_at);
         } else {
             self.annotations
                 .sort_by_key(|a| std::cmp::Reverse(a.created_at));
@@ -819,13 +818,12 @@ impl XfdfHandler {
                                     annot.rect = Some((parts[0], parts[1], parts[2], parts[3]));
                                 }
                             }
-                            b"color" if current_text.starts_with('#') && current_text.len() == 7 => {
-                                let r =
-                                    u8::from_str_radix(&current_text[1..3], 16).unwrap_or(0);
-                                let g =
-                                    u8::from_str_radix(&current_text[3..5], 16).unwrap_or(0);
-                                let b =
-                                    u8::from_str_radix(&current_text[5..7], 16).unwrap_or(0);
+                            b"color"
+                                if current_text.starts_with('#') && current_text.len() == 7 =>
+                            {
+                                let r = u8::from_str_radix(&current_text[1..3], 16).unwrap_or(0);
+                                let g = u8::from_str_radix(&current_text[3..5], 16).unwrap_or(0);
+                                let b = u8::from_str_radix(&current_text[5..7], 16).unwrap_or(0);
                                 annot.color = Some((r, g, b));
                             }
                             b"author" => annot.author = Some(current_text.clone()),

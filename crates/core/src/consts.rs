@@ -61,14 +61,53 @@ pub mod system {
     /// Maximum file name length
     pub const MAX_FILENAME_LENGTH: usize = 255;
 
-    /// Page cache size in megabytes
+    /// Page cache size in megabytes for standard Kobo devices (256-512MB RAM)
     pub const PAGE_CACHE_SIZE_MB: usize = 20;
 
-    /// Preload ahead pages count
+    /// Page cache size for Elipsa devices (1GB RAM)
+    pub const ELIPSA_PAGE_CACHE_SIZE_MB: usize = 40;
+
+    /// Page cache size for Android devices (12GB+ RAM)
+    pub const ANDROID_PAGE_CACHE_SIZE_MB: usize = 100;
+
+    /// Preload ahead pages count for standard devices
     pub const PRELOAD_AHEAD_PAGES: usize = 2;
+
+    /// Preload ahead pages count for Elipsa (more RAM allows more preloading)
+    pub const ELIPSA_PRELOAD_AHEAD_PAGES: usize = 3;
+
+    /// Preload ahead pages count for Android (abundant RAM)
+    pub const ANDROID_PRELOAD_AHEAD_PAGES: usize = 5;
 
     /// Preload behind pages count
     pub const PRELOAD_BEHIND_PAGES: usize = 1;
+
+    /// Preload behind pages count for Elipsa
+    pub const ELIPSA_PRELOAD_BEHIND_PAGES: usize = 2;
+
+    /// Preload behind pages count for Android
+    pub const ANDROID_PRELOAD_BEHIND_PAGES: usize = 3;
+}
+
+/// Buffer pool size constants
+pub mod buffer_pool {
+    /// Thumbnail buffer size for standard Kobo devices (1MB)
+    pub const THUMBNAIL_BUFFER_SIZE: usize = 1024 * 1024;
+
+    /// Thumbnail buffer size for Elipsa devices (2MB)
+    pub const ELIPSA_THUMBNAIL_BUFFER_SIZE: usize = 2 * 1024 * 1024;
+
+    /// Thumbnail buffer size for Android devices (4MB)
+    pub const ANDROID_THUMBNAIL_BUFFER_SIZE: usize = 4 * 1024 * 1024;
+
+    /// Document buffer size for standard Kobo devices (4MB)
+    pub const DOCUMENT_BUFFER_SIZE: usize = 4 * 1024 * 1024;
+
+    /// Document buffer size for Elipsa devices (8MB)
+    pub const ELIPSA_DOCUMENT_BUFFER_SIZE: usize = 8 * 1024 * 1024;
+
+    /// Document buffer size for Android devices (16MB)
+    pub const ANDROID_DOCUMENT_BUFFER_SIZE: usize = 16 * 1024 * 1024;
 }
 
 /// PDF manipulation constants
@@ -180,17 +219,94 @@ pub mod thumbnail {
     /// Default thumbnail height in pixels
     pub const THUMBNAIL_HEIGHT: u32 = 320;
 
-    /// Default number of worker threads
+    /// Default number of worker threads for standard Kobo devices (256-512MB RAM)
     pub const DEFAULT_WORKER_COUNT: usize = 2;
 
-    /// Default cache size
+    /// Worker threads for Elipsa devices (1GB RAM, 4-core Allwinner B300)
+    pub const ELIPSA_WORKER_COUNT: usize = 3;
+
+    /// Worker threads for Android devices (abundant RAM, 8+ cores)
+    pub const ANDROID_WORKER_COUNT: usize = 4;
+
+    /// Default cache size for standard Kobo devices
     pub const DEFAULT_CACHE_SIZE: usize = 20;
+
+    /// Cache size for Elipsa devices (1GB RAM allows larger cache)
+    pub const ELIPSA_CACHE_SIZE: usize = 35;
+
+    /// Cache size for Android devices (abundant RAM)
+    pub const ANDROID_CACHE_SIZE: usize = 50;
 }
 
 /// Input and interaction constants
 pub mod input {
     /// Input history size
     pub const INPUT_HISTORY_SIZE: usize = 32;
+
+    /// Tap jitter tolerance in millimeters for e-ink devices
+    pub const EINK_TAP_JITTER_MM: f32 = 6.0;
+
+    /// Tap jitter tolerance in millimeters for mobile devices (tighter)
+    pub const MOBILE_TAP_JITTER_MM: f32 = 4.0;
+
+    /// Hold delay for e-ink devices (conservative)
+    pub const EINK_HOLD_DELAY_MS: u64 = 666;
+
+    /// Hold delay for mobile devices (more responsive)
+    pub const MOBILE_HOLD_DELAY_MS: u64 = 400;
+
+    /// Touch polling rate for e-ink (60Hz)
+    pub const EINK_TOUCH_POLL_RATE: u32 = 60;
+
+    /// Touch polling rate for mobile (120Hz)
+    pub const MOBILE_TOUCH_POLL_RATE: u32 = 120;
+}
+
+/// Mobile platform constants
+pub mod mobile {
+    use std::time::Duration;
+
+    /// Target FPS for mobile animations (OnePlus Nord 2 5G: 90Hz)
+    pub const MOBILE_TARGET_FPS: u32 = 90;
+
+    /// Animation duration multiplier for mobile (faster animations)
+    pub const MOBILE_ANIMATION_SPEED: f32 = 0.7;
+
+    /// Sync interval for mobile background sync (5 minutes)
+    pub const MOBILE_SYNC_INTERVAL: Duration = Duration::from_secs(300);
+
+    /// Conservative sync interval for e-ink (1 hour)
+    pub const EINK_SYNC_INTERVAL: Duration = Duration::from_secs(3600);
+
+    /// Max concurrent downloads on mobile
+    pub const MOBILE_MAX_CONCURRENT_DOWNLOADS: usize = 4;
+
+    /// Max concurrent downloads on e-ink (battery conservative)
+    pub const EINK_MAX_CONCURRENT_DOWNLOADS: usize = 1;
+
+    /// Thumbnail quality for mobile (higher, better displays)
+    pub const MOBILE_THUMBNAIL_QUALITY: u8 = 85;
+
+    /// Thumbnail quality for e-ink (lower, sufficient)
+    pub const EINK_THUMBNAIL_QUALITY: u8 = 75;
+
+    /// Image cache size on mobile (300MB)
+    pub const MOBILE_IMAGE_CACHE_MB: usize = 300;
+
+    /// Image cache size on e-ink (20MB)
+    pub const EINK_IMAGE_CACHE_MB: usize = 20;
+
+    /// I/O buffer size for UFS 3.1 (mobile)
+    pub const MOBILE_IO_BUFFER_SIZE: usize = 128 * 1024;
+
+    /// I/O buffer size for eMMC (e-ink)
+    pub const EINK_IO_BUFFER_SIZE: usize = 32 * 1024;
+
+    /// Heap usage percentage on mobile (75%)
+    pub const MOBILE_HEAP_PERCENT: u8 = 75;
+
+    /// Heap usage percentage on e-ink (50%)
+    pub const EINK_HEAP_PERCENT: u8 = 50;
 }
 
 /// Settings and configuration constants

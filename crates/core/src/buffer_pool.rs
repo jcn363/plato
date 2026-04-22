@@ -1,17 +1,49 @@
 //! Buffer reuse pools for temporary work
 //!
-//! This module provides thread-local buffer pools to reduce allocations
-//! for thumbnail generation and document parsing.
+//! This module provides device-aware thread-local buffer pools to reduce allocations
+//! for thumbnail generation and document parsing. Buffer sizes are optimized based
+//! on device capabilities (standard Kobo, Elipsa 1GB, Android 12GB).
 
+use crate::consts::buffer_pool as buffer_consts;
+use crate::device::{Model, CURRENT_DEVICE};
 use std::sync::LazyLock;
 
-/// Thread-local buffer pool for thumbnail generation
-pub static THUMBNAIL_BUFFER: LazyLock<std::sync::Mutex<Vec<u8>>> =
-    LazyLock::new(|| std::sync::Mutex::new(Vec::with_capacity(1024 * 1024)));
+/// Get the appropriate thumbnail buffer size for the current device
+fn get_thumbnail_buffer_size() -> usize {
+    match CURRENT_DEVICE.model {
+        Model::Elipsa | Model::Elipsa2E => buffer_consts::ELIPSA_THUMBNAIL_BUFFER_SIZE,
+        _ => {
+            // Check if running on Android (detected by different environment)
+            if std::env::var("ANDROID_ROOT").is_ok() {
+                buffer_consts::ANDROID_THUMBNAIL_BUFFER_SIZE
+            } else {
+                buffer_consts::THUMBNAIL_BUFFER_SIZE
+            }
+        }
+    }
+}
 
-/// Thread-local buffer pool for document parsing
+/// Get the appropriate document buffer size for the current device
+fn get_document_buffer_size() -> usize {
+    match CURRENT_DEVICE.model {
+        Model::Elipsa | Model::Elipsa2E => buffer_consts::ELIPSA_DOCUMENT_BUFFER_SIZE,
+        _ => {
+            if std::env::var("ANDROID_ROOT").is_ok() {
+                buffer_consts::ANDROID_DOCUMENT_BUFFER_SIZE
+            } else {
+                buffer_consts::DOCUMENT_BUFFER_SIZE
+            }
+        }
+    }
+}
+
+/// Thread-local buffer pool for thumbnail generation (device-aware sizing)
+pub static THUMBNAIL_BUFFER: LazyLock<std::sync::Mutex<Vec<u8>>> =
+    LazyLock::new(|| std::sync::Mutex::new(Vec::with_capacity(get_thumbnail_buffer_size())));
+
+/// Thread-local buffer pool for document parsing (device-aware sizing)
 pub static DOCUMENT_BUFFER: LazyLock<std::sync::Mutex<Vec<u8>>> =
-    LazyLock::new(|| std::sync::Mutex::new(Vec::with_capacity(4 * 1024 * 1024)));
+    LazyLock::new(|| std::sync::Mutex::new(Vec::with_capacity(get_document_buffer_size())));
 
 /// Get a thumbnail buffer from the pool
 pub fn with_thumbnail_buffer<F, R>(f: F) -> R

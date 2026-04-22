@@ -315,3 +315,85 @@ pub fn battery_fill(dark: bool) -> Color {
         BATTERY_FILL
     }
 }
+
+// ============================================================================
+// Mobile platform color integration
+// ============================================================================
+
+/// Check if running on mobile platform (Android/iOS)
+#[inline]
+fn is_mobile_platform() -> bool {
+    std::env::var("ANDROID_ROOT").is_ok() || std::env::var("IPHONE_SIMULATOR_ROOT").is_ok()
+}
+
+/// Get platform-optimized background color
+/// Uses mobile colorful themes on Android/iOS, grayscale on e-ink
+#[inline]
+pub fn platform_background(dark: bool) -> Color {
+    if is_mobile_platform() {
+        crate::mobile_theme::mobile_background()
+    } else {
+        background(dark)
+    }
+}
+
+/// Get platform-optimized text color
+#[inline]
+pub fn platform_text_primary(dark: bool) -> Color {
+    if is_mobile_platform() {
+        crate::mobile_theme::mobile_text_primary()
+    } else {
+        foreground(dark)
+    }
+}
+
+/// Get platform-optimized surface color (for cards/panels)
+#[inline]
+pub fn platform_surface() -> Color {
+    if is_mobile_platform() {
+        crate::mobile_theme::mobile_surface()
+    } else {
+        WHITE
+    }
+}
+
+/// Get platform-optimized accent color (blue)
+/// Returns vibrant color on mobile, grayscale on e-ink
+#[inline]
+pub fn platform_accent_primary() -> Color {
+    if is_mobile_platform() {
+        crate::mobile_theme::mobile_accent_blue()
+    } else {
+        GRAY07 // Neutral gray for e-ink
+    }
+}
+
+/// Get platform-optimized success color (green)
+#[inline]
+pub fn platform_accent_success() -> Color {
+    if is_mobile_platform() {
+        crate::mobile_theme::mobile_accent_green()
+    } else {
+        GRAY05 // Darker gray for e-ink
+    }
+}
+
+/// Get platform-optimized warning color (amber)
+#[inline]
+pub fn platform_accent_warning() -> Color {
+    if is_mobile_platform() {
+        crate::mobile_theme::mobile_accent_amber()
+    } else {
+        GRAY09 // Medium gray for e-ink
+    }
+}
+
+/// Get platform-optimized error color (red)
+#[inline]
+pub fn platform_accent_error() -> Color {
+    if is_mobile_platform() {
+        crate::mobile_theme::mobile_accent_red()
+    } else {
+        GRAY03 // Dark gray for e-ink
+    }
+}

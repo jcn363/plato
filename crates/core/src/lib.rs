@@ -12,6 +12,12 @@ pub mod cover_editor;
 pub mod device;
 pub mod image_formats;
 pub use device::{Device, FrontlightKind, KoboDevice, Model, Orientation, CURRENT_DEVICE};
+pub use mobile_optimizations::{
+    animation_config, is_mobile_platform, memory_config, network_config, power_config,
+    recommended_io_buffer_size, recommended_thread_pool_size, storage_config, AnimationConfig,
+    MemoryConfig, NetworkConfig, PowerConfig, StorageConfig, TouchConfig,
+};
+pub use mobile_theme::{mobile_theme_mode, set_mobile_theme_mode, MobileThemeMode};
 mod dictionary;
 pub mod document;
 pub mod eink;
@@ -25,6 +31,8 @@ pub mod input;
 pub mod library;
 pub mod lightsensor;
 pub mod metadata;
+pub mod mobile_optimizations;
+pub mod mobile_theme;
 pub mod opds;
 pub mod plugin;
 pub mod rtc;

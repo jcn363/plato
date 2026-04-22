@@ -1,6 +1,7 @@
 use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::Point;
 use crate::geom::{LinearDir, Rectangle};
+use crate::mobile_optimizations::{animation_config, is_mobile_platform};
 use crate::unit::scale_by_dpi;
 
 #[derive(Debug, Clone, Copy)]
@@ -18,22 +19,39 @@ pub struct PageAnimation {
 }
 
 impl PageAnimation {
+    /// Create a new page animation with platform-aware defaults
     pub fn new(kind: PageAnimKind, direction: LinearDir) -> Self {
+        // On e-ink, disable animations by immediately completing them
+        let initial_progress = if is_mobile_platform() { 0.0 } else { 1.0 };
+
         PageAnimation {
             kind,
             direction,
-            progress: 0.0,
+            progress: initial_progress,
         }
     }
 
+    /// Advance animation with platform-appropriate speed
     pub fn advance(&mut self, delta: f32) -> bool {
-        self.progress += delta;
+        // Apply platform-specific animation speed multiplier
+        let speed = if is_mobile_platform() {
+            animation_config().duration_multiplier
+        } else {
+            0.0 // No animation on e-ink
+        };
+
+        self.progress += delta * speed;
         if self.progress >= 1.0 {
             self.progress = 1.0;
             false
         } else {
             true
         }
+    }
+
+    /// Check if animations are supported on current platform
+    pub fn animations_enabled() -> bool {
+        animation_config().page_animations
     }
 
     pub fn is_complete(&self) -> bool {

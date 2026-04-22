@@ -12,17 +12,55 @@ pub use request::ThumbnailRequest;
 // Re-export thumbnail constants from canonical source in consts::thumbnail
 // per Single Source of Truth rule.
 pub use crate::consts::thumbnail::{
-    DEFAULT_CACHE_SIZE, DEFAULT_WORKER_COUNT, THUMBNAIL_HEIGHT, THUMBNAIL_WIDTH,
+    ANDROID_CACHE_SIZE, ANDROID_WORKER_COUNT, DEFAULT_CACHE_SIZE, DEFAULT_WORKER_COUNT,
+    ELIPSA_CACHE_SIZE, ELIPSA_WORKER_COUNT, THUMBNAIL_HEIGHT, THUMBNAIL_WIDTH,
 };
 
 /// Maximum allowed worker threads for Kobo devices
 pub const MAX_WORKER_COUNT: usize = 4;
 
+/// Maximum allowed worker threads for Android devices (8-core CPUs)
+pub const ANDROID_MAX_WORKER_COUNT: usize = 6;
+
 /// Minimum allowed worker threads
 pub const MIN_WORKER_COUNT: usize = 1;
 
-/// Maximum allowed cache size in memory
+/// Maximum allowed cache size in memory for Kobo
 pub const MAX_CACHE_SIZE: usize = 50;
+
+/// Maximum allowed cache size for Android devices
+pub const ANDROID_MAX_CACHE_SIZE: usize = 100;
 
 /// Minimum allowed cache size
 pub const MIN_CACHE_SIZE: usize = 5;
+
+use crate::device::{Model, CURRENT_DEVICE};
+
+/// Get the optimal worker count for the current device
+pub fn optimal_worker_count() -> usize {
+    match CURRENT_DEVICE.model {
+        Model::Elipsa | Model::Elipsa2E => ELIPSA_WORKER_COUNT,
+        _ => {
+            // Check if running on Android
+            if std::env::var("ANDROID_ROOT").is_ok() {
+                ANDROID_WORKER_COUNT
+            } else {
+                DEFAULT_WORKER_COUNT
+            }
+        }
+    }
+}
+
+/// Get the optimal cache size for the current device
+pub fn optimal_cache_size() -> usize {
+    match CURRENT_DEVICE.model {
+        Model::Elipsa | Model::Elipsa2E => ELIPSA_CACHE_SIZE,
+        _ => {
+            if std::env::var("ANDROID_ROOT").is_ok() {
+                ANDROID_CACHE_SIZE
+            } else {
+                DEFAULT_CACHE_SIZE
+            }
+        }
+    }
+}

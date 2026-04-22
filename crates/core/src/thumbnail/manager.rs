@@ -1,6 +1,7 @@
 use crate::thumbnail::cache::ThumbnailCache;
 use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
 use crate::thumbnail::request::ThumbnailRequest;
+use crate::thumbnail::{optimal_cache_size, optimal_worker_count};
 use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, Sender};
@@ -20,8 +21,8 @@ pub struct ThumbnailConfig {
 impl Default for ThumbnailConfig {
     fn default() -> Self {
         Self {
-            worker_count: crate::thumbnail::DEFAULT_WORKER_COUNT,
-            cache_size: crate::thumbnail::DEFAULT_CACHE_SIZE,
+            worker_count: optimal_worker_count(),
+            cache_size: optimal_cache_size(),
             thumbnail_width: crate::thumbnail::THUMBNAIL_WIDTH,
             thumbnail_height: crate::thumbnail::THUMBNAIL_HEIGHT,
             enabled: true,
@@ -30,6 +31,24 @@ impl Default for ThumbnailConfig {
 }
 
 impl ThumbnailConfig {
+    /// Get the max worker count for the current platform
+    fn max_worker_count() -> usize {
+        if std::env::var("ANDROID_ROOT").is_ok() {
+            crate::thumbnail::ANDROID_MAX_WORKER_COUNT
+        } else {
+            crate::thumbnail::MAX_WORKER_COUNT
+        }
+    }
+
+    /// Get the max cache size for the current platform
+    fn max_cache_size() -> usize {
+        if std::env::var("ANDROID_ROOT").is_ok() {
+            crate::thumbnail::ANDROID_MAX_CACHE_SIZE
+        } else {
+            crate::thumbnail::MAX_CACHE_SIZE
+        }
+    }
+
     /// Creates a new thumbnail configuration with validation
     pub fn new(
         worker_count: usize,
@@ -38,25 +57,23 @@ impl ThumbnailConfig {
         thumbnail_height: u32,
         enabled: bool,
     ) -> ThumbnailResult<Self> {
-        // Validate worker count
-        if !(crate::thumbnail::MIN_WORKER_COUNT..=crate::thumbnail::MAX_WORKER_COUNT)
-            .contains(&worker_count)
-        {
+        // Validate worker count (platform-aware limits)
+        let max_workers = Self::max_worker_count();
+        if !(crate::thumbnail::MIN_WORKER_COUNT..=max_workers).contains(&worker_count) {
             return Err(ThumbnailError::configuration(format!(
                 "worker count must be between {} and {}",
                 crate::thumbnail::MIN_WORKER_COUNT,
-                crate::thumbnail::MAX_WORKER_COUNT
+                max_workers
             )));
         }
 
-        // Validate cache size
-        if !(crate::thumbnail::MIN_CACHE_SIZE..=crate::thumbnail::MAX_CACHE_SIZE)
-            .contains(&cache_size)
-        {
+        // Validate cache size (platform-aware limits)
+        let max_cache = Self::max_cache_size();
+        if !(crate::thumbnail::MIN_CACHE_SIZE..=max_cache).contains(&cache_size) {
             return Err(ThumbnailError::configuration(format!(
                 "cache size must be between {} and {}",
                 crate::thumbnail::MIN_CACHE_SIZE,
-                crate::thumbnail::MAX_CACHE_SIZE
+                max_cache
             )));
         }
 
@@ -289,8 +306,9 @@ mod tests {
     #[test]
     fn test_config_default() {
         let config = ThumbnailConfig::default();
-        assert_eq!(config.worker_count, crate::thumbnail::DEFAULT_WORKER_COUNT);
-        assert_eq!(config.cache_size, crate::thumbnail::DEFAULT_CACHE_SIZE);
+        // Default uses device-aware optimal values
+        assert!(config.worker_count >= crate::thumbnail::MIN_WORKER_COUNT);
+        assert!(config.cache_size >= crate::thumbnail::MIN_CACHE_SIZE);
         assert!(config.enabled);
     }
 
@@ -305,7 +323,9 @@ mod tests {
         let config = ThumbnailConfig::new(0, 20, 240, 320, true);
         assert!(config.is_err());
 
-        let config = ThumbnailConfig::new(10, 20, 240, 320, true);
+        // Test exceeds max for current platform (may be 4 or 6 depending on Android)
+        let max_workers = ThumbnailConfig::max_worker_count();
+        let config = ThumbnailConfig::new(max_workers + 5, 20, 240, 320, true);
         assert!(config.is_err());
     }
 
@@ -314,7 +334,9 @@ mod tests {
         let config = ThumbnailConfig::new(2, 0, 240, 320, true);
         assert!(config.is_err());
 
-        let config = ThumbnailConfig::new(2, 100, 240, 320, true);
+        // Test exceeds max for current platform (may be 50 or 100 depending on Android)
+        let max_cache = ThumbnailConfig::max_cache_size();
+        let config = ThumbnailConfig::new(2, max_cache + 10, 240, 320, true);
         assert!(config.is_err());
     }
 

@@ -44,6 +44,26 @@ pub use crate::consts::gesture::{
     HOLD_DELAY_LONG, HOLD_DELAY_SHORT, HOLD_JITTER_MM, TAP_JITTER_MM,
 };
 
+/// Get platform-optimized tap jitter tolerance in millimeters
+#[inline]
+pub fn platform_tap_jitter_mm() -> f32 {
+    if crate::mobile_optimizations::is_mobile_platform() {
+        crate::consts::input::MOBILE_TAP_JITTER_MM
+    } else {
+        crate::consts::input::EINK_TAP_JITTER_MM
+    }
+}
+
+/// Get platform-optimized hold delay in milliseconds
+#[inline]
+pub fn platform_hold_delay_ms() -> u64 {
+    if crate::mobile_optimizations::is_mobile_platform() {
+        crate::consts::input::MOBILE_HOLD_DELAY_MS
+    } else {
+        crate::consts::input::EINK_HOLD_DELAY_MS
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum GestureEvent {
     Tap(Point),
@@ -168,7 +188,7 @@ pub fn parse_gesture_events(rx: &Receiver<DeviceEvent>, ty: &Sender<Event>) {
     let buttons: Arc<Mutex<FxHashMap<ButtonCode, f64>>> =
         Arc::new(Mutex::new(FxHashMap::default()));
     let segments: Arc<Mutex<Vec<Vec<Point>>>> = Arc::new(Mutex::new(Vec::new()));
-    let tap_jitter = mm_to_px(TAP_JITTER_MM, CURRENT_DEVICE.dpi);
+    let tap_jitter = mm_to_px(platform_tap_jitter_mm(), CURRENT_DEVICE.dpi);
     let hold_jitter = mm_to_px(HOLD_JITTER_MM, CURRENT_DEVICE.dpi);
 
     while let Ok(evt) = rx.recv() {
@@ -313,7 +333,8 @@ fn spawn_finger_hold_detector(
 ) {
     thread::spawn(move || {
         let mut held = false;
-        thread::sleep(HOLD_DELAY_SHORT);
+        let hold_delay_short = std::time::Duration::from_millis(platform_hold_delay_ms());
+        thread::sleep(hold_delay_short);
         {
             let mut ct = contacts.lock().expect("contacts lock poisoned");
             let sg = segments.lock().expect("segments lock poisoned");
@@ -339,7 +360,10 @@ fn spawn_finger_hold_detector(
                 return;
             }
         }
-        thread::sleep(HOLD_DELAY_LONG - HOLD_DELAY_SHORT);
+        let hold_delay_long = std::time::Duration::from_millis(
+            crate::consts::gesture::HOLD_DELAY_LONG.as_millis() as u64,
+        );
+        thread::sleep(hold_delay_long - hold_delay_short);
         {
             let mut ct = contacts.lock().expect("contacts lock poisoned");
             let sg = segments.lock().expect("segments lock poisoned");
@@ -367,17 +391,21 @@ fn spawn_button_hold_detector(
     time: f64,
 ) {
     thread::spawn(move || {
-        thread::sleep(HOLD_DELAY_SHORT);
+        let hold_delay_short = std::time::Duration::from_millis(platform_hold_delay_ms());
+        let hold_delay_long = std::time::Duration::from_millis(
+            crate::consts::gesture::HOLD_DELAY_LONG.as_millis() as u64,
+        );
+        thread::sleep(hold_delay_short);
         {
             let bt = buttons.lock().expect("buttons lock poisoned");
             if let Some(&initial_time) = bt.get(&code) {
-                if (initial_time - time).abs() < f64::EPSILON {
+                if initial_time == time {
                     ty.send(Event::Gesture(GestureEvent::HoldButtonShort(code)))
                         .ok();
                 }
             }
         }
-        thread::sleep(HOLD_DELAY_LONG - HOLD_DELAY_SHORT);
+        thread::sleep(hold_delay_long - hold_delay_short);
         {
             let bt = buttons.lock().expect("buttons lock poisoned");
             if let Some(&initial_time) = bt.get(&code) {
