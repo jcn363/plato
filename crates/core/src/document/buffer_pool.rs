@@ -46,15 +46,6 @@ impl PixelBuffer {
         }
     }
 
-impl PixelBuffer {
-    /// Create a new buffer with specified capacity
-    pub fn new(capacity: usize) -> Self {
-        Self {
-            data: Vec::with_capacity(capacity),
-            capacity,
-        }
-    }
-
     /// Get the underlying data
     pub fn data(&self) -> &[u8] {
         &self.data
