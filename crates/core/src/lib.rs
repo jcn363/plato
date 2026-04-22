@@ -4,6 +4,7 @@
 pub mod geom;
 
 pub mod battery;
+pub mod buffer_pool;
 pub mod color;
 pub mod consts;
 pub mod context;

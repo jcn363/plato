@@ -3,6 +3,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{LazyLock, Mutex};
 use std::thread;
 
+use crate::buffer_pool;
 use crate::document::open;
 use crate::framebuffer::Framebuffer;
 use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
@@ -52,22 +53,24 @@ impl ThumbnailWorker {
             .lock()
             .map_err(|_| ThumbnailError::thread_pool("EXCLUSIVE_ACCESS lock poisoned"))?;
 
-        // Open document and generate preview
+        // Open document and generate preview using buffer pool
         let full_path = request.file_path.clone();
-        let pixmap = open(full_path)
-            .and_then(|mut doc| {
-                doc.preview_pixmap(
-                    request.dimensions.0 as f32,
-                    request.dimensions.1 as f32,
-                    crate::device::CURRENT_DEVICE.color_samples(),
-                )
-            })
-            .ok_or_else(|| {
-                ThumbnailError::document_processing(
-                    anyhow::anyhow!("Failed to generate preview pixmap"),
-                    request.file_path.display().to_string(),
-                )
-            })?;
+        let pixmap = buffer_pool::with_thumbnail_buffer(|_buffer| {
+            open(full_path)
+                .and_then(|mut doc| {
+                    doc.preview_pixmap(
+                        request.dimensions.0 as f32,
+                        request.dimensions.1 as f32,
+                        crate::device::CURRENT_DEVICE.color_samples(),
+                    )
+                })
+                .ok_or_else(|| {
+                    ThumbnailError::document_processing(
+                        anyhow::anyhow!("Failed to generate preview pixmap"),
+                        request.file_path.display().to_string(),
+                    )
+                })
+        })?;
 
         // Save thumbnail to disk
         pixmap

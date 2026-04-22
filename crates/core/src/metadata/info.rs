@@ -1,5 +1,7 @@
 use chrono::{Local, NaiveDateTime};
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
@@ -103,8 +105,8 @@ pub struct ReaderInfo {
     pub page_names: std::collections::BTreeMap<usize, String>,
     #[serde(skip_serializing_if = "BTreeSet::is_empty")]
     pub bookmarks: BTreeSet<usize>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub annotations: Vec<Annotation>,
+    #[serde(skip_serializing_if = "SmallVec::is_empty")]
+    pub annotations: SmallVec<[Annotation; 4]>,
     #[serde(skip_serializing)]
     pub reading_time_seconds: u64,
 }
@@ -146,7 +148,7 @@ impl Default for ReaderInfo {
             contrast_gray: None,
             page_names: std::collections::BTreeMap::new(),
             bookmarks: BTreeSet::new(),
-            annotations: Vec::new(),
+            annotations: SmallVec::new(),
             reading_time_seconds: 0,
         }
     }
@@ -233,11 +235,22 @@ impl Info {
             .unwrap_or_default()
     }
 
-    pub fn title(&self) -> String {
+    pub fn title(&self) -> Cow<'_, str> {
         if self.title.is_empty() {
-            return self.file_stem();
+            return Cow::Owned(self.file_stem());
         }
 
+        // Check if any modifications are needed
+        let needs_modification = 
+            (!self.number.is_empty() && self.series.is_empty()) ||
+            !self.volume.is_empty() ||
+            !self.subtitle.is_empty();
+
+        if !needs_modification {
+            return Cow::Borrowed(&self.title);
+        }
+
+        // Modifications needed - allocate new string
         let mut title = self.title.clone();
 
         if !self.number.is_empty() && self.series.is_empty() {
@@ -264,7 +277,7 @@ impl Info {
             title = format!("{} ({} #{})", title, self.series, self.number);
         }
 
-        title
+        Cow::Owned(title)
     }
 
     pub fn alphabetic_author(&self) -> String {
@@ -313,9 +326,9 @@ impl Info {
         &self.title[start..]
     }
 
-    pub fn label(&self) -> String {
+    pub fn label(&self) -> Cow<'_, str> {
         if !self.author.is_empty() {
-            format!("{} · {}", self.title(), &self.author)
+            Cow::Owned(format!("{} · {}", self.title(), &self.author))
         } else {
             self.title()
         }

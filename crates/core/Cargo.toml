@@ -48,6 +48,7 @@ quick-xml = "0.39.2"
 epub_edit = { path = "../epub_edit" }
 lru = "0.17.0"
 dashmap = "6.1.0"
+smallvec = { version = "1.15.1", features = ["serde"] }
 
 # Pure Rust compression and image libraries (replaces C libraries)
 bzip2 = "0.6.1"

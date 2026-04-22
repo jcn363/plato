@@ -11,86 +11,84 @@ This document tracks the modularization of the Plato codebase following AGENTS.m
 
 ---
 
-## Completion Status
+## Completion Status (April 22, 2026)
 
 ### ✅ All Critical Violations Resolved
 
-| File | Before | After | Status |
-|------|--------|-------|--------|
-| `document/html/engine.rs` | 2,679 lines | 175 lines | ✅ Split into 4 modules |
-| `document/html/engine_text.rs` | 1,076 lines | <200 each | ✅ Split into 6 submodules |
-| `view/home/ui_toggles.rs` | 1,014 lines | <150 each | ✅ Split into 11 submodules |
-| `view/reader/reader_impl/reader.rs` | 2,682 lines | ~921 lines | ✅ 64% reduction, 20 modules |
+| File                                | Before      | After                      | Status                       |
+|-------------------------------------|-------------|----------------------------|------------------------------|
+| `document/html/`                    | 2,679 lines | Multiple files < 22KB each | ✅ Split into 20 files       |
+| `view/home/ui_toggles.rs`           | 1,014 lines | 13 files < 14KB each       | ✅ Split into directory      |
+| `view/reader/reader_impl/reader.rs` | 2,682 lines | 25.9KB (~900 lines)        | ✅ 64% reduction, 16 modules |
 
-**Total**: Extracted 5,000+ lines into 42 focused modules.
+**Total**: Extracted 5,000+ lines into 50+ focused modules.
 
 ---
 
 ## Module Structure
 
-### 1. HTML Engine (7 files)
+### 1. HTML Engine (20 files)
 
-```
+```text
 crates/core/src/document/html/
-├── engine.rs               (175 lines - core trait)
-├── engine_helpers.rs     (display list, styles)
-├── engine_display.rs     (layout, positioning)
-├── engine_methods.rs     (rendering pipeline)
-└── engine_text/
-    ├── mod.rs            (public exports)
-    ├── text_layout.rs    (text positioning)
-    ├── hyphenation.rs    (word breaking)
-    ├── text_shaping.rs   (HarfBuzz integration)
-    ├── font_cache.rs     (glyph caching)
-    ├── line_breaker.rs   (Knuth-Plass algorithm)
-    └── text_renderer.rs  (pixmap output)
+├── engine.rs               (15.2KB - core trait)
+├── engine_image.rs        (8.0KB - image handling)
+├── engine_methods.rs      (16.9KB - rendering pipeline)
+├── engine_render.rs       (17.6KB - rendering)
+├── engine_table.rs        (3.5KB - table layout)
+├── engine_text_gather.rs  (10.7KB - text gathering)
+├── engine_text_hyphenate.rs (13.5KB - hyphenation)
+├── engine_text_items.rs   (18.9KB - text items)
+├── css.rs                 (15.5KB - CSS parsing)
+├── dom.rs                 (15.7KB - DOM handling)
+├── layout.rs              (17.4KB - layout engine)
+├── parse.rs               (21.8KB - XML parsing)
+├── style.rs               (11.1KB - styling)
+├── xml.rs                 (10.2KB - XML utilities)
+├── mod.rs                 (17.5KB - public exports)
+├── engine_text/           (directory - text processing)
+└── Multiple test files
 ```
 
-### 2. Home UI Toggles (12 files)
+### 2. Home UI Toggles (13 files)
 
-```
+```text
 crates/core/src/view/home/ui_toggles/
-├── mod.rs
-├── keyboard_toggle.rs
-├── address_bar_toggle.rs
-├── navigation_bar_toggle.rs
-├── search_bar_toggle.rs
-├── go_to_page_toggle.rs
-├── menu_toggle.rs
-├── shelf_view_toggle.rs
-├── book_view_toggle.rs
-├── directory_view_toggle.rs
-├── settings_toggle.rs
-└── library_toggle.rs
+├── mod.rs                  (485B - public exports)
+├── keyboard_toggle.rs      (5.5KB)
+├── address_bar_toggle.rs   (4.9KB)
+├── navigation_bar_toggle.rs (4.9KB)
+├── search_bar_toggle.rs    (4.8KB)
+├── go_to_page_toggle.rs    (5.2KB)
+├── menu_toggle.rs          (9.4KB)
+├── shelf_view_toggle.rs    (4.7KB)
+├── book_view_toggle.rs     (8.2KB)
+├── directory_view_toggle.rs (8.1KB)
+├── settings_toggle.rs     (6.4KB)
+├── library_toggle.rs       (13.7KB)
+└── utils.rs                (2.8KB)
 ```
 
-### 3. Reader Module (20 files)
+### 3. Reader Module (16 files)
 
-```
+```text
 crates/core/src/view/reader/reader_impl/
-├── reader.rs               (921 lines - main impl)
-├── reader_core.rs          (types: State, ViewPort, etc.)
-├── reader_menus.rs         (379 lines - menu toggles)
-├── reader_setters.rs       (400 lines - settings setters)
-├── reader_events.rs        (300 lines - event handling)
-├── reader_rendering_impl.rs (200 lines - resize, render)
-├── reader_input.rs         (gesture processing)
-├── reader_state.rs         (state management)
-├── reader_navigation.rs    (page navigation, chapters, bookmarks)
-├── reader_annotations.rs   (annotation handling, bookmarks)
-├── reader_annotations_ext.rs (extended features)
-├── reader_dialogs.rs       (dialog types)
-├── reader_dialog_manager.rs (dialog operations)
-├── reader_gestures.rs      (gesture processing)
-├── reader_rendering.rs     (rendering logic, load pixmap)
-├── reader_rendering_ext.rs (caching, scaling)
-├── reader_search.rs        (search functionality, highlights)
-├── reader_search_handler.rs (search operations)
-├── reader_settings.rs      (settings management)
-├── reader_settings_ui.rs   (settings UI)
-├── reader_toc.rs           (table of contents, TOC display)
-├── reader_ui.rs            (UI updates, toolbar, keyboard)
-└── reader_events.rs        (device events, keyboard input)
+├── mod.rs                  (1.9KB - public exports)
+├── reader.rs               (25.9KB - main impl)
+├── reader_core.rs          (3.7KB - types: State, ViewPort, etc.)
+├── reader_menus.rs         (10.3KB - menu toggles)
+├── reader_setters.rs       (12.2KB - settings setters)
+├── reader_events.rs        (1.1KB - event handling)
+├── reader_rendering_impl.rs (8.5KB - resize, render)
+├── reader_gestures.rs      (8.4KB - gesture processing)
+├── reader_navigation.rs    (7.5KB - page navigation, chapters, bookmarks)
+├── reader_annotations.rs   (5.1KB - annotation handling, bookmarks)
+├── reader_dialogs.rs       (3.8KB - dialog types)
+├── reader_rendering.rs     (6.6KB - rendering logic, load pixmap)
+├── reader_search.rs        (9.9KB - search functionality, highlights)
+├── reader_settings.rs      (22.0KB - settings management)
+├── reader_toc.rs           (7.4KB - table of contents, TOC display)
+└── reader_ui.rs            (4.0KB - UI updates, toolbar, keyboard)
 ```
 
 ---
@@ -124,12 +122,12 @@ crates/core/src/view/reader/reader_impl/
 
 ## Helper Functions Extracted
 
-| Helper | Location | Lines Saved |
-|--------|----------|-------------|
-| `toggle_dialog_view()` | reader_dialogs.rs | ~40 |
-| `queue_partial_update()` | reader_navigation.rs | ~100 |
-| `refresh_after_change()` | reader_setters.rs | ~20 |
-| **Total** | | **~160** |
+| Helper                   | Location             | Lines Saved |
+|--------------------------|----------------------|-------------|
+| `toggle_dialog_view()`   | reader_dialogs.rs    | ~40         |
+| `queue_partial_update()` | reader_navigation.rs | ~100        |
+| `refresh_after_change()` | reader_setters.rs    | ~20         |
+| **Total**                |                      | **~160**    |
 
 ---
 

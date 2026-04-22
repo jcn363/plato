@@ -2,32 +2,47 @@
 
 ## Executive Summary
 
-The goal is to split `crates/core/src/view/home/mod.rs` (2786 lines) into focused submodules under 1000 lines each, following AGENTS.md mandates without backward compatibility.
+The goal is to split `crates/core/src/view/home/mod.rs` into focused submodules under 1000 lines each, following AGENTS.md mandates without backward compatibility.
 
-**Status: COMPLETED** - All 8 modules extracted successfully.
+**Status: COMPLETED** - All modules extracted successfully.
 
 ## Current Structure
 
-```
-home/mod.rs (591 lines - COMPLETED)
+```text
+home/mod.rs (9.5KB - COMPLETED)
 ├── Extraction completed:
-│   ├── home/ops.rs (217 lines) - Document operations
-│   ├── home/ui_toggles.rs (1014 lines) - UI toggle methods
-│   ├── home/library.rs (117 lines) - Library operations
-│   ├── home/fetcher.rs (226 lines) - Background fetcher management
-│   ├── home/navigation.rs (159 lines) - Directory/page navigation
-│   ├── home/updates.rs (182 lines) - UI state updates
-│   ├── home/input.rs (525 lines) - Event handling
-│   └── home_utils.rs (41 lines) - Utility functions
+│   ├── home/ops.rs (6.6KB) - Document operations
+│   ├── home/ui_toggles/ (directory) - UI toggle methods (13 files)
+│   │   ├── mod.rs (485B)
+│   │   ├── address_bar_toggle.rs (4.9KB)
+│   │   ├── book_view_toggle.rs (8.2KB)
+│   │   ├── directory_view_toggle.rs (8.1KB)
+│   │   ├── go_to_page_toggle.rs (5.2KB)
+│   │   ├── keyboard_toggle.rs (5.5KB)
+│   │   ├── library_toggle.rs (13.7KB)
+│   │   ├── menu_toggle.rs (9.4KB)
+│   │   ├── navigation_bar_toggle.rs (4.9KB)
+│   │   ├── search_bar_toggle.rs (4.8KB)
+│   │   ├── settings_toggle.rs (6.4KB)
+│   │   ├── shelf_view_toggle.rs (4.7KB)
+│   │   └── utils.rs (2.8KB)
+│   ├── home/library.rs (3.5KB) - Library operations
+│   ├── home/fetcher.rs (9.0KB) - Background fetcher management
+│   ├── home/navigation.rs (4.9KB) - Directory/page navigation
+│   ├── home/updates.rs (6.1KB) - UI state updates
+│   ├── home/input.rs (25.1KB) - Event handling
+│   ├── home_core.rs (7.0KB) - Core home view state and types
+│   ├── home_ui.rs (15.1KB) - Home view UI methods
+│   └── home_utils.rs (1.2KB) - Utility functions
 └── Existing submodules:
-    ├── shelf.rs (217 lines)
-    ├── book.rs (366 lines)
-    ├── directory.rs (128 lines)
-    ├── address_bar.rs (189 lines)
-    ├── navigation_bar.rs (405 lines)
-    ├── bottom_bar.rs (216 lines)
-    ├── library_label.rs (128 lines)
-    └── directories_bar.rs (621 lines)
+    ├── shelf.rs (8.4KB)
+    ├── book.rs (13.1KB)
+    ├── directory.rs (3.8KB)
+    ├── address_bar.rs (5.4KB)
+    ├── navigation_bar.rs (13.9KB)
+    ├── bottom_bar.rs (6.8KB)
+    ├── library_label.rs (3.4KB)
+    └── directories_bar.rs (21.8KB)
 ```
 
 ## Modularization Plan
@@ -37,6 +52,7 @@ home/mod.rs (591 lines - COMPLETED)
 **Target:** ~400 lines
 
 **Contents:**
+
 - Module docstring
 - `mod` declarations
 - `pub use` re-exports
@@ -53,6 +69,7 @@ home/mod.rs (591 lines - COMPLETED)
 **Target:** ~900 lines
 
 **Contents:**
+
 - `add_document()`
 - `set_status()`
 - `empty_trash()`
@@ -73,6 +90,7 @@ home/mod.rs (591 lines - COMPLETED)
 **Target:** ~900 lines
 
 **Contents:**
+
 - `toggle_keyboard()`
 - `toggle_address_bar()`
 - `toggle_navigation_bar()`
@@ -93,6 +111,7 @@ home/mod.rs (591 lines - COMPLETED)
 **Target:** ~400 lines
 
 **Contents:**
+
 - `load_library()`
 - `import()`
 - `clean_up()`
@@ -107,6 +126,7 @@ home/mod.rs (591 lines - COMPLETED)
 **Target:** ~400 lines
 
 **Contents:**
+
 - `terminate_fetchers()`
 - `insert_fetcher()`
 - `spawn_child()`
@@ -121,6 +141,7 @@ home/mod.rs (591 lines - COMPLETED)
 **Target:** ~400 lines
 
 **Contents:**
+
 - `select_directory()`
 - `toggle_select_directory()`
 - `go_to_page()`
@@ -136,6 +157,7 @@ home/mod.rs (591 lines - COMPLETED)
 **Target:** ~400 lines
 
 **Contents:**
+
 - `refresh_visibles()`
 - `update_first_column()`
 - `update_second_column()`
@@ -153,6 +175,7 @@ home/mod.rs (591 lines - COMPLETED)
 **Target:** ~500 lines
 
 **Contents:**
+
 - `new()` (constructor - might stay in mod.rs for convenience)
 - `handle_event()`
 
@@ -162,16 +185,16 @@ home/mod.rs (591 lines - COMPLETED)
 
 ## Implementation Order
 
-| Step | Module | Target Lines | Priority |
-|------|--------|-------------|------------|
-| 1 | ops.rs | ~900 | High |
-| 2 | ui_toggles.rs | ~900 | High |
-| 3 | library.rs | ~400 | Medium |
-| 4 | fetcher.rs | ~400 | Medium |
-| 5 | navigation.rs | ~400 | Medium |
-| 6 | updates.rs | ~400 | Low |
-| 7 | input.rs | ~500 | Low |
-| 8 | home/mod.rs | ~400 | Final |
+| Step | Module        | Target Lines | Priority |
+|------|---------------|--------------|----------|
+| 1    | ops.rs        | ~900         | High     |
+| 2    | ui_toggles.rs | ~900         | High     |
+| 3    | library.rs    | ~400         | Medium   |
+| 4    | fetcher.rs    | ~400         | Medium   |
+| 5    | navigation.rs | ~400         | Medium   |
+| 6    | updates.rs    | ~400         | Low      |
+| 7    | input.rs      | ~500         | Low      |
+| 8    | home/mod.rs   | ~400         | Final    |
 
 ## Refactoring Steps
 
@@ -189,7 +212,7 @@ home/mod.rs (591 lines - COMPLETED)
 3. Move UI toggle methods
 4. Update imports in both files
 
-### Continue for remaining modules...
+### Continue for remaining modules
 
 ## Key Requirements
 
@@ -202,6 +225,7 @@ home/mod.rs (591 lines - COMPLETED)
 ## Verification
 
 After each step:
+
 ```bash
 # Check line count
 wc -l crates/core/src/view/home/ops.rs
