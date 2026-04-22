@@ -95,7 +95,7 @@ impl GrayscaleConverter {
                 }
                 if y + 1 < height {
                     if x > 0 {
-                        pixels[idx - width as usize + 1] += quant_error * 3.0 / 16.0;
+                        pixels[idx + width as usize - 1] += quant_error * 3.0 / 16.0;
                     }
                     pixels[idx + width as usize] += quant_error * 5.0 / 16.0;
                     if x + 1 < width {

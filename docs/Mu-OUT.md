@@ -47,7 +47,6 @@ This document outlines the completed migration from MuPDF (C library) to PDFPurr
 | Rendering   | (in mod.rs)        | Rendering to bitmaps          | ✅ Active |
 | Caching     | `cache.rs`         | LRU caching for pages/text    | ✅ Active |
 | Buffer Pool | `buffer_pool.rs`   | Memory optimization           | ✅ Active |
-| CPU Detect  | `cpu_detection.rs` | Runtime SIMD detection        | ✅ Active |
 
 **Features Implemented**:
 
