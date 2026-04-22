@@ -21,33 +21,33 @@ This document outlines the completed migration from MuPDF (C library) to PDFPurr
 
 **Previous Location**: `crates/core/src/document/mupdf/` (~1,867 lines) - **DELETED**
 
-| Module      | File            | Lines | Purpose                       | Status      |
-|-------------|-----------------|-------|-------------------------------|-------------|
-| FFI sys     | `mupdf_sys.rs`  | 531   | Core types/FFI bindings       | ✅ Removed  |
-| Context     | `context.rs`    | 164   | Document context management   | ✅ Removed  |
-| Document    | `document.rs`   | 213   | PDF document operations       | ✅ Removed  |
-| Page        | `page.rs`       | 238   | Page rendering and operations | ✅ Removed  |
-| Text        | `text.rs`       | 245   | Text extraction and analysis  | ✅ Removed  |
-| Pixmap      | `pixmap.rs`     | 179   | Rendering to bitmaps          | ✅ Removed  |
-| Outline     | `outline.rs`    | 102   | Table of contents             | ✅ Removed  |
-| Annotations | `annotation.rs` | 71    | PDF annotations               | ✅ Removed  |
-| Links       | `link.rs`       | 59    | Hyperlink handling            | ✅ Removed  |
-| Images      | `image.rs`      | 35    | Image extraction              | ✅ Removed  |
-| Module      | `mod.rs`        | 30    | Re-exports                    | ✅ Removed  |
+| Module      | File            | Lines | Purpose                       | Status     |
+|-------------|-----------------|-------|-------------------------------|------------|
+| FFI sys     | `mupdf_sys.rs`  | 531   | Core types/FFI bindings       | ✅ Removed |
+| Context     | `context.rs`    | 164   | Document context management   | ✅ Removed |
+| Document    | `document.rs`   | 213   | PDF document operations       | ✅ Removed |
+| Page        | `page.rs`       | 238   | Page rendering and operations | ✅ Removed |
+| Text        | `text.rs`       | 245   | Text extraction and analysis  | ✅ Removed |
+| Pixmap      | `pixmap.rs`     | 179   | Rendering to bitmaps          | ✅ Removed |
+| Outline     | `outline.rs`    | 102   | Table of contents             | ✅ Removed |
+| Annotations | `annotation.rs` | 71    | PDF annotations               | ✅ Removed |
+| Links       | `link.rs`       | 59    | Hyperlink handling            | ✅ Removed |
+| Images      | `image.rs`      | 35    | Image extraction              | ✅ Removed |
+| Module      | `mod.rs`        | 30    | Re-exports                    | ✅ Removed |
 
 ### Current PDFPurr Implementation
 
 **Current Location**: `crates/core/src/document/pdfpurr/`
 
-| Module      | File             | Purpose                       | Status    |
-|-------------|------------------|-------------------------------|-----------|
-| Document    | `mod.rs`         | PDF document operations       | ✅ Active |
-| Page        | (in mod.rs)      | Page rendering and operations | ✅ Active |
-| Text        | (in mod.rs)      | Text extraction and analysis  | ✅ Active |
-| Rendering   | (in mod.rs)      | Rendering to bitmaps          | ✅ Active |
-| Caching     | `cache.rs`       | LRU caching for pages/text    | ✅ Active |
-| Buffer Pool | `buffer_pool.rs` | Memory optimization           | ✅ Active |
-| CPU Detect  | `cpu_detection.rs` | Runtime SIMD detection      | ✅ Active |
+| Module      | File               | Purpose                       | Status    |
+|-------------|--------------------|-------------------------------|-----------|
+| Document    | `mod.rs`           | PDF document operations       | ✅ Active |
+| Page        | (in mod.rs)        | Page rendering and operations | ✅ Active |
+| Text        | (in mod.rs)        | Text extraction and analysis  | ✅ Active |
+| Rendering   | (in mod.rs)        | Rendering to bitmaps          | ✅ Active |
+| Caching     | `cache.rs`         | LRU caching for pages/text    | ✅ Active |
+| Buffer Pool | `buffer_pool.rs`   | Memory optimization           | ✅ Active |
+| CPU Detect  | `cpu_detection.rs` | Runtime SIMD detection        | ✅ Active |
 
 **Features Implemented**:
 
@@ -59,8 +59,17 @@ This document outlines the completed migration from MuPDF (C library) to PDFPurr
 - ✅ Link extraction (basic)
 - ✅ Image extraction (basic)
 - ✅ Search within PDFs (basic)
-- ✅ Redaction support (stubbed for lopdf integration)
-- ✅ PDF manipulation (stubbed for lopdf integration)
+- ✅ Redaction support using lopdf
+- ✅ PDF manipulation using lopdf (delete, rotate, extract, merge, reorder pages)
+- ✅ Annotation export using lopdf
+- ✅ Resource extraction using lopdf (images, fonts, PDF/A detection)
+
+**Performance Notes**:
+
+- SIMD optimizations (NEON) are not available due to unstable Rust intrinsics in stable compiler
+- Color conversion and framebuffer operations use scalar fallback
+- Performance is acceptable for e-ink display use case
+- To enable SIMD: requires nightly Rust with `stdarch_arm_neon_intrinsics` feature
 
 ### Current Dependencies
 
@@ -614,14 +623,14 @@ This document outlines the completed migration from MuPDF (C library) to PDFPurr
 
 ## Timeline Estimate
 
-| Phase                             | Duration                 | Dependencies       |
-|-----------------------------------|--------------------------|--------------------|
-| Phase 1: E-Ink Optimization       | 6 weeks                  | None               |
-| Phase 2: MuPDF Feature Extension  | 6 weeks                  | None               |
-| Phase 3: PDFPurr Integration      | 4 weeks                  | Phase 1, 2         |
-| Phase 4: Performance Optimization | 4 weeks                  | Phase 1, 2, 3      |
-| Phase 5: Testing and Validation   | 4 weeks                  | Phase 1, 2, 3, 4   |
-| **Total**                         | **24 weeks** (~6 months) |                    |
+| Phase                             | Duration                 | Dependencies     |
+|-----------------------------------|--------------------------|------------------|
+| Phase 1: E-Ink Optimization       | 6 weeks                  | None             |
+| Phase 2: MuPDF Feature Extension  | 6 weeks                  | None             |
+| Phase 3: PDFPurr Integration      | 4 weeks                  | Phase 1, 2       |
+| Phase 4: Performance Optimization | 4 weeks                  | Phase 1, 2, 3    |
+| Phase 5: Testing and Validation   | 4 weeks                  | Phase 1, 2, 3, 4 |
+| **Total**                         | **24 weeks** (~6 months) |                  |
 
 **Critical Path**: Phase 1 + Phase 2 → Phase 3 → Phase 4 → Phase 5
 
