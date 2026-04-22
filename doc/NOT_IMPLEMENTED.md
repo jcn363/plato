@@ -11,20 +11,20 @@ The following features were implemented in the latest updates:
 3. **External Storage Auto-Import** - Now imports from SD card during regular import
 4. **WebDAV Sync** - Added file listing capability, improved sync detection, annotation/reading state sync
 5. **Reading Statistics UI** - Added Statistics view accessible from Applications menu
-6. **Password-protected Documents** - Infrastructure exists in MuPDF (auto-handled)
+6. **Password-protected Documents** - Infrastructure exists in PDF libraries (auto-handled)
 7. **Series Management** - Metadata is fully supported; basic UI via metadata editing
 8. **Batch Operations UI** - Added batch mode with delete and move operations
 9. **KoboCloud Sync** - Implemented sync_with_kobocloud function for reading progress
 10. **EPUB Editor Enhancements** - Added Undo, Preview, and improved error handling
-11. **MuPDF Native Search** - Added option to use MuPDF's `fz_search_page` for PDF text search
-12. **Settings UI Improvements** - Added Manga Mode, MuPDF Search, Show Time, Show Battery, External Storage, and Dithering toggles to the in-app settings
+11. **PDF Native Search** - Added PDF text search using PDFPurr
+12. **Settings UI Improvements** - Added Manga Mode, PDF Search, Show Time, Show Battery, External Storage, and Dithering toggles to the in-app settings
 13. **PDF Document Manipulation** - Added full PDF manipulation library and UI with delete, rotate, extract, merge, and reorder pages using lopdf (pure Rust)
 14. **Progressive Document Loading** - Added `ProgressiveDocLoader` with LRU caching and preloading for large PDFs
 15. **Redaction Support** - Added `RedactionEditor` struct using lopdf for marking and permanently removing content from PDFs
 16. **Resource Extraction** - Added `ResourceExtractor` using lopdf for extracting images, fonts, and listing PDF resources
 17. **PDF-Native Annotations** - Added `PdfAnnotationExporter` using lopdf for exporting annotations to PDF (new file, preserves original)
 18. **Memory Optimizations** - Fixed `get_available_memory_mb()` to actually read `/proc/meminfo`, reduced thumbnail memory by 75% (RGBA→grayscale), fixed page leaks on error paths, added `MAX_CACHED_PAGES` constant
-19. **Performance Improvements** - Reduced MuPDF context cache from 32MB→16MB, fixed Pixmap OOM panics, added PDF/A detection, improved error messages
+19. **Performance Improvements** - Reduced context cache from 32MB→16MB, fixed Pixmap OOM panics, added PDF/A detection, improved error messages
 20. **PDF Annotation Reading** - Added `read_annotations()` to read existing PDF annotations and display count
 21. **EPUB Editor Search & Replace** - Added popup UX for searching and replacing text within EPUB chapters
 22. **E-ink Crash Safety** - Fixed 11 unsafe mutex lock unwrap() calls in reader that could crash on Kobo OOM
@@ -55,7 +55,7 @@ The following features were implemented in the latest updates:
 47. **Library Crash Safety (continued)** - Fixed remaining 4 unwrap() calls on metadata/fingerprint operations in library.rs
 48. **Reader Crash Safety** - Fixed 7 dangerous unwrap() calls in reader/mod.rs (cache.get, selection.as_mut, text_excerpt, doc.dims, child_mut/downcast)
 49. **EPUB Editor Performance** - Cached 10 regex compilations as lazy_static constants in epub_edit/src/lib.rs, eliminating repeated regex compilation on every EPUB parse
-50. **MuPDF Wrapper Expansion** - Added 20+ custom FFI wrapper functions to `mupdf_wrapper.c` for PDF manipulation (page insert/delete/rotate, annotations, redactions, image/font extraction), resolving linker failures from incomplete pre-compiled `libmupdf.so`
+50. **PDF Manipulation Implementation** - Added PDF manipulation library using lopdf for page insert/delete/rotate, annotations, redactions, and image/font extraction
 51. **lazy_static → LazyLock Migration** - Migrated 13 `lazy_static!` instances to `std::sync::LazyLock` across 9 files (constants, keyboard combos, regex patterns, hyphenation, i18n translations, dithering matrices, shelf mutex). 5 remaining depend on `CURRENT_DEVICE` runtime config and cannot migrate.
 52. **Further Unwrap/Expect Reduction** - Replaced `.unwrap()` with proper error handling in `sync.rs`, `document/html/parse.rs`, and `fetcher/main.rs` (HTTP response handling, JSON parsing fallbacks)
 53. **IMPROVEMENTS.md Reorganization** - Condensed from 539 to 127 lines with clear status tables, consolidated completed items, and separated remaining/deferred/future work
@@ -68,7 +68,7 @@ The following features were implemented in the latest updates:
 
 **Status**: Planning
 
-**Description**: See `doc/MUPDF_FEATURES.md` for potential MuPDF-based enhancements.
+**Description**: See `doc/PDF_FEATURES.md` for potential PDF-based enhancements.
 
 ---
 
@@ -78,21 +78,23 @@ The following features were implemented in the latest updates:
 
 **Status**: Documented as not implemented by design
 
-**Location**: `doc/OCR_TTS.md` and `doc/MUPDF_FEATURES.md` (Section 12)
+**Location**: `doc/OCR_TTS.md` and `doc/PDF_FEATURES.md` (Section 12)
 
 **Reason**:
-- OCR: Hardware limitations (256MB RAM, 1GHz CPU), MuPDF doesn't include OCR (external Tesseract needed), battery impact
-- Advanced OCR Control: Same as basic OCR - MuPDF cannot convert images to text
+
+- OCR: Hardware limitations (256MB RAM, 1GHz CPU), PDF libraries don't include OCR (external Tesseract needed), battery impact
+- Advanced OCR Control: Same as basic OCR - PDF libraries cannot convert images to text
 - TTS: No audio subsystem, outside core mission
 
 ### JavaScript (mujs) Integration
 
 **Status**: Documented as not implemented by design
 
-**Location**: `doc/MUPDF_FEATURES.md` (Section 9)
+**Location**: `doc/PDF_FEATURES.md` (Section 9)
 
 **Reason**:
-- mujs NOT included in Plato's MuPDF build - requires recompilation
+
+- JavaScript engine not included - requires additional dependency
 - JavaScript in PDFs is virtually nonexistent (<0.1% of e-books)
 - E-ink displays cannot properly render interactive content/animations
 - Kobo's 256MB RAM insufficient for JS runtime
@@ -102,10 +104,10 @@ The following features were implemented in the latest updates:
 
 **Status**: Documented as not implemented by design
 
-**Location**: `doc/MUPDF_FEATURES.md` (Section 4)
+**Location**: `doc/PDF_FEATURES.md` (Section 4)
 
 **Reason**:
-- Story module NOT included in Plato's MuPDF build - requires recompilation
+
 - Plato already has a working HTML reflow engine (in `document/html/`)
 - Module is designed for complex document workflows, not simple reading
 - E-ink displays don't benefit from complex layouts
@@ -114,9 +116,10 @@ The following features were implemented in the latest updates:
 
 **Status**: Documented as not implemented by design
 
-**Location**: `doc/MUPDF_FEATURES.md` (Section 2)
+**Location**: `doc/PDF_FEATURES.md` (Section 2)
 
 **Reason**:
+
 - Forms are extremely rare in e-books (<0.01%)
 - E-ink displays poorly suited for text input (requires keyboard)
 - Small screen impractical for complex form layouts
@@ -127,10 +130,11 @@ The following features were implemented in the latest updates:
 
 **Status**: Documented as not implemented by design
 
-**Location**: `doc/MUPDF_FEATURES.md` (Section 5)
+**Location**: `doc/PDF_FEATURES.md` (Section 5)
 
 **Reason**:
-- MuPDF can only verify signatures partially, cannot create new ones
+
+- PDF libraries can only verify signatures partially, cannot create new ones
 - No use case on e-readers (legal/business documents)
 - Security concerns: no secure key storage on Kobo
 - Would require adding crypto libraries
@@ -139,33 +143,34 @@ The following features were implemented in the latest updates:
 
 **Status**: Documented as not implemented by design
 
-**Location**: `doc/MUPDF_FEATURES.md` (Section 11)
+**Location**: `doc/PDF_FEATURES.md` (Section 11)
 
 **Reason**:
+
 - No use case on e-readers (users need desktop software for validation)
 - PDF/A/PDF/X virtually never used in e-books
 - E-readers are for reading, not professional document workflows
-- MuPDF has limited validation capability anyway
+- PDF libraries have limited validation capability anyway
 
 ---
 
 ## Summary
 
-| Feature | Priority | Status |
-|---------|----------|--------|
-| Plugin Network Control | P1 | ✅ Implemented |
-| Cover Editor UI | P1 | ✅ Implemented |
-| External Storage Import | P1 | ✅ Implemented |
-| WebDAV Sync | P2 | ✅ Implemented |
-| Reading Statistics | P2 | ✅ Implemented |
-| Password UI | P3 | ✅ Auto-handled |
-| KoboCloud Sync | P1 | ✅ Implemented |
-| Batch Operations | P2 | ✅ Implemented |
-| EPUB Editor Improvements | P2 | ✅ Implemented |
-| MuPDF Native Search | P2 | ✅ Implemented |
-| Settings UI | P2 | ✅ Implemented |
-| PDF Document Manipulation | P2 | ✅ Implemented |
-| Progressive Loading | P2 | ✅ Implemented |
-| Redaction Support | P3 | ✅ Implemented |
-| Resource Extraction | P3 | ✅ Implemented |
-| PDF-Native Annotations | P3 | ⚠️ Partial (Export only) |
+| Feature                   | Priority | Status                   |
+|---------------------------|----------|--------------------------|
+| Plugin Network Control    | P1       | ✅ Implemented           |
+| Cover Editor UI           | P1       | ✅ Implemented           |
+| External Storage Import   | P1       | ✅ Implemented           |
+| WebDAV Sync               | P2       | ✅ Implemented           |
+| Reading Statistics        | P2       | ✅ Implemented           |
+| Password UI               | P3       | ✅ Auto-handled          |
+| KoboCloud Sync            | P1       | ✅ Implemented           |
+| Batch Operations          | P2       | ✅ Implemented           |
+| EPUB Editor Improvements  | P2       | ✅ Implemented           |
+| PDF Native Search         | P2       | ✅ Implemented           |
+| Settings UI               | P2       | ✅ Implemented           |
+| PDF Document Manipulation | P2       | ✅ Implemented           |
+| Progressive Loading       | P2       | ✅ Implemented           |
+| Redaction Support         | P3       | ✅ Implemented           |
+| Resource Extraction       | P3       | ✅ Implemented           |
+| PDF-Native Annotations    | P3       | ⚠️ Partial (Export only) |

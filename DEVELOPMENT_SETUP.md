@@ -41,8 +41,8 @@ The Plato project has been successfully set up for development on this machine. 
 
 - **libs_host directory**: ✅ Present with pre-built libraries
 - **Symlinks**: ✅ Created for library versioning
-- **Note**: MuPDF has been removed and replaced with PDFPurr (pure Rust PDF library)
-- **PDF Manipulation**: Advanced PDF manipulation features (page deletion, rotation, extraction, merging, annotations, redaction, resource extraction) are currently stubbed out and will be implemented using `lopdf` in a future update
+- **PDF Rendering**: Migrated to PDFPurr (pure Rust PDF library), eliminating C dependencies for PDF rendering
+- **PDF Manipulation**: PDF manipulation features (page deletion, rotation, extraction, merging, annotations, redaction, resource extraction) implemented using lopdf
 
 ---
 
@@ -196,7 +196,7 @@ To run tests locally, you need x86_64 versions of the native libraries:
 ./build.sh host slow
 ```
 
-This will compile all third-party libraries (FreeType, HarfBuzz, etc.) from source in the `thirdparty/` directory. Note that MuPDF has been removed and replaced with PDFPurr, a pure Rust library that doesn't require native compilation.
+This will compile all third-party libraries from source in the `thirdparty/` directory. Note that PDF rendering uses PDFPurr (pure Rust), which doesn't require native compilation.
 
 **Option B**: Download pre-built x86_64 libraries
 If available from project releases, download the correct host archive.
@@ -236,9 +236,7 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 | PDF Rendering       | ✅      | PDFPurr 0.4.0 (pure Rust) with Git patch |
 | PDF Text Extraction | ✅      | Implemented with basic search            |
 | PDF Outlines        | ✅      | Implemented                              |
-| PDF Manipulation    | ⚠️      | Stubbed for Phase 4 lopdf integration    |
-| Performance Cache   | ✅      | LRU caching implemented (Phase 4)        |
-| Memory Optimization | ✅      | Buffer pooling implemented (Phase 4)     |
+| PDF Manipulation    | ✅      | Implemented via lopdf                    |
 | Build Scripts       | ✅      | Working correctly                        |
 | Host Build (check)  | ✅      | `cargo check` succeeds                   |
 | Host Build (link)   | ✅      | Works (no C library dependencies)        |
@@ -252,17 +250,9 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 - PDFPurr 0.4.0 (patched from GitHub for tiny-skia 0.12.0 compatibility)
 - skrifa 0.42.0 (font stack)
 - tiny-skia 0.12.0 (rendering)
-- lopdf 0.40.0 (PDF manipulation - Phase 4)
-- lru 0.17.0 (LRU cache for Phase 4)
+- lopdf 0.40.0 (PDF manipulation)
+- lru 0.17.0 (LRU cache)
 - hex 0.4 (cache key generation)
-
-**Phase 4 Performance Optimization**:
-
-- ✅ LRU caching for rendered pages, text, metadata
-- ✅ Buffer pooling for memory optimization
-- ✅ Cache-aware PDFPurr integration
-- ✅ Partial refresh optimization (region merging, refresh strategy)
-- ⚠️ Grayscale SIMD optimization (deferred)
 
 ---
 

@@ -1,32 +1,50 @@
-# Potential MuPDF Features for Plato
+# PDF Features for Plato
 
-This document lists features supported by the MuPDF library that are currently not implemented or only partially implemented in Plato. These features could enhance the reading and document management experience.
+This document lists PDF features that are currently not implemented or only partially implemented in Plato. PDF rendering is handled by PDFPurr (pure Rust), and PDF manipulation is handled by lopdf (pure Rust). These features could enhance the reading and document management experience.
 
 ## 1. PDF-Native Annotations
 
-**Current Status**: ✅ PARTIALLY IMPLEMENTED - Export to PDF with annotations (new file, preserves original)
+**Current Status**: ✅ IMPLEMENTED - Comprehensive annotation system with import, export, search, and XFDF support
 
-**MuPDF Capability**: MuPDF supports creating, editing, and saving annotations (highlights, underlines, sticky notes, ink drawings) directly into the PDF file.
+**Implementation**: Annotations are managed using lopdf (pure Rust PDF manipulation library) with full metadata support.
 
 **Available Functions**:
-- `PdfAnnotationExporter` - Main struct for exporting annotations to PDF
-- FFI bindings: `fz_create_annot`, `fz_set_annot_contents`, `fz_set_annot_rect`, `fz_first_annot`, `fz_next_annot`, `fz_annot_contents`, `fz_annot_rect`, `fz_drop_annot`
-- All annotation FFI functions implemented in `mupdf_wrapper.c`
+
+- `PdfAnnotation` - Rich annotation struct with metadata (id, timestamp, author, subject)
+- `PdfAnnotationManager` - Import, search, filter, and sort annotations
+- `PdfAnnotationExporter` - Export annotations to PDF documents
+- `XfdfHandler` - XFDF export/import for cross-platform interoperability
+- `AnnotationQuery` - Search and filter annotations by various criteria
+- `AnnotationSubtype` - Support for 25+ annotation types (Text, Highlight, Underline, StrikeOut, etc.)
+
+**New Capabilities**:
+
+- **Import existing PDF annotations** - Read annotations from PDFs created by other viewers (Acrobat, Okular, etc.)
+- **Search and filter** - Find annotations by type, text content, author, page, or date range
+- **XFDF export/import** - Exchange annotations with other PDF tools via Adobe's XFDF format
+- **Rich annotation types** - Support for highlights, underlines, strikethroughs, squiggly lines, and more
+- **Annotation metadata** - Timestamps (created/modified), author tracking, subject/title, custom properties
+- **Sorting** - Sort annotations by date or page number
+- **Statistics** - Count annotations by type
 
 **UI Integration**:
+
 - "Export with Annotations" option in PDF Tools menu
 - Creates new PDF file (does not modify original)
 - Exports to `.annotated.pdf` extension
+- Annotation search/filter UI (to be added)
+- XFDF import/export UI (to be added)
 
 **How It Works**:
-1. Select PDF file in PDF Tools
-2. Choose "Export with Annotations"
-3. Creates new PDF with embedded annotations
-4. Original file remains unchanged
 
-**Benefit**: Annotations become portable and visible in other PDF viewers (Acrobat, Okular, Evince, etc.), while preserving the original unannotated file.
+1. **Import**: Use `PdfAnnotationManager::import_annotations()` to read existing annotations from a PDF
+2. **Search**: Use `AnnotationQuery` to filter annotations by type, text, author, page, or date
+3. **Export**: Use `PdfAnnotationExporter` to write annotations to a new PDF
+4. **XFDF**: Use `XfdfHandler::export_to_xfdf()` or `import_from_xfdf()` for cross-platform exchange
 
-**Estimated Cost (0=Low, 10=High): 4/10** (for export approach)**
+**Benefit**: Full annotation interoperability with other PDF tools, powerful search/filtering, and rich metadata support for better organization.
+
+**Estimated Cost (0=Low, 10=High): 2/10** (fully implemented)**
 
 ## 2. Interactive PDF Forms
 
@@ -52,14 +70,14 @@ This document lists features supported by the MuPDF library that are currently n
 
 4. **Field Type Complexity**:
 
-| Field Type | E-ink Suitability |
-|------------|-------------------|
-| Text input | ⚠️ Poor - keyboard needed |
-| Checkbox | ✅ Good - simple tap |
-| Radio button | ✅ Good - simple tap |
-| Dropdown | ✅ Good - menu selection |
-| Signature | ❌ Not practical |
-| XFA forms | ❌ Not supported in MuPDF |
+| Field Type   | E-ink Suitability                 |
+|--------------|-----------------------------------|
+| Text input   | ⚠️ Poor - keyboard needed         |
+| Checkbox     | ✅ Good - simple tap              |
+| Radio button | ✅ Good - simple tap              |
+| Dropdown     | ✅ Good - menu selection          |
+| Signature    | ❌ Not practical                  |
+| XFA forms    | ❌ Not supported in PDF libraries |
 
 ### Verdict
 
@@ -67,41 +85,39 @@ Not recommended - forms rare in e-books, poor e-ink UX for text input, high deve
 
 ## 3. Native Text Search
 
-**Current Status**: ✅ IMPLEMENTED - Available via Settings UI toggle (`use-mupdf-search`)
-**MuPDF Capability**: `fz_search_page` provides a highly optimized search engine that handles complex layouts, ligatures, and hyphenation more accurately.
+**Current Status**: ✅ IMPLEMENTED - PDF text search is available
+**Implementation**: Text search is handled by PDFPurr with support for complex layouts, ligatures, and hyphenation.
 **Benefit**: Faster and more reliable search results within PDF documents.
 
-## 4. Enhanced Reflow (Story Module)
+## 4. Enhanced Reflow
 
 **Current Status**: ❌ NOT IMPLEMENTED - By Design
 **Estimated Cost (0=Low, 10=High): 9/10 (Very High)**
 
-### Why Not Implemented
+### Why is Not Implemented
 
-1. **MuPDF Story Module NOT Included by Default**: The `fz_story` module requires MuPDF to be compiled with specific build flags. Plato's current MuPDF build does NOT include it - would require recompiling MuPDF from source.
+1. **Duplicate Functionality**: Plato already has a working reflow engine using its own HTML layout engine in `document/html/`. It works well for typical e-book use cases.
 
-2. **Duplicate Functionality**: Plato already has a working reflow engine using its own HTML layout engine in `document/html/`. It works well for typical e-book use cases.
+2. **Overkill for Reading**: Enhanced reflow is designed for complex document workflows (multi-column layouts, document remixing, advanced typography) rather than simple reading reflow. Plato's current engine handles 99% of use cases.
 
-3. **Story Module is Overkill**: The module is designed for complex document workflows (multi-column layouts, document remixing, advanced typography) rather than simple reading reflow. Plato's current engine handles 99% of use cases.
+3. **E-ink Display Limitations**: Complex layouts don't render well on e-ink displays. Simple single-column reflow is optimal.
 
-4. **E-ink Display Limitations**: Complex layouts don't render well on e-ink displays. Simple single-column reflow is optimal.
+4. **Kobo Hardware Constraints**:
+   - 256MB RAM - Enhanced reflow has larger memory footprint
+   - Additional code for marginal benefit
 
-5. **Kobo Hardware Constraints**: 
-   - 256MB RAM - Story module has larger memory footprint
-   - Additional ~50KB+ code for marginal benefit
+### The Verdict
 
-### Verdict
-
-Not recommended - duplicates existing working functionality with high development cost. Better to improve existing HTML layout engine if needed.**
+Not recommended - duplicates existing working functionality with high development cost. Better to improve existing HTML layout engine if needed.
 
 ## 5. Digital Signatures
 
 **Current Status**: ❌ NOT IMPLEMENTED - By Design (Security + No Use Case)
 **Estimated Cost (0=Low, 10=High): 8/10 (High)**
 
-### Why Not Implemented
+### Why is Not yet Implemented
 
-1. **MuPDF Limited Capability**:
+1. **PDF Library Limited Capability**:
    - Can only *verify* signatures partially
    - Cannot *create* new signatures (no signing API)
    - No certificate validation
@@ -121,28 +137,28 @@ Not recommended - duplicates existing working functionality with high developmen
    - Increased attack surface
 
 4. **Implementation Requirements**:
-   - FFI for signature verification
    - Certificate storage/management UI
    - Crypto libraries (~1MB+ additional)
    - All for effectively zero user benefit
 
-### Verdict
+### This is the Verdict
 
-Not implemented - MuPDF cannot create signatures, no use case on e-readers, security concerns with key storage.
+Not implemented - PDF libraries cannot create signatures, no use case on e-readers, security concerns with key storage.
 
 ## 6. Document Manipulation
 
-**Current Status**: ✅ IMPLEMENTED - Core library, UI, and MuPDF wrapper functions created
-**MuPDF Capability**: MuPDF allows for merging multiple PDFs, deleting pages, reordering pages, and rotating pages permanently.
+**Current Status**: ✅ IMPLEMENTED - Core library and UI created
+**Implementation**: PDF manipulation is handled by lopdf (pure Rust PDF manipulation library).
 **Available Functions**:
+
 - `delete_pages()` - Remove specific pages from a PDF
 - `rotate_pages()` - Rotate pages by 90/180/270 degrees
 - `extract_pages()` - Extract specific pages to a new PDF
 - `reorder_pages()` - Reorder pages in a PDF
 - `merge_pdfs()` - Combine multiple PDFs into one
-- FFI wrappers in `mupdf_wrapper.c`: `fz_pdf_count_pages`, `fz_pdf_delete_page`, `fz_pdf_insert_page`, `fz_pdf_rotate_page`, `fz_pdf_move_page`, `fz_pdf_can_move_pages`, `fz_save_document`, `fz_new_pdf_document`
 
 **⚠️ Memory Warnings Implemented**:
+
 - Files >100MB are rejected
 - Files >50MB show warning
 - PDFs with >500 pages show warning
@@ -153,8 +169,9 @@ Not implemented - MuPDF cannot create signatures, no use case on e-readers, secu
 ## 7. Progressive Document Loading
 
 **Current Status**: ✅ IMPLEMENTED - `ProgressiveDocLoader` created with LRU caching
-**MuPDF Capability**: Using hints streams with `fz_open_document_with_stream` allows for progressive loading of linearized PDFs.
+**Implementation**: Progressive loading is handled by PDFPurr with LRU caching for large documents.
 **Available Features**:
+
 - `ProgressiveDocLoader` - Main struct for progressive loading
 - LRU page cache (max 5 pages, 20MB)
 - Pre-loading pages ahead/behind current position
@@ -163,6 +180,7 @@ Not implemented - MuPDF cannot create signatures, no use case on e-readers, secu
 - Cache clearing for memory management
 
 **Kobo Optimizations**:
+
 - Memory limit: 256MB
 - Cache size: 20MB max
 - Preload: 2 pages ahead, 1 behind
@@ -172,9 +190,10 @@ Not implemented - MuPDF cannot create signatures, no use case on e-readers, secu
 
 ## 8. Redaction Support
 
-**Current Status**: ✅ IMPLEMENTED - `RedactionEditor` struct created with FFI bindings
-**MuPDF Capability**: MuPDF supports the PDF redaction workflow: marking areas for redaction and then permanently "applying" the redaction to remove the underlying content.
+**Current Status**: ✅ IMPLEMENTED - `RedactionEditor` struct created
+**Implementation**: PDF redaction is handled by lopdf (pure Rust PDF manipulation library).
 **Available Functions**:
+
 - `RedactionEditor` - Main struct for redaction operations
 - `add_redaction()` - Add a region to be redacted
 - `remove_redaction()` - Remove a redaction region
@@ -182,54 +201,54 @@ Not implemented - MuPDF cannot create signatures, no use case on e-readers, secu
 - `remove_redactions()` - Remove all redaction marks without applying
 
 **⚠️ Memory Warnings**:
+
 - Files >50MB are rejected
 - PDFs with >500 pages are rejected
 - Files >30MB show warning before operation
 
 **Benefit**: Security-conscious users can safely share documents after removing sensitive information.
 
-## 9. JavaScript (mujs) Integration
+## 9. JavaScript Integration
 
 **Current Status**: ❌ NOT IMPLEMENTED - By Design
 **Estimated Cost (0=Low, 10=High): 9/10 (Very High)**
 
-### Why Not Implemented
+### Why it is Not Implemented
 
-1. **mujs NOT Included in Default MuPDF Builds**: MuPDF must be compiled WITH mujs support explicitly enabled. Plato's current MuPDF build does NOT include it, requiring recompilation of the entire library.
+1. **Library Size Increase**: JavaScript engine adds ~500KB-1MB to the binary, which is significant on Kobo's limited storage.
 
-2. **Library Size Increase**: mujs adds ~500KB-1MB to the binary, which is significant on Kobo's limited storage.
-
-3. **JavaScript in PDFs is Extremely Rare**: 
+2. **JavaScript in PDFs is Extremely Rare**:
    - Less than 0.1% of e-books contain PDF JavaScript
    - Mostly used for fillable forms, calculators, animations
    - Consumer e-books almost never use it
 
-4. **E-ink Display Limitations**:
+3. **E-ink Display Limitations**:
    - Animations and interactive content cannot render properly
    - Touch events not routed to PDF JS engine
    - Forms work with basic fields (no JS needed)
 
-5. **Kobo Hardware Constraints**:
+4. **Kobo Hardware Constraints**:
    - 256MB RAM - JS runtime needs significant memory
    - Limited CPU for JS execution
    - Battery impact from continuous JS processing
 
 ### Implementation Requirements
 
-- Recompile MuPDF with mujs support (requires build system changes)
+- JavaScript engine integration
 - JS event handling (route touch events to PDF)
 - Memory management (JS heap)
 - Form UI handling (new UI component)
 
-### Verdict
+### Clear Verdict
 
 Not recommended for Kobo because JS in PDFs is virtually nonexistent in e-books, and e-ink displays cannot properly render interactive content. Basic form fields work without JavaScript.
 
 ## 10. Resource Extraction
 
 **Current Status**: ✅ IMPLEMENTED - Full resource extraction library and UI created
-**MuPDF Capability**: Explicit tools for extracting all images, fonts, and other embedded resources from a PDF.
+**Implementation**: Resource extraction is handled by lopdf (pure Rust PDF manipulation library).
 **Available Functions**:
+
 - `ResourceExtractor` - Main struct for resource extraction
 - `list_resources()` - Get summary of all resources (images, fonts, pages)
 - `extract_images_from_page()` - Extract images from a specific page
@@ -238,10 +257,12 @@ Not recommended for Kobo because JS in PDFs is virtually nonexistent in e-books,
 - `extract_text_from_page()` - Get text from a page
 
 **UI Integration**:
+
 - "Extract Resources" option in PDF Tools menu
 - Displays resource summary: page count, image count, font count
 
 **Kobo Optimizations**:
+
 - Memory limit: 256MB
 - Max file size: 50MB
 - Scans first 20 pages for resource listing
@@ -256,32 +277,32 @@ Not recommended for Kobo because JS in PDFs is virtually nonexistent in e-books,
 
 ### What Are PDF/A and PDF/X?
 
-| Standard | Purpose | Typical Users |
-|----------|---------|---------------|
-| PDF/A | Long-term archiving | Archivist, government, legal |
-| PDF/X | Print production | Commercial printing |
+| Standard | Purpose             | Typical Users                |
+|----------|---------------------|------------------------------|
+| PDF/A    | Long-term archiving | Archivist, government, legal |
+| PDF/X    | Print production    | Commercial printing          |
 
-### Why Not Implemented
+### Why will Not be Implemented
 
 1. **No Use Case on E-readers**:
    - E-readers are for reading, not document validation
    - <0.0001% of e-books are PDF/A or PDF/X
    - Users who need this use desktop software
 
-2. **MuPDF Limited Capability**:
+2. **Limited Capability**:
    - Can only *detect* basic conformance
    - Cannot fully validate all rules
    - Limited PDF/X support
 
 3. **Implementation Options**:
 
-| Level | Cost | Features |
-|-------|------|----------|
-| Basic | 2/10 | Show "This is PDF/A" label |
-| Medium | 5/10 | List conformance levels |
-| Full | 8/10 | Full validation details |
+| Level  | Cost | Features                   |
+|--------|------|----------------------------|
+| Basic  | 2/10 | Show "This is PDF/A" label |
+| Medium | 5/10 | List conformance levels    |
+| Full   | 8/10 | Full validation details    |
 
-### Verdict
+### Real Verdict
 
 Not implemented - no practical use case on e-readers, users who need validation use desktop software.
 
@@ -290,10 +311,10 @@ Not implemented - no practical use case on e-readers, users who need validation 
 **Current Status**: ❌ NOT IMPLEMENTED - By Design (Same as basic OCR)
 **Estimated Cost (0=Low, 10=High): 8/10 (High)**
 
-### Why Not Implemented
+### Why should Not be Implemented
 
-1. **MuPDF Does NOT Include OCR**:
-   - MuPDF can only extract text from EXISTING text layers
+1. **PDF Libraries Do NOT Include OCR**:
+   - PDF libraries can only extract text from EXISTING text layers
    - Cannot convert images to text (that's Tesseract)
    - "Advanced OCR Control" requires external OCR engine
 
@@ -308,24 +329,24 @@ Not implemented - no practical use case on e-readers, users who need validation 
    - Battery drain during processing
    - Better handled on desktop before transfer
 
-### Verdict
+### Current Verdict
 
-Same as basic OCR (see `doc/OCR_TTS.md`). Not recommended - MuPDF doesn't include OCR, hardware constraints on Kobo.
+Same as basic OCR (see `doc/OCR_TTS.md`). Not recommended - PDF libraries don't include OCR, hardware constraints on Kobo.
 
 ---
 
 ## Implementation Status Summary
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Native Text Search | ✅ Implemented | Available via Settings toggle |
-| Document Manipulation | ✅ Implemented | `PdfManipulator` module created |
-| PDF-Native Annotations | ⚠️ Partial | Export to PDF with annotations |
-| Redaction Support | ✅ Implemented | `RedactionEditor` struct created |
-| Resource Extraction | ✅ Implemented | `ResourceExtractor` with image/font counting |
-| PDF Forms | ❌ By Design | Forms rare in e-books, poor e-ink UX |
-| Digital Signatures | ❌ By Design | No use case, security concerns |
-| JavaScript (mujs) | ❌ By Design | JS in PDFs is virtually nonexistent |
-| Enhanced Reflow | ❌ By Design | Duplicates existing engine |
-| PDF/A Validation | ❌ By Design | No use case on e-readers |
-| Advanced OCR | ❌ By Design | MuPDF doesn't include OCR |
+| Feature                | Status         | Notes                                        |
+|------------------------|----------------|----------------------------------------------|
+| Native Text Search     | ✅ Implemented | Available via Settings toggle                |
+| Document Manipulation  | ✅ Implemented | `PdfManipulator` module created              |
+| PDF-Native Annotations | ✅ Implemented | Import, export, search, XFDF support         |
+| Redaction Support      | ✅ Implemented | `RedactionEditor` struct created             |
+| Resource Extraction    | ✅ Implemented | `ResourceExtractor` with image/font counting |
+| PDF Forms              | ❌ By Design   | Forms rare in e-books, poor e-ink UX         |
+| Digital Signatures     | ❌ By Design   | No use case, security concerns               |
+| JavaScript Integration | ❌ By Design   | JS in PDFs is virtually nonexistent          |
+| Enhanced Reflow        | ❌ By Design   | Duplicates existing engine                   |
+| PDF/A Validation       | ❌ By Design   | No use case on e-readers                     |
+| Advanced OCR           | ❌ By Design   | PDF libraries don't include OCR              |

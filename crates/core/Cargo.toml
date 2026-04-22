@@ -42,6 +42,7 @@ rand_core = "0.10.1"
 rand_xoshiro = "0.8.0"
 percent-encoding = "2.3.2"
 chrono = { version = "0.4.44", features = ["serde", "clock"], default-features = false }
+uuid = { version = "1.11", features = ["v4", "serde"] }
 reqwest = { version = "0.13.2", default-features = false, features = ["blocking", "json", "rustls"] }
 quick-xml = "0.39.2"
 epub_edit = { path = "../epub_edit" }

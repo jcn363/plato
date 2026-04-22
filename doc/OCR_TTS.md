@@ -6,7 +6,7 @@ This document explains why Optical Character Recognition (OCR) and Text-to-Speec
 
 ### Why Not Implemented
 
-1. **MuPDF Does NOT Include Native OCR**: MuPDF has NO built-in OCR engine. The "OCR" in MuPDF is actually text *extraction* from existing text layers, not image-to-text conversion. For true OCR of scanned PDFs, Tesseract integration would be required separately.
+1. **PDF Libraries Do NOT Include Native OCR**: PDF libraries have NO built-in OCR engine. The "OCR" in PDF libraries is actually text *extraction* from existing text layers, not image-to-text conversion. For true OCR of scanned PDFs, Tesseract integration would be required separately.
 
 2. **Hardware Limitations**: Kobo e-readers have limited CPU (typically ARM-based @ 1GHz) and memory (256MB). OCR requires significant computational power - a single page takes 10-60 seconds, meaning a 300-page book would require 50-300 minutes to process.
 
@@ -18,7 +18,7 @@ This document explains why Optical Character Recognition (OCR) and Text-to-Speec
 
 4. **Battery Impact**: OCR processing is power-intensive and would significantly reduce battery life on portable devices.
 
-5. **Already Handled by MuPDF**: Plato uses MuPDF for PDF rendering, which includes text extraction from PDFs that already have text layers. This enables text selection and search in scanned documents that have already been OCR'd.
+5. **Already Handled by PDF Libraries**: Plato uses PDFPurr for PDF rendering, which includes text extraction from PDFs that already have text layers. This enables text selection and search in scanned documents that have already been OCR'd.
 
 6. **Use Case Mismatch**: The primary audience for e-readers wants to read text-based documents. OCR is primarily needed for image-only PDFs (scanned books), which are less common in the e-reader ecosystem.
 
@@ -31,16 +31,17 @@ This document explains why Optical Character Recognition (OCR) and Text-to-Speec
 ### Implementation Verdict
 
 **Not recommended for Kobo implementation** due to:
+
 - Hardware limitations (256MB RAM, 1GHz CPU)
 - Battery drain during intensive processing
-- MuPDF doesn't actually do OCR - external Tesseract dependency required
+- PDF doesn't actually do OCR - external Tesseract dependency required
 - Better handled by pre-processing on computer
 
-The existing text selection in MuPDF works for PDFs that already have an invisible text layer - true OCR for image-only PDFs is outside Plato's core mission.
+The existing text selection in PDF libraries works for PDFs that already have an invisible text layer - true OCR for image-only PDFs is outside Plato's core mission.
 
 ## TTS (Text-to-Speech)
 
-### Why Not Implemented
+### Why is Not Implemented
 
 1. **No Audio Hardware Support**: The codebase contains no audio output subsystem. Kobo e-readers have basic audio capabilities (some models have speakers or headphone jacks), but Plato's architecture is focused on visual reading.
 
@@ -60,6 +61,7 @@ The existing text selection in MuPDF works for PDFs that already have an invisib
 ## Summary
 
 Both OCR and TTS are omitted because they:
+
 - Require significant hardware resources
 - Are outside Plato's core mission of document reading
 - Have limited use cases for the typical e-reader user

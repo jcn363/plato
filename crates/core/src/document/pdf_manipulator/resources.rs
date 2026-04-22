@@ -299,11 +299,10 @@ impl ResourceExtractor {
 
         // Get pages map
         let pages_map = doc.get_pages();
-        let page_ids: Vec<_> = pages_map.values().collect();
 
         // Iterate through all pages
-        for (page_num, page_id) in page_ids.iter().enumerate() {
-            let page_dict = doc.get_object(**page_id).unwrap().as_dict().unwrap();
+        for (page_num, page_id) in pages_map {
+            let page_dict = doc.get_object(page_id).unwrap().as_dict().unwrap();
 
             // Get annotations array
             if let Ok(annot_ref) = page_dict.get(b"Annots") {
@@ -313,10 +312,12 @@ impl ResourceExtractor {
                             if let Ok(annot_obj) = doc.get_object(annot_ref) {
                                 if let Ok(annot_dict) = annot_obj.as_dict() {
                                     // Extract annotation type
-                                    let annot_type = annot_dict.get(b"Subtype")
+                                    let subtype_str = annot_dict.get(b"Subtype")
                                         .and_then(|s| s.as_name())
                                         .map(|n| String::from_utf8_lossy(n).to_string())
-                                        .unwrap_or_else(|_| "Unknown".to_string());
+                                        .unwrap_or_else(|_| "Text".to_string());
+                                    let subtype = super::AnnotationSubtype::from_str(&subtype_str)
+                                        .unwrap_or(super::AnnotationSubtype::Text);
 
                                     // Extract contents
                                     let contents = match annot_dict.get(b"Contents") {
@@ -331,7 +332,7 @@ impl ResourceExtractor {
                                     };
 
                                     // Extract rectangle
-                                    let rect = annot_dict.get(b"Rect")
+                                    let _rect = annot_dict.get(b"Rect")
                                         .and_then(|r| r.as_array())
                                         .ok()
                                         .and_then(|arr| {
@@ -347,13 +348,11 @@ impl ResourceExtractor {
                                             }
                                         });
 
-                                    annotations.push(super::PdfAnnotation {
-                                        page: page_num,
-                                        annot_type,
+                                    annotations.push(super::PdfAnnotation::new(
+                                        page_num as usize,
+                                        subtype,
                                         contents,
-                                        rect,
-                                        color: None,
-                                    });
+                                    ));
                                 }
                             }
                         }

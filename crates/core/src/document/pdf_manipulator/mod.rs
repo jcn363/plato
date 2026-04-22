@@ -31,7 +31,7 @@ use crate::consts::pdf::{
 };
 
 // Re-export submodule types for backwards compatibility
-pub use annotations::{PdfAnnotation, PdfAnnotationExporter};
+pub use annotations::{PdfAnnotation, PdfAnnotationExporter, PdfAnnotationManager, XfdfHandler, AnnotationQuery, AnnotationSubtype};
 pub use redaction::{RedactionEditor, RedactionRegion};
 pub use resources::{ExtractedFont, ExtractedImage, ResourceExtractor, ResourceSummary};
 

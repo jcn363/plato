@@ -27,7 +27,7 @@ Documentation:
 - [Article fetcher documentation](doc/ARTICLE_FETCHER.md)
 - [Hooks documentation](doc/HOOKS.md)
 - [Library documentation](doc/LIBRARY.md)
-- [MuPDF features](doc/MUPDF_FEATURES.md)
+- [PDF features](doc/PDF_FEATURES.md)
 - [Navigation documentation](doc/NAVIGATION.md)
 
 ## Supported firmwares
@@ -79,7 +79,7 @@ None currently.
 
 - ePUB through the built-in renderer.
 - HTML and HTM through the built-in HTML renderer.
-- PDF, CBZ, FB2, FBZ, MOBI, XPS, OXPS, and TXT via [MuPDF](https://mupdf.com/index.html).
+- PDF, CBZ, FB2, FBZ, MOBI, XPS, OXPS, and TXT via PDFPurr (pure Rust PDF library).
 
 ## Features
 
@@ -96,11 +96,11 @@ None currently.
 
 ## Optimizations
 
-- **Build System** - Resolved linker failures by expanding `mupdf_wrapper.c` with 20+ custom FFI functions (PDF manipulation, annotations, redactions, image/font extraction); wrapper is now automatically linked via `build.rs`
-- **Safe FFI Wrappers** - Added `mupdf.rs`, `freetype.rs`, `harfbuzz.rs` with RAII/Drop semantics for safe resource management; `pdf.rs` and `pdf_manipulator.rs` migrated to use safe wrappers
+- **PDF Rendering** - Migrated from MuPDF to PDFPurr (pure Rust PDF library), eliminating C dependencies for PDF rendering
+- **Font Stack** - Migrated to pure Rust font stack: skrifa for font parsing/metrics, rustybuzz for text shaping, ab_glyph for rasterization (replaced FreeType + HarfBuzz FFI)
 - **AArch64 (ARM64)** - Added support for newer Kobo devices (Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
 - **Error Handling** - Improved robustness with proper error handling instead of `unwrap()`; further reduced unwrap/expect in sync, HTML parsing, and fetcher crates
-- **Memory** - Optimized string building with pre-allocated buffers, fixed memory availability detection, reduced thumbnail memory by 75% (grayscale instead of RGBA), reduced MuPDF context cache from 32MB to 16MB, fixed Pixmap OOM panics, optimized pixmap creation to avoid double allocation
+- **Memory** - Optimized string building with pre-allocated buffers, fixed memory availability detection, reduced thumbnail memory by 75% (grayscale instead of RGBA), fixed Pixmap OOM panics, optimized pixmap creation to avoid double allocation
 - PDF - Added auto-crop margins feature for scanned documents, PDF/A detection, annotation reading and export, interactive redaction region definition UI, and PDF merging functionality. **Note:** These features are implemented and stable.
 - **Rendering** - Added minimum font size support for better readability
 - **ePUB** - Enhanced HTML engine with improved font handling
@@ -145,7 +145,7 @@ cargo test --target x86_64-unknown-linux-gnu
 
 ## Library Directories
 
-Plato uses two separate library directories to support different build targets:
+Plato uses library directories to support different build targets:
 
 - **`libs/`** → ARM 32-bit (`arm-unknown-linux-gnueabihf`) for original Kobo devices
 - **`libs_host/`** → Host/x86_64 (`x86_64-unknown-linux-gnu`) for development and emulator

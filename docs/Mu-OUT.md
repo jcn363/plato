@@ -540,21 +540,21 @@ This document outlines the completed migration from MuPDF (C library) to PDFPurr
 
 **Test Suite Implemented**:
 
-| Component | Tests | Status |
-|-----------|-------|--------|
-| E-ink Damage Tracking | 8 | ✅ Complete |
-| E-ink Grayscale Conversion | 12 | ✅ Complete |
-| E-ink Waveform Selection | 6 | ✅ Complete |
-| E-ink Ghosting Reduction | 6 | ✅ Complete |
-| E-ink Partial Refresh | 10 | ✅ Complete |
-| E-ink Controllers | 8 | ✅ Complete |
-| E-ink Integration Tests | 16 | ✅ Complete |
-| PDFPurr Types/Utils | 12 | ✅ Complete |
-| PDFPurr Document/Page | 8 | ✅ Complete |
-| PDFPurr Text/Outline | 6 | ✅ Complete |
-| PDFPurr Integration Tests | 8 | ✅ Complete |
-| FrameBuffer Operations | 8 | ✅ Complete |
-| **TOTAL** | **109** | **100% Pass Rate** |
+| Component                  | Tests   | Status             |
+|----------------------------|---------|--------------------|
+| E-ink Damage Tracking      | 8       | ✅ Complete        |
+| E-ink Grayscale Conversion | 12      | ✅ Complete        |
+| E-ink Waveform Selection   | 6       | ✅ Complete        |
+| E-ink Ghosting Reduction   | 6       | ✅ Complete        |
+| E-ink Partial Refresh      | 10      | ✅ Complete        |
+| E-ink Controllers          | 8       | ✅ Complete        |
+| E-ink Integration Tests    | 16      | ✅ Complete        |
+| PDFPurr Types/Utils        | 12      | ✅ Complete        |
+| PDFPurr Document/Page      | 8       | ✅ Complete        |
+| PDFPurr Text/Outline       | 6       | ✅ Complete        |
+| PDFPurr Integration Tests  | 8       | ✅ Complete        |
+| FrameBuffer Operations     | 8       | ✅ Complete        |
+| **TOTAL**                  | **109** | **100% Pass Rate** |
 
 **Tasks Completed**:
 
@@ -899,15 +899,15 @@ ab_glyph = "0.2"
 
 ### Quantitative Metrics
 
-| Metric | Target | Achieved | Status |
-|--------|--------|----------|--------|
-| Build time reduction | 30% | ~40% | ✅ No C compilation |
-| Binary size reduction | 20% | ~25% | ✅ No C libraries |
-| Test coverage | >80% | 100% | ✅ 109 tests, 109 passing |
-| Code modules | <1000 lines | All under limit | ✅ Max 545 lines |
-| Rendering speed | Within 10% MuPDF | Not measured | ⏸️ Baseline needed |
-| Memory usage | Within 10% MuPDF | Not measured | ⏸️ Baseline needed |
-| Critical bugs | <10 in beta | 0 found | ✅ Automated tests pass |
+| Metric                | Target           | Achieved        | Status                    |
+|-----------------------|------------------|-----------------|---------------------------|
+| Build time reduction  | 30%              | ~40%            | ✅ No C compilation       |
+| Binary size reduction | 20%              | ~25%            | ✅ No C libraries         |
+| Test coverage         | >80%             | 100%            | ✅ 109 tests, 109 passing |
+| Code modules          | <1000 lines      | All under limit | ✅ Max 545 lines          |
+| Rendering speed       | Within 10% MuPDF | Not measured    | ⏸️ Baseline needed        |
+| Memory usage          | Within 10% MuPDF | Not measured    | ⏸️ Baseline needed        |
+| Critical bugs         | <10 in beta      | 0 found         | ✅ Automated tests pass   |
 
 ### Qualitative Metrics
 

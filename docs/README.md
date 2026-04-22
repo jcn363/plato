@@ -15,7 +15,7 @@ For user-facing documentation, see the [doc/](../doc/) directory:
 - [OCR and TTS](../doc/OCR_TTS.md)
 - [Navigation Guide](../doc/NAVIGATION.md)
 - [Not Implemented Features](../doc/NOT_IMPLEMENTED.md)
-- [MuPDF Features](../doc/MUPDF_FEATURES.md)
+- [PDF Features](../doc/PDF_FEATURES.md)
 
 ## Project Documentation
 
@@ -59,7 +59,7 @@ Root level documentation:
 
 ### PDF Rendering
 
-- [PDFRust.md](PDFRust.md) - MuPDF to Rust replacement plan
+- [PDFRust.md](PDFRust.md) - PDF library migration plan (historical)
 
 ### Platform Support
 
