@@ -47,6 +47,7 @@ This document outlines the completed migration from MuPDF (C library) to PDFPurr
 | Rendering   | (in mod.rs)      | Rendering to bitmaps          | ✅ Active |
 | Caching     | `cache.rs`       | LRU caching for pages/text    | ✅ Active |
 | Buffer Pool | `buffer_pool.rs` | Memory optimization           | ✅ Active |
+| CPU Detect  | `cpu_detection.rs` | Runtime SIMD detection      | ✅ Active |
 
 **Features Implemented**:
 
@@ -70,7 +71,7 @@ This document outlines the completed migration from MuPDF (C library) to PDFPurr
 - skrifa (font metrics)
 - rustybuzz (text shaping)
 - ab_glyph (glyph rasterization)
-- lopdf (PDF manipulation)
+- lopdf (PDF manipulation - delete, rotate, extract, merge, reorder pages, annotations, redaction, resource extraction)
 - flate2 (compression)
 - bzip2 (Rust crate)
 - png (Rust crate via image)
@@ -460,11 +461,14 @@ This document outlines the completed migration from MuPDF (C library) to PDFPurr
 - ✅ MuPDF fallback no longer needed (PDFPurr fully replaces MuPDF)
 - ✅ Text extraction and basic search implemented
 - ✅ Outlines and metadata extraction implemented
-- ⚠️ Advanced features for Phase 4:
-  - Image extraction (requires XObject dictionary access)
-  - Link/annotation extraction (requires page dictionary access)
-  - Page dimensions (requires MediaBox access)
-  - PDF manipulation features (page deletion, rotation, extraction, merging, annotations, redaction, resource extraction) stubbed for lopdf integration
+- ✅ Advanced features implemented using lopdf:
+  - Image extraction via XObject dictionary access
+  - Link/annotation extraction via page dictionary access
+  - Page dimensions via MediaBox access
+  - PDF manipulation features (delete, rotate, extract, merge, reorder pages) using lopdf
+  - Annotation export using lopdf
+  - Redaction support using lopdf
+  - Resource extraction (images, fonts, PDF/A detection) using lopdf
 
 ---
 
