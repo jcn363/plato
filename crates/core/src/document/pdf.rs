@@ -19,7 +19,7 @@
 //! - PDF manipulation via lopdf
 
 use super::pdfpurr::{
-    Document as PdfPurrDocument, MuPdfContext, Page, Link, Outline, FzRect, FzQuad, FzPoint,
+    Document as PdfPurrDocument, Page, Link, Outline, FzRect, FzQuad, FzPoint,
     rect_from_quad, union_rect, PixmapFormat, FZ_PAGE_BLOCK_IMAGE,
 };
 
@@ -101,9 +101,7 @@ fn auto_detect_margins(pixmap: &Pixmap, threshold: u8) -> (f32, f32, f32, f32) {
 
 
 /// PDF document opener.
-pub struct PdfOpener {
-    ctx: MuPdfContext,
-}
+pub struct PdfOpener;
 
 /// PDF document instance with page access.
 pub struct PdfDocument {
@@ -120,7 +118,7 @@ pub struct PdfPage<'a> {
 impl PdfOpener {
     /// Creates a new PDF opener.
     pub fn new() -> Option<PdfOpener> {
-        Some(PdfOpener { ctx: MuPdfContext::new().ok()? })
+        Some(PdfOpener)
     }
 
     /// Opens a PDF file from the given path.

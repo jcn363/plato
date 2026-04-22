@@ -8,7 +8,7 @@ use crate::framebuffer::Framebuffer;
 use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
 use crate::thumbnail::request::ThumbnailRequest;
 
-/// Global mutex to prevent MuPDF segfaults when loading multiple JP2 images
+/// Global mutex to prevent concurrent access when loading multiple JP2 images
 static EXCLUSIVE_ACCESS: LazyLock<Mutex<u8>> = LazyLock::new(|| Mutex::new(0));
 
 /// Worker thread that processes thumbnail generation requests

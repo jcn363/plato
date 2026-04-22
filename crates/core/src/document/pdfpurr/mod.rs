@@ -9,22 +9,6 @@ use pdfpurr::Document as PdfPurrDoc;
 use pdfpurr::rendering::{Renderer, RenderOptions};
 use pdfpurr::content::analysis::TextRun;
 
-/// MuPDF-compatible context (no-op for PDFPurr)
-pub struct MuPdfContext;
-
-impl MuPdfContext {
-    pub fn new() -> Result<Self> {
-        Ok(MuPdfContext)
-    }
-
-    pub fn set_user_css(&self, _css: &str) {
-        // PDFPurr doesn't need user CSS
-    }
-
-    pub fn device_gray(&self) {}
-    pub fn device_rgb(&self) {}
-}
-
 /// Wrapper around PDFPurr Document
 pub struct Document {
     inner: PdfPurrDoc,
@@ -156,11 +140,9 @@ impl<'a> Page<'a> {
             background: [255, 255, 255, 255],
         };
         let renderer = Renderer::new(self.doc, options);
-        let _pixmap = renderer.render_page(self.index)
+        let pixmap = renderer.render_page(self.index)
             .map_err(|e| anyhow::format_err!("Failed to render page: {}", e))?;
-        // TODO: Fix tiny-skia version conflict between pdfpurr (0.11.4) and skrifa (0.12.0)
-        // For now, return a dummy pixmap to allow compilation
-        Ok(PdfPurrPixmap { inner: tiny_skia::Pixmap::new(100, 100).unwrap() })
+        Ok(PdfPurrPixmap { inner: pixmap })
     }
 
     pub fn dims(&self) -> (f32, f32) {

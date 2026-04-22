@@ -24,38 +24,6 @@ pub fn build_rows(
             rect.min.x + max_label_width + padding,
             y + small_height
         ],
-        "MuPDF Search".to_string(),
-        Align::Right(padding / 2),
-    );
-    children.push(Box::new(label) as Box<dyn View>);
-
-    let ctrl_rect = rect![
-        rect.min.x + max_label_width + 2 * padding,
-        y,
-        rect.max.x - padding,
-        y + small_height
-    ];
-    let toggle = Button::new(
-        ctrl_rect,
-        Event::Select(EntryId::ToggleMupdfSearch),
-        if settings.reader.use_mupdf_search {
-            "On"
-        } else {
-            "Off"
-        }
-        .to_string(),
-    );
-    children.push(Box::new(toggle) as Box<dyn View>);
-
-    y += small_height;
-
-    let label = Label::new(
-        rect![
-            rect.min.x + padding,
-            y,
-            rect.min.x + max_label_width + padding,
-            y + small_height
-        ],
         "Show Time".to_string(),
         Align::Right(padding / 2),
     );
@@ -190,24 +158,9 @@ pub fn handle_event(
     context: &mut Context,
 ) -> bool {
     match *evt {
-        Event::Select(EntryId::ToggleMupdfSearch) => {
-            context.settings.reader.use_mupdf_search = !context.settings.reader.use_mupdf_search;
-            if let Some(btn) = children[offset + 1].downcast_mut::<Button>() {
-                btn.update(
-                    if context.settings.reader.use_mupdf_search {
-                        "On"
-                    } else {
-                        "Off"
-                    }
-                    .to_string(),
-                    rq,
-                );
-            }
-            true
-        }
         Event::Select(EntryId::ToggleShowTime) => {
             context.settings.reader.show_time = !context.settings.reader.show_time;
-            if let Some(btn) = children[offset + 3].downcast_mut::<Button>() {
+            if let Some(btn) = children[offset + 1].downcast_mut::<Button>() {
                 btn.update(
                     if context.settings.reader.show_time {
                         "On"

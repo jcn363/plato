@@ -42,6 +42,7 @@ The Plato project has been successfully set up for development on this machine. 
 - **libs_host directory**: ✅ Present with pre-built libraries
 - **Symlinks**: ✅ Created for library versioning
 - **Note**: MuPDF has been removed and replaced with PDFPurr (pure Rust PDF library)
+- **PDF Manipulation**: Advanced PDF manipulation features (page deletion, rotation, extraction, merging, annotations, redaction, resource extraction) are currently stubbed out and will be implemented using `lopdf` in a future update
 
 ---
 
@@ -233,6 +234,7 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 | Rust Toolchain      | ✅      | v1.93.0, all targets installed           |
 | Native Dependencies | ✅      | Minimal (SDL2 for emulator only)         |
 | PDF Rendering       | ✅      | PDFPurr (pure Rust) replacing MuPDF      |
+| PDF Manipulation    | ⚠️      | Stubbed with TODOs for lopdf integration |
 | Build Scripts       | ✅      | Working correctly                        |
 | Host Build (check)  | ✅      | `cargo check` succeeds                   |
 | Host Build (link)   | ✅      | Works (no C library dependencies)        |

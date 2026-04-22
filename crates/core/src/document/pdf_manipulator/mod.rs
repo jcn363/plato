@@ -18,8 +18,6 @@
 //! manipulator.delete_pages(&input_path, &output_path, &[1, 2, 3])?;
 //! ```
 
-use super::pdfpurr::MuPdfContext;
-
 use crate::{log_info, log_warn};
 use anyhow::{format_err, Error};
 use std::fs;
@@ -86,14 +84,12 @@ impl Default for OperationOptions {
 /// This struct provides high-level PDF operations with progress reporting
 /// and memory safety checks for Kobo devices.
 pub struct PdfManipulator {
-    ctx: MuPdfContext,
     progress_callback: Option<ProgressCallback>,
 }
 
 impl Default for PdfManipulator {
     fn default() -> Self {
         Self {
-            ctx: MuPdfContext::new().expect("PDFPurr context"),
             progress_callback: None,
         }
     }
@@ -102,9 +98,7 @@ impl Default for PdfManipulator {
 impl PdfManipulator {
     /// Create a new PDF manipulator
     pub fn new() -> Result<PdfManipulator, Error> {
-        let ctx = MuPdfContext::new()?;
         Ok(PdfManipulator {
-            ctx,
             progress_callback: None,
         })
     }

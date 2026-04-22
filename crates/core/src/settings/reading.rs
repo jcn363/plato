@@ -44,7 +44,6 @@ pub struct ReaderSettings {
     pub manga_mode: bool,
     pub duplicates_detection: bool,
     pub external_storage_path: Option<String>,
-    pub use_mupdf_search: bool,
     pub page_turn_animation: PageTurnAnimation,
     pub fast_page_turn: bool,
 }
@@ -253,13 +252,12 @@ impl Default for ReaderSettings {
             line_height: DEFAULT_LINE_HEIGHT,
             continuous_fit_to_width: true,
             ignore_document_css: false,
+            auto_dual_page: false,
             dithered_kinds: DEFAULT_DITHERED_KINDS
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),
             manga_mode: false,
-            use_mupdf_search: false,
-            auto_dual_page: false,
             css_overrides: CssOverrides::default(),
             show_time: true,
             show_battery: true,

@@ -20,12 +20,8 @@
 //! - **pdfpurr/**: PDFPurr integration layer
 //!   - Safe wrappers for PDFPurr
 //!   - Document abstraction, rendering
-//! - **mupdf/**: Legacy MuPDF integration (deprecated, will be removed)
-//! - **mupdf/**: Legacy MuPDF integration (deprecated, will be removed)
-//!
-//! ### Support Modules
-//! - **pdf_manipulator/**: PDF manipulation tools (merge, split, redact)
-//! - **progressive_loader.rs**: Progressive document loading with caching
+//! - **pdf_manipulator/**: PDF manipulation tools (page deletion, rotation, extraction, merging, annotations, redaction, resource extraction)
+//! - **progressive_loader/**: Progressive PDF loading for large documents loading with caching
 //! - **sysinfo.rs**: System information HTML generator
 //!
 //! ## Module Hierarchy

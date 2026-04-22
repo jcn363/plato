@@ -50,14 +50,14 @@ lru = "0.17.0"
 dashmap = "6.1.0"
 
 # Rust-native font stack (replaces FreeType + HarfBuzz)
-skrifa.workspace = true
-rustybuzz.workspace = true
-ab_glyph.workspace = true
+skrifa = "0.42.0"
+rustybuzz = "0.20.1"
+ab_glyph = { version = "0.2.32", features = ["variable-fonts"] }
 
 # Pure Rust PDF library (replaces MuPDF)
-pdfpurr.workspace = true
-tiny-skia.workspace = true
-lopdf.workspace = true
+pdfpurr = "0.4.0"
+tiny-skia = "0.12.0"
+lopdf = "0.40.0"
 
 [dev-dependencies]
-tempfile.workspace = true
+tempfile = "3.27.0"

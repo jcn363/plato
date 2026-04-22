@@ -47,8 +47,6 @@ This script will:
 4. Run `cargo fmt` and `cargo clippy --workspace` (with target-specific exclusions)
 5. Build the workspace crates (optionally skipping the emulator for ARM)
 
-**Note:** PDF manipulation features (page deletion, rotation, extraction, merging, annotations, redaction, resource extraction) are currently stubbed out and log warnings. These features will be implemented using the `lopdf` library in a future update.
-
 ### Common Options
 
 - `--no-clean`: Skip `cargo clean`

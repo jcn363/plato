@@ -1,4 +1,4 @@
-use crate::document::pdfpurr::{Document as PdfPurrDocument, MuPdfContext};
+use crate::document::pdfpurr::Document as PdfPurrDocument;
 use crate::framebuffer::Pixmap;
 use crate::{log_error, log_info, log_warn};
 use anyhow::{format_err, Error};
@@ -26,8 +26,7 @@ pub struct CachedPage {
 }
 
 pub struct ProgressiveDocLoader {
-    ctx: MuPdfContext,
-    doc: PdfPurrDocument,
+    doc: Option<PdfPurrDocument>,
     _path: PathBuf,
     total_pages: usize,
     current_page: usize,
@@ -40,10 +39,7 @@ pub struct ProgressiveDocLoader {
 }
 
 impl ProgressiveDocLoader {
-    pub fn new(path: &Path) -> Result<ProgressiveDocLoader, Error> {
-        let ctx = MuPdfContext::new()
-            .map_err(|e| format_err!("Failed to create PDFPurr context: {}", e))?;
-
+    pub fn new(path: &Path) -> Result<Self, Error> {
         let doc = PdfPurrDocument::open(path)
             .map_err(|e| format_err!("Failed to open PDF: {}", e))?;
 
@@ -51,8 +47,7 @@ impl ProgressiveDocLoader {
         let is_linearized = false;
 
         let loader = ProgressiveDocLoader {
-            ctx,
-            doc,
+            doc: Some(doc),
             _path: path.to_path_buf(),
             total_pages,
             current_page: 0,
@@ -184,7 +179,8 @@ impl ProgressiveDocLoader {
         let size_bytes = (800 * 1200) as usize;
         self.ensure_cache_space(size_bytes);
 
-        let page = self.doc.load_page(page_idx as i32)?;
+        let doc = self.doc.as_ref().ok_or_else(|| format_err!("Document not loaded"))?;
+        let page = doc.load_page(page_idx as i32)?;
 
         let matrix = 800.0 / 600.0;
         let colorspace = crate::document::pdfpurr::PixmapFormat::Grayscale;
