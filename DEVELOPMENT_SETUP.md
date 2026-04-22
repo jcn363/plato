@@ -237,6 +237,8 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 | PDF Text Extraction | ✅      | Implemented with basic search            |
 | PDF Outlines        | ✅      | Implemented                              |
 | PDF Manipulation    | ⚠️      | Stubbed for Phase 4 lopdf integration    |
+| Performance Cache   | ✅      | LRU caching implemented (Phase 4)         |
+| Memory Optimization  | ✅      | Buffer pooling implemented (Phase 4)     |
 | Build Scripts       | ✅      | Working correctly                        |
 | Host Build (check)  | ✅      | `cargo check` succeeds                   |
 | Host Build (link)   | ✅      | Works (no C library dependencies)        |
@@ -250,6 +252,15 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 - skrifa 0.42.0 (font stack)
 - tiny-skia 0.12.0 (rendering)
 - lopdf 0.40.0 (PDF manipulation - Phase 4)
+- lru 0.17.0 (LRU cache for Phase 4)
+- hex 0.4 (cache key generation)
+
+**Phase 4 Performance Optimization**:
+- ✅ LRU caching for rendered pages, text, metadata
+- ✅ Buffer pooling for memory optimization
+- ✅ Cache-aware PDFPurr integration
+- ⚠️ Partial refresh optimization (deferred)
+- ⚠️ Grayscale SIMD optimization (deferred)
 
 ---
 

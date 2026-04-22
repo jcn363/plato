@@ -189,13 +189,13 @@ fn test_grayscale_black_white() {
     let converter = GrayscaleConverter::new(DitheringMode::None);
 
     // Black pixel
-    let black = vec![0u8, 0, 0, 255];
-    let gray = converter.convert(&black, 1, 1).unwrap();
+    let rgba: Vec<u8> = (0..4).map(|i| [0u8, 0, 0, 255][i]).collect();
+    let gray = converter.convert(&rgba, 1, 1).unwrap();
     assert_eq!(gray[0], 0); // Should be black (0)
 
     // White pixel
-    let white = vec![255u8, 255, 255, 255];
-    let gray = converter.convert(&white, 1, 1).unwrap();
+    let rgba: Vec<u8> = (0..4).map(|i| [255u8, 255, 255, 255][i]).collect();
+    let gray = converter.convert(&rgba, 1, 1).unwrap();
     assert_eq!(gray[0], 15); // Should be white (15 in 16-level)
 }
 
@@ -247,7 +247,7 @@ fn test_floyd_steinberg_dithering() {
 fn test_ordered_dithering() {
     let converter = GrayscaleConverter::new(DitheringMode::Ordered);
 
-    let rgba = vec![128u8, 128, 128, 255; 16 * 16 * 4];
+    let rgba: Vec<u8> = (0..(16 * 16)).flat_map(|_| [128u8, 128, 128, 255]).collect();
     let grayscale = converter.convert(&rgba, 16, 16).unwrap();
 
     // Ordered dithering should produce a pattern

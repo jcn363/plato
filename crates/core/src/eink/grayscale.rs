@@ -178,7 +178,7 @@ mod tests {
     #[test]
     fn test_convert_no_dither() {
         let conv = GrayscaleConverter::new(DitheringMode::None);
-        let rgba = vec![255u8, 128, 64, 255; 100];
+        let rgba: Vec<u8> = (0..100).map(|_| 255u8).chain((0..100).map(|_| 128u8)).chain((0..100).map(|_| 64u8)).chain((0..100).map(|_| 255u8)).collect();
         let result = conv.convert(&rgba, 10, 10);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 100);
@@ -190,5 +190,17 @@ mod tests {
         let rgba = vec![255u8; 50];
         let result = conv.convert(&rgba, 10, 10);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_ordered_dithering() {
+        let conv = GrayscaleConverter::new(DitheringMode::Ordered);
+        let rgba: Vec<u8> = (0..(16 * 16)).flat_map(|_| [128u8, 128, 128, 255]).collect();
+        let grayscale = conv.convert(&rgba, 16, 16).unwrap();
+
+        // Ordered dithering should produce a pattern
+        // Values shouldn't all be the same
+        let unique_values: std::collections::HashSet<u8> = grayscale.iter().cloned().collect();
+        assert!(unique_values.len() > 1, "Ordered dithering should produce variety");
     }
 }

@@ -4,14 +4,19 @@
 //! to replace the MuPDF C library dependency.
 
 use std::path::Path;
+use std::sync::Arc;
 use anyhow::{Result, bail};
 use pdfpurr::Document as PdfPurrDoc;
 use pdfpurr::rendering::{Renderer, RenderOptions};
 use pdfpurr::content::analysis::TextRun;
 
+use crate::document::cache::{PdfCache, PageCacheKey};
+
 /// Wrapper around PDFPurr Document
 pub struct Document {
     inner: PdfPurrDoc,
+    cache: Option<Arc<PdfCache>>,
+    doc_id: String,
 }
 
 /// Type alias for compatibility
@@ -19,15 +24,51 @@ pub type PdfPurrDocument = Document;
 
 impl Document {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let doc_id = path.as_ref().to_string_lossy().to_string();
         let inner = PdfPurrDoc::open(path)
             .map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
-        Ok(Document { inner })
+        Ok(Document { 
+            inner, 
+            cache: None,
+            doc_id,
+        })
+    }
+
+    pub fn open_with_cache<P: AsRef<Path>>(path: P, cache: Arc<PdfCache>) -> Result<Self> {
+        let doc_id = path.as_ref().to_string_lossy().to_string();
+        let inner = PdfPurrDoc::open(path)
+            .map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+        Ok(Document { 
+            inner, 
+            cache: Some(cache),
+            doc_id,
+        })
     }
 
     pub fn from_bytes(data: &[u8]) -> Result<Self> {
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
-        Ok(Document { inner })
+        let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
+        Ok(Document { 
+            inner, 
+            cache: None,
+            doc_id,
+        })
+    }
+
+    pub fn from_bytes_with_cache(data: &[u8], cache: Arc<PdfCache>) -> Result<Self> {
+        let inner = PdfPurrDoc::from_bytes(data)
+            .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
+        let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
+        Ok(Document { 
+            inner, 
+            cache: Some(cache),
+            doc_id,
+        })
+    }
+
+    pub fn set_cache(&mut self, cache: Arc<PdfCache>) {
+        self.cache = Some(cache);
     }
 
     pub fn object_count(&self) -> usize {
@@ -43,9 +84,12 @@ impl Document {
         if page_index >= page_count {
             bail!("Page index {} out of range (document has {} pages)", page_index, page_count);
         }
+        let cache_key = PageCacheKey::new(self.doc_id.clone(), page_index as i32);
         Ok(Page {
             doc: &self.inner,
             index: page_index,
+            cache_key,
+            cache: self.cache.clone(),
         })
     }
 
@@ -120,6 +164,8 @@ impl Document {
 pub struct Page<'a> {
     doc: &'a PdfPurrDoc,
     index: usize,
+    cache_key: PageCacheKey,
+    cache: Option<Arc<PdfCache>>,
 }
 
 impl<'a> Page<'a> {
@@ -135,6 +181,13 @@ impl<'a> Page<'a> {
     }
 
     pub fn render_pixmap(&self, _matrix: f32, _color_space: PixmapFormat, _flags: i32) -> Result<PdfPurrPixmap> {
+        // Check cache first
+        if let Some(ref cache) = self.cache {
+            if let Some(cached) = cache.get_rendered_page(&self.cache_key) {
+                return Ok(cached.pixmap);
+            }
+        }
+
         let options = RenderOptions {
             dpi: 72.0 * _matrix as f64,
             background: [255, 255, 255, 255],
@@ -161,15 +214,37 @@ impl<'a> Page<'a> {
             })
             .collect();
         converted.pixels_mut().copy_from_slice(&colors);
-        Ok(PdfPurrPixmap { inner: converted })
+        
+        let result = PdfPurrPixmap { inner: converted };
+        
+        // Cache the result
+        if let Some(ref cache) = self.cache {
+            cache.put_rendered_page(self.cache_key.clone(), result.clone());
+        }
+        
+        Ok(result)
     }
 
     pub fn dims(&self) -> (f32, f32) {
+        // Check cache first
+        if let Some(ref cache) = self.cache {
+            if let Some(cached) = cache.get_metadata(&self.cache_key) {
+                return cached.dims;
+            }
+        }
+
         // Get page dimensions from PDFPurr
         // PDFPurr stores page dimensions in the page dictionary
         // For now, use default dimensions - this should be improved
         // by accessing the PDF's MediaBox directly
-        (600.0, 800.0)
+        let dims = (600.0, 800.0);
+        
+        // Cache the dimensions
+        if let Some(ref cache) = self.cache {
+            cache.put_metadata(self.cache_key.clone(), dims);
+        }
+        
+        dims
     }
 
     pub fn width(&self) -> f32 {
@@ -544,6 +619,7 @@ pub enum PixmapFormat {
 }
 
 /// Pixmap wrapper for PDFPurr rendering output
+#[derive(Debug, Clone)]
 pub struct PdfPurrPixmap {
     inner: tiny_skia::Pixmap,
 }

@@ -58,6 +58,7 @@ ab_glyph = { version = "0.2.32", features = ["variable-fonts"] }
 pdfpurr = "0.4.0"
 tiny-skia = "0.12.0"
 lopdf = "0.40.0"
+hex = "0.4"
 
 [dev-dependencies]
 tempfile = "3.27.0"

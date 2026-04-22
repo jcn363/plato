@@ -16,6 +16,8 @@ mod waveform;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod regression_tests;
 
 pub use controller::{EInkController, SunxiController, MxcController};
 pub use damage_tracker::{DamageTracker, FrameBuffer};

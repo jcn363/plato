@@ -76,6 +76,8 @@
 
 pub mod epub;
 pub mod html;
+pub mod buffer_pool;
+pub mod cache;
 pub mod pdf;
 pub mod pdf_manipulator;
 pub mod pdfpurr;
@@ -671,3 +673,6 @@ pub fn chapter_from_uri<'a>(target_uri: &str, toc: &'a [TocEntry]) -> Option<&'a
 
 // Re-export sys_info_as_html from sysinfo module for backwards compatibility
 pub use sysinfo::sys_info_as_html;
+
+#[cfg(test)]
+mod pdfpurr_integration_tests;

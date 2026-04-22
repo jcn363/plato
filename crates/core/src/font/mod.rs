@@ -121,11 +121,8 @@ pub const MD_SIZE: Style = Style {
 // ===========================================================================
 // Embedded Font Data Module
 // ===========================================================================
-
-pub mod embedded;
-
-// Re-export embedded font symbols for backward compatibility
-pub use embedded::*;
+// NOTE: Removed - font data now loaded from filesystem using pure Rust stack
+// (skrifa, rustybuzz, ab_glyph) instead of embedded MuPDF font data.
 
 // ===========================================================================
 // Font Family and Discovery Utilities
