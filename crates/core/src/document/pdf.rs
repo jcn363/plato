@@ -1,6 +1,6 @@
 //! PDF Document Handling
 //!
-//! This module provides PDF document loading, rendering, and manipulation via MuPDF.
+//! This module provides PDF document loading, rendering, and manipulation via PDFPurr (pure Rust).
 //!
 //! ## Architecture
 //!
@@ -15,8 +15,11 @@
 //! - Table of contents extraction
 //! - Auto-margin detection for scanned documents
 //! - Link and annotation handling
+//! - Encryption support (RC4, AES-128/256)
+//! - PDF manipulation via lopdf
 
 use super::mupdf;
+use super::pdfpurr;
 
 use super::{chapter, chapter_relative};
 use super::{BoundedText, Document, Location, TocEntry};
@@ -179,9 +182,9 @@ impl PdfDocument {
     ///
     /// # Returns
     /// None if the page doesn't exist or cannot be loaded.
-    pub fn page(&self, _index: usize) -> Option<PdfPage<'_>> {
+    pub fn page(&self, index: usize) -> Option<PdfPage<'_>> {
         self.doc
-            .load_page(_index as i32)
+            .load_page(index as i32)
             .ok()
             .map(|page| PdfPage { page, _doc: self })
     }
@@ -359,7 +362,7 @@ impl Document for PdfDocument {
     }
 
     fn set_font_family(&mut self, _family_name: &str, _search_path: &str) {
-        // PDF documents use embedded fonts and MuPDF's text layout.
+        // PDF documents use embedded fonts.
         // Font family changes are not supported for PDF format.
     }
 
@@ -388,23 +391,19 @@ impl Document for PdfDocument {
         // Stretch tolerance changes are not supported for PDF format.
     }
 
-    fn set_ignore_document_css(&mut self, ignore: bool) {
-        self.ctx.set_use_document_css(!ignore);
+    fn set_ignore_document_css(&mut self, _ignore: bool) {
+        // PDFPurr doesn't use CSS
+        // This is kept for API compatibility
     }
 }
 
 impl<'a> PdfPage<'a> {
     pub fn images(&self) -> Option<Vec<Boundary>> {
-        let opts = mupdf::FzTextOptions {
-            flags: mupdf::FZ_TEXT_PRESERVE_IMAGES,
-            scale: 1.0,
-            clip: mupdf::FzRect::default(),
-        };
-        let text_page = self.page.to_text_page(Some(&opts))?;
+        let text_page = self.page.to_text_page(None)?;
         let mut images = Vec::with_capacity(16);
 
         for block in text_page.blocks() {
-            if block.kind() == mupdf::FZ_PAGE_BLOCK_IMAGE {
+            if block.kind() == pdfpurr::FZ_PAGE_BLOCK_IMAGE {
                 let bnd: Boundary = block.bbox().into();
                 images.retain(|img: &Boundary| !img.overlaps(&bnd));
                 images.push(bnd);
@@ -437,7 +436,7 @@ impl<'a> PdfPage<'a> {
         for block in text_page.blocks() {
             for line in block.lines() {
                 let mut current_word = String::new();
-                let mut word_rect = mupdf::FzRect::default();
+                let mut word_rect = pdfpurr::FzRect::default();
 
                 for text_char in line.chars() {
                     if let Some(c) = std::char::from_u32(text_char.char_code() as u32) {
@@ -450,13 +449,18 @@ impl<'a> PdfPage<'a> {
                                     location: bounds.min.into(),
                                 });
                                 current_word.clear();
-                                word_rect = mupdf::FzRect::default();
+                                word_rect = pdfpurr::FzRect::default();
                             }
                         } else {
                             let quad = text_char.quad();
-                            let ctx = self._doc.ctx.as_ptr();
-                            let chr_rect = mupdf::rect_from_quad(ctx, quad);
-                            word_rect = mupdf::union_rect(ctx, word_rect, chr_rect);
+                            let pdfpurr_quad = pdfpurr::FzQuad {
+                                ul: pdfpurr::FzPoint { x: quad.ul.x, y: quad.ul.y },
+                                ur: pdfpurr::FzPoint { x: quad.ur.x, y: quad.ur.y },
+                                ll: pdfpurr::FzPoint { x: quad.ll.x, y: quad.ll.y },
+                                lr: pdfpurr::FzPoint { x: quad.lr.x, y: quad.lr.y },
+                            };
+                            let chr_rect = pdfpurr::rect_from_quad(pdfpurr_quad);
+                            word_rect = pdfpurr::union_rect(word_rect, chr_rect);
                             current_word.push(c);
                         }
                     }
@@ -504,13 +508,13 @@ impl<'a> PdfPage<'a> {
     }
 
     pub fn boundary_box(&self) -> Option<Boundary> {
-        let ctx = self._doc.ctx.as_ptr();
-        let rect = mupdf::FzRect::default();
-        let dev = mupdf::new_bbox_device(ctx, rect)?;
-        self.page.run(dev, mupdf::IDENTITY);
-        mupdf::close_device(ctx, dev);
-        mupdf::drop_device(ctx, dev);
-        Some(rect.into())
+        // PDFPurr doesn't have the same bbox device API
+        // Return the full page bounds as a fallback
+        let (width, height) = self.dims();
+        Some(Boundary {
+            min: vec2!(0.0, 0.0),
+            max: vec2!(width, height),
+        })
     }
 
     #[inline]

@@ -8,7 +8,7 @@
 //! The document module is organized by format and function:
 //!
 //! ### Format-Specific Modules
-//! - **pdf/**: PDF document support via MuPDF
+//! - **pdf/**: PDF document support via PDFPurr (pure Rust)
 //!   - `PdfOpener`, `PdfDocument`, `PdfPage` for PDF handling
 //!   - Table of contents, links, annotations
 //! - **epub/**: EPUB e-book support
@@ -17,14 +17,14 @@
 //! - **html/**: HTML document support
 //!   - Custom HTML/CSS rendering engine optimized for e-ink
 //!   - DOM, layout, text shaping, line breaking
-//! - **mupdf/**: MuPDF integration layer
-//!   - Safe wrappers for MuPDF FFI
-//!   - Context management, document abstraction
+//! - **pdfpurr/**: PDFPurr integration layer
+//!   - Safe wrappers for PDFPurr
+//!   - Document abstraction, rendering
+//! - **mupdf/**: Legacy MuPDF integration (deprecated, will be removed)
 //!
 //! ### Support Modules
 //! - **pdf_manipulator/**: PDF manipulation tools (merge, split, redact)
 //! - **progressive_loader.rs**: Progressive document loading with caching
-//! - **mupdf_sys.rs**: Low-level MuPDF FFI bindings
 //! - **sysinfo.rs**: System information HTML generator
 //!
 //! ## Module Hierarchy
@@ -84,6 +84,7 @@ pub mod html;
 pub mod mupdf;
 pub mod pdf;
 pub mod pdf_manipulator;
+pub mod pdfpurr;
 pub mod progressive_loader;
 pub mod sysinfo;
 

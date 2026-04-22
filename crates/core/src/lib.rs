@@ -12,6 +12,7 @@ pub mod device;
 pub use device::{Device, FrontlightKind, KoboDevice, Model, Orientation, CURRENT_DEVICE};
 mod dictionary;
 pub mod document;
+pub mod eink;
 pub mod font;
 pub mod framebuffer;
 pub mod frontlight;
