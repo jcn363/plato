@@ -233,7 +233,7 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 |---------------------|---------|------------------------------------------|
 | Rust Toolchain      | ✅      | v1.93.0, all targets installed           |
 | Native Dependencies | ✅      | Minimal (SDL2 for emulator only)         |
-| PDF Rendering       | ✅      | PDFPurr (pure Rust) replacing MuPDF      |
+| PDF Rendering       | ✅      | PDFPurr 0.4.0 (pure Rust) with Git patch |
 | PDF Text Extraction | ✅      | Implemented with basic search            |
 | PDF Outlines        | ✅      | Implemented                              |
 | PDF Manipulation    | ⚠️      | Stubbed for Phase 4 lopdf integration    |
@@ -244,6 +244,12 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 | Unit Tests          | ✅      | Can run without native C libraries       |
 | Clippy              | ✅      | Passes on successfully building crates   |
 | Formatting          | ✅      | rustfmt.toml configured                  |
+
+**Dependencies**:
+- PDFPurr 0.4.0 (patched from GitHub for tiny-skia 0.12.0 compatibility)
+- skrifa 0.42.0 (font stack)
+- tiny-skia 0.12.0 (rendering)
+- lopdf 0.40.0 (PDF manipulation - Phase 4)
 
 ---
 

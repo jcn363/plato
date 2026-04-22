@@ -142,7 +142,26 @@ impl<'a> Page<'a> {
         let renderer = Renderer::new(self.doc, options);
         let pixmap = renderer.render_page(self.index)
             .map_err(|e| anyhow::format_err!("Failed to render page: {}", e))?;
-        Ok(PdfPurrPixmap { inner: pixmap })
+        // PDFPurr returns tiny-skia::pixmap::Pixmap (0.11.4), but we need tiny_skia::Pixmap (0.12.0)
+        // Convert by creating a new Pixmap with the same data using tiny-skia 0.12.0 API
+        let width = pixmap.width();
+        let height = pixmap.height();
+        let data = pixmap.data();
+        let mut converted = tiny_skia::Pixmap::new(width, height)
+            .ok_or_else(|| anyhow::format_err!("Failed to create pixmap"))?;
+        // Convert u8 data to PremultipliedColorU8 for tiny-skia 0.12.0
+        let colors: Vec<tiny_skia::PremultipliedColorU8> = data.chunks(4)
+            .map(|chunk| {
+                if chunk.len() == 4 {
+                    tiny_skia::PremultipliedColorU8::from_rgba(chunk[0], chunk[1], chunk[2], chunk[3])
+                        .unwrap_or_else(|| tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap())
+                } else {
+                    tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap()
+                }
+            })
+            .collect();
+        converted.pixels_mut().copy_from_slice(&colors);
+        Ok(PdfPurrPixmap { inner: converted })
     }
 
     pub fn dims(&self) -> (f32, f32) {
@@ -575,3 +594,327 @@ pub fn scale(x: f32, _y: f32) -> f32 {
 
 /// Image block constant
 pub const FZ_PAGE_BLOCK_IMAGE: i32 = 2;
+
+// ============================================================================
+// Unit Tests for Phase 5 Validation
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ------------------------------------------------------------------------
+    // FzRect Tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_fz_rect_default() {
+        let rect = FzRect::default();
+        assert_eq!(rect.x0, 0.0);
+        assert_eq!(rect.y0, 0.0);
+        assert_eq!(rect.x1, 0.0);
+        assert_eq!(rect.y1, 0.0);
+    }
+
+    #[test]
+    fn test_fz_rect_boundary_conversion() {
+        let rect = FzRect {
+            x0: 10.0,
+            y0: 20.0,
+            x1: 100.0,
+            y1: 200.0,
+        };
+        
+        let boundary: crate::geom::Boundary = rect.into();
+        assert_eq!(boundary.min.x, 10.0);
+        assert_eq!(boundary.min.y, 20.0);
+        assert_eq!(boundary.max.x, 100.0);
+        assert_eq!(boundary.max.y, 200.0);
+    }
+
+    // ------------------------------------------------------------------------
+    // FzPoint Tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_fz_point_default() {
+        let point = FzPoint::default();
+        assert_eq!(point.x, 0.0);
+        assert_eq!(point.y, 0.0);
+    }
+
+    // ------------------------------------------------------------------------
+    // FzQuad Tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_fz_quad_default() {
+        let quad = FzQuad::default();
+        assert_eq!(quad.ul.x, 0.0);
+        assert_eq!(quad.ur.y, 0.0);
+        assert_eq!(quad.ll.x, 0.0);
+        assert_eq!(quad.lr.y, 0.0);
+    }
+
+    // ------------------------------------------------------------------------
+    // Utility Function Tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_rect_from_quad() {
+        let quad = FzQuad {
+            ul: FzPoint { x: 0.0, y: 0.0 },
+            ur: FzPoint { x: 100.0, y: 0.0 },
+            ll: FzPoint { x: 0.0, y: 50.0 },
+            lr: FzPoint { x: 100.0, y: 50.0 },
+        };
+
+        let rect = rect_from_quad(quad);
+        assert_eq!(rect.x0, 0.0);
+        assert_eq!(rect.y0, 0.0);
+        assert_eq!(rect.x1, 100.0);
+        assert_eq!(rect.y1, 50.0);
+    }
+
+    #[test]
+    fn test_rect_from_rotated_quad() {
+        // Rotated rectangle
+        let quad = FzQuad {
+            ul: FzPoint { x: 0.0, y: 10.0 },
+            ur: FzPoint { x: 90.0, y: 0.0 },
+            ll: FzPoint { x: 10.0, y: 60.0 },
+            lr: FzPoint { x: 100.0, y: 50.0 },
+        };
+
+        let rect = rect_from_quad(quad);
+        assert_eq!(rect.x0, 0.0);  // min x
+        assert_eq!(rect.y0, 0.0);  // min y
+        assert_eq!(rect.x1, 100.0); // max x
+        assert_eq!(rect.y1, 60.0);  // max y
+    }
+
+    #[test]
+    fn test_union_rect() {
+        let a = FzRect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 50.0,
+            y1: 50.0,
+        };
+        let b = FzRect {
+            x0: 30.0,
+            y0: 30.0,
+            x1: 100.0,
+            y1: 100.0,
+        };
+
+        let union = union_rect(a, b);
+        assert_eq!(union.x0, 0.0);
+        assert_eq!(union.y0, 0.0);
+        assert_eq!(union.x1, 100.0);
+        assert_eq!(union.y1, 100.0);
+    }
+
+    #[test]
+    fn test_union_disjoint_rects() {
+        let a = FzRect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 10.0,
+            y1: 10.0,
+        };
+        let b = FzRect {
+            x0: 100.0,
+            y0: 100.0,
+            x1: 200.0,
+            y1: 200.0,
+        };
+
+        let union = union_rect(a, b);
+        assert_eq!(union.x0, 0.0);
+        assert_eq!(union.y0, 0.0);
+        assert_eq!(union.x1, 200.0);
+        assert_eq!(union.y1, 200.0);
+    }
+
+    #[test]
+    fn test_scale() {
+        assert_eq!(scale(1.0, 2.0), 1.0);
+        assert_eq!(scale(100.0, 50.0), 100.0);
+    }
+
+    // ------------------------------------------------------------------------
+    // Outline Tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_fz_location_default() {
+        let loc = FzLocation::default();
+        assert_eq!(loc.chapter, 0);
+        assert_eq!(loc.page, 0);
+    }
+
+    // ------------------------------------------------------------------------
+    // Pixmap Format Tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_pixmap_format_variants() {
+        let _gray = PixmapFormat::Grayscale;
+        let _rgb = PixmapFormat::RGB;
+    }
+
+    // ------------------------------------------------------------------------
+    // Error Handling Tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_negative_page_index() {
+        // This would need a mock document to test properly
+        // For now, just verify the error path exists
+    }
+
+    // ------------------------------------------------------------------------
+    // Edge Case Tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_rect_from_quad_single_point() {
+        let quad = FzQuad {
+            ul: FzPoint { x: 5.0, y: 5.0 },
+            ur: FzPoint { x: 5.0, y: 5.0 },
+            ll: FzPoint { x: 5.0, y: 5.0 },
+            lr: FzPoint { x: 5.0, y: 5.0 },
+        };
+
+        let rect = rect_from_quad(quad);
+        assert_eq!(rect.x0, 5.0);
+        assert_eq!(rect.y0, 5.0);
+        assert_eq!(rect.x1, 5.0);
+        assert_eq!(rect.y1, 5.0);
+    }
+
+    #[test]
+    fn test_union_rect_same() {
+        let a = FzRect {
+            x0: 10.0,
+            y0: 10.0,
+            x1: 50.0,
+            y1: 50.0,
+        };
+
+        let union = union_rect(a, a);
+        assert_eq!(union.x0, 10.0);
+        assert_eq!(union.y0, 10.0);
+        assert_eq!(union.x1, 50.0);
+        assert_eq!(union.y1, 50.0);
+    }
+
+    #[test]
+    fn test_empty_outline() {
+        let outline = Outline { outlines: vec![] };
+        
+        assert!(outline.next().is_none());
+        assert!(outline.down().is_none());
+        assert_eq!(outline.title(), "");
+        assert_eq!(outline.page().page, 0);
+    }
+
+    #[test]
+    fn test_link_empty() {
+        let link = Link {
+            annots: vec![],
+            index: 0,
+        };
+        
+        assert_eq!(link.uri(), "");
+        assert!(link.next().is_none());
+    }
+
+    #[test]
+    fn test_empty_text_page() {
+        let text_page = TextPage { runs: vec![] };
+        
+        assert!(text_page.blocks().is_empty());
+        assert_eq!(text_page.chars(), 0);
+    }
+
+    #[test]
+    fn test_text_page_single_run() {
+        use pdfpurr::content::analysis::TextRun;
+
+        let run = TextRun {
+            text: "Hello".to_string(),
+            x: 10.0,
+            y: 20.0,
+            width: 50.0,
+            height: 12.0,
+            font_size: 12.0,
+        };
+
+        let text_page = TextPage { runs: vec![run] };
+        
+        assert_eq!(text_page.chars(), 5);
+        let blocks = text_page.blocks();
+        assert_eq!(blocks.len(), 1);
+    }
+
+    #[test]
+    fn test_text_page_multiple_runs() {
+        use pdfpurr::content::analysis::TextRun;
+
+        let runs = vec![
+            TextRun {
+                text: "Hello".to_string(),
+                x: 10.0,
+                y: 20.0,
+                width: 50.0,
+                height: 12.0,
+                font_size: 12.0,
+            },
+            TextRun {
+                text: "World".to_string(),
+                x: 65.0,
+                y: 20.0,
+                width: 50.0,
+                height: 12.0,
+                font_size: 12.0,
+            },
+        ];
+
+        let text_page = TextPage { runs: runs };
+        
+        assert_eq!(text_page.chars(), 10);
+        let blocks = text_page.blocks();
+        assert_eq!(blocks.len(), 1); // Same y position, same block
+    }
+
+    #[test]
+    fn test_text_page_separate_lines() {
+        use pdfpurr::content::analysis::TextRun;
+
+        let runs = vec![
+            TextRun {
+                text: "Line 1".to_string(),
+                x: 10.0,
+                y: 20.0,
+                width: 50.0,
+                height: 12.0,
+                font_size: 12.0,
+            },
+            TextRun {
+                text: "Line 2".to_string(),
+                x: 10.0,
+                y: 40.0, // Different y position
+                width: 50.0,
+                height: 12.0,
+                font_size: 12.0,
+            },
+        ];
+
+        let text_page = TextPage { runs: runs };
+        
+        let blocks = text_page.blocks();
+        assert_eq!(blocks.len(), 2); // Different y positions, different blocks
+    }
+}

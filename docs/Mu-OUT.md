@@ -343,12 +343,12 @@ This document outlines a comprehensive plan to replace MuPDF (C library) with PD
 
 1. Add PDFPurr dependency to `crates/core/Cargo.toml`
 
-   ```toml
-   [dependencies]
-   pdfpurr = "0.4"
-   tiny-skia = "0.12.0"
-   lopdf = "0.40.0"  # For missing manipulation features
-   ```
+    ```toml
+    [dependencies]
+    pdfpurr = "0.4"
+    tiny-skia = "0.12.0"
+    lopdf = "0.40.0"  # For missing manipulation features
+    ```
 
 2. Create PDFPurr wrapper module `crates/core/src/document/pdfpurr/`
    - `mod.rs` - Module exports
@@ -786,9 +786,9 @@ thirdparty/mupdf/ (entire directory after migration)
 ```toml
 [dependencies]
 pdfpurr = "0.4"
-tiny-skia = "0.11.4"
+tiny-skia = "0.12.0"
 # Existing dependencies retained:
-skrifa = "0.19.0"
+skrifa = "0.42.0"
 rustybuzz = "0.20"
 ab_glyph = "0.2"
 ```

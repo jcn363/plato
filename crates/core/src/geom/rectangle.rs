@@ -33,6 +33,15 @@ impl Rectangle {
 
     #[inline]
     #[must_use]
+    pub fn from_coords(x0: i32, y0: i32, x1: i32, y1: i32) -> Rectangle {
+        Rectangle {
+            min: Point::new(x0, y0),
+            max: Point::new(x1, y1),
+        }
+    }
+
+    #[inline]
+    #[must_use]
     pub fn from_point(pt: Point) -> Rectangle {
         Rectangle {
             min: pt,

@@ -14,6 +14,9 @@ mod grayscale;
 mod partial_refresh;
 mod waveform;
 
+#[cfg(test)]
+mod tests;
+
 pub use controller::{EInkController, SunxiController, MxcController};
 pub use damage_tracker::{DamageTracker, FrameBuffer};
 pub use ghosting::GhostingReducer;

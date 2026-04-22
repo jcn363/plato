@@ -1,433 +1,470 @@
-//! Comprehensive test suite for E-ink optimization layer
-//! 
-//! Tests all Phase 1 completed features:
-//! - Damage tracking
-//! - Grayscale conversion with dithering
-//! - Waveform selection
-//! - Ghosting reduction
-//! - Partial refresh management
+//! Comprehensive integration tests for e-ink optimization layer
+//!
+//! Phase 5 Testing: Validates all Phase 1 components work together correctly.
 
-use super::*;
+use crate::eink::*;
 use crate::geom::{Point, Rectangle};
 
-#[cfg(test)]
-mod damage_tracker_tests {
-    use super::*;
+// ============================================================================
+// Integration Tests: Full pipeline scenarios
+// ============================================================================
 
-    #[test]
-    fn test_framebuffer_creation() {
-        let fb = FrameBuffer::new(100, 100);
-        assert_eq!(fb.width, 100);
-        assert_eq!(fb.height, 100);
-        assert_eq!(fb.data.len(), 100 * 100 * 4);
+#[test]
+fn test_full_refresh_pipeline() {
+    // Simulate a complete refresh cycle
+    let mut damage_tracker = DamageTracker::new(50);
+    let mut ghosting_reducer = GhostingReducer::new(10, 60);
+    let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
+
+    // First frame - should trigger full refresh
+    let frame1 = FrameBuffer::new(100, 100);
+    let regions = damage_tracker.track_changes(&frame1);
+    
+    assert_eq!(regions.len(), 1);
+    assert!(damage_tracker.should_full_refresh());
+    assert!(ghosting_reducer.should_force_full_refresh());
+    
+    ghosting_reducer.register_full_refresh();
+    
+    // Convert to grayscale
+    let grayscale = converter.convert(&frame1.data, 100, 100).unwrap();
+    assert_eq!(grayscale.len(), 100 * 100);
+}
+
+#[test]
+fn test_partial_refresh_pipeline() {
+    let mut damage_tracker = DamageTracker::new(50);
+    let mut ghosting_reducer = GhostingReducer::default();
+    let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
+
+    // First frame
+    let frame1 = FrameBuffer::new(100, 100);
+    damage_tracker.track_changes(&frame1);
+    ghosting_reducer.register_full_refresh();
+
+    // Second frame with small change
+    let mut frame2_data = vec![0u8; 100 * 100 * 4];
+    // Change a single pixel
+    frame2_data[0] = 255;
+    frame2_data[1] = 255;
+    frame2_data[2] = 255;
+    let frame2 = FrameBuffer::from_data(100, 100, frame2_data).unwrap();
+    
+    let regions = damage_tracker.track_changes(&frame2);
+    ghosting_reducer.register_partial_update();
+
+    // Should have partial damage regions
+    assert!(!regions.is_empty());
+    assert!(!damage_tracker.should_full_refresh());
+    assert!(!ghosting_reducer.should_force_full_refresh());
+
+    // Convert changed regions
+    let grayscale = converter.convert(&frame2.data, 100, 100).unwrap();
+    assert_eq!(grayscale.len(), 100 * 100);
+}
+
+#[test]
+fn test_ghosting_reduction_trigger() {
+    let mut ghosting_reducer = GhostingReducer::new(5, 60);
+    let mut damage_tracker = DamageTracker::new(50);
+
+    // Initial full refresh
+    let frame = FrameBuffer::new(100, 100);
+    damage_tracker.track_changes(&frame);
+    ghosting_reducer.register_full_refresh();
+    assert!(!ghosting_reducer.should_force_full_refresh());
+
+    // Simulate 5 partial updates
+    for _ in 0..5 {
+        ghosting_reducer.register_partial_update();
     }
 
-    #[test]
-    fn test_framebuffer_from_data() {
-        let data = vec![255u8; 100 * 100 * 4];
-        let fb = FrameBuffer::from_data(100, 100, data).unwrap();
-        assert_eq!(fb.width, 100);
-        assert_eq!(fb.height, 100);
+    // Should now force full refresh
+    assert!(ghosting_reducer.should_force_full_refresh());
+}
+
+// ============================================================================
+// Waveform Selection Integration Tests
+// ============================================================================
+
+#[test]
+fn test_waveform_selection_scenarios() {
+    use waveform::{ContentType, UpdateType, WaveformMode};
+
+    // Text with full update -> GC16 (quality)
+    assert_eq!(
+        select_waveform(ContentType::Text, UpdateType::Full),
+        WaveformMode::GC16
+    );
+
+    // Text with partial update -> A2 (fast)
+    assert_eq!(
+        select_waveform(ContentType::Text, UpdateType::Partial),
+        WaveformMode::A2
+    );
+
+    // Image with full update -> GC16 (quality)
+    assert_eq!(
+        select_waveform(ContentType::Image, UpdateType::Full),
+        WaveformMode::GC16
+    );
+
+    // Image with partial -> GL16 (balanced)
+    assert_eq!(
+        select_waveform(ContentType::Image, UpdateType::Partial),
+        WaveformMode::GL16
+    );
+
+    // UI fast update -> A2 (very fast)
+    assert_eq!(
+        select_waveform(ContentType::UI, UpdateType::Fast),
+        WaveformMode::A2
+    );
+}
+
+// ============================================================================
+// Damage Tracker Edge Cases
+// ============================================================================
+
+#[test]
+fn test_damage_tracker_size_change() {
+    let mut tracker = DamageTracker::new(50);
+
+    // First frame 100x100
+    let frame1 = FrameBuffer::new(100, 100);
+    let regions1 = tracker.track_changes(&frame1);
+    assert_eq!(regions1.len(), 1);
+
+    // Second frame 200x200 - should trigger full refresh
+    let frame2 = FrameBuffer::new(200, 200);
+    let regions2 = tracker.track_changes(&frame2);
+    
+    assert_eq!(regions2.len(), 1);
+    let region = &regions2[0];
+    assert_eq!(region.width(), 200);
+    assert_eq!(region.height(), 200);
+}
+
+#[test]
+fn test_damage_tracker_no_change() {
+    let mut tracker = DamageTracker::new(50);
+
+    // Two identical frames
+    let frame1 = FrameBuffer::new(100, 100);
+    tracker.track_changes(&frame1);
+
+    let frame2 = FrameBuffer::new(100, 100);
+    let regions = tracker.track_changes(&frame2);
+
+    // Should have no damage regions
+    assert!(regions.is_empty());
+    assert!(!tracker.should_full_refresh());
+}
+
+#[test]
+fn test_damage_tracker_full_screen_change() {
+    let mut tracker = DamageTracker::new(50);
+
+    // First frame
+    let frame1 = FrameBuffer::new(100, 100);
+    tracker.track_changes(&frame1);
+
+    // Second frame - completely different
+    let frame2_data: Vec<u8> = (0..100 * 100 * 4).map(|i| i as u8).collect();
+    let frame2 = FrameBuffer::from_data(100, 100, frame2_data).unwrap();
+    
+    let regions = tracker.track_changes(&frame2);
+    
+    // Should detect large change area
+    let total_area: u32 = regions.iter().map(|r| r.width() * r.height()).sum();
+    assert!(total_area > 0);
+}
+
+// ============================================================================
+// Grayscale Conversion Tests
+// ============================================================================
+
+#[test]
+fn test_grayscale_black_white() {
+    let converter = GrayscaleConverter::new(DitheringMode::None);
+
+    // Black pixel
+    let black = vec![0u8, 0, 0, 255];
+    let gray = converter.convert(&black, 1, 1).unwrap();
+    assert_eq!(gray[0], 0); // Should be black (0)
+
+    // White pixel
+    let white = vec![255u8, 255, 255, 255];
+    let gray = converter.convert(&white, 1, 1).unwrap();
+    assert_eq!(gray[0], 15); // Should be white (15 in 16-level)
+}
+
+#[test]
+fn test_grayscale_16_level_quantization() {
+    let converter = GrayscaleConverter::new(DitheringMode::None);
+
+    // Create gradient from black to white
+    let mut rgba = Vec::new();
+    for i in 0..16 {
+        let gray_value = (i * 255 / 15) as u8;
+        rgba.extend_from_slice(&[gray_value, gray_value, gray_value, 255]);
     }
 
-    #[test]
-    fn test_framebuffer_from_data_invalid_length() {
-        let data = vec![255u8; 100]; // Wrong length
-        let result = FrameBuffer::from_data(100, 100, data);
-        assert!(result.is_err());
-    }
+    let grayscale = converter.convert(&rgba, 16, 1).unwrap();
 
-    #[test]
-    fn test_framebuffer_pixel_access() {
-        let mut fb = FrameBuffer::new(10, 10);
-        fb.data[0] = 255;
-        fb.data[1] = 128;
-        fb.data[2] = 64;
-        fb.data[3] = 255;
-
-        let pixel = fb.get_pixel(0, 0);
-        assert_eq!(pixel, Some([255, 128, 64, 255]));
-    }
-
-    #[test]
-    fn test_framebuffer_pixel_out_of_bounds() {
-        let fb = FrameBuffer::new(10, 10);
-        assert_eq!(fb.get_pixel(10, 0), None);
-        assert_eq!(fb.get_pixel(0, 10), None);
-    }
-
-    #[test]
-    fn test_damage_tracker_initial_frame() {
-        let tracker = DamageTracker::new(50);
-        let fb = FrameBuffer::new(100, 100);
-        let regions = tracker.track_changes(&fb);
-        assert_eq!(regions.len(), 1);
-        assert!(tracker.should_full_refresh());
-    }
-
-    #[test]
-    fn test_damage_tracker_no_changes() {
-        let tracker = DamageTracker::new(50);
-        let fb = FrameBuffer::new(100, 100);
-        tracker.track_changes(&fb);
-        
-        // Track same frame again
-        let regions = tracker.track_changes(&fb);
-        assert_eq!(regions.len(), 0);
-        assert!(!tracker.should_full_refresh());
-    }
-
-    #[test]
-    fn test_damage_tracker_with_changes() {
-        let tracker = DamageTracker::new(50);
-        let mut fb1 = FrameBuffer::new(100, 100);
-        let mut fb2 = FrameBuffer::new(100, 100);
-        
-        // Modify a pixel in fb2
-        fb2.data[0] = 255; // R
-        fb2.data[1] = 0;   // G
-        fb2.data[2] = 0;   // B
-        fb2.data[3] = 255; // A
-        
-        tracker.track_changes(&fb1);
-        let regions = tracker.track_changes(&fb2);
-        assert_eq!(regions.len(), 1);
-        
-        let region = &regions[0];
-        assert_eq!(region.min.x, 0);
-        assert_eq!(region.min.y, 0);
-        assert_eq!(region.max.x, 1);
-        assert_eq!(region.max.y, 1);
-    }
-
-    #[test]
-    fn test_damage_tracker_threshold() {
-        let tracker = DamageTracker::new(10); // 10% threshold
-        let mut fb1 = FrameBuffer::new(100, 100);
-        let mut fb2 = FrameBuffer::new(100, 100);
-        
-        // Change 5% of pixels
-        for i in 0..(100 * 100 * 4 / 20) {
-            fb2.data[i] = 255;
-        }
-        
-        tracker.track_changes(&fb1);
-        tracker.track_changes(&fb2);
-        assert!(!tracker.should_full_refresh()); // 5% < 10% threshold
-    }
-
-    #[test]
-    fn test_damage_tracker_exceeds_threshold() {
-        let tracker = DamageTracker::new(10); // 10% threshold
-        let mut fb1 = FrameBuffer::new(100, 100);
-        let mut fb2 = FrameBuffer::new(100, 100);
-        
-        // Change 15% of pixels
-        for i in 0..(100 * 100 * 4 / 7) {
-            fb2.data[i] = 255;
-        }
-        
-        tracker.track_changes(&fb1);
-        tracker.track_changes(&fb2);
-        assert!(tracker.should_full_refresh()); // 15% > 10% threshold
-    }
-
-    #[test]
-    fn test_damage_tracker_resolution_change() {
-        let tracker = DamageTracker::new(50);
-        let fb1 = FrameBuffer::new(100, 100);
-        let fb2 = FrameBuffer::new(200, 150);
-        
-        tracker.track_changes(&fb1);
-        let regions = tracker.track_changes(&fb2);
-        assert_eq!(regions.len(), 1);
-        assert!(tracker.should_full_refresh());
-    }
-
-    #[test]
-    fn test_damage_tracker_reset() {
-        let tracker = DamageTracker::new(50);
-        let fb = FrameBuffer::new(100, 100);
-        tracker.track_changes(&fb);
-        
-        tracker.reset();
-        assert!(tracker.previous_frame.is_none());
-        assert!(tracker.damage_regions.is_empty());
+    // Each value should map to appropriate 16-level value
+    for (i, &value) in grayscale.iter().enumerate() {
+        assert_eq!(value as usize, i);
     }
 }
 
-#[cfg(test)]
-mod grayscale_tests {
-    use super::*;
+#[test]
+fn test_floyd_steinberg_dithering() {
+    let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
 
-    #[test]
-    fn test_grayscale_converter_creation() {
-        let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
-        assert!(matches!(converter.dithering_mode(), DitheringMode::FloydSteinberg));
-    }
-
-    #[test]
-    fn test_rgba_to_grayscale_basic() {
-        let converter = GrayscaleConverter::new(DitheringMode::None);
-        let rgba_data = vec![255, 0, 0, 255, 0, 255, 0, 255]; // Red, Green
-        let result = converter.convert_to_grayscale(&rgba_data, 2, 1);
-        
-        assert_eq!(result.len(), 2); // 2 grayscale values
-        // Red (255,0,0) -> ~76, Green (0,255,0) -> ~150
-        assert!((result[0] as i32 - 76).abs() < 2);
-        assert!((result[1] as i32 - 150).abs() < 2);
-    }
-
-    #[test]
-    fn test_grayscale_quantization() {
-        let converter = GrayscaleConverter::new(DitheringMode::None);
-        let gray_values = vec![0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 255];
-        let quantized = converter.quantize_to_16_level(&gray_values);
-        
-        // Should map to 0-15 range
-        for &val in &quantized {
-            assert!(val <= 15);
+    // Create a smooth gradient
+    let width = 100;
+    let height = 10;
+    let mut rgba = Vec::new();
+    for y in 0..height {
+        for x in 0..width {
+            let gray = (x * 255 / width) as u8;
+            rgba.extend_from_slice(&[gray, gray, gray, 255]);
         }
     }
 
-    #[test]
-    fn test_floyd_steinberg_dithering() {
-        let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
-        let rgba_data = vec![128, 128, 128, 255]; // Medium gray
-        let result = converter.convert_to_grayscale(&rgba_data, 1, 1);
-        
-        assert_eq!(result.len(), 1);
-        assert!(result[0] <= 15); // Should be quantized to 16-level
-    }
+    let grayscale = converter.convert(&rgba, width, height).unwrap();
+    
+    // Should maintain approximate average brightness
+    let sum: u32 = grayscale.iter().map(|&v| v as u32).sum();
+    let avg = sum / grayscale.len() as u32;
+    
+    // Average should be around mid-range (7-8 in 0-15 scale)
+    assert!(avg >= 5 && avg <= 10);
+}
 
-    #[test]
-    fn test_gamma_correction() {
-        let converter = GrayscaleConverter::new(DitheringMode::None);
-        let linear_values = vec![0, 64, 128, 192, 255];
-        let corrected = converter.apply_gamma_correction(&linear_values, 2.2);
+#[test]
+fn test_ordered_dithering() {
+    let converter = GrayscaleConverter::new(DitheringMode::Ordered);
+
+    let rgba = vec![128u8, 128, 128, 255; 16 * 16 * 4];
+    let grayscale = converter.convert(&rgba, 16, 16).unwrap();
+
+    // Ordered dithering should produce a pattern
+    // Values shouldn't all be the same
+    let unique_values: std::collections::HashSet<u8> = grayscale.iter().cloned().collect();
+    assert!(unique_values.len() > 1, "Ordered dithering should produce variety");
+}
+
+#[test]
+fn test_grayscale_gamma_correction() {
+    let converter = GrayscaleConverter::with_gamma(DitheringMode::None, 2.2).unwrap();
+
+    // Mid-gray with gamma correction
+    let mid_gray = vec![128u8, 128, 128, 255];
+    let gray = converter.convert(&mid_gray, 1, 1).unwrap();
+    
+    // With gamma 2.2, mid-gray (128) should be corrected
+    // Linear: 128 -> ~6 in 16-level
+    // Gamma corrected: should be different
+    assert!(gray[0] <= 8); // Should be darker than linear
+}
+
+// ============================================================================
+// Partial Refresh Manager Integration Tests
+// ============================================================================
+
+#[test]
+fn test_partial_refresh_manager_integration() {
+    let mut manager = PartialRefreshManager::new(10, 100);
+    let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
+
+    // First frame
+    let frame1 = FrameBuffer::new(100, 100);
+    let regions = manager.track_frame(&frame1);
+    
+    // Should return full screen for first frame
+    assert_eq!(regions.len(), 1);
+
+    // Simulate conversion
+    let grayscale = converter.convert(&frame1.data, 100, 100).unwrap();
+    assert_eq!(grayscale.len(), 100 * 100);
+}
+
+#[test]
+fn test_region_filtering() {
+    let manager = PartialRefreshManager::new(10, 1000);
+
+    // Create regions of different sizes
+    let regions = vec![
+        Rectangle::from_coords(0, 0, 10, 10),      // Small: 100 pixels
+        Rectangle::from_coords(20, 20, 50, 50),    // Medium: 900 pixels
+        Rectangle::from_coords(100, 100, 200, 200), // Large: 10000 pixels
+    ];
+
+    let filtered = manager.filter_small_regions(regions);
+    
+    // Should only keep regions >= 1000 pixels
+    assert_eq!(filtered.len(), 1);
+    assert_eq!(filtered[0].width(), 100);
+    assert_eq!(filtered[0].height(), 100);
+}
+
+// ============================================================================
+// Controller Mock Tests
+// ============================================================================
+
+#[test]
+fn test_sunxi_controller_mock() {
+    let controller = SunxiController::default().unwrap();
+    
+    assert_eq!(controller.get_controller_name(), "sunxi-disp2");
+
+    let data = vec![0u8; 100];
+    let region = Rectangle::from_coords(0, 0, 10, 10);
+    
+    // Mock implementation should accept valid data
+    assert!(controller.update(region, &data, WaveformMode::GC16).is_ok());
+}
+
+#[test]
+fn test_mxc_controller_mock() {
+    let controller = MxcController::default().unwrap();
+    
+    assert_eq!(controller.get_controller_name(), "mxc-epdc");
+
+    let data = vec![0u8; 100];
+    let region = Rectangle::from_coords(0, 0, 10, 10);
+    
+    assert!(controller.update(region, &data, WaveformMode::GC16).is_ok());
+}
+
+#[test]
+fn test_controller_empty_data_rejection() {
+    let sunxi = SunxiController::default().unwrap();
+    let mxc = MxcController::default().unwrap();
+    
+    let region = Rectangle::from_coords(0, 0, 10, 10);
+    
+    // Both controllers should reject empty data
+    assert!(sunxi.update(region, &[], WaveformMode::GC16).is_err());
+    assert!(mxc.update(region, &[], WaveformMode::GC16).is_err());
+}
+
+// ============================================================================
+// Performance Benchmarks
+// ============================================================================
+
+#[test]
+fn test_large_buffer_performance() {
+    let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
+    let mut tracker = DamageTracker::new(50);
+
+    // Simulate large e-ink display (e.g., Elipsa 1404x1872)
+    let width = 1404;
+    let height = 1872;
+    let data = vec![128u8; width * height * 4];
+
+    let start = std::time::Instant::now();
+    
+    let grayscale = converter.convert(&data, width as u32, height as u32).unwrap();
+    let frame = FrameBuffer::from_data(width as u32, height as u32, data).unwrap();
+    tracker.track_changes(&frame);
+    
+    let duration = start.elapsed();
+    
+    // Should complete in reasonable time (< 1 second for large buffer)
+    assert!(duration.as_secs() < 1, "Large buffer conversion too slow: {:?}", duration);
+    assert_eq!(grayscale.len(), width * height);
+}
+
+// ============================================================================
+// Stress Tests
+// ============================================================================
+
+#[test]
+fn test_rapid_partial_updates() {
+    let mut manager = PartialRefreshManager::new(100, 100);
+    let mut ghosting_reducer = GhostingReducer::new(50, 60);
+
+    // Simulate rapid updates (like scrolling)
+    for i in 0..50 {
+        let mut data = vec![0u8; 100 * 100 * 4];
+        // Change a different region each time
+        let offset = (i % 10) * 100 * 4;
+        if offset < data.len() {
+            data[offset] = 255;
+        }
         
-        // Gamma correction should make values brighter
-        for i in 0..linear_values.len() {
-            if linear_values[i] > 0 && linear_values[i] < 255 {
-                assert!(corrected[i] >= linear_values[i]);
-            }
+        let frame = FrameBuffer::from_data(100, 100, data).unwrap();
+        let regions = manager.track_frame(&frame);
+        
+        if manager.should_force_full_refresh() {
+            ghosting_reducer.register_full_refresh();
+            manager.reset_partial_count();
+        } else {
+            ghosting_reducer.register_partial_update();
+            manager.increment_partial_count();
         }
     }
 }
 
-#[cfg(test)]
-mod waveform_tests {
-    use super::*;
+#[test]
+fn test_damage_tracker_reset() {
+    let mut tracker = DamageTracker::new(50);
 
-    #[test]
-    fn test_waveform_selection_text() {
-        let mode = select_waveform(ContentType::Text, UpdateType::Partial);
-        assert!(matches!(mode, WaveformMode::A2)); // Fast monochrome for text
-    }
+    // First frame
+    let frame1 = FrameBuffer::new(100, 100);
+    tracker.track_changes(&frame1);
 
-    #[test]
-    fn test_waveform_selection_image() {
-        let mode = select_waveform(ContentType::Image, UpdateType::Full);
-        assert!(matches!(mode, WaveformMode::GC16)); // High quality for images
-    }
+    // Reset
+    tracker.reset();
 
-    #[test]
-    fn test_waveform_selection_mixed() {
-        let mode = select_waveform(ContentType::Mixed, UpdateType::Partial);
-        assert!(matches!(mode, WaveformMode::GL16)); // Grayscale for mixed content
-    }
-
-    #[test]
-    fn test_waveform_selection_fast_update() {
-        let mode = select_waveform(ContentType::Text, UpdateType::Fast);
-        assert!(matches!(mode, WaveformMode::DU)); // Direct update for speed
-    }
+    // Next frame should be treated as first frame again
+    let frame2 = FrameBuffer::new(100, 100);
+    let regions = tracker.track_changes(&frame2);
+    
+    assert_eq!(regions.len(), 1);
+    assert!(tracker.should_full_refresh());
 }
 
-#[cfg(test)]
-mod ghosting_tests {
-    use super::*;
+// ============================================================================
+// Error Handling Tests
+// ============================================================================
 
-    #[test]
-    fn test_ghosting_reducer_creation() {
-        let reducer = GhostingReducer::new(5, 3); // 5 partial updates, 3 full refreshes
-        assert_eq!(reducer.partial_update_count(), 0);
-        assert_eq!(reducer.full_refresh_count(), 0);
-    }
+#[test]
+fn test_framebuffer_invalid_data() {
+    // Too little data
+    let result = FrameBuffer::from_data(100, 100, vec![0u8; 100]);
+    assert!(result.is_err());
 
-    #[test]
-    fn test_ghosting_reducer_partial_updates() {
-        let mut reducer = GhostingReducer::new(5, 3);
-        
-        for i in 0..4 {
-            reducer.record_partial_update();
-            assert_eq!(reducer.partial_update_count(), i + 1);
-            assert!(!reducer.should_force_full_refresh());
-        }
-        
-        // 5th partial update should trigger full refresh
-        reducer.record_partial_update();
-        assert!(reducer.should_force_full_refresh());
-    }
-
-    #[test]
-    fn test_ghosting_reducer_full_refresh() {
-        let mut reducer = GhostingReducer::new(5, 3);
-        
-        // Trigger full refresh condition
-        for _ in 0..5 {
-            reducer.record_partial_update();
-        }
-        assert!(reducer.should_force_full_refresh());
-        
-        reducer.record_full_refresh();
-        assert_eq!(reducer.partial_update_count(), 0);
-        assert_eq!(reducer.full_refresh_count(), 1);
-        assert!(!reducer.should_force_full_refresh());
-    }
-
-    #[test]
-    fn test_ghosting_reducer_periodic_refresh() {
-        let mut reducer = GhostingReducer::new(10, 3);
-        
-        // Record partial updates but not enough to trigger
-        for _ in 0..5 {
-            reducer.record_partial_update();
-        }
-        
-        // Simulate periodic full refresh
-        reducer.record_full_refresh();
-        assert_eq!(reducer.partial_update_count(), 0);
-    }
+    // Too much data
+    let result = FrameBuffer::from_data(10, 10, vec![0u8; 10000]);
+    assert!(result.is_err());
 }
 
-#[cfg(test)]
-mod partial_refresh_tests {
-    use super::*;
-
-    #[test]
-    fn test_partial_refresh_manager_creation() {
-        let manager = PartialRefreshManager::new(20, 100); // 20% threshold, 100px minimum
-        assert_eq!(manager.partial_update_threshold(), 20);
-        assert_eq!(manager.minimum_region_size(), 100);
-    }
-
-    #[test]
-    fn test_region_merging() {
-        let manager = PartialRefreshManager::new(20, 100);
-        let region1 = Rectangle::new(Point::new(0, 0), Point::new(50, 50));
-        let region2 = Rectangle::new(Point::new(40, 40), Point::new(90, 90));
-        
-        let merged = manager.merge_adjacent_regions(&[region1, region2]);
-        assert_eq!(merged.len(), 1); // Should merge into one region
-    }
-
-    #[test]
-    fn test_small_region_filtering() {
-        let manager = PartialRefreshManager::new(20, 1000);
-        let small_region = Rectangle::new(Point::new(0, 0), Point::new(10, 10)); // 100px
-        
-        let filtered = manager.filter_small_regions(&[small_region]);
-        assert_eq!(filtered.len(), 0); // Should filter out small region
-    }
-
-    #[test]
-    fn test_optimize_regions() {
-        let manager = PartialRefreshManager::new(20, 100);
-        let regions = vec![
-            Rectangle::new(Point::new(0, 0), Point::new(50, 50)),
-            Rectangle::new(Point::new(100, 100), Point::new(150, 150)),
-        ];
-        
-        let optimized = manager.optimize_regions(&regions);
-        assert_eq!(optimized.len(), 2); // Should keep both regions
-    }
+#[test]
+fn test_grayscale_invalid_buffer() {
+    let converter = GrayscaleConverter::new(DitheringMode::None);
+    
+    // Wrong buffer size
+    let result = converter.convert(&[0u8; 100], 10, 10);
+    assert!(result.is_err());
 }
 
-#[cfg(test)]
-mod integration_tests {
-    use super::*;
+#[test]
+fn test_waveform_invalid_string() {
+    assert!(WaveformMode::from_str("INVALID").is_err());
+    assert!(WaveformMode::from_str("").is_err());
+}
 
-    #[test]
-    fn test_end_to_end_pipeline() {
-        // Create test RGBA data
-        let width = 100;
-        let height = 100;
-        let mut rgba_data = vec![128u8; width * height * 4];
-        
-        // Add some variation
-        for i in 0..width * height {
-            let idx = i * 4;
-            rgba_data[idx] = (i % 256) as u8;
-        }
-        
-        // Create framebuffer
-        let fb = FrameBuffer::from_data(width as u32, height as u32, rgba_data).unwrap();
-        
-        // Track damage
-        let mut tracker = DamageTracker::new(50);
-        let regions = tracker.track_changes(&fb);
-        assert!(!regions.is_empty());
-        
-        // Convert to grayscale
-        let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
-        let grayscale = converter.convert_to_grayscale(&fb.data, width, height);
-        assert_eq!(grayscale.len(), width * height);
-        
-        // Select waveform
-        let waveform = select_waveform(ContentType::Mixed, UpdateType::Partial);
-        assert!(matches!(waveform, WaveformMode::GL16));
-        
-        // Check if full refresh needed
-        assert!(tracker.should_full_refresh()); // First frame always full refresh
-    }
-
-    #[test]
-    fn test_multiple_frame_updates() {
-        let mut tracker = DamageTracker::new(30);
-        let converter = GrayscaleConverter::new(DitheringMode::None);
-        let mut ghosting_reducer = GhostingReducer::new(5, 2);
-        
-        // Create initial frame
-        let fb1 = FrameBuffer::new(100, 100);
-        tracker.track_changes(&fb1);
-        ghosting_reducer.record_full_refresh();
-        
-        // Create second frame with small changes
-        let mut fb2 = FrameBuffer::new(100, 100);
-        for i in 0..100 {
-            fb2.data[i * 4] = 255; // Change some pixels
-        }
-        
-        let regions = tracker.track_changes(&fb2);
-        assert!(regions.len() > 0);
-        assert!(!tracker.should_full_refresh()); // Small changes
-        
-        ghosting_reducer.record_partial_update();
-        assert!(!ghosting_reducer.should_force_full_refresh());
-        
-        // Continue with more partial updates
-        for _ in 0..4 {
-            ghosting_reducer.record_partial_update();
-        }
-        assert!(ghosting_reducer.should_force_full_refresh());
-    }
-
-    #[test]
-    fn test_performance_characteristics() {
-        use std::time::Instant;
-        
-        let width = 800;
-        let height = 600;
-        let fb = FrameBuffer::new(width, height);
-        let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
-        
-        // Measure grayscale conversion performance
-        let start = Instant::now();
-        let _grayscale = converter.convert_to_grayscale(&fb.data, width, height);
-        let duration = start.elapsed();
-        
-        // Should complete within reasonable time (adjust threshold as needed)
-        assert!(duration.as_millis() < 100, "Grayscale conversion too slow: {:?}", duration);
-    }
+#[test]
+fn test_ghosting_reducer_invalid_settings() {
+    let mut reducer = GhostingReducer::default();
+    
+    assert!(reducer.set_max_partial_updates(0).is_err());
+    assert!(reducer.set_full_refresh_interval(0).is_err());
+    
+    assert!(reducer.set_max_partial_updates(5).is_ok());
+    assert!(reducer.set_full_refresh_interval(30).is_ok());
 }

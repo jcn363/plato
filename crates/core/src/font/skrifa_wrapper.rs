@@ -173,7 +173,7 @@ impl Face {
 
         let hmtx = font.hmtx().ok();
         let advance_width = hmtx
-            .and_then(|h| h.advance(GlyphId::new(glyph_id as u16)))
+            .and_then(|h| h.advance(GlyphId::new(glyph_id as u32)))
             .unwrap_or(0) as i32;
 
         Ok(GlyphMetrics {
