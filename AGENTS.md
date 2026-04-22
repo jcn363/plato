@@ -474,6 +474,17 @@ Plato uses a target-to-library directory convention to separate native shared li
 
 The `get_lib_dir()` function in `build.sh` is the canonical source of truth for this mapping and is used by build and packaging scripts to resolve the correct library directory for each target.
 
+### iOS Library Separation
+
+**Mandatory rule:** Keep iOS device and simulator libraries separate to avoid lipo architecture conflicts.
+
+- **Device libraries:** `target/{lib}/iOS-device/lib/` for ARM64 iOS devices
+- **Simulator libraries:** `target/{lib}/iOS-simulator/lib/` for universal simulator libraries (ARM64 + x86_64)
+- **Never combine device and simulator ARM64** in the same fat binary using `lipo` - they have the same architecture
+- Use `lipo` only to combine different simulator architectures (ARM64 + x86_64) for universal simulator libraries
+- Device libraries should be copied directly without lipo combination
+- This pattern applies to all iOS native libraries: mupdf, mupdf_wrapper, and third-party dependencies
+
 ## Stub and Hardware Limitation Documentation
 
 **Mandatory rule:** Document all stub implementations and unsupported features.
