@@ -46,7 +46,6 @@ uuid = { version = "1.11", features = ["v4", "serde"] }
 reqwest = { version = "0.13.2", default-features = false, features = ["blocking", "json", "rustls"] }
 quick-xml = "0.39.2"
 epub_edit = { path = "../epub_edit" }
-crossbeam-channel = "0.5.15"
 lru = "0.17.0"
 dashmap = "6.1.0"
 
