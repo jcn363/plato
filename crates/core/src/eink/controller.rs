@@ -119,14 +119,14 @@ impl EInkController for SunxiController {
             anyhow::bail!("Data cannot be empty for update");
         }
 
-        // TODO: Implement actual DISP_EINK_UPDATE2 ioctl
-        // This is a placeholder for the actual implementation
-        Ok(())
+        // Hardware-specific DISP_EINK_UPDATE2 ioctl requires actual device access
+        // This implementation is a placeholder for future hardware integration
+        anyhow::bail!("DISP_EINK_UPDATE2 ioctl not implemented: requires actual Sunxi e-ink hardware access");
     }
 
     fn full_refresh(&self) -> Result<()> {
-        // TODO: Implement full refresh via ioctl
-        Ok(())
+        // Hardware-specific full refresh requires actual device access
+        anyhow::bail!("Full refresh ioctl not implemented: requires actual Sunxi e-ink hardware access");
     }
 
     fn set_waveform_lut(&self, lut: &[u8]) -> Result<()> {
@@ -134,8 +134,8 @@ impl EInkController for SunxiController {
             anyhow::bail!("Waveform LUT cannot be empty");
         }
 
-        // TODO: Implement waveform LUT programming
-        Ok(())
+        // Hardware-specific waveform LUT programming requires actual device access
+        anyhow::bail!("Waveform LUT programming not implemented: requires actual Sunxi e-ink hardware access");
     }
 
     fn get_controller_name(&self) -> &str {
@@ -168,14 +168,13 @@ impl EInkController for MxcController {
             anyhow::bail!("Data cannot be empty for update");
         }
 
-        // TODO: Implement actual MXCFB_SEND_UPDATE ioctl
-        // This is a placeholder for the actual implementation
-        Ok(())
+        // Hardware-specific MXCFB_SEND_UPDATE ioctl requires actual device access
+        anyhow::bail!("MXCFB_SEND_UPDATE ioctl not implemented: requires actual MXC e-ink hardware access");
     }
 
     fn full_refresh(&self) -> Result<()> {
-        // TODO: Implement full refresh via ioctl
-        Ok(())
+        // Hardware-specific full refresh requires actual device access
+        anyhow::bail!("Full refresh ioctl not implemented: requires actual MXC e-ink hardware access");
     }
 
     fn set_waveform_lut(&self, lut: &[u8]) -> Result<()> {
@@ -183,8 +182,8 @@ impl EInkController for MxcController {
             anyhow::bail!("Waveform LUT cannot be empty");
         }
 
-        // TODO: Implement EPDC waveform programming
-        Ok(())
+        // Hardware-specific EPDC waveform programming requires actual device access
+        anyhow::bail!("EPDC waveform programming not implemented: requires actual MXC e-ink hardware access");
     }
 
     fn get_controller_name(&self) -> &str {

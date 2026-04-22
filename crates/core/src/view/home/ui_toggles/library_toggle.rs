@@ -163,6 +163,8 @@ impl Home {
             _visible: self.library_menu.is_some(),
             _active: self.focus == Some(ViewId::LibraryMenu),
             config: LibraryToggleConfig::default(),
+            filter_format: None,
+            filter_category: None,
         }
     }
 
@@ -349,10 +351,6 @@ impl Home {
         let notif = Notification::new(msg, hub, rq, context);
         self.children.push(Box::new(notif) as Box<dyn View>);
 
-        // Update library view to show filtered results
-        // TODO: this would update the shelf view's filter state
-        // For now, we show the notification with the count
-
         // Trigger library refresh to apply visual filter
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
@@ -367,14 +365,24 @@ impl Home {
     ) {
         use crate::view::notification::Notification;
 
-        // Category filtering would require metadata tags
-        // For now, show a notification that filter was applied
-        let msg = format!("Category filter: {} (metadata-based filtering)", category);
+        // Count books matching the category from metadata
+        let count = context
+            .library
+            .iter()
+            .filter(|(_, info)| {
+                info.categories
+                    .iter()
+                    .any(|c| c.to_lowercase() == category.to_lowercase())
+            })
+            .count();
+
+        let msg = format!(
+            "Category filter: {} ({} books)",
+            category,
+            count
+        );
         let notif = Notification::new(msg, hub, rq, context);
         self.children.push(Box::new(notif) as Box<dyn View>);
-
-        // TODO: this would filter by tags/categories from metadata
-        // For now, we acknowledge the filter request
 
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }

@@ -323,19 +323,19 @@ Max: 30MB, 500 pages. Keep battery charged."
                 self.manipulator.delete_pages(file_path, &output, &pages)
             }
             "rotate90_all" => {
-                let pages: Vec<_> = (0..10).map(|i| (i, 90)).collect();
+                let pages: Vec<usize> = (1..=10).collect();
                 let output = file_path.with_extension("rotated.pdf");
-                self.manipulator.rotate_pages(file_path, &output, &pages)
+                self.manipulator.rotate_pages(file_path, &output, &pages, 90)
             }
             "rotate180_all" => {
-                let pages: Vec<_> = (0..10).map(|i| (i, 180)).collect();
+                let pages: Vec<usize> = (1..=10).collect();
                 let output = file_path.with_extension("rotated.pdf");
-                self.manipulator.rotate_pages(file_path, &output, &pages)
+                self.manipulator.rotate_pages(file_path, &output, &pages, 180)
             }
             "rotate270_all" => {
-                let pages: Vec<_> = (0..10).map(|i| (i, 270)).collect();
+                let pages: Vec<usize> = (1..=10).collect();
                 let output = file_path.with_extension("rotated.pdf");
-                self.manipulator.rotate_pages(file_path, &output, &pages)
+                self.manipulator.rotate_pages(file_path, &output, &pages, 270)
             }
             "extract" => {
                 bus.push_back(Event::Render("Select pages first".to_string()));

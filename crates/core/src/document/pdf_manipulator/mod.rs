@@ -541,28 +541,4 @@ impl PdfManipulator {
         }
         Ok(())
     }
-
-    fn _merge_documents(
-        &mut self,
-        _inputs: &[&Path],
-        _new_doc: &(),
-    ) -> Result<(), Error> {
-        // TODO: Implement using lopdf for PDF manipulation
-        log_warn!("merge_documents not yet implemented with PDFPurr/lopdf");
-        Ok(())
-    }
-
-    fn _add_document_pages(&mut self, _doc: &(), _new_doc: &()) {
-        // TODO: Implement using lopdf for PDF manipulation
-    }
-
-    fn _save_merged_document(
-        &mut self,
-        _new_doc: &(),
-        _output_path: &Path,
-        total: usize,
-    ) -> Result<(), Error> {
-        self._report_progress(total, total, "Merge complete!");
-        Ok(())
-    }
 }

@@ -128,10 +128,35 @@ impl PdfAnnotationExporter {
         if let Some(page_id) = page_ids.get(page_index) {
             let page_dict = doc.get_object(**page_id).unwrap().as_dict().unwrap();
 
-            // Check if annotations exist
-            if page_dict.get(b"Annots").is_ok() {
-                log_info!("Found annotations on page {}", annot.page + 1);
-                // TODO: we would copy specific annotations
+            // Check if annotations exist and copy them
+            if let Ok(annot_ref) = page_dict.get(b"Annots") {
+                if let Ok(annot_array) = annot_ref.as_array() {
+                    log_info!("Found {} annotations on page {}", annot_array.len(), annot.page + 1);
+                    
+                    // Copy annotations to the output document
+                    let mut output_doc = Document::load(&self.file_path)
+                        .map_err(|e| format_err!("Failed to load output PDF with lopdf: {}", e))?;
+                    
+                    let output_pages_map = output_doc.get_pages();
+                    let output_page_ids: Vec<_> = output_pages_map.values().collect();
+                    
+                    if page_index < output_page_ids.len() {
+                        let output_page_id = output_page_ids.get(page_index).unwrap();
+                        let output_page_dict = output_doc.get_object_mut(**output_page_id).unwrap().as_dict_mut().unwrap();
+                        
+                        // Add annotations to output page
+                        output_page_dict.set("Annots", annot_ref.clone());
+                        
+                        // Save the modified document
+                        let mut buffer = std::io::Cursor::new(Vec::new());
+                        output_doc.save_to(&mut buffer)
+                            .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
+                        let bytes = buffer.into_inner();
+                        
+                        std::fs::write(&self.file_path, bytes)
+                            .map_err(|e| format_err!("Failed to write output file: {}", e))?;
+                    }
+                }
             }
         }
 

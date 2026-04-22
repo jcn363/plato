@@ -272,6 +272,11 @@ fn test_partial_refresh_single_region() {
             fb2.data[idx] = 255;
         }
     }
+    
+    // Verify the data was actually changed
+    println!("fb1 pixel at (0,0): {:?}", fb1.get_pixel(0, 0));
+    println!("fb2 pixel at (0,0): {:?}", fb2.get_pixel(0, 0));
+    println!("fb1.data[0] = {}, fb2.data[0] = {}", fb1.data[0], fb2.data[0]);
 
     let regions1 = manager.track_frame(&fb1);
     println!("First frame regions: {:?}", regions1);

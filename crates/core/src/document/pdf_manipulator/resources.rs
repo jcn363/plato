@@ -5,7 +5,7 @@
 //!
 //! Implemented using lopdf for PDF manipulation
 
-use crate::{log_info, log_warn};
+use crate::log_info;
 use anyhow::{format_err, Error};
 use lopdf::Document;
 use std::path::{Path, PathBuf};
@@ -193,18 +193,32 @@ impl ResourceExtractor {
         Ok(font_count)
     }
 
-    /// Extract text from a page (placeholder - use Plato's built-in text selection)
+    /// Extract text from a page using PDFPurr
     pub fn extract_text_from_page(&self, page_num: usize) -> Result<String, Error> {
         if page_num >= self.total_pages {
             return Err(format_err!("Page {} does not exist", page_num + 1));
         }
 
-        // TODO: Implement using PDFPurr text extraction
-        log_warn!("extract_text_from_page not yet implemented with PDFPurr");
-        Ok(format!(
-            "Text extraction for page {} - use Plato's built-in text selection",
-            page_num + 1
-        ))
+        log_info!("Extracting text from page {}", page_num + 1);
+
+        let doc = super::super::pdfpurr::Document::open(&self._file_path)
+            .map_err(|e| format_err!("Failed to open PDF: {}", e))?;
+
+        let page = doc.load_page(page_num as i32)
+            .map_err(|e| format_err!("Failed to get page {}: {}", page_num + 1, e))?;
+
+        let text_page = page.to_text_page(None)
+            .ok_or_else(|| format_err!("Failed to extract text from page {}", page_num + 1))?;
+
+        let text: String = text_page.blocks()
+            .iter()
+            .flat_map(|block| block.lines())
+            .flat_map(|line| line.chars())
+            .map(|c| char::from_u32(c.char_code as u32).unwrap_or(char::REPLACEMENT_CHARACTER))
+            .collect();
+
+        log_info!("Extracted {} characters from page {}", text.len(), page_num + 1);
+        Ok(text)
     }
 
     /// Get a summary of all resources in the PDF

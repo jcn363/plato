@@ -127,7 +127,7 @@ pub mod menu_helpers;
 pub mod named_input;
 pub mod notification;
 pub mod page_label;
-// pub mod pdf_manipulator; // TODO: Migrate to PDFPurr API (document/pdf_manipulator is commented out)
+pub mod pdf_manipulator;
 pub mod preset;
 pub mod presets_list;
 pub mod reader;
