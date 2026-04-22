@@ -601,11 +601,36 @@ This section documents key performance decisions for the Plato codebase, particu
 - **Shared ownership**: Use `Rc` for shared MuPDF contexts, `Arc` for document references
 - **Cow\<str\>**: Use for conditional string ownership to avoid unnecessary clones
 
+### Stack Overflow Prevention
+
+- **Large arrays on heap**: Move large temporary arrays to the heap using `Box<[u8; N]>` or `Vec<u8>`
+- **Apply to**: Image buffers, glyph outlines, and processing pipelines
+- **Memory Management**: Implement proper `Drop` traits for heap-allocated data
+- **Error Handling**: Return `anyhow::Error` for allocation failures with context
+
 ### Battery Optimization
 
-- **Event-driven I/O**: Use `poll()` instead of busy loops for input handling
-- **State caching**: Cache battery and frontlight states to avoid redundant file I/O
-- **E-ink refresh modes**: Use appropriate `UpdateMode` (Gui, Partial, Full) based on content change
+#### Event-Driven I/O
+
+- Replace polling loops with `poll()`/`epoll`-style waiting for input events
+- Use existing input event system; ensure no busy-wait in UI loops
+- **Input Validation**: Validate all input events before processing
+- **Error Handling**: Use `anyhow::Result` for I/O operations with context
+
+#### State Caching
+
+- Cache battery level, frontlight settings, and device orientation
+- Implement cache invalidation on known change events
+- **Configuration**: Define cache TTL and invalidation strategies in config
+- **Validation**: Validate cached values before use
+
+#### E-Ink Update Modes
+
+- Use `UpdateMode::Partial` for small UI changes
+- Use `UpdateMode::Gui` for glyphs and text rendering
+- Reserve `UpdateMode::Full` for full-screen refreshes only
+- **Dirty Region Tracking**: Implement efficient dirty region calculation
+- **Validation**: Validate update mode parameters and constraints
 
 ### Not Recommended Optimizations
 
