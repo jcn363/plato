@@ -1,5 +1,5 @@
 //! Buffer reuse pools for temporary work
-//! 
+//!
 //! This module provides thread-local buffer pools to reduce allocations
 //! for thumbnail generation and document parsing.
 
@@ -18,10 +18,11 @@ pub fn with_thumbnail_buffer<F, R>(f: F) -> R
 where
     F: FnOnce(&mut Vec<u8>) -> R,
 {
-    let mut buffer = THUMBNAIL_BUFFER.lock().expect("THUMBNAIL_BUFFER lock poisoned");
+    let mut buffer = THUMBNAIL_BUFFER
+        .lock()
+        .expect("THUMBNAIL_BUFFER lock poisoned");
     buffer.clear();
-    let result = f(&mut buffer);
-    result
+    f(&mut buffer)
 }
 
 /// Get a document buffer from the pool
@@ -29,8 +30,9 @@ pub fn with_document_buffer<F, R>(f: F) -> R
 where
     F: FnOnce(&mut Vec<u8>) -> R,
 {
-    let mut buffer = DOCUMENT_BUFFER.lock().expect("DOCUMENT_BUFFER lock poisoned");
+    let mut buffer = DOCUMENT_BUFFER
+        .lock()
+        .expect("DOCUMENT_BUFFER lock poisoned");
     buffer.clear();
-    let result = f(&mut buffer);
-    result
+    f(&mut buffer)
 }

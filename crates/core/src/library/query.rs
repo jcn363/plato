@@ -26,10 +26,12 @@ impl Library {
 
             // Calculate similarity scores
             let title_distance = levenshtein(&query_lower, &title_lower);
-            let title_similarity = 1.0 - (title_distance as f64 / query_lower.len().max(title_lower.len()) as f64);
+            let title_similarity =
+                1.0 - (title_distance as f64 / query_lower.len().max(title_lower.len()) as f64);
 
             let author_distance = levenshtein(&query_lower, &author_lower);
-            let author_similarity = 1.0 - (author_distance as f64 / query_lower.len().max(author_lower.len()) as f64);
+            let author_similarity =
+                1.0 - (author_distance as f64 / query_lower.len().max(author_lower.len()) as f64);
 
             // Use the higher similarity score
             let max_similarity = title_similarity.max(author_similarity);

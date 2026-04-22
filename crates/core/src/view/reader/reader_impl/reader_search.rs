@@ -29,17 +29,18 @@ pub(crate) fn create_search_menu(
 ) -> Menu {
     use crate::view::ViewId;
 
-    let mut entries = Vec::with_capacity(2);
-    entries.push(EntryKind::RadioButton(
-        "Forward".to_string(),
-        EntryId::SearchDirection(LinearDir::Forward),
-        search_direction == LinearDir::Forward,
-    ));
-    entries.push(EntryKind::RadioButton(
-        "Backward".to_string(),
-        EntryId::SearchDirection(LinearDir::Backward),
-        search_direction == LinearDir::Backward,
-    ));
+    let entries = vec![
+        EntryKind::RadioButton(
+            "Forward".to_string(),
+            EntryId::SearchDirection(LinearDir::Forward),
+            search_direction == LinearDir::Forward,
+        ),
+        EntryKind::RadioButton(
+            "Backward".to_string(),
+            EntryId::SearchDirection(LinearDir::Backward),
+            search_direction == LinearDir::Backward,
+        ),
+    ];
 
     Menu::new(
         rect,

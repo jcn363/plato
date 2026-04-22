@@ -241,10 +241,9 @@ impl Info {
         }
 
         // Check if any modifications are needed
-        let needs_modification = 
-            (!self.number.is_empty() && self.series.is_empty()) ||
-            !self.volume.is_empty() ||
-            !self.subtitle.is_empty();
+        let needs_modification = (!self.number.is_empty() && self.series.is_empty())
+            || !self.volume.is_empty()
+            || !self.subtitle.is_empty();
 
         if !needs_modification {
             return Cow::Borrowed(&self.title);

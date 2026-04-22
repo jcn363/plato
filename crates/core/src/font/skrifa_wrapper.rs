@@ -187,7 +187,7 @@ impl Face {
     }
 
     /// Render a glyph outline to a bitmap.
-    /// 
+    ///
     /// Note: Actual glyph rasterization is handled by the document rendering system
     /// (e.g., MuPDF for PDFs, HTML rendering engine for HTML). This wrapper provides
     /// metrics and glyph information, but not actual bitmap rendering.

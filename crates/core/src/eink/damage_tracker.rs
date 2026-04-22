@@ -3,8 +3,8 @@
 //! Tracks which regions of the display have changed between renders
 //! to enable efficient partial updates.
 
-use anyhow::Result;
 use crate::geom::Rectangle;
+use anyhow::Result;
 
 /// Frame buffer representing RGBA pixel data
 #[derive(Debug, Clone)]
@@ -17,7 +17,11 @@ pub struct FrameBuffer {
 impl FrameBuffer {
     pub fn new(width: u32, height: u32) -> Self {
         let data = vec![0; (width * height * 4) as usize];
-        Self { width, height, data }
+        Self {
+            width,
+            height,
+            data,
+        }
     }
 
     pub fn from_data(width: u32, height: u32, data: Vec<u8>) -> Result<Self> {
@@ -31,7 +35,11 @@ impl FrameBuffer {
                 height
             );
         }
-        Ok(Self { width, height, data })
+        Ok(Self {
+            width,
+            height,
+            data,
+        })
     }
 
     #[inline]
@@ -148,7 +156,7 @@ impl DamageTracker {
         regions.sort_by(|a, b| a.min.y.cmp(&b.min.y).then(a.min.x.cmp(&b.min.x)));
 
         while let Some(current) = regions.pop() {
-            let mut merged_rect = current.clone();
+            let mut merged_rect = current;
 
             regions.retain(|other| {
                 if Self::rects_adjacent_or_overlap(&merged_rect, other) {
@@ -177,7 +185,7 @@ impl DamageTracker {
         let adjacent_x = (a.max.x - b.min.x).abs() <= margin || (b.max.x - a.min.x).abs() <= margin;
         let adjacent_y = (a.max.y - b.min.y).abs() <= margin || (b.max.y - a.min.y).abs() <= margin;
 
-        overlap_x && overlap_y || (overlap_x && adjacent_y) || (overlap_y && adjacent_x)
+        (adjacent_y || overlap_y) && overlap_x || (overlap_y && adjacent_x)
     }
 
     /// Merge two rectangles into their bounding box

@@ -40,11 +40,13 @@ pub fn decode_jbig2(data: &[u8]) -> Result<image::DynamicImage, Error> {
     if data.is_empty() {
         return Err(Error::msg("JBIG2 data is empty"));
     }
-    
+
     // Decode JBIG2 using hayro-jbig2
     // This is a placeholder - full implementation would use hayro_jbig2::decode
     // For now, we return an error indicating this needs implementation
-    Err(Error::msg("JBIG2 decoding not yet implemented - requires hayro-jbig2 integration"))
+    Err(Error::msg(
+        "JBIG2 decoding not yet implemented - requires hayro-jbig2 integration",
+    ))
 }
 
 /// Check if data is JBIG2 format

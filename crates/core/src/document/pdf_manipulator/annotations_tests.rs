@@ -9,7 +9,7 @@ use std::path::PathBuf;
 #[test]
 fn test_annotation_creation() {
     let annot = PdfAnnotation::new(0, AnnotationSubtype::Highlight, "Test note".to_string());
-    
+
     assert_eq!(annot.page, 0);
     assert_eq!(annot.subtype, AnnotationSubtype::Highlight);
     assert_eq!(annot.contents, "Test note");
@@ -24,12 +24,12 @@ fn test_annotation_creation() {
 fn test_annotation_touch() {
     let mut annot = PdfAnnotation::new(0, AnnotationSubtype::Text, "Test".to_string());
     let original_time = annot.modified_at;
-    
+
     // Small delay to ensure time difference
     std::thread::sleep(std::time::Duration::from_millis(10));
-    
+
     annot.touch();
-    
+
     assert!(annot.modified_at > original_time);
 }
 
@@ -39,7 +39,7 @@ fn test_annotation_query_builder() {
         .with_subtype(AnnotationSubtype::Highlight)
         .with_text("search term".to_string())
         .with_page(5);
-    
+
     assert_eq!(query.subtype, Some(AnnotationSubtype::Highlight));
     assert_eq!(query.text, Some("search term".to_string()));
     assert_eq!(query.page, Some(5));
@@ -48,31 +48,35 @@ fn test_annotation_query_builder() {
 #[test]
 fn test_annotation_matching() {
     let now = Utc::now();
-    let mut annot = PdfAnnotation::new(0, AnnotationSubtype::Highlight, "Important note".to_string());
+    let mut annot = PdfAnnotation::new(
+        0,
+        AnnotationSubtype::Highlight,
+        "Important note".to_string(),
+    );
     annot.author = Some("John Doe".to_string());
     annot.subject = Some("Review".to_string());
-    
+
     // Test subtype match
     let query = AnnotationQuery::new().with_subtype(AnnotationSubtype::Highlight);
     assert!(annot.matches(&query));
-    
+
     let query = AnnotationQuery::new().with_subtype(AnnotationSubtype::Text);
     assert!(!annot.matches(&query));
-    
+
     // Test text match
     let query = AnnotationQuery::new().with_text("important".to_string());
     assert!(annot.matches(&query));
-    
+
     let query = AnnotationQuery::new().with_text("missing".to_string());
     assert!(!annot.matches(&query));
-    
+
     // Test page match
     let query = AnnotationQuery::new().with_page(0);
     assert!(annot.matches(&query));
-    
+
     let query = AnnotationQuery::new().with_page(5);
     assert!(!annot.matches(&query));
-    
+
     // Test date range
     let query = AnnotationQuery::new()
         .with_after(now - Duration::hours(1))
@@ -98,13 +102,13 @@ fn test_annotation_subtype_from_str() {
         AnnotationSubtype::from_str("strikeout").unwrap(),
         AnnotationSubtype::StrikeOut
     );
-    
+
     // Case insensitive
     assert_eq!(
         AnnotationSubtype::from_str("HIGHLIGHT").unwrap(),
         AnnotationSubtype::Highlight
     );
-    
+
     // Invalid subtype
     assert!(AnnotationSubtype::from_str("invalid").is_err());
 }
@@ -123,15 +127,15 @@ fn test_xfdf_export() {
     annot1.rect = Some((10.0, 20.0, 100.0, 200.0));
     annot1.color = Some((255, 0, 0));
     annot1.author = Some("Alice".to_string());
-    
+
     let mut annot2 = PdfAnnotation::new(1, AnnotationSubtype::Text, "Note 2".to_string());
     annot2.subject = Some("Comment".to_string());
-    
+
     let annotations = vec![annot1, annot2];
     let pdf_path = PathBuf::from("/test/document.pdf");
-    
+
     let xfdf = XfdfHandler::export_to_xfdf(&annotations, &pdf_path).unwrap();
-    
+
     assert!(xfdf.contains("<?xml version=\"1.0\""));
     assert!(xfdf.contains("<xfdf"));
     assert!(xfdf.contains("<annotate>"));
@@ -158,9 +162,9 @@ fn test_xfdf_import() {
     <subject>Review</subject>
   </annotate>
 </xfdf>"#;
-    
+
     let annotations = XfdfHandler::import_from_xfdf(xfdf_content).unwrap();
-    
+
     assert_eq!(annotations.len(), 1);
     assert_eq!(annotations[0].subtype, AnnotationSubtype::Highlight);
     assert_eq!(annotations[0].contents, "Test note");
@@ -173,18 +177,22 @@ fn test_xfdf_import() {
 
 #[test]
 fn test_xfdf_roundtrip() {
-    let mut original = PdfAnnotation::new(5, AnnotationSubtype::Underline, "Roundtrip test".to_string());
+    let mut original = PdfAnnotation::new(
+        5,
+        AnnotationSubtype::Underline,
+        "Roundtrip test".to_string(),
+    );
     original.rect = Some((50.0, 60.0, 150.0, 160.0));
     original.color = Some((0, 128, 255));
     original.author = Some("Charlie".to_string());
     original.subject = Some("Check".to_string());
-    
+
     let annotations = vec![original.clone()];
     let pdf_path = PathBuf::from("/test/doc.pdf");
-    
+
     let xfdf = XfdfHandler::export_to_xfdf(&annotations, &pdf_path).unwrap();
     let imported = XfdfHandler::import_from_xfdf(&xfdf).unwrap();
-    
+
     assert_eq!(imported.len(), 1);
     assert_eq!(imported[0].subtype, original.subtype);
     assert_eq!(imported[0].contents, original.contents);
@@ -213,13 +221,13 @@ fn test_annotation_manager_sorting() {
         PdfAnnotation::new(0, AnnotationSubtype::Highlight, "Page 0".to_string()),
         PdfAnnotation::new(1, AnnotationSubtype::Underline, "Page 1".to_string()),
     ];
-    
+
     // Sort by page ascending
     annotations.sort_by(|a, b| a.page.cmp(&b.page));
     assert_eq!(annotations[0].page, 0);
     assert_eq!(annotations[1].page, 1);
     assert_eq!(annotations[2].page, 2);
-    
+
     // Sort by page descending
     annotations.sort_by(|a, b| b.page.cmp(&a.page));
     assert_eq!(annotations[0].page, 2);

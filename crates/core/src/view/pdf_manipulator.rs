@@ -337,17 +337,20 @@ Max: 30MB, 500 pages. Keep battery charged."
             "rotate90_all" => {
                 let pages: Vec<usize> = (1..=10).collect();
                 let output = file_path.with_extension("rotated.pdf");
-                self.manipulator.rotate_pages(file_path, &output, &pages, 90)
+                self.manipulator
+                    .rotate_pages(file_path, &output, &pages, 90)
             }
             "rotate180_all" => {
                 let pages: Vec<usize> = (1..=10).collect();
                 let output = file_path.with_extension("rotated.pdf");
-                self.manipulator.rotate_pages(file_path, &output, &pages, 180)
+                self.manipulator
+                    .rotate_pages(file_path, &output, &pages, 180)
             }
             "rotate270_all" => {
                 let pages: Vec<usize> = (1..=10).collect();
                 let output = file_path.with_extension("rotated.pdf");
-                self.manipulator.rotate_pages(file_path, &output, &pages, 270)
+                self.manipulator
+                    .rotate_pages(file_path, &output, &pages, 270)
             }
             "extract" => {
                 bus.push_back(Event::Render("Select pages first".to_string()));
@@ -453,7 +456,9 @@ Max: 30MB, 500 pages. Keep battery charged."
                 return Ok(());
             }
             "search_annotations" => {
-                use crate::document::pdf_manipulator::{PdfAnnotationManager, AnnotationQuery, AnnotationSubtype};
+                use crate::document::pdf_manipulator::{
+                    AnnotationQuery, AnnotationSubtype, PdfAnnotationManager,
+                };
                 let mut manager = match PdfAnnotationManager::new(file_path) {
                     Ok(m) => m,
                     Err(e) => {
@@ -461,13 +466,13 @@ Max: 30MB, 500 pages. Keep battery charged."
                         return Ok(());
                     }
                 };
-                
+
                 match manager.import_annotations() {
                     Ok(_) => {
                         // Search for all highlights
-                        let query = AnnotationQuery::new()
-                            .with_subtype(AnnotationSubtype::Highlight);
-                        
+                        let query =
+                            AnnotationQuery::new().with_subtype(AnnotationSubtype::Highlight);
+
                         let results = manager.search(&query);
                         if results.is_empty() {
                             bus.push_back(Event::Render(
@@ -493,7 +498,7 @@ Max: 30MB, 500 pages. Keep battery charged."
                         return Ok(());
                     }
                 };
-                
+
                 match manager.import_annotations() {
                     Ok(annotations) => {
                         let xfdf_path = file_path.with_extension("xfdf");
@@ -519,32 +524,33 @@ Max: 30MB, 500 pages. Keep battery charged."
             "import_xfdf" => {
                 use crate::document::pdf_manipulator::XfdfHandler;
                 let xfdf_path = file_path.with_extension("xfdf");
-                
+
                 if !xfdf_path.exists() {
                     bus.push_back(Event::Render(
                         "❌ No XFDF file found. Export annotations first.".to_string(),
                     ));
                     return Ok(());
                 }
-                
+
                 match std::fs::read_to_string(&xfdf_path) {
-                    Ok(xfdf_content) => {
-                        match XfdfHandler::import_from_xfdf(&xfdf_content) {
-                            Ok(annotations) => {
-                                if annotations.is_empty() {
-                                    bus.push_back(Event::Render(
-                                        "📥 No annotations found in XFDF file".to_string(),
-                                    ));
-                                } else {
-                                    let msg = format!("📥 Imported {} annotations from XFDF", annotations.len());
-                                    bus.push_back(Event::Render(msg));
-                                }
-                            }
-                            Err(e) => {
-                                bus.push_back(Event::Render(format!("XFDF import failed: {}", e)));
+                    Ok(xfdf_content) => match XfdfHandler::import_from_xfdf(&xfdf_content) {
+                        Ok(annotations) => {
+                            if annotations.is_empty() {
+                                bus.push_back(Event::Render(
+                                    "📥 No annotations found in XFDF file".to_string(),
+                                ));
+                            } else {
+                                let msg = format!(
+                                    "📥 Imported {} annotations from XFDF",
+                                    annotations.len()
+                                );
+                                bus.push_back(Event::Render(msg));
                             }
                         }
-                    }
+                        Err(e) => {
+                            bus.push_back(Event::Render(format!("XFDF import failed: {}", e)));
+                        }
+                    },
                     Err(e) => {
                         bus.push_back(Event::Render(format!("Error reading XFDF file: {}", e)));
                     }

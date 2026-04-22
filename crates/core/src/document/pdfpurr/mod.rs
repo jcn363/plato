@@ -3,14 +3,14 @@
 //! This module provides a wrapper around PDFPurr (pure Rust PDF library)
 //! to replace the MuPDF C library dependency.
 
+use anyhow::{bail, Result};
+use pdfpurr::content::analysis::TextRun;
+use pdfpurr::rendering::{RenderOptions, Renderer};
+use pdfpurr::Document as PdfPurrDoc;
 use std::path::Path;
 use std::sync::Arc;
-use anyhow::{Result, bail};
-use pdfpurr::Document as PdfPurrDoc;
-use pdfpurr::rendering::{Renderer, RenderOptions};
-use pdfpurr::content::analysis::TextRun;
 
-use crate::document::cache::{PdfCache, PageCacheKey};
+use crate::document::cache::{PageCacheKey, PdfCache};
 
 /// Wrapper around PDFPurr Document
 pub struct Document {
@@ -25,10 +25,10 @@ pub type PdfPurrDocument = Document;
 impl Document {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let doc_id = path.as_ref().to_string_lossy().to_string();
-        let inner = PdfPurrDoc::open(path)
-            .map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
-        Ok(Document { 
-            inner, 
+        let inner =
+            PdfPurrDoc::open(path).map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+        Ok(Document {
+            inner,
             cache: None,
             doc_id,
         })
@@ -36,10 +36,10 @@ impl Document {
 
     pub fn open_with_cache<P: AsRef<Path>>(path: P, cache: Arc<PdfCache>) -> Result<Self> {
         let doc_id = path.as_ref().to_string_lossy().to_string();
-        let inner = PdfPurrDoc::open(path)
-            .map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
-        Ok(Document { 
-            inner, 
+        let inner =
+            PdfPurrDoc::open(path).map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+        Ok(Document {
+            inner,
             cache: Some(cache),
             doc_id,
         })
@@ -49,8 +49,8 @@ impl Document {
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
         let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
-        Ok(Document { 
-            inner, 
+        Ok(Document {
+            inner,
             cache: None,
             doc_id,
         })
@@ -60,8 +60,8 @@ impl Document {
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
         let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
-        Ok(Document { 
-            inner, 
+        Ok(Document {
+            inner,
             cache: Some(cache),
             doc_id,
         })
@@ -82,7 +82,11 @@ impl Document {
         let page_index = index as usize;
         let page_count = self.inner.page_count().unwrap_or(0);
         if page_index >= page_count {
-            bail!("Page index {} out of range (document has {} pages)", page_index, page_count);
+            bail!(
+                "Page index {} out of range (document has {} pages)",
+                page_index,
+                page_count
+            );
         }
         let cache_key = PageCacheKey::new(self.doc_id.clone(), page_index as i32);
         Ok(Page {
@@ -171,23 +175,29 @@ pub struct Page<'a> {
 impl<'a> Page<'a> {
     pub fn to_text_page(&self, _options: Option<&()>) -> Option<TextPage> {
         // Extract text runs from PDFPurr
-        self.doc.extract_text_runs(self.index).ok().map(|runs| TextPage { runs })
+        self.doc
+            .extract_text_runs(self.index)
+            .ok()
+            .map(|runs| TextPage { runs })
     }
 
     pub fn load_links(&self) -> Option<Link> {
         // Extract links from the page's annotation dictionary using lopdf
         // This requires accessing the underlying PDF document structure
-        
+
         // For now, return empty list as this requires deeper PDF structure access
         // A full implementation would:
         // 1. Get the page dictionary
         // 2. Access the /Annots array
         // 3. Filter for /Link annotations
         // 4. Extract their URIs and bounding boxes
-        
+
         // This is a complex feature that requires lopdf integration
         // For Phase 4, we stub this out
-        Some(Link { annots: Vec::new(), index: 0 })
+        Some(Link {
+            annots: Vec::new(),
+            index: 0,
+        })
     }
 
     pub fn first_annot(&self) -> Option<()> {
@@ -197,7 +207,12 @@ impl<'a> Page<'a> {
         None
     }
 
-    pub fn render_pixmap(&self, _matrix: f32, _color_space: PixmapFormat, _flags: i32) -> Result<PdfPurrPixmap> {
+    pub fn render_pixmap(
+        &self,
+        _matrix: f32,
+        _color_space: PixmapFormat,
+        _flags: i32,
+    ) -> Result<PdfPurrPixmap> {
         // Check cache first
         if let Some(ref cache) = self.cache {
             if let Some(cached) = cache.get_rendered_page(&self.cache_key) {
@@ -210,7 +225,8 @@ impl<'a> Page<'a> {
             background: [255, 255, 255, 255],
         };
         let renderer = Renderer::new(self.doc, options);
-        let pixmap = renderer.render_page(self.index)
+        let pixmap = renderer
+            .render_page(self.index)
             .map_err(|e| anyhow::format_err!("Failed to render page: {}", e))?;
         // PDFPurr returns tiny-skia::pixmap::Pixmap (0.11.4), but we need tiny_skia::Pixmap (0.12.0)
         // Convert by creating a new Pixmap with the same data using tiny-skia 0.12.0 API
@@ -220,25 +236,30 @@ impl<'a> Page<'a> {
         let mut converted = tiny_skia::Pixmap::new(width, height)
             .ok_or_else(|| anyhow::format_err!("Failed to create pixmap"))?;
         // Convert u8 data to PremultipliedColorU8 for tiny-skia 0.12.0
-        let colors: Vec<tiny_skia::PremultipliedColorU8> = data.chunks(4)
+        let colors: Vec<tiny_skia::PremultipliedColorU8> = data
+            .chunks(4)
             .map(|chunk| {
                 if chunk.len() == 4 {
-                    tiny_skia::PremultipliedColorU8::from_rgba(chunk[0], chunk[1], chunk[2], chunk[3])
-                        .unwrap_or_else(|| tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap())
+                    tiny_skia::PremultipliedColorU8::from_rgba(
+                        chunk[0], chunk[1], chunk[2], chunk[3],
+                    )
+                    .unwrap_or_else(|| {
+                        tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap()
+                    })
                 } else {
                     tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap()
                 }
             })
             .collect();
         converted.pixels_mut().copy_from_slice(&colors);
-        
+
         let result = PdfPurrPixmap { inner: converted };
-        
+
         // Cache the result
         if let Some(ref cache) = self.cache {
             cache.put_rendered_page(self.cache_key.clone(), result.clone());
         }
-        
+
         Ok(result)
     }
 
@@ -255,12 +276,12 @@ impl<'a> Page<'a> {
         // For now, use default dimensions - this should be improved
         // by accessing the PDF's MediaBox directly
         let dims = (600.0, 800.0);
-        
+
         // Cache the dimensions
         if let Some(ref cache) = self.cache {
             cache.put_metadata(self.cache_key.clone(), dims);
         }
-        
+
         dims
     }
 
@@ -286,7 +307,7 @@ impl<'a> Page<'a> {
         // Basic search implementation using PDFPurr text extraction
         let text_runs = self.doc.extract_text_runs(self.index).ok()?;
         let text: String = text_runs.iter().map(|r| r.text.as_str()).collect();
-        
+
         if text.contains(needle) {
             // Return page-level quad if text is found
             // Full implementation would need character-level position tracking
@@ -324,28 +345,26 @@ impl TextPage {
         if self.runs.is_empty() {
             return Vec::new();
         }
-        
+
         let mut blocks = Vec::new();
         let mut current_block_runs = Vec::new();
         let mut last_y = self.runs[0].y;
-        
+
         for run in &self.runs {
             // Group runs by vertical position (lines)
-            if (run.y - last_y).abs() > run.height {
-                if !current_block_runs.is_empty() {
-                    let bbox = self.bbox_from_runs(&current_block_runs);
-                    blocks.push(TextBlock {
-                        runs: current_block_runs.clone(),
-                        kind: 0, // Text block
-                        bbox,
-                    });
-                    current_block_runs.clear();
-                }
+            if (run.y - last_y).abs() > run.height && !current_block_runs.is_empty() {
+                let bbox = self.bbox_from_runs(&current_block_runs);
+                blocks.push(TextBlock {
+                    runs: current_block_runs.clone(),
+                    kind: 0, // Text block
+                    bbox,
+                });
+                current_block_runs.clear();
             }
             current_block_runs.push(run.clone());
             last_y = run.y;
         }
-        
+
         if !current_block_runs.is_empty() {
             let bbox = self.bbox_from_runs(&current_block_runs);
             blocks.push(TextBlock {
@@ -354,20 +373,26 @@ impl TextPage {
                 bbox,
             });
         }
-        
+
         blocks
     }
-    
+
     fn bbox_from_runs(&self, runs: &[TextRun]) -> FzRect {
         if runs.is_empty() {
             return FzRect::default();
         }
-        
+
         let min_x = runs.iter().map(|r| r.x).fold(f64::INFINITY, f64::min);
-        let max_x = runs.iter().map(|r| r.x + r.width).fold(f64::NEG_INFINITY, f64::max);
+        let max_x = runs
+            .iter()
+            .map(|r| r.x + r.width)
+            .fold(f64::NEG_INFINITY, f64::max);
         let min_y = runs.iter().map(|r| r.y).fold(f64::INFINITY, f64::min);
-        let max_y = runs.iter().map(|r| r.y + r.height).fold(f64::NEG_INFINITY, f64::max);
-        
+        let max_y = runs
+            .iter()
+            .map(|r| r.y + r.height)
+            .fold(f64::NEG_INFINITY, f64::max);
+
         FzRect {
             x0: min_x as f32,
             y0: min_y as f32,
@@ -375,7 +400,7 @@ impl TextPage {
             y1: max_y as f32,
         }
     }
-    
+
     pub fn chars(&self) -> usize {
         self.runs.iter().map(|r| r.text.chars().count()).sum()
     }
@@ -399,40 +424,64 @@ impl TextBlock {
 
     pub fn lines(&self) -> Vec<TextLine> {
         // Convert runs to lines
-        self.runs.chunks(10).map(|chunk| TextLine {
-            runs: chunk.to_vec(),
-            bbox: self.bbox_from_runs(chunk),
-        }).collect()
-    }
-    
-    pub fn chars(&self) -> Vec<TextChar> {
-        self.runs.iter().flat_map(|run| {
-            run.text.chars().enumerate().map(move |(i, c)| {
-                let char_x = run.x + (i as f64 * run.width / run.text.len() as f64);
-                TextChar {
-                    char_code: c as u32 as i32,
-                    quad: FzQuad {
-                        ul: FzPoint { x: char_x as f32, y: run.y as f32 },
-                        ur: FzPoint { x: (char_x + run.width / run.text.len() as f64) as f32, y: run.y as f32 },
-                        ll: FzPoint { x: char_x as f32, y: (run.y + run.height) as f32 },
-                        lr: FzPoint { x: (char_x + run.width / run.text.len() as f64) as f32, y: (run.y + run.height) as f32 },
-                    },
-                    origin: 0,
-                }
+        self.runs
+            .chunks(10)
+            .map(|chunk| TextLine {
+                runs: chunk.to_vec(),
+                bbox: self.bbox_from_runs(chunk),
             })
-        }).collect()
+            .collect()
     }
-    
+
+    pub fn chars(&self) -> Vec<TextChar> {
+        self.runs
+            .iter()
+            .flat_map(|run| {
+                run.text.chars().enumerate().map(move |(i, c)| {
+                    let char_x = run.x + (i as f64 * run.width / run.text.len() as f64);
+                    TextChar {
+                        char_code: c as u32 as i32,
+                        quad: FzQuad {
+                            ul: FzPoint {
+                                x: char_x as f32,
+                                y: run.y as f32,
+                            },
+                            ur: FzPoint {
+                                x: (char_x + run.width / run.text.len() as f64) as f32,
+                                y: run.y as f32,
+                            },
+                            ll: FzPoint {
+                                x: char_x as f32,
+                                y: (run.y + run.height) as f32,
+                            },
+                            lr: FzPoint {
+                                x: (char_x + run.width / run.text.len() as f64) as f32,
+                                y: (run.y + run.height) as f32,
+                            },
+                        },
+                        origin: 0,
+                    }
+                })
+            })
+            .collect()
+    }
+
     fn bbox_from_runs(&self, runs: &[TextRun]) -> FzRect {
         if runs.is_empty() {
             return FzRect::default();
         }
-        
+
         let min_x = runs.iter().map(|r| r.x).fold(f64::INFINITY, f64::min);
-        let max_x = runs.iter().map(|r| r.x + r.width).fold(f64::NEG_INFINITY, f64::max);
+        let max_x = runs
+            .iter()
+            .map(|r| r.x + r.width)
+            .fold(f64::NEG_INFINITY, f64::max);
         let min_y = runs.iter().map(|r| r.y).fold(f64::INFINITY, f64::min);
-        let max_y = runs.iter().map(|r| r.y + r.height).fold(f64::NEG_INFINITY, f64::max);
-        
+        let max_y = runs
+            .iter()
+            .map(|r| r.y + r.height)
+            .fold(f64::NEG_INFINITY, f64::max);
+
         FzRect {
             x0: min_x as f32,
             y0: min_y as f32,
@@ -454,21 +503,36 @@ impl TextLine {
     }
 
     pub fn chars(&self) -> Vec<TextChar> {
-        self.runs.iter().flat_map(|run| {
-            run.text.chars().enumerate().map(move |(i, c)| {
-                let char_x = run.x + (i as f64 * run.width / run.text.len() as f64);
-                TextChar {
-                    char_code: c as u32 as i32,
-                    quad: FzQuad {
-                        ul: FzPoint { x: char_x as f32, y: run.y as f32 },
-                        ur: FzPoint { x: (char_x + run.width / run.text.len() as f64) as f32, y: run.y as f32 },
-                        ll: FzPoint { x: char_x as f32, y: (run.y + run.height) as f32 },
-                        lr: FzPoint { x: (char_x + run.width / run.text.len() as f64) as f32, y: (run.y + run.height) as f32 },
-                    },
-                    origin: 0,
-                }
+        self.runs
+            .iter()
+            .flat_map(|run| {
+                run.text.chars().enumerate().map(move |(i, c)| {
+                    let char_x = run.x + (i as f64 * run.width / run.text.len() as f64);
+                    TextChar {
+                        char_code: c as u32 as i32,
+                        quad: FzQuad {
+                            ul: FzPoint {
+                                x: char_x as f32,
+                                y: run.y as f32,
+                            },
+                            ur: FzPoint {
+                                x: (char_x + run.width / run.text.len() as f64) as f32,
+                                y: run.y as f32,
+                            },
+                            ll: FzPoint {
+                                x: char_x as f32,
+                                y: (run.y + run.height) as f32,
+                            },
+                            lr: FzPoint {
+                                x: (char_x + run.width / run.text.len() as f64) as f32,
+                                y: (run.y + run.height) as f32,
+                            },
+                        },
+                        origin: 0,
+                    }
+                })
             })
-        }).collect()
+            .collect()
     }
 }
 
@@ -540,7 +604,10 @@ impl Outline {
                 page: first.page.unwrap_or(0) as i32,
             }
         } else {
-            FzLocation { chapter: 0, page: 0 }
+            FzLocation {
+                chapter: 0,
+                page: 0,
+            }
         }
     }
 
@@ -559,7 +626,10 @@ impl Outline {
     }
 
     pub fn title(&self) -> String {
-        self.outlines.first().map(|o| o.title.clone()).unwrap_or_default()
+        self.outlines
+            .first()
+            .map(|o| o.title.clone())
+            .unwrap_or_default()
     }
 
     pub fn down(&self) -> Option<Outline> {
@@ -585,6 +655,7 @@ pub struct FzRect {
 }
 
 impl FzRect {
+    #[allow(clippy::should_implement_trait)]
     pub fn default() -> Self {
         FzRect {
             x0: 0.0,
@@ -645,11 +716,11 @@ impl PdfPurrPixmap {
     pub fn data(&self) -> &[u8] {
         self.inner.data()
     }
-    
+
     pub fn width(&self) -> u32 {
         self.inner.width()
     }
-    
+
     pub fn height(&self) -> u32 {
         self.inner.height()
     }
@@ -661,7 +732,7 @@ pub fn rect_from_quad(quad: FzQuad) -> FzRect {
     let max_x = quad.ul.x.max(quad.ll.x).max(quad.ur.x).max(quad.lr.x);
     let min_y = quad.ul.y.min(quad.ll.y).min(quad.ur.y).min(quad.lr.y);
     let max_y = quad.ul.y.max(quad.ll.y).max(quad.ur.y).max(quad.lr.y);
-    
+
     FzRect {
         x0: min_x,
         y0: min_y,
@@ -717,7 +788,7 @@ mod tests {
             x1: 100.0,
             y1: 200.0,
         };
-        
+
         let boundary: crate::geom::Boundary = rect.into();
         assert_eq!(boundary.min.x, 10.0);
         assert_eq!(boundary.min.y, 20.0);
@@ -780,10 +851,10 @@ mod tests {
         };
 
         let rect = rect_from_quad(quad);
-        assert_eq!(rect.x0, 0.0);  // min x
-        assert_eq!(rect.y0, 0.0);  // min y
+        assert_eq!(rect.x0, 0.0); // min x
+        assert_eq!(rect.y0, 0.0); // min y
         assert_eq!(rect.x1, 100.0); // max x
-        assert_eq!(rect.y1, 60.0);  // max y
+        assert_eq!(rect.y1, 60.0); // max y
     }
 
     #[test]
@@ -906,7 +977,7 @@ mod tests {
     #[test]
     fn test_empty_outline() {
         let outline = Outline { outlines: vec![] };
-        
+
         assert!(outline.next().is_none());
         assert!(outline.down().is_none());
         assert_eq!(outline.title(), "");
@@ -919,7 +990,7 @@ mod tests {
             annots: vec![],
             index: 0,
         };
-        
+
         assert_eq!(link.uri(), "");
         assert!(link.next().is_none());
     }
@@ -927,7 +998,7 @@ mod tests {
     #[test]
     fn test_empty_text_page() {
         let text_page = TextPage { runs: vec![] };
-        
+
         assert!(text_page.blocks().is_empty());
         assert_eq!(text_page.chars(), 0);
     }
@@ -952,7 +1023,7 @@ mod tests {
         };
 
         let text_page = TextPage { runs: vec![run] };
-        
+
         assert_eq!(text_page.chars(), 5);
         let blocks = text_page.blocks();
         assert_eq!(blocks.len(), 1);
@@ -994,7 +1065,7 @@ mod tests {
         ];
 
         let text_page = TextPage { runs: runs };
-        
+
         assert_eq!(text_page.chars(), 10);
         let blocks = text_page.blocks();
         assert_eq!(blocks.len(), 1); // Same y position, same block
@@ -1036,7 +1107,7 @@ mod tests {
         ];
 
         let text_page = TextPage { runs: runs };
-        
+
         let blocks = text_page.blocks();
         assert_eq!(blocks.len(), 2); // Different y positions, different blocks
     }

@@ -1,5 +1,5 @@
 //! Caching strategies for PDF rendering and text extraction
-//! 
+//!
 //! This module implements LRU caching for:
 //! - Rendered pages (pixmaps)
 //! - Extracted text
@@ -61,7 +61,7 @@ impl PdfCache {
     /// Create a new PDF cache with specified capacity
     pub fn new(capacity: usize) -> Self {
         let capacity = NonZeroUsize::new(capacity.max(1)).unwrap();
-        
+
         Self {
             rendered_pages: Arc::new(Mutex::new(LruCache::new(capacity))),
             extracted_text: Arc::new(Mutex::new(LruCache::new(capacity))),
@@ -81,8 +81,11 @@ impl PdfCache {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        
-        self.rendered_pages.lock().unwrap().put(key, CachedPage { pixmap, timestamp });
+
+        self.rendered_pages
+            .lock()
+            .unwrap()
+            .put(key, CachedPage { pixmap, timestamp });
     }
 
     /// Get cached text
@@ -96,8 +99,11 @@ impl PdfCache {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        
-        self.extracted_text.lock().unwrap().put(key, CachedText { text, timestamp });
+
+        self.extracted_text
+            .lock()
+            .unwrap()
+            .put(key, CachedText { text, timestamp });
     }
 
     /// Get cached metadata
@@ -111,8 +117,11 @@ impl PdfCache {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        
-        self.metadata.lock().unwrap().put(key, CachedMetadata { dims, timestamp });
+
+        self.metadata
+            .lock()
+            .unwrap()
+            .put(key, CachedMetadata { dims, timestamp });
     }
 
     /// Get cached outlines
@@ -198,7 +207,7 @@ mod tests {
     fn test_cache_put_get() {
         let cache = PdfCache::new(4);
         let key = PageCacheKey::new("test.pdf".to_string(), 0);
-        
+
         // Test metadata caching
         cache.put_metadata(key.clone(), (600.0, 800.0));
         let cached = cache.get_metadata(&key);
@@ -209,18 +218,18 @@ mod tests {
     #[test]
     fn test_cache_lru_eviction() {
         let cache = PdfCache::new(2);
-        
+
         // Fill cache beyond capacity
         for i in 0..3 {
             let key = PageCacheKey::new("test.pdf".to_string(), i);
             cache.put_metadata(key, (600.0, 800.0));
         }
-        
+
         // First entry should be evicted
         let key0 = PageCacheKey::new("test.pdf".to_string(), 0);
         let key1 = PageCacheKey::new("test.pdf".to_string(), 1);
         let key2 = PageCacheKey::new("test.pdf".to_string(), 2);
-        
+
         assert!(cache.get_metadata(&key0).is_none());
         assert!(cache.get_metadata(&key1).is_some());
         assert!(cache.get_metadata(&key2).is_some());
@@ -229,7 +238,7 @@ mod tests {
     #[test]
     fn test_clear_document() {
         let cache = PdfCache::new(10);
-        
+
         // Add entries for two documents
         for i in 0..3 {
             let key1 = PageCacheKey::new("doc1.pdf".to_string(), i);
@@ -237,13 +246,17 @@ mod tests {
             cache.put_metadata(key1, (600.0, 800.0));
             cache.put_metadata(key2, (600.0, 800.0));
         }
-        
+
         cache.clear_document("doc1.pdf");
-        
+
         // doc1 entries should be gone
-        assert!(cache.get_metadata(&PageCacheKey::new("doc1.pdf".to_string(), 0)).is_none());
-        
+        assert!(cache
+            .get_metadata(&PageCacheKey::new("doc1.pdf".to_string(), 0))
+            .is_none());
+
         // doc2 entries should remain
-        assert!(cache.get_metadata(&PageCacheKey::new("doc2.pdf".to_string(), 0)).is_some());
+        assert!(cache
+            .get_metadata(&PageCacheKey::new("doc2.pdf".to_string(), 0))
+            .is_some());
     }
 }

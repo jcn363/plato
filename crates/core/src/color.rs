@@ -13,9 +13,7 @@ impl Color {
     pub fn gray(&self) -> u8 {
         match *self {
             Color::Gray(level) => level,
-            Color::Rgb(red, green, blue) => {
-                rgb_to_grayscale_scalar(red, green, blue)
-            }
+            Color::Rgb(red, green, blue) => rgb_to_grayscale_scalar(red, green, blue),
         }
     }
 

@@ -104,12 +104,16 @@ impl ResourceExtractor {
                                     if let Ok(name_bytes) = subtype.as_name() {
                                         if name_bytes == b"Image" {
                                             // Extract image dimensions if available
-                                            let width = dict.get(b"Width")
+                                            let width = dict
+                                                .get(b"Width")
                                                 .and_then(|w| w.as_i64())
-                                                .unwrap_or(0) as i32;
-                                            let height = dict.get(b"Height")
+                                                .unwrap_or(0)
+                                                as i32;
+                                            let height = dict
+                                                .get(b"Height")
                                                 .and_then(|h| h.as_i64())
-                                                .unwrap_or(0) as i32;
+                                                .unwrap_or(0)
+                                                as i32;
 
                                             images.push(ExtractedImage {
                                                 page: page_num,
@@ -204,20 +208,27 @@ impl ResourceExtractor {
         let doc = super::super::pdfpurr::Document::open(&self._file_path)
             .map_err(|e| format_err!("Failed to open PDF: {}", e))?;
 
-        let page = doc.load_page(page_num as i32)
+        let page = doc
+            .load_page(page_num as i32)
             .map_err(|e| format_err!("Failed to get page {}: {}", page_num + 1, e))?;
 
-        let text_page = page.to_text_page(None)
+        let text_page = page
+            .to_text_page(None)
             .ok_or_else(|| format_err!("Failed to extract text from page {}", page_num + 1))?;
 
-        let text: String = text_page.blocks()
+        let text: String = text_page
+            .blocks()
             .iter()
             .flat_map(|block| block.lines())
             .flat_map(|line| line.chars())
             .map(|c| char::from_u32(c.char_code as u32).unwrap_or(char::REPLACEMENT_CHARACTER))
             .collect();
 
-        log_info!("Extracted {} characters from page {}", text.len(), page_num + 1);
+        log_info!(
+            "Extracted {} characters from page {}",
+            text.len(),
+            page_num + 1
+        );
         Ok(text)
     }
 
@@ -268,7 +279,9 @@ impl ResourceExtractor {
                             if let Ok(metadata_stream) = metadata_obj.as_stream() {
                                 if let Ok(content) = metadata_stream.get_plain_content() {
                                     let content_str = String::from_utf8_lossy(&content);
-                                    if content_str.contains("pdfaid") || content_str.contains("PDF/A") {
+                                    if content_str.contains("pdfaid")
+                                        || content_str.contains("PDF/A")
+                                    {
                                         if content_str.contains("1") {
                                             return "PDF/A-1".to_string();
                                         } else if content_str.contains("2") {
@@ -312,7 +325,8 @@ impl ResourceExtractor {
                             if let Ok(annot_obj) = doc.get_object(annot_ref) {
                                 if let Ok(annot_dict) = annot_obj.as_dict() {
                                     // Extract annotation type
-                                    let subtype_str = annot_dict.get(b"Subtype")
+                                    let subtype_str = annot_dict
+                                        .get(b"Subtype")
                                         .and_then(|s| s.as_name())
                                         .map(|n| String::from_utf8_lossy(n).to_string())
                                         .unwrap_or_else(|_| "Text".to_string());
@@ -321,27 +335,43 @@ impl ResourceExtractor {
 
                                     // Extract contents
                                     let contents = match annot_dict.get(b"Contents") {
-                                        Ok(obj) => {
-                                            obj.as_str()
-                                                .ok()
-                                                .and_then(|s| std::str::from_utf8(s).ok())
-                                                .unwrap_or("")
-                                                .to_string()
-                                        }
+                                        Ok(obj) => obj
+                                            .as_str()
+                                            .ok()
+                                            .and_then(|s| std::str::from_utf8(s).ok())
+                                            .unwrap_or("")
+                                            .to_string(),
                                         Err(_) => String::new(),
                                     };
 
                                     // Extract rectangle
-                                    let _rect = annot_dict.get(b"Rect")
+                                    let _rect = annot_dict
+                                        .get(b"Rect")
                                         .and_then(|r| r.as_array())
                                         .ok()
                                         .and_then(|arr| {
                                             if arr.len() >= 4 {
                                                 Some((
-                                                    arr[0].as_i64().ok().map(|f| f as f32).unwrap_or(0.0),
-                                                    arr[1].as_i64().ok().map(|f| f as f32).unwrap_or(0.0),
-                                                    arr[2].as_i64().ok().map(|f| f as f32).unwrap_or(0.0),
-                                                    arr[3].as_i64().ok().map(|f| f as f32).unwrap_or(0.0),
+                                                    arr[0]
+                                                        .as_i64()
+                                                        .ok()
+                                                        .map(|f| f as f32)
+                                                        .unwrap_or(0.0),
+                                                    arr[1]
+                                                        .as_i64()
+                                                        .ok()
+                                                        .map(|f| f as f32)
+                                                        .unwrap_or(0.0),
+                                                    arr[2]
+                                                        .as_i64()
+                                                        .ok()
+                                                        .map(|f| f as f32)
+                                                        .unwrap_or(0.0),
+                                                    arr[3]
+                                                        .as_i64()
+                                                        .ok()
+                                                        .map(|f| f as f32)
+                                                        .unwrap_or(0.0),
                                                 ))
                                             } else {
                                                 None

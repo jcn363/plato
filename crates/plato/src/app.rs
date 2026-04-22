@@ -1301,7 +1301,12 @@ pub fn run() -> Result<(), Error> {
                         }
                     }
                     AppCmd::OpenPdfManipulator(ref path) => {
-                        match PdfManipulatorView::for_file(context.fb.rect(), path.clone(), &mut rq, &mut context) {
+                        match PdfManipulatorView::for_file(
+                            context.fb.rect(),
+                            path.clone(),
+                            &mut rq,
+                            &mut context,
+                        ) {
                             Ok(view) => Some(Box::new(view) as Box<dyn View>),
                             Err(e) => {
                                 log_error!("Failed to open PDF Tools for file: {}", e);

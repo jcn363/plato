@@ -351,7 +351,8 @@ pub fn compress_bzip2(data: &[u8]) -> Result<Vec<u8>, Error> {
     use bzip2::Compression;
     let mut encoder = BzEncoder::new(data, Compression::best()); // Maximum compression level
     let mut compressed = Vec::new();
-    encoder.read_to_end(&mut compressed)
+    encoder
+        .read_to_end(&mut compressed)
         .context("Failed to compress data with BZIP2")?;
     Ok(compressed)
 }
@@ -361,7 +362,8 @@ pub fn compress_bzip2(data: &[u8]) -> Result<Vec<u8>, Error> {
 pub fn decompress_bzip2(data: &[u8]) -> Result<Vec<u8>, Error> {
     let mut decoder = BzDecoder::new(data);
     let mut decompressed = Vec::new();
-    decoder.read_to_end(&mut decompressed)
+    decoder
+        .read_to_end(&mut decompressed)
         .context("Failed to decompress BZIP2 data")?;
     Ok(decompressed)
 }
@@ -371,17 +373,29 @@ pub fn compress_file_bzip2<P: AsRef<Path>>(input: P, output: P) -> Result<(), Er
     let data = fs::read(input.as_ref())
         .with_context(|| format!("Failed to read file {}", input.as_ref().display()))?;
     let compressed = compress_bzip2(&data)?;
-    fs::write(output.as_ref(), compressed)
-        .with_context(|| format!("Failed to write compressed file to {}", output.as_ref().display()))
+    fs::write(output.as_ref(), compressed).with_context(|| {
+        format!(
+            "Failed to write compressed file to {}",
+            output.as_ref().display()
+        )
+    })
 }
 
 /// Decompress a BZIP2 compressed file and write to output path
 pub fn decompress_file_bzip2<P: AsRef<Path>>(input: P, output: P) -> Result<(), Error> {
-    let compressed = fs::read(input.as_ref())
-        .with_context(|| format!("Failed to read compressed file {}", input.as_ref().display()))?;
+    let compressed = fs::read(input.as_ref()).with_context(|| {
+        format!(
+            "Failed to read compressed file {}",
+            input.as_ref().display()
+        )
+    })?;
     let decompressed = decompress_bzip2(&compressed)?;
-    fs::write(output.as_ref(), decompressed)
-        .with_context(|| format!("Failed to write decompressed file to {}", output.as_ref().display()))
+    fs::write(output.as_ref(), decompressed).with_context(|| {
+        format!(
+            "Failed to write decompressed file to {}",
+            output.as_ref().display()
+        )
+    })
 }
 
 /// URL-safe encoding set (excluding reserved characters for URL structure)
@@ -437,76 +451,85 @@ pub fn format_number_for_ui(n: u64) -> String {
 
 /// Select files matching a glob pattern in a directory
 /// Returns matching file paths relative to the base directory
-pub fn select_files_by_pattern<P: AsRef<Path>>(base_dir: P, pattern: &str) -> Result<Vec<PathBuf>, Error> {
-    let glob = Glob::new(pattern)
-        .with_context(|| format!("Invalid glob pattern: {}", pattern))?;
-    
+pub fn select_files_by_pattern<P: AsRef<Path>>(
+    base_dir: P,
+    pattern: &str,
+) -> Result<Vec<PathBuf>, Error> {
+    let glob = Glob::new(pattern).with_context(|| format!("Invalid glob pattern: {}", pattern))?;
+
     let mut builder = GlobSetBuilder::new();
     builder.add(glob);
-    let glob_set = builder.build()
-        .context("Failed to build glob set")?;
-    
+    let glob_set = builder.build().context("Failed to build glob set")?;
+
     let mut matches = Vec::new();
-    
+
     for entry in walkdir_visible(base_dir.as_ref()) {
         let path = entry.path();
-        let relative_path = path.strip_prefix(base_dir.as_ref())
+        let relative_path = path
+            .strip_prefix(base_dir.as_ref())
             .with_context(|| format!("Failed to strip prefix from {}", path.display()))?;
-        
+
         if glob_set.is_match(relative_path) {
             matches.push(relative_path.to_path_buf());
         }
     }
-    
+
     Ok(matches)
 }
 
 /// Select files matching multiple glob patterns
 /// Returns files that match any of the provided patterns
-pub fn select_files_by_patterns<P: AsRef<Path>>(base_dir: P, patterns: &[&str]) -> Result<Vec<PathBuf>, Error> {
+pub fn select_files_by_patterns<P: AsRef<Path>>(
+    base_dir: P,
+    patterns: &[&str],
+) -> Result<Vec<PathBuf>, Error> {
     let mut builder = GlobSetBuilder::new();
-    
+
     for pattern in patterns {
-        let glob = Glob::new(pattern)
-            .with_context(|| format!("Invalid glob pattern: {}", pattern))?;
+        let glob =
+            Glob::new(pattern).with_context(|| format!("Invalid glob pattern: {}", pattern))?;
         builder.add(glob);
     }
-    
-    let glob_set = builder.build()
-        .context("Failed to build glob set")?;
-    
+
+    let glob_set = builder.build().context("Failed to build glob set")?;
+
     let mut matches = Vec::new();
-    
+
     for entry in walkdir_visible(base_dir.as_ref()) {
         let path = entry.path();
-        let relative_path = path.strip_prefix(base_dir.as_ref())
+        let relative_path = path
+            .strip_prefix(base_dir.as_ref())
             .with_context(|| format!("Failed to strip prefix from {}", path.display()))?;
-        
+
         if glob_set.is_match(relative_path) {
             matches.push(relative_path.to_path_buf());
         }
     }
-    
+
     Ok(matches)
 }
 
 /// Check if a file matches any of the provided glob patterns
-pub fn file_matches_patterns<P: AsRef<Path>>(file_path: P, patterns: &[&str]) -> Result<bool, Error> {
+pub fn file_matches_patterns<P: AsRef<Path>>(
+    file_path: P,
+    patterns: &[&str],
+) -> Result<bool, Error> {
     let mut builder = GlobSetBuilder::new();
-    
+
     for pattern in patterns {
-        let glob = Glob::new(pattern)
-            .with_context(|| format!("Invalid glob pattern: {}", pattern))?;
+        let glob =
+            Glob::new(pattern).with_context(|| format!("Invalid glob pattern: {}", pattern))?;
         builder.add(glob);
     }
-    
-    let glob_set = builder.build()
-        .context("Failed to build glob set")?;
-    
-    let file_name = file_path.as_ref().file_name()
+
+    let glob_set = builder.build().context("Failed to build glob set")?;
+
+    let file_name = file_path
+        .as_ref()
+        .file_name()
         .and_then(|s| s.to_str())
         .ok_or_else(|| anyhow::anyhow!("Invalid file name: {}", file_path.as_ref().display()))?;
-    
+
     Ok(glob_set.is_match(file_name))
 }
 
@@ -525,13 +548,13 @@ impl HttpClient {
             .timeout(timeout)
             .build()
             .context("Failed to build HTTP client")?;
-        
+
         Ok(Self {
             client,
             max_retries: 3,
         })
     }
-    
+
     /// Create a new HTTP client with custom settings
     pub fn with_settings(max_retries: u32, timeout_seconds: u64) -> Result<Self, Error> {
         let timeout = std::time::Duration::from_secs(timeout_seconds);
@@ -539,41 +562,39 @@ impl HttpClient {
             .timeout(timeout)
             .build()
             .context("Failed to build HTTP client")?;
-        
+
         Ok(Self {
             client,
             max_retries,
         })
     }
-    
+
     /// Create a new HTTP client with proxy support
     pub fn with_proxy(proxy_url: &str) -> Result<Self, Error> {
-        let proxy = reqwest::Proxy::all(proxy_url)
-            .context("Failed to parse proxy URL")?;
-        
+        let proxy = reqwest::Proxy::all(proxy_url).context("Failed to parse proxy URL")?;
+
         let timeout = std::time::Duration::from_secs(30);
         let client = reqwest::blocking::Client::builder()
             .timeout(timeout)
             .proxy(proxy)
             .build()
             .context("Failed to build HTTP client with proxy")?;
-        
+
         Ok(Self {
             client,
             max_retries: 3,
         })
     }
-    
+
     /// Fetch a URL with retry logic
     pub fn fetch_with_retry(&self, url: &str) -> Result<String, Error> {
         let mut last_error = None;
-        
+
         for attempt in 0..=self.max_retries {
             match self.client.get(url).send() {
                 Ok(response) => {
                     if response.status().is_success() {
-                        let text = response.text()
-                            .context("Failed to read response body")?;
+                        let text = response.text().context("Failed to read response body")?;
                         return Ok(text);
                     } else {
                         let status = response.status();
@@ -584,25 +605,24 @@ impl HttpClient {
                     last_error = Some(Error::from(e));
                 }
             }
-            
+
             if attempt < self.max_retries {
                 std::thread::sleep(std::time::Duration::from_millis(100 * (attempt + 1) as u64));
             }
         }
-        
+
         Err(last_error.unwrap_or_else(|| anyhow::anyhow!("Failed to fetch URL after retries")))
     }
-    
+
     /// Fetch a URL as bytes with retry logic
     pub fn fetch_bytes_with_retry(&self, url: &str) -> Result<Vec<u8>, Error> {
         let mut last_error = None;
-        
+
         for attempt in 0..=self.max_retries {
             match self.client.get(url).send() {
                 Ok(response) => {
                     if response.status().is_success() {
-                        let bytes = response.bytes()
-                            .context("Failed to read response body")?;
+                        let bytes = response.bytes().context("Failed to read response body")?;
                         return Ok(bytes.to_vec());
                     } else {
                         let status = response.status();
@@ -613,15 +633,15 @@ impl HttpClient {
                     last_error = Some(Error::from(e));
                 }
             }
-            
+
             if attempt < self.max_retries {
                 std::thread::sleep(std::time::Duration::from_millis(100 * (attempt + 1) as u64));
             }
         }
-        
+
         Err(last_error.unwrap_or_else(|| anyhow::anyhow!("Failed to fetch URL after retries")))
     }
-    
+
     /// Get the underlying reqwest client
     pub fn client(&self) -> &reqwest::blocking::Client {
         &self.client

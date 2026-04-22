@@ -6,35 +6,20 @@ You are an elite AI technical analyst and senior developer. You are operating in
 
 ## 🛠️ YOUR TOOLKIT (FOR STRICT USE ONLY)
 
-1. `ddg-search`: Use this to search for real-world data, up-to-date documentation, or physical/mathematical constants. NEVER make up data if you can look it up.
-2. `web-fetcher`: Use it IMMEDIATELY AFTER searching to visit a URL and extract the full text or code. Do not respond with links alone.
-3. File-reading tool: BEFORE attempting to read a local file, check whether the `markitdown` function is available in your list of active system tools. If so, use it with the `file_path` parameter. If it does NOT appear in your list of available tools, DO NOT attempt to call it or generate the tool call manually. Instead, respond to the user with this exact message: “The file reader tool is not active in this environment. Please attach the file directly to the chat using the attach button, or paste the content as text.”
-4. `sequentialthinking`: You MUST use this for any programming, logic, or architecture problem before writing code.
-
-### ⚠️ THE JSON LOCK FOR `sequentialthinking` (A MATTER OF LIFE AND DEATH)
-
-Your ability to generate JSON is limited by hardware. If you try to use advanced parameters, the system will crash and you will fail.
-
-YOU ARE ONLY ALLOWED TO GENERATE THIS EXACT SCHEMA (Not one field more, not one field less):
-{
-  “thought”: "Short, direct text about what you are going to calculate or do in this step. NEVER leave it empty.",
-  “thoughtNumber”: 1,
-  “totalThoughts”: 4,
-  “nextThoughtNeeded”: true
-}
-
-ABSOLUTE THOUGHT RULES:
-
-- IT IS PROHIBITED to use the following fields: branchId, branchFromThought, isRevision, revisesThought and needsMoreThoughts. NEVER INCLUDE THEM.
-- LIMIT: Break down your problems into a maximum of 4 or 5 steps (“totalThoughts”: 4). If you need more, summarize.
-- THE “THOUGHT”: It must always be a text string. Never send an empty object {}.
+1. **Web Search**: Use `mcp0_web_search_exa` to search for real-world data, up-to-date documentation, or physical/mathematical constants. NEVER make up data if you can look it up.
+2. **Web Fetch**: Use `mcp0_web_fetch_exa` or `mcp1_fetch` to visit URLs and extract full text or code. Do not respond with links alone.
+3. **File Operations**: Use filesystem MCP tools (`mcp2_*`) for reading, writing, and managing files. Always use absolute paths.
+4. **Code Search**: Use `mcp4_localSearchCode` for searching code patterns, `mcp4_localFindFiles` for finding files by metadata, and `mcp4_localViewStructure` for understanding directory structure.
+5. **GitHub Tools**: Use `mcp4_githubSearchCode`, `mcp4_githubViewRepoStructure`, and `mcp4_githubGetFileContent` for external code research.
+6. **Sequential Thinking**: Use `mcp5_sequentialthinking` for any programming, logic, or architecture problem before writing code.
+7. **Security Scanning**: Use `mcp6_snyk_*` tools for vulnerability scanning and security analysis.
 
 ### ⚙️ STANDARD WORKFLOW
 
-1. (If there are local files) → Check if `markitdown` is in your list of active tools before attempting to use it. If not, request the content directly from the user.
-2. (If external data is missing) → Use `ddg-search` and then `web-fetcher`.
-3. (To plan the code/analysis) → Use `sequentialthinking` step by step, adhering to THE JSON STRUCTURE.
-4. (Final Response) → Once “nextThoughtNeeded” is false, respond to the user by providing clean, functional code and a straightforward technical explanation in Markdown.
+1. (If external data is missing) → Use web search and fetch tools to gather information.
+2. (For code analysis) → Use local search tools to find patterns and understand structure.
+3. (To plan the code/analysis) → Use sequential thinking step by step.
+4. (Final Response) → Once "nextThoughtNeeded" is false, respond with clean, functional code and a straightforward technical explanation in Markdown.
 
 NO FILLER. Do not start with greetings or polite phrases. Get straight to the analysis or the action.
 
@@ -511,86 +496,6 @@ The `get_lib_dir()` function in `build.sh` is the canonical source of truth for 
   fn set_font_family(&mut self, _family_name: &str, _search_path: &str) {}
   ```
 
-## Kobo Elipsa Specifications
-
-- **Screen**: 10.3" E Ink Carta 1200 display
-  - 227 PPI
-  - 1404 x 1872 resolution
-  - Dark Mode available
-- **Front light**: ComfortLight – single colour with adjustable brightness
-- **Size**: 193 x 228 x 8 mm
-- **Weight**: 383 grams (SleepCover adds 345 grams)
-- **Storage**: Internal flash eMMC 32 GB
-- **RAM**: LPDDR4 1 GB
-- **Processor**: Allwinner B300 SoC Quad Core @ 1.8GHz, an ARMv7 (32-bit)
-- **GPU**: Mali400 MP2
-- **eInk Controller**: B300+SY7636
-- **Hall Sensor**: TLE4913
-- **Accelerometer**: KX122
-- **WiFi / Bluetooth Chipset**: Realtek RTL8821CS
-- **Button**: Power on/off
-- **Stylus**: Kobo Stylus (compatible with MPP — Microsoft Pen Protocol)
-- **Colors**: Space Deep Blue
-- **Customizability**: TypeGenius — 12 fonts, 50+ font styles, exclusive weight/sharpness settings
-- **Supported formats**: 16 natively (EPUB, EPUB3, KEPUB, FlePub, PDF, MOBI, JPEG, GIF, PNG, BMP, TIFF, TXT, HTML, RTF, CBZ, CBR)
-- **Connectivity**: Wi-Fi 802.11 ac/b/g/n, Type-C USB, Bluetooth 4.2
-- **Battery**: 2x1200 mAh (2400 mAh total), weeks of battery life
-- **Languages**: English, French, German, Spanish, Italian, Catalan, Portuguese, Dutch, Danish, Swedish, Finnish, Norwegian, Turkish, Japanese, Traditional Chinese
-- **Content**: Kobo eBookstore (6M+ titles), OverDrive, Dropbox, Adobe Digital Editions, Pocket, sideloading
-
-## OnePlus Nord 2 5G Specifications
-
-- Release date: July 22, 2021
-
-### Body
-
-- Dimensions: ~158.9 × 73.2 × 8.3 mm
-- Weight: 189 g
-- Build: Glass front (Gorilla Glass 5), glass back (Gorilla Glass 5) or textured leather option, plastic frame
-- SIM: Dual nano-SIM (no microSD)
-
-### Display
-
-- 6.43" Fluid AMOLED, 1080 × 2400 px (409 ppi), 20:9
-- 90 Hz refresh, HDR10+, Corning Gorilla Glass 5
-- DCI‑P3 color support
-
-### Platform
-
-- OS: Android 13
-- Chipset: MediaTek Dimensity 1200‑AI (6 nm)
-- CPU: Octa‑core (1×3.0 GHz Cortex‑A78, 3×2.6 GHz Cortex‑A78, 4×2.0 GHz Cortex‑A55)
-- GPU: Mali‑G77 MC9
-
-### Memory
-
-- RAM: 12 GB (LPDDR4X)
-- Storage: 256 GB UFS 3.1 (non‑expandable)
-
-### Cameras
-
-- Rear (triple): 50 MP main (Sony IMX766, f/1.9, OIS), 8 MP ultrawide (f/2.3, 120°), 2 MP mono/depth (f/2.4)
-- Video: 4K@30fps, 1080p up to 240fps (varies by mode), EIS/Gyro‑EIS, PDAF
-- Front: 32 MP (Sony IMX615, f/2.5), 1080p@30fps, Auto HDR
-
-### Battery & charging
-
-- 4500 mAh non‑removable
-- 65 W wired fast charging
-- No wireless charging
-
-### Connectivity
-
-- 5G (SA/NSA) and extensive regional LTE bands
-- Wi‑Fi 6 (802.11 a/b/g/n/ac/6), dual‑band
-- Bluetooth 5.2 (aptX/aptX HD), NFC, GPS (GPS/GLONASS/Galileo/BeiDou/NavIC)
-- USB Type‑C (USB 2.0), no 3.5 mm jack
-
-### Audio & sensors
-
-- Stereo speakers, no headphone jack
-- In‑display optical fingerprint, accelerometer, gyro, proximity, compass
-
 ## Performance Optimization Decisions
 
 This section documents key performance decisions for the Plato codebase, particularly for constrained Kobo devices.
@@ -639,40 +544,6 @@ The following were investigated and deemed unnecessary for this codebase:
 - **Thread pools for thumbnails**: Background fetchers already handle this; thread pools add complexity
 - **Async file I/O**: E-ink refresh latency dominates; async adds overhead without perceptible benefit
 - **Feature flags for plugins/sync**: These are integral features; feature flags add maintenance overhead
-
-## Could the Kobo Elipsa benefit from parallel programming?
-
-The Kobo Elipsa can benefit from parallel programming for workloads that are CPU-bound, parallelizable, and not latency-sensitive. Practical considerations:
-
-### When parallelism helps
-
-- **Page rendering / compositing:** Rasterizing complex pages (PDFs with many objects, or large bitmaps) and blending layers (text, annotations, UI) can be split into tiles or scanline bands processed in parallel.
-- **PDF/EPUB layout & reflow:** Laying out complex pages or reflowing large documents can parallelize per-chunk or per-page work.
-- **Image decoding & scaling:** Decode multiple images or tiles concurrently (especially if using multi-frame or tiled images).
-- **OCR / handwriting recognition (if local):** Model inference or feature extraction can be parallelized across CPU cores (or vectorized).
-- **Background tasks:** Indexing library, thumbnail generation, or file format conversions can run on background threads without blocking the UI.
-- **I/O pipelining:** Overlap flash reads, decompression, and rendering on separate threads to improve throughput.
-
-### When it’s not helpful or is counterproductive
-
-- **Simple UI interactions:** Eink refresh latency and the need to block for full or partial refresh often dominate perceived responsiveness more than CPU. Spawning threads won’t reduce eink update time.
-- **Small, short-lived tasks:** Threading overhead and context switches can increase total runtime on a low‑power CPU.
-- **Memory pressure:** The Elipsa has limited RAM; parallel tasks that increase peak memory usage (multiple large render buffers) risk paging or OOM.
-- **Power consumption:** More active cores raise energy use and can reduce battery life; mobile workloads must trade speed for battery.
-
-### Implementation notes and best practices
-
-- Use a thread pool sized to available cores (usually 2–4 on such devices), not one thread per task.
-- Partition work into coarse-grained tiles or page-level jobs to amortize thread overhead.
-- Limit peak memory by streaming and reusing buffers. Process tiles sequentially when memory is tight.
-- Prioritize interactive threads (UI, touch/pen input) and run heavy work at lower priority or in background.
-- Prefer SIMD/vectorized libraries for image & text rendering where possible; this can yield big gains without adding threads.
-- Measure: benchmark real device workloads (PDF rendering, annotation response) to confirm gains.
-- Use existing optimized libraries (MuPDF, Harfbuzz, Skia with context-appropriate builds) which already include multithreading or SIMD optimizations.
-
-### Bottom line
-
-Parallel programming can improve throughput for rendering, decoding, layout, and background processing on the Kobo Elipsa, but benefits are bounded by eink refresh latency, limited RAM, power constraints, and threading overhead. Focus on coarse-grained parallel tasks, buffer reuse, and SIMD acceleration, and always validate on the actual device.
 
 ## Known Build Issues and Solutions
 

@@ -374,11 +374,7 @@ impl Home {
             })
             .count();
 
-        let msg = format!(
-            "Category filter: {} ({} books)",
-            category,
-            count
-        );
+        let msg = format!("Category filter: {} ({} books)", category, count);
         let notif = Notification::new(msg, hub, rq, context);
         self.children.push(Box::new(notif) as Box<dyn View>);
 

@@ -2,10 +2,10 @@
 //!
 //! Provides a trait abstraction for different e-ink display controllers.
 
-use anyhow::Result;
-use crate::geom::Rectangle;
-use crate::eink::waveform::WaveformMode;
 use crate::eink::damage_tracker::RefreshStrategy;
+use crate::eink::waveform::WaveformMode;
+use crate::geom::Rectangle;
+use anyhow::Result;
 
 /// Trait for e-ink display controllers
 pub trait EInkController {
@@ -24,9 +24,7 @@ pub trait EInkController {
         match strategy {
             RefreshStrategy::None => Ok(()),
             RefreshStrategy::Full => self.full_refresh(),
-            RefreshStrategy::Partial(regions) => {
-                self.partial_refresh(regions, full_data, waveform)
-            }
+            RefreshStrategy::Partial(regions) => self.partial_refresh(regions, full_data, waveform),
         }
     }
 
@@ -75,7 +73,7 @@ pub trait EInkController {
         }
 
         let mut region_data = Vec::with_capacity(region_size);
-        let fb_width = (region.max.x as f32).ceil() as u32;
+        let fb_width = region.max.x as u32;
 
         for y in 0..height {
             let y_offset = (region.min.y as u32 + y) * fb_width * 4;
@@ -105,11 +103,14 @@ impl SunxiController {
         if device_path.is_empty() {
             anyhow::bail!("Device path cannot be empty");
         }
-        Ok(Self { _device_path: device_path })
+        Ok(Self {
+            _device_path: device_path,
+        })
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn default() -> Result<Self> {
-        Ok(Self::new("/dev/disp_eink".to_string())?)
+        Self::new("/dev/disp_eink".to_string())
     }
 }
 
@@ -121,12 +122,16 @@ impl EInkController for SunxiController {
 
         // Hardware-specific DISP_EINK_UPDATE2 ioctl requires actual device access
         // This implementation is a placeholder for future hardware integration
-        anyhow::bail!("DISP_EINK_UPDATE2 ioctl not implemented: requires actual Sunxi e-ink hardware access");
+        anyhow::bail!(
+            "DISP_EINK_UPDATE2 ioctl not implemented: requires actual Sunxi e-ink hardware access"
+        );
     }
 
     fn full_refresh(&self) -> Result<()> {
         // Hardware-specific full refresh requires actual device access
-        anyhow::bail!("Full refresh ioctl not implemented: requires actual Sunxi e-ink hardware access");
+        anyhow::bail!(
+            "Full refresh ioctl not implemented: requires actual Sunxi e-ink hardware access"
+        );
     }
 
     fn set_waveform_lut(&self, lut: &[u8]) -> Result<()> {
@@ -135,7 +140,9 @@ impl EInkController for SunxiController {
         }
 
         // Hardware-specific waveform LUT programming requires actual device access
-        anyhow::bail!("Waveform LUT programming not implemented: requires actual Sunxi e-ink hardware access");
+        anyhow::bail!(
+            "Waveform LUT programming not implemented: requires actual Sunxi e-ink hardware access"
+        );
     }
 
     fn get_controller_name(&self) -> &str {
@@ -154,11 +161,14 @@ impl MxcController {
         if device_path.is_empty() {
             anyhow::bail!("Device path cannot be empty");
         }
-        Ok(Self { _device_path: device_path })
+        Ok(Self {
+            _device_path: device_path,
+        })
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn default() -> Result<Self> {
-        Ok(Self::new("/dev/fb0".to_string())?)
+        Self::new("/dev/fb0".to_string())
     }
 }
 
@@ -169,12 +179,16 @@ impl EInkController for MxcController {
         }
 
         // Hardware-specific MXCFB_SEND_UPDATE ioctl requires actual device access
-        anyhow::bail!("MXCFB_SEND_UPDATE ioctl not implemented: requires actual MXC e-ink hardware access");
+        anyhow::bail!(
+            "MXCFB_SEND_UPDATE ioctl not implemented: requires actual MXC e-ink hardware access"
+        );
     }
 
     fn full_refresh(&self) -> Result<()> {
         // Hardware-specific full refresh requires actual device access
-        anyhow::bail!("Full refresh ioctl not implemented: requires actual MXC e-ink hardware access");
+        anyhow::bail!(
+            "Full refresh ioctl not implemented: requires actual MXC e-ink hardware access"
+        );
     }
 
     fn set_waveform_lut(&self, lut: &[u8]) -> Result<()> {
@@ -183,7 +197,9 @@ impl EInkController for MxcController {
         }
 
         // Hardware-specific EPDC waveform programming requires actual device access
-        anyhow::bail!("EPDC waveform programming not implemented: requires actual MXC e-ink hardware access");
+        anyhow::bail!(
+            "EPDC waveform programming not implemented: requires actual MXC e-ink hardware access"
+        );
     }
 
     fn get_controller_name(&self) -> &str {

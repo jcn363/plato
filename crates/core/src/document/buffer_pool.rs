@@ -1,12 +1,12 @@
 //! Buffer pooling for memory optimization
-//! 
+//!
 //! This module implements buffer reuse and pooling to reduce memory allocations
 //! during PDF rendering and text extraction operations.
 
 use anyhow::Result;
+use std::alloc::Layout;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
-use std::alloc::Layout;
 
 /// Reusable buffer for pixel data with SIMD alignment
 #[derive(Debug)]
@@ -27,8 +27,7 @@ impl PixelBuffer {
 
     /// Create a new SIMD-aligned buffer for specific size
     pub fn new_aligned(size: usize) -> Self {
-        let layout = Layout::from_size_align(size, 32)
-            .expect("Invalid alignment layout");
+        let layout = Layout::from_size_align(size, 32).expect("Invalid alignment layout");
         let ptr = unsafe { std::alloc::alloc(layout) };
         let vec = if ptr.is_null() {
             Vec::with_capacity(size)
@@ -39,7 +38,7 @@ impl PixelBuffer {
                 vec
             }
         };
-        
+
         Self {
             data: vec,
             capacity: size,
@@ -96,7 +95,7 @@ impl BufferPool {
     pub fn acquire(&self, min_size: usize) -> Result<BufferGuard> {
         let size = min_size.max(self.min_buffer_size);
         let mut pool = self.pool.lock().unwrap();
-        
+
         // Try to find a buffer with sufficient capacity
         let buffer = if let Some(mut buf) = pool.pop_front() {
             buf.ensure_capacity(size);
@@ -177,13 +176,13 @@ mod tests {
     #[test]
     fn test_buffer_pool_acquire_release() {
         let pool = BufferPool::new(1024, 4);
-        
+
         {
             let mut guard = pool.acquire(2048).unwrap();
             let buffer = guard.buffer();
             assert!(buffer.capacity() >= 2048);
         }
-        
+
         // Buffer should be returned to pool
         let stats = pool.stats();
         assert_eq!(stats.available, 1);
@@ -192,11 +191,11 @@ mod tests {
     #[test]
     fn test_buffer_pool_capacity_limit() {
         let pool = BufferPool::new(1024, 2);
-        
+
         let _guard1 = pool.acquire(1024).unwrap();
         let _guard2 = pool.acquire(1024).unwrap();
         let _guard3 = pool.acquire(1024).unwrap(); // Should allocate new
-        
+
         let stats = pool.stats();
         assert_eq!(stats.available, 0); // None returned yet
     }
@@ -204,12 +203,12 @@ mod tests {
     #[test]
     fn test_buffer_clear() {
         let pool = BufferPool::new(1024, 4);
-        
+
         let mut guard = pool.acquire(1024).unwrap();
         let buffer = guard.buffer();
         buffer.data_mut().extend_from_slice(&[1, 2, 3, 4]);
         buffer.clear();
-        
+
         assert!(buffer.data().is_empty());
     }
 }

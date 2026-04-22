@@ -40,8 +40,8 @@ pub struct ProgressiveDocLoader {
 
 impl ProgressiveDocLoader {
     pub fn new(path: &Path) -> Result<Self, Error> {
-        let doc = PdfPurrDocument::open(path)
-            .map_err(|e| format_err!("Failed to open PDF: {}", e))?;
+        let doc =
+            PdfPurrDocument::open(path).map_err(|e| format_err!("Failed to open PDF: {}", e))?;
 
         let total_pages = doc.page_count();
         let is_linearized = false;
@@ -146,7 +146,7 @@ impl ProgressiveDocLoader {
             let _ = self.load_page_thumbnail(page_idx);
         }
 
-        let behind_start = if current >= PRELOAD_BEHIND_PAGES { current - PRELOAD_BEHIND_PAGES } else { 0 };
+        let behind_start = current.saturating_sub(PRELOAD_BEHIND_PAGES);
         let behind_end = current;
 
         for page_idx in behind_start..behind_end {
@@ -179,7 +179,10 @@ impl ProgressiveDocLoader {
         let size_bytes = (800 * 1200) as usize;
         self.ensure_cache_space(size_bytes);
 
-        let doc = self.doc.as_ref().ok_or_else(|| format_err!("Document not loaded"))?;
+        let doc = self
+            .doc
+            .as_ref()
+            .ok_or_else(|| format_err!("Document not loaded"))?;
         let page = doc.load_page(page_idx as i32)?;
 
         let matrix = 800.0 / 600.0;
@@ -276,11 +279,7 @@ impl ProgressiveDocLoader {
 
     pub fn estimate_load_time(&self, page_idx: usize) -> Duration {
         if self.is_linearized {
-            let distance = if page_idx > self.current_page {
-                page_idx - self.current_page
-            } else {
-                self.current_page - page_idx
-            };
+            let distance = page_idx.abs_diff(self.current_page);
             Duration::from_millis(distance as u64 * 50)
         } else {
             Duration::from_millis(page_idx as u64 * 100)

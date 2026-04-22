@@ -111,7 +111,7 @@ impl RedactionEditor {
         for region in &self.regions {
             redactions_by_page
                 .entry(region.page)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(region);
         }
 
@@ -146,7 +146,11 @@ impl RedactionEditor {
 
                 // Add annotations to page
                 if !annot_array.is_empty() {
-                    let page_dict = doc.get_object_mut(**page_id).unwrap().as_dict_mut().unwrap();
+                    let page_dict = doc
+                        .get_object_mut(**page_id)
+                        .unwrap()
+                        .as_dict_mut()
+                        .unwrap();
                     page_dict.set("Annots", Object::Array(annot_array));
                 }
             }
@@ -161,7 +165,10 @@ impl RedactionEditor {
         fs::write(output_path, bytes)
             .map_err(|e| format_err!("Failed to write output file: {}", e))?;
 
-        log_info!("Successfully applied redactions and saved to: {:?}", output_path);
+        log_info!(
+            "Successfully applied redactions and saved to: {:?}",
+            output_path
+        );
         Ok(output_path.to_path_buf())
     }
 

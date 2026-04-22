@@ -144,7 +144,7 @@ pub trait Framebuffer {
     fn draw_rectangle_simd(&mut self, rect: &Rectangle, color: Color) {
         let width = (rect.max.x - rect.min.x) as usize;
         let height = (rect.max.y - rect.min.y) as usize;
-        
+
         // Use SIMD for large rectangles
         if width >= 16 && height >= 1 {
             self.draw_rectangle_simd_neon(rect, color);
@@ -163,17 +163,17 @@ pub trait Framebuffer {
     fn draw_rectangle_simd_neon(&mut self, rect: &Rectangle, color: Color) {
         let width = (rect.max.x - rect.min.x) as usize;
         let start_y = rect.min.y as u32;
-        
+
         // Create aligned color buffer for SIMD operations
         let color_bytes = color.rgb();
         let mut color_buffer = vec![color_bytes[0]; width * 3];
-        
+
         for i in 1..width {
             color_buffer[i * 3] = color_bytes[0];
             color_buffer[i * 3 + 1] = color_bytes[1];
             color_buffer[i * 3 + 2] = color_bytes[2];
         }
-        
+
         // Draw rows using scalar pixel setting
         for y in 0..(rect.max.y - rect.min.y) {
             let py = start_y + y as u32;

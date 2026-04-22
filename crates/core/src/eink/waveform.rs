@@ -5,13 +5,14 @@
 use anyhow::Result;
 
 /// Waveform modes for e-ink refresh
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum WaveformMode {
-    GC16,  // High quality, slow (grayscale 16-level)
-    GL16,  // Grayscale, medium
-    DU,    // Direct update, fast
-    A2,    // Monochrome text, very fast
-    AUTO,  // Let controller decide
+    #[default]
+    GC16, // High quality, slow (grayscale 16-level)
+    GL16, // Grayscale, medium
+    DU,   // Direct update, fast
+    A2,   // Monochrome text, very fast
+    AUTO, // Let controller decide
 }
 
 impl WaveformMode {
@@ -25,6 +26,7 @@ impl WaveformMode {
         }
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Result<Self> {
         match s.to_uppercase().as_str() {
             "GC16" => Ok(Self::GC16),
@@ -69,12 +71,6 @@ pub fn select_waveform(content: ContentType, update: UpdateType) -> WaveformMode
         (ContentType::UI, UpdateType::Full) => WaveformMode::GC16,
         (ContentType::UI, UpdateType::Partial) => WaveformMode::A2,
         (ContentType::UI, UpdateType::Fast) => WaveformMode::A2,
-    }
-}
-
-impl Default for WaveformMode {
-    fn default() -> Self {
-        Self::GC16
     }
 }
 

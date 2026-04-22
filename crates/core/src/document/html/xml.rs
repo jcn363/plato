@@ -177,7 +177,6 @@ impl XmlExt for char {
 /// ## Dependencies
 ///
 /// - `quick_xml` - For enhanced XML parsing and manipulation
-
 use anyhow::{Context, Error};
 use quick_xml::events::Event;
 use quick_xml::Reader;
@@ -185,50 +184,57 @@ use quick_xml::Reader;
 /// Extract all text content from an XML element by tag name
 pub fn extract_text_by_tag(xml: &str, tag_name: &str) -> Result<Vec<String>, Error> {
     let mut reader = Reader::from_str(xml);
-    
+
     let mut results = Vec::new();
     let mut in_target = false;
-    
+
     let mut buf = Vec::new();
     loop {
-        match reader.read_event_into(&mut buf)
-            .context("Failed to read XML event")? {
-            Event::Start(ref e) => {
-                if e.name().as_ref() == tag_name.as_bytes() {
-                    in_target = true;
-                }
+        match reader
+            .read_event_into(&mut buf)
+            .context("Failed to read XML event")?
+        {
+            Event::Start(ref e) if e.name().as_ref() == tag_name.as_bytes() => {
+                in_target = true;
             }
             Event::Text(e) if in_target => {
                 results.push(String::from_utf8_lossy(e.as_ref()).to_string());
             }
-            Event::End(ref e) => {
-                if e.name().as_ref() == tag_name.as_bytes() {
-                    in_target = false;
-                }
+            Event::End(ref e) if e.name().as_ref() == tag_name.as_bytes() => {
+                in_target = false;
             }
             Event::Eof => break,
             _ => {}
         }
         buf.clear();
     }
-    
+
     Ok(results)
 }
 
 /// Extract attribute value from first matching XML element
-pub fn extract_attribute_by_tag(xml: &str, tag_name: &str, attr_name: &str) -> Result<Option<String>, Error> {
+pub fn extract_attribute_by_tag(
+    xml: &str,
+    tag_name: &str,
+    attr_name: &str,
+) -> Result<Option<String>, Error> {
     let mut reader = Reader::from_str(xml);
-    
+
     let mut buf = Vec::new();
     loop {
-        match reader.read_event_into(&mut buf)
-            .context("Failed to read XML event")? {
+        match reader
+            .read_event_into(&mut buf)
+            .context("Failed to read XML event")?
+        {
             Event::Start(ref e) if e.name().as_ref() == tag_name.as_bytes() => {
-                if let Some(attr) = e.attributes()
+                if let Some(attr) = e
+                    .attributes()
                     .with_checks(false)
                     .filter_map(|a| a.ok())
-                    .find(|a| a.key.as_ref() == attr_name.as_bytes()) {
-                    let value = attr.unescape_value()
+                    .find(|a| a.key.as_ref() == attr_name.as_bytes())
+                {
+                    let value = attr
+                        .unescape_value()
                         .context("Failed to unescape attribute value")?
                         .to_string();
                     return Ok(Some(value));
@@ -239,34 +245,39 @@ pub fn extract_attribute_by_tag(xml: &str, tag_name: &str, attr_name: &str) -> R
         }
         buf.clear();
     }
-    
+
     Ok(None)
 }
 
 /// Extract all elements matching a tag name with their attributes
-pub fn extract_elements_with_attrs(xml: &str, tag_name: &str) -> Result<Vec<(String, FxHashMap<String, String>)>, Error> {
+#[allow(clippy::type_complexity)]
+pub fn extract_elements_with_attrs(
+    xml: &str,
+    tag_name: &str,
+) -> Result<Vec<(String, FxHashMap<String, String>)>, Error> {
     let mut reader = Reader::from_str(xml);
-    
+
     let mut results = Vec::new();
     let mut buf = Vec::new();
-    
+
     loop {
-        match reader.read_event_into(&mut buf)
-            .context("Failed to read XML event")? {
+        match reader
+            .read_event_into(&mut buf)
+            .context("Failed to read XML event")?
+        {
             Event::Start(ref e) if e.name().as_ref() == tag_name.as_bytes() => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 let mut attrs = FxHashMap::default();
-                
-                for attr in e.attributes()
-                    .with_checks(false)
-                    .filter_map(|a| a.ok()) {
+
+                for attr in e.attributes().with_checks(false).filter_map(|a| a.ok()) {
                     let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-                    let value = attr.unescape_value()
+                    let value = attr
+                        .unescape_value()
                         .context("Failed to unescape attribute value")?
                         .to_string();
                     attrs.insert(key, value);
                 }
-                
+
                 results.push((name, attrs));
             }
             Event::Eof => break,
@@ -274,7 +285,7 @@ pub fn extract_elements_with_attrs(xml: &str, tag_name: &str) -> Result<Vec<(Str
         }
         buf.clear();
     }
-    
+
     Ok(results)
 }
 
@@ -282,35 +293,39 @@ pub fn extract_elements_with_attrs(xml: &str, tag_name: &str) -> Result<Vec<(Str
 pub fn validate_xml(xml: &str) -> Result<(), Error> {
     let mut reader = Reader::from_str(xml);
     let mut buf = Vec::new();
-    
+
     loop {
-        match reader.read_event_into(&mut buf)
-            .context("XML is malformed")? {
-            Event::Eof => break,
-            _ => {}
+        if reader
+            .read_event_into(&mut buf)
+            .context("XML is malformed")?
+            == Event::Eof
+        {
+            break;
         }
         buf.clear();
     }
-    
+
     Ok(())
 }
 
 /// Pretty-print XML with proper indentation
 pub fn pretty_print_xml(xml: &str, indent: usize) -> Result<String, Error> {
     let mut reader = Reader::from_str(xml);
-    
+
     let mut writer = quick_xml::Writer::new_with_indent(Vec::new(), b' ', indent);
     let mut buf = Vec::new();
-    
+
     loop {
-        match reader.read_event_into(&mut buf)
-            .context("Failed to read XML event")? {
+        match reader
+            .read_event_into(&mut buf)
+            .context("Failed to read XML event")?
+        {
             Event::Eof => break,
             e => writer.write_event(e).context("Failed to write XML event")?,
         }
         buf.clear();
     }
-    
+
     let result = writer.into_inner();
     String::from_utf8(result).context("Generated XML is not valid UTF-8")
 }

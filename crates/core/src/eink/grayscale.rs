@@ -21,10 +21,7 @@ pub struct GrayscaleConverter {
 
 impl GrayscaleConverter {
     pub fn new(mode: DitheringMode) -> Self {
-        Self {
-            mode,
-            gamma: 2.2,
-        }
+        Self { mode, gamma: 2.2 }
     }
 
     pub fn with_gamma(mode: DitheringMode, gamma: f32) -> Result<Self> {
@@ -145,7 +142,7 @@ impl GrayscaleConverter {
 
     #[inline]
     fn quantize_16_level(&self, value: f32) -> u8 {
-        let clamped = value.max(0.0).min(255.0);
+        let clamped = value.clamp(0.0, 255.0);
         ((clamped / 255.0) * 15.0).round() as u8
     }
 }
@@ -178,7 +175,12 @@ mod tests {
     #[test]
     fn test_convert_no_dither() {
         let conv = GrayscaleConverter::new(DitheringMode::None);
-        let rgba: Vec<u8> = (0..100).map(|_| 255u8).chain((0..100).map(|_| 128u8)).chain((0..100).map(|_| 64u8)).chain((0..100).map(|_| 255u8)).collect();
+        let rgba: Vec<u8> = (0..100)
+            .map(|_| 255u8)
+            .chain((0..100).map(|_| 128u8))
+            .chain((0..100).map(|_| 64u8))
+            .chain((0..100).map(|_| 255u8))
+            .collect();
         let result = conv.convert(&rgba, 10, 10);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 100);
@@ -195,12 +197,17 @@ mod tests {
     #[test]
     fn test_ordered_dithering() {
         let conv = GrayscaleConverter::new(DitheringMode::Ordered);
-        let rgba: Vec<u8> = (0..(16 * 16)).flat_map(|_| [128u8, 128, 128, 255]).collect();
+        let rgba: Vec<u8> = (0..(16 * 16))
+            .flat_map(|_| [128u8, 128, 128, 255])
+            .collect();
         let grayscale = conv.convert(&rgba, 16, 16).unwrap();
 
         // Ordered dithering should produce a pattern
         // Values shouldn't all be the same
         let unique_values: std::collections::HashSet<u8> = grayscale.iter().cloned().collect();
-        assert!(unique_values.len() > 1, "Ordered dithering should produce variety");
+        assert!(
+            unique_values.len() > 1,
+            "Ordered dithering should produce variety"
+        );
     }
 }

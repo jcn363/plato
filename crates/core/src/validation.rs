@@ -229,16 +229,16 @@ pub fn validate_url(url: &str, context: &str) -> Result<(), Error> {
 pub fn validate_ip(ip: &str, context: &str) -> Result<(), Error> {
     let ipv4_regex = regex::Regex::new(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
         .map_err(|_| format_err!("{}: failed to compile IP regex", context))?;
-    
+
     if ipv4_regex.is_match(ip) {
         return Ok(());
     }
-    
+
     // Basic IPv6 validation (simplified)
     if ip.contains(':') && ip.split(':').count() <= 8 {
         return Ok(());
     }
-    
+
     bail!("{}: '{}' is not a valid IP address", context, ip);
 }
 
@@ -255,7 +255,7 @@ pub fn validate_alphanumeric(s: &str, context: &str) -> Result<(), Error> {
 pub fn validate_hostname(hostname: &str, context: &str) -> Result<(), Error> {
     let hostname_regex = regex::Regex::new(r"^[a-zA-Z0-9][a-zA-Z0-9.-]{0,253}[a-zA-Z0-9]$")
         .map_err(|_| format_err!("{}: failed to compile hostname regex", context))?;
-    
+
     if !hostname_regex.is_match(hostname) {
         bail!("{}: '{}' is not a valid hostname", context, hostname);
     }

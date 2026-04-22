@@ -632,8 +632,8 @@ impl EpubEditorCore {
                         None
                     };
                     let after = search_content.chars().nth(abs_pos + search_query.len());
-                    let is_word_boundary = before.map_or(true, |c| !c.is_alphanumeric())
-                        && after.map_or(true, |c| !c.is_alphanumeric());
+                    let is_word_boundary = before.is_none_or(|c| !c.is_alphanumeric())
+                        && after.is_none_or(|c| !c.is_alphanumeric());
                     if is_word_boundary {
                         matches.push((abs_pos, abs_pos + search_query.len()));
                     }
@@ -680,8 +680,8 @@ impl EpubEditorCore {
                     None
                 };
                 let after = search_content.chars().nth(abs_pos + search_query.len());
-                let is_word_boundary = before.map_or(true, |c| !c.is_alphanumeric())
-                    && after.map_or(true, |c| !c.is_alphanumeric());
+                let is_word_boundary = before.is_none_or(|c| !c.is_alphanumeric())
+                    && after.is_none_or(|c| !c.is_alphanumeric());
                 if is_word_boundary {
                     c += 1;
                 }
@@ -840,7 +840,7 @@ impl EpubEditorCore {
         toc.push_str("<nav epub:type=\"toc\">\n");
         toc.push_str("  <ol>\n");
 
-        for (_index, chapter) in self.chapters.iter().enumerate() {
+        for chapter in self.chapters.iter() {
             toc.push_str(&format!(
                 "    <li><a href=\"{}\">{}</a></li>\n",
                 chapter.href, chapter.title
@@ -868,6 +868,7 @@ impl EpubEditorCore {
     pub fn list_images(&self) -> Vec<ImageInfo> {
         let mut images = Vec::new();
         let img_re = Regex::new(r#"<img[^>]+src=["']([^"']+)["'][^>]*>"#).unwrap();
+        let alt_re = Regex::new(r#"alt=["']([^"']*)["']"#).unwrap();
 
         for (index, chapter) in self.chapters.iter().enumerate() {
             for cap in img_re.captures_iter(&chapter.content) {
@@ -875,8 +876,7 @@ impl EpubEditorCore {
                     .get(1)
                     .map(|m| m.as_str().to_string())
                     .unwrap_or_default();
-                let alt = Regex::new(r#"alt=["']([^"']*)["']"#)
-                    .unwrap()
+                let alt = alt_re
                     .captures(&cap[0])
                     .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
 
@@ -898,6 +898,7 @@ impl EpubEditorCore {
         let link_re =
             Regex::new(r#"<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>"#)
                 .unwrap();
+        let media_type_re = Regex::new(r#"media=["']([^"']*)["']"#).unwrap();
         let style_re = Regex::new(r#"<style[^>]*>(.*?)</style>"#).unwrap();
 
         for (index, chapter) in self.chapters.iter().enumerate() {
@@ -906,8 +907,7 @@ impl EpubEditorCore {
                     .get(1)
                     .map(|m| m.as_str().to_string())
                     .unwrap_or_default();
-                let media_type = Regex::new(r#"media=["']([^"']*)["']"#)
-                    .unwrap()
+                let media_type = media_type_re
                     .captures(&cap[0])
                     .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
 

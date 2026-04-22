@@ -31,21 +31,21 @@ const RELATIVE_SIZE_KEYWORDS: [&str; 2] = ["smaller", "larger"];
 /// Extracts title, description, author, and other meta tags from HTML content
 pub fn extract_html_metadata(html: &str) -> HtmlMetadata {
     let mut metadata = HtmlMetadata::default();
-    
+
     // For now, use regex-based extraction as a fallback
     // until full html5ever integration is complete
     if let Some(title) = extract_title_regex(html) {
         metadata.title = Some(title);
     }
-    
+
     if let Some(description) = extract_meta_regex(html, "description") {
         metadata.description = Some(description);
     }
-    
+
     if let Some(author) = extract_meta_regex(html, "author") {
         metadata.author = Some(author);
     }
-    
+
     metadata
 }
 
@@ -57,13 +57,18 @@ fn extract_title_regex(html: &str) -> Option<String> {
 
 /// Extract meta tag content using regex (fallback method)
 fn extract_meta_regex(html: &str, name: &str) -> Option<String> {
-    let meta_regex = Regex::new(&format!(r#"<meta\s+name="{}"\s+content="([^"]+)""#, regex::escape(name))).ok()?;
+    let meta_regex = Regex::new(&format!(
+        r#"<meta\s+name="{}"\s+content="([^"]+)""#,
+        regex::escape(name)
+    ))
+    .ok()?;
     meta_regex.captures(html).map(|c| c[1].trim().to_string())
 }
 
 /// Extract all links from HTML content
 pub fn extract_links(html: &str) -> Vec<String> {
-    let link_regex = Regex::new(r#"<a\s+[^>]*href="([^"]+)"#).unwrap_or_else(|_| Regex::new(r#"<a[^>]*href="([^"]+)""#).unwrap());
+    let link_regex = Regex::new(r#"<a\s+[^>]*href="([^"]+)"#)
+        .unwrap_or_else(|_| Regex::new(r#"<a[^>]*href="([^"]+)""#).unwrap());
     link_regex
         .captures_iter(html)
         .map(|c| c[1].to_string())
@@ -72,7 +77,8 @@ pub fn extract_links(html: &str) -> Vec<String> {
 
 /// Extract all images from HTML content
 pub fn extract_images(html: &str) -> Vec<String> {
-    let img_regex = Regex::new(r#"<img\s+[^>]*src="([^"]+)"#).unwrap_or_else(|_| Regex::new(r#"<img[^>]*src="([^"]+)""#).unwrap());
+    let img_regex = Regex::new(r#"<img\s+[^>]*src="([^"]+)"#)
+        .unwrap_or_else(|_| Regex::new(r#"<img[^>]*src="([^"]+)""#).unwrap());
     img_regex
         .captures_iter(html)
         .map(|c| c[1].to_string())

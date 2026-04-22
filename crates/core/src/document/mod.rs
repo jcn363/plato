@@ -77,11 +77,11 @@
 //! - `framebuffer` - Output rendering
 //! - `metadata` - Document metadata
 
-pub mod epub;
-pub mod html;
 pub mod buffer_pool;
 pub mod cache;
 pub mod djvu;
+pub mod epub;
+pub mod html;
 pub mod pdf;
 pub mod pdf_manipulator;
 pub mod pdfpurr;

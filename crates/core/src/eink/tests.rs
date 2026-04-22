@@ -19,14 +19,14 @@ fn test_full_refresh_pipeline() {
     // First frame - should trigger full refresh
     let frame1 = FrameBuffer::new(100, 100);
     let regions = damage_tracker.track_changes(&frame1);
-    
+
     assert_eq!(regions.len(), 1);
     assert!(damage_tracker.should_full_refresh());
     // Ghosting reducer starts at 0, shouldn't force refresh until threshold
     assert!(!ghosting_reducer.should_force_full_refresh());
-    
+
     ghosting_reducer.register_full_refresh();
-    
+
     // Convert to grayscale
     let grayscale = converter.convert(&frame1.data, 100, 100).unwrap();
     assert_eq!(grayscale.len(), 100 * 100);
@@ -50,7 +50,7 @@ fn test_partial_refresh_pipeline() {
     frame2_data[1] = 255;
     frame2_data[2] = 255;
     let frame2 = FrameBuffer::from_data(100, 100, frame2_data).unwrap();
-    
+
     let regions = damage_tracker.track_changes(&frame2);
     ghosting_reducer.register_partial_update();
 
@@ -139,7 +139,7 @@ fn test_damage_tracker_size_change() {
     // Second frame 200x200 - should trigger full refresh
     let frame2 = FrameBuffer::new(200, 200);
     let regions2 = tracker.track_changes(&frame2);
-    
+
     assert_eq!(regions2.len(), 1);
     let region = &regions2[0];
     assert_eq!(region.width(), 200);
@@ -173,9 +173,9 @@ fn test_damage_tracker_full_screen_change() {
     // Second frame - completely different
     let frame2_data: Vec<u8> = (0..100 * 100 * 4).map(|i| i as u8).collect();
     let frame2 = FrameBuffer::from_data(100, 100, frame2_data).unwrap();
-    
+
     let regions = tracker.track_changes(&frame2);
-    
+
     // Should detect large change area
     let total_area: u32 = regions.iter().map(|r| r.width() * r.height()).sum();
     assert!(total_area > 0);
@@ -236,11 +236,11 @@ fn test_floyd_steinberg_dithering() {
     }
 
     let grayscale = converter.convert(&rgba, width, height).unwrap();
-    
+
     // Should maintain approximate average brightness
     let sum: u32 = grayscale.iter().map(|&v| v as u32).sum();
     let avg = sum / grayscale.len() as u32;
-    
+
     // Average should be around mid-range (7-8 in 0-15 scale)
     assert!(avg >= 5 && avg <= 10);
 }
@@ -249,13 +249,18 @@ fn test_floyd_steinberg_dithering() {
 fn test_ordered_dithering() {
     let converter = GrayscaleConverter::new(DitheringMode::Ordered);
 
-    let rgba: Vec<u8> = (0..(16 * 16)).flat_map(|_| [128u8, 128, 128, 255]).collect();
+    let rgba: Vec<u8> = (0..(16 * 16))
+        .flat_map(|_| [128u8, 128, 128, 255])
+        .collect();
     let grayscale = converter.convert(&rgba, 16, 16).unwrap();
 
     // Ordered dithering should produce a pattern
     // Values shouldn't all be the same
     let unique_values: std::collections::HashSet<u8> = grayscale.iter().cloned().collect();
-    assert!(unique_values.len() > 1, "Ordered dithering should produce variety");
+    assert!(
+        unique_values.len() > 1,
+        "Ordered dithering should produce variety"
+    );
 }
 
 #[test]
@@ -265,11 +270,15 @@ fn test_grayscale_gamma_correction() {
     // Mid-gray with gamma correction
     let mid_gray = vec![128u8, 128, 128, 255];
     let gray = converter.convert(&mid_gray, 1, 1).unwrap();
-    
+
     // With gamma 2.2, mid-gray (128) is brightened
     // Linear: 128 -> ~7-8 in 16-level
     // Gamma corrected: ~187 -> ~11 in 16-level (brighter)
-    assert!(gray[0] > 7, "Gamma 2.2 should brighten mid-gray, got {}", gray[0]);
+    assert!(
+        gray[0] > 7,
+        "Gamma 2.2 should brighten mid-gray, got {}",
+        gray[0]
+    );
 }
 
 // ============================================================================
@@ -284,7 +293,7 @@ fn test_partial_refresh_manager_integration() {
     // First frame
     let frame1 = FrameBuffer::new(100, 100);
     let regions = manager.track_frame(&frame1);
-    
+
     // Should return full screen for first frame
     assert_eq!(regions.len(), 1);
 
@@ -299,13 +308,13 @@ fn test_region_filtering() {
 
     // Create regions of different sizes
     let regions = vec![
-        Rectangle::from_coords(0, 0, 10, 10),      // Small: 100 pixels
-        Rectangle::from_coords(20, 20, 50, 50),    // Medium: 900 pixels
+        Rectangle::from_coords(0, 0, 10, 10),       // Small: 100 pixels
+        Rectangle::from_coords(20, 20, 50, 50),     // Medium: 900 pixels
         Rectangle::from_coords(100, 100, 200, 200), // Large: 10000 pixels
     ];
 
     let filtered = manager.filter_small_regions(regions);
-    
+
     // Should only keep regions >= 1000 pixels
     assert_eq!(filtered.len(), 1);
     assert_eq!(filtered[0].width(), 100);
@@ -321,11 +330,13 @@ fn test_sunxi_controller_creation() {
     // Test controller creation and name (does not require hardware)
     let controller = SunxiController::default().unwrap();
     assert_eq!(controller.get_controller_name(), "sunxi-disp2");
-    
+
     // Verify update() returns error without hardware (expected behavior)
     let data = vec![0u8; 100];
     let region = Rectangle::from_coords(0, 0, 10, 10);
-    assert!(controller.update(region, &data, WaveformMode::GC16).is_err());
+    assert!(controller
+        .update(region, &data, WaveformMode::GC16)
+        .is_err());
 }
 
 #[test]
@@ -333,20 +344,22 @@ fn test_mxc_controller_creation() {
     // Test controller creation and name (does not require hardware)
     let controller = MxcController::default().unwrap();
     assert_eq!(controller.get_controller_name(), "mxc-epdc");
-    
+
     // Verify update() returns error without hardware (expected behavior)
     let data = vec![0u8; 100];
     let region = Rectangle::from_coords(0, 0, 10, 10);
-    assert!(controller.update(region, &data, WaveformMode::GC16).is_err());
+    assert!(controller
+        .update(region, &data, WaveformMode::GC16)
+        .is_err());
 }
 
 #[test]
 fn test_controller_empty_data_rejection() {
     let sunxi = SunxiController::default().unwrap();
     let mxc = MxcController::default().unwrap();
-    
+
     let region = Rectangle::from_coords(0, 0, 10, 10);
-    
+
     // Both controllers should reject empty data
     assert!(sunxi.update(region, &[], WaveformMode::GC16).is_err());
     assert!(mxc.update(region, &[], WaveformMode::GC16).is_err());
@@ -367,15 +380,21 @@ fn test_large_buffer_performance() {
     let data = vec![128u8; width * height * 4];
 
     let start = std::time::Instant::now();
-    
-    let grayscale = converter.convert(&data, width as u32, height as u32).unwrap();
+
+    let grayscale = converter
+        .convert(&data, width as u32, height as u32)
+        .unwrap();
     let frame = FrameBuffer::from_data(width as u32, height as u32, data).unwrap();
     tracker.track_changes(&frame);
-    
+
     let duration = start.elapsed();
-    
+
     // Should complete in reasonable time (< 2 seconds for large buffer in debug)
-    assert!(duration.as_secs() < 2, "Large buffer conversion too slow: {:?}", duration);
+    assert!(
+        duration.as_secs() < 2,
+        "Large buffer conversion too slow: {:?}",
+        duration
+    );
     assert_eq!(grayscale.len(), width * height);
 }
 
@@ -396,10 +415,10 @@ fn test_rapid_partial_updates() {
         if offset < data.len() {
             data[offset] = 255;
         }
-        
+
         let frame = FrameBuffer::from_data(100, 100, data).unwrap();
         let _regions = manager.track_frame(&frame);
-        
+
         if manager.should_force_full_refresh() {
             ghosting_reducer.register_full_refresh();
             manager.reset_partial_count();
@@ -424,7 +443,7 @@ fn test_damage_tracker_reset() {
     // Next frame should be treated as first frame again
     let frame2 = FrameBuffer::new(100, 100);
     let regions = tracker.track_changes(&frame2);
-    
+
     assert_eq!(regions.len(), 1);
     assert!(tracker.should_full_refresh());
 }
@@ -447,7 +466,7 @@ fn test_framebuffer_invalid_data() {
 #[test]
 fn test_grayscale_invalid_buffer() {
     let converter = GrayscaleConverter::new(DitheringMode::None);
-    
+
     // Wrong buffer size
     let result = converter.convert(&[0u8; 100], 10, 10);
     assert!(result.is_err());
@@ -462,10 +481,10 @@ fn test_waveform_invalid_string() {
 #[test]
 fn test_ghosting_reducer_invalid_settings() {
     let mut reducer = GhostingReducer::default();
-    
+
     assert!(reducer.set_max_partial_updates(0).is_err());
     assert!(reducer.set_full_refresh_interval(0).is_err());
-    
+
     assert!(reducer.set_max_partial_updates(5).is_ok());
     assert!(reducer.set_full_refresh_interval(30).is_ok());
 }

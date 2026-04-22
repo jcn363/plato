@@ -15,13 +15,13 @@ mod partial_refresh;
 mod waveform;
 
 #[cfg(test)]
-mod tests;
-#[cfg(test)]
 mod regression_tests;
+#[cfg(test)]
+mod tests;
 
-pub use controller::{EInkController, SunxiController, MxcController};
+pub use controller::{EInkController, MxcController, SunxiController};
 pub use damage_tracker::{DamageTracker, FrameBuffer};
 pub use ghosting::GhostingReducer;
-pub use grayscale::{GrayscaleConverter, DitheringMode};
+pub use grayscale::{DitheringMode, GrayscaleConverter};
 pub use partial_refresh::PartialRefreshManager;
-pub use waveform::{WaveformMode, select_waveform, ContentType, UpdateType};
+pub use waveform::{select_waveform, ContentType, UpdateType, WaveformMode};

@@ -124,7 +124,6 @@ pub static CURRENT_LANGUAGE: LazyLock<RwLock<Language>> =
 pub static TRANSLATIONS: LazyLock<RwLock<HashMap<String, TranslationData>>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
 
-
 pub fn set_language(lang: Language) {
     *CURRENT_LANGUAGE
         .write()
@@ -144,21 +143,19 @@ pub fn load_translations_from_dir<P: AsRef<Path>>(dir: P) -> Result<(), Error> {
         return Ok(()); // No translations directory is fine
     }
 
-    let mut translations = TRANSLATIONS
-        .write()
-        .expect("TRANSLATIONS lock poisoned");
+    let mut translations = TRANSLATIONS.write().expect("TRANSLATIONS lock poisoned");
 
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
-        
+
         if path.extension().and_then(|s| s.to_str()) == Some("json") {
             let content = fs::read_to_string(&path)
                 .with_context(|| format!("Failed to read translation file {}", path.display()))?;
-            
+
             let data: TranslationData = serde_json::from_str(&content)
                 .with_context(|| format!("Failed to parse translation file {}", path.display()))?;
-            
+
             translations.insert(data.language.clone(), data);
         }
     }
@@ -175,11 +172,9 @@ pub fn t(key: &str) -> String {
 pub fn t_with_context(key: &str, context: Option<&str>) -> String {
     let lang = get_language();
     let lang_code = lang.code();
-    
-    let translations = TRANSLATIONS
-        .read()
-        .expect("TRANSLATIONS lock poisoned");
-    
+
+    let translations = TRANSLATIONS.read().expect("TRANSLATIONS lock poisoned");
+
     // Try to get translation from loaded files
     if let Some(data) = translations.get(lang_code) {
         if let Some(entry) = data.translations.get(key) {
@@ -195,7 +190,7 @@ pub fn t_with_context(key: &str, context: Option<&str>) -> String {
             return entry.value.clone();
         }
     }
-    
+
     // Fallback to hardcoded translations
     get_fallback_translation(key)
 }
@@ -209,11 +204,9 @@ pub fn tn(key: &str, count: usize) -> String {
 pub fn tn_with_context(key: &str, count: usize, context: Option<&str>) -> String {
     let lang = get_language();
     let lang_code = lang.code();
-    
-    let translations = TRANSLATIONS
-        .read()
-        .expect("TRANSLATIONS lock poisoned");
-    
+
+    let translations = TRANSLATIONS.read().expect("TRANSLATIONS lock poisoned");
+
     // Try to get translation from loaded files
     if let Some(data) = translations.get(lang_code) {
         if let Some(entry) = data.translations.get(key) {
@@ -230,7 +223,7 @@ pub fn tn_with_context(key: &str, count: usize, context: Option<&str>) -> String
             }
         }
     }
-    
+
     // Fallback to simple translation
     t_with_context(key, context)
 }
@@ -238,22 +231,22 @@ pub fn tn_with_context(key: &str, count: usize, context: Option<&str>) -> String
 /// Interpolated translation with variables
 pub fn ti(key: &str, vars: &[(&str, &str)]) -> String {
     let mut result = t(key);
-    
+
     for (var_name, var_value) in vars {
         result = result.replace(&format!("{{{}}}", var_name), var_value);
     }
-    
+
     result
 }
 
 /// Interpolated pluralized translation
 pub fn tni(key: &str, count: usize, vars: &[(&str, &str)]) -> String {
     let mut result = tn(key, count);
-    
+
     for (var_name, var_value) in vars {
         result = result.replace(&format!("{{{}}}", var_name), var_value);
     }
-    
+
     result
 }
 
@@ -263,7 +256,7 @@ fn get_fallback_translation(key: &str) -> String {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[allow(dead_code)]
+#[allow(dead_code)] // Zero and Two variants reserved for future language support (e.g., Arabic uses Zero, some Slavic languages use Two)
 enum PluralForm {
     Zero,
     One,
@@ -275,50 +268,54 @@ enum PluralForm {
 
 fn get_plural_form(lang: Language, count: usize) -> PluralForm {
     match lang {
-        Language::English | Language::German | Language::Italian | Language::Portuguese | Language::Chinese | Language::Japanese | Language::Korean => {
+        Language::English
+        | Language::German
+        | Language::Italian
+        | Language::Portuguese
+        | Language::Chinese
+        | Language::Japanese
+        | Language::Korean => {
             if count == 1 {
                 PluralForm::One
             } else {
                 PluralForm::Other
             }
-        },
+        }
         Language::Spanish => {
             if count == 1 {
                 PluralForm::One
             } else {
                 PluralForm::Other
             }
-        },
+        }
         Language::French => {
             if count == 0 || count == 1 {
                 PluralForm::One
             } else {
                 PluralForm::Other
             }
-        },
+        }
         Language::Russian => {
             let tens = count % 100;
             let ones = count % 10;
-            
-            if tens >= 10 && tens <= 20 {
+
+            if (10..=20).contains(&tens) {
                 PluralForm::Many
             } else if ones == 1 {
                 PluralForm::One
-            } else if ones >= 2 && ones <= 4 {
+            } else if (2..=4).contains(&ones) {
                 PluralForm::Few
             } else {
                 PluralForm::Many
             }
-        },
+        }
     }
 }
 
 /// Get available languages with their translation completeness
 pub fn get_available_languages() -> Vec<(Language, f64)> {
-    let translations = TRANSLATIONS
-        .read()
-        .expect("TRANSLATIONS lock poisoned");
-    
+    let translations = TRANSLATIONS.read().expect("TRANSLATIONS lock poisoned");
+
     Language::all()
         .into_iter()
         .map(|lang| {
@@ -333,19 +330,15 @@ pub fn get_available_languages() -> Vec<(Language, f64)> {
 
 /// Export current translations to JSON format
 pub fn export_translations<P: AsRef<Path>>(output_dir: P) -> Result<(), Error> {
-    let translations = TRANSLATIONS
-        .read()
-        .expect("TRANSLATIONS lock poisoned");
-    
+    let translations = TRANSLATIONS.read().expect("TRANSLATIONS lock poisoned");
+
     fs::create_dir_all(&output_dir)?;
-    
+
     for (lang_code, data) in translations.iter() {
         let file_path = output_dir.as_ref().join(format!("{}.json", lang_code));
         let json = serde_json::to_string_pretty(data)?;
         fs::write(file_path, json)?;
     }
-    
+
     Ok(())
 }
-
-

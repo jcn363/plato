@@ -47,6 +47,7 @@ pub enum AnnotationSubtype {
 }
 
 impl AnnotationSubtype {
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Result<Self, Error> {
         match s.to_lowercase().as_str() {
             "text" => Ok(AnnotationSubtype::Text),
@@ -136,11 +137,7 @@ pub struct PdfAnnotation {
 
 impl PdfAnnotation {
     /// Create a new annotation with default metadata
-    pub fn new(
-        page: usize,
-        subtype: AnnotationSubtype,
-        contents: String,
-    ) -> Self {
+    pub fn new(page: usize, subtype: AnnotationSubtype, contents: String) -> Self {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
@@ -171,13 +168,20 @@ impl PdfAnnotation {
         }
         if let Some(text) = &query.text {
             if !self.contents.to_lowercase().contains(&text.to_lowercase())
-                && !self.subject.as_ref().map_or(false, |s| s.to_lowercase().contains(&text.to_lowercase()))
+                && !self
+                    .subject
+                    .as_ref()
+                    .is_none_or(|s| s.to_lowercase().contains(&text.to_lowercase()))
             {
                 return false;
             }
         }
         if let Some(author) = &query.author {
-            if self.author.as_ref().map_or(false, |a| a.to_lowercase().contains(&author.to_lowercase())) {
+            if self
+                .author
+                .as_ref()
+                .is_some_and(|a| a.to_lowercase().contains(&author.to_lowercase()))
+            {
                 return false;
             }
         }
@@ -260,7 +264,7 @@ impl PdfAnnotationManager {
     pub fn new(path: &Path) -> Result<Self, Error> {
         let doc = super::super::pdfpurr::Document::open(path)
             .map_err(|e| format_err!("Failed to open PDF: {}", e))?;
-        
+
         let total_pages = doc.page_count();
         log_info!("Opened PDF with {} pages", total_pages);
 
@@ -284,7 +288,8 @@ impl PdfAnnotationManager {
                 if let Ok(annot_array) = annot_ref.as_array() {
                     for annot_obj in annot_array {
                         if let Ok(annot_dict) = annot_obj.as_dict() {
-                            if let Ok(annot) = self.parse_annotation(annot_dict, page_num as usize) {
+                            if let Ok(annot) = self.parse_annotation(annot_dict, page_num as usize)
+                            {
                                 imported.push(annot);
                             }
                         }
@@ -309,8 +314,7 @@ impl PdfAnnotationManager {
         } else {
             "Text".to_string()
         };
-        let subtype = AnnotationSubtype::from_str(&subtype_str)
-            .unwrap_or(AnnotationSubtype::Text);
+        let subtype = AnnotationSubtype::from_str(&subtype_str).unwrap_or(AnnotationSubtype::Text);
 
         let contents = if let Ok(contents_obj) = dict.get(b"Contents") {
             if let Ok(bytes) = contents_obj.as_str() {
@@ -439,18 +443,20 @@ impl PdfAnnotationManager {
     /// Sort annotations by creation date
     pub fn sort_by_date(&mut self, ascending: bool) {
         if ascending {
-            self.annotations.sort_by(|a, b| a.created_at.cmp(&b.created_at));
+            self.annotations
+                .sort_by_key(|a| a.created_at);
         } else {
-            self.annotations.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+            self.annotations
+                .sort_by_key(|a| std::cmp::Reverse(a.created_at));
         }
     }
 
     /// Sort annotations by page
     pub fn sort_by_page(&mut self, ascending: bool) {
         if ascending {
-            self.annotations.sort_by(|a, b| a.page.cmp(&b.page));
+            self.annotations.sort_by_key(|a| a.page);
         } else {
-            self.annotations.sort_by(|a, b| b.page.cmp(&a.page));
+            self.annotations.sort_by_key(|a| std::cmp::Reverse(a.page));
         }
     }
 }
@@ -468,7 +474,7 @@ impl PdfAnnotationExporter {
     pub fn new(source_path: &Path, output_path: &Path) -> Result<PdfAnnotationExporter, Error> {
         let doc = super::super::pdfpurr::Document::open(source_path)
             .map_err(|e| format_err!("Failed to open PDF: {}", e))?;
-        
+
         let total_pages = doc.page_count();
 
         Ok(PdfAnnotationExporter {
@@ -497,22 +503,35 @@ impl PdfAnnotationExporter {
         let page_ids: Vec<_> = pages_map.values().collect();
         let page_index = annot.page;
         if page_index >= page_ids.len() {
-            return Err(format_err!("Page {} does not exist in output document", annot.page + 1));
+            return Err(format_err!(
+                "Page {} does not exist in output document",
+                annot.page + 1
+            ));
         }
         let page_id = page_ids.get(page_index).unwrap();
 
         // Create annotation dictionary
         let mut annot_dict = Dictionary::new();
-        annot_dict.set("Subtype", Object::Name(annot.subtype.as_str().as_bytes().to_vec()));
-        annot_dict.set("Contents", Object::String(annot.contents.as_bytes().to_vec(), lopdf::StringFormat::Literal));
+        annot_dict.set(
+            "Subtype",
+            Object::Name(annot.subtype.as_str().as_bytes().to_vec()),
+        );
+        annot_dict.set(
+            "Contents",
+            Object::String(
+                annot.contents.as_bytes().to_vec(),
+                lopdf::StringFormat::Literal,
+            ),
+        );
 
         // Add rectangle if provided
         if let Some(rect) = annot.rect {
-            let mut rect_array = Vec::new();
-            rect_array.push(Object::Real(rect.0));
-            rect_array.push(Object::Real(rect.1));
-            rect_array.push(Object::Real(rect.2));
-            rect_array.push(Object::Real(rect.3));
+            let rect_array = vec![
+                Object::Real(rect.0),
+                Object::Real(rect.1),
+                Object::Real(rect.2),
+                Object::Real(rect.3),
+            ];
             annot_dict.set("Rect", Object::Array(rect_array));
         }
 
@@ -527,15 +546,43 @@ impl PdfAnnotationExporter {
         }
 
         // Add metadata
-        annot_dict.set("T", Object::String(annot.author.unwrap_or_default().as_bytes().to_vec(), lopdf::StringFormat::Literal));
-        annot_dict.set("Subj", Object::String(annot.subject.unwrap_or_default().as_bytes().to_vec(), lopdf::StringFormat::Literal));
-        annot_dict.set("M", Object::String(annot.modified_at.to_rfc3339().as_bytes().to_vec(), lopdf::StringFormat::Literal));
-        annot_dict.set("CreationDate", Object::String(annot.created_at.to_rfc3339().as_bytes().to_vec(), lopdf::StringFormat::Literal));
+        annot_dict.set(
+            "T",
+            Object::String(
+                annot.author.unwrap_or_default().as_bytes().to_vec(),
+                lopdf::StringFormat::Literal,
+            ),
+        );
+        annot_dict.set(
+            "Subj",
+            Object::String(
+                annot.subject.unwrap_or_default().as_bytes().to_vec(),
+                lopdf::StringFormat::Literal,
+            ),
+        );
+        annot_dict.set(
+            "M",
+            Object::String(
+                annot.modified_at.to_rfc3339().as_bytes().to_vec(),
+                lopdf::StringFormat::Literal,
+            ),
+        );
+        annot_dict.set(
+            "CreationDate",
+            Object::String(
+                annot.created_at.to_rfc3339().as_bytes().to_vec(),
+                lopdf::StringFormat::Literal,
+            ),
+        );
 
         // Add annotation to page
         let annot_id = doc.add_object(Object::Dictionary(annot_dict));
 
-        let page_dict = doc.get_object_mut(**page_id).unwrap().as_dict_mut().unwrap();
+        let page_dict = doc
+            .get_object_mut(**page_id)
+            .unwrap()
+            .as_dict_mut()
+            .unwrap();
         page_dict.set("Annots", Object::Array(vec![Object::Reference(annot_id)]));
 
         // Save the modified document
@@ -572,28 +619,37 @@ impl PdfAnnotationExporter {
             // Check if annotations exist and copy them
             if let Ok(annot_ref) = page_dict.get(b"Annots") {
                 if let Ok(annot_array) = annot_ref.as_array() {
-                    log_info!("Found {} annotations on page {}", annot_array.len(), annot.page + 1);
-                    
+                    log_info!(
+                        "Found {} annotations on page {}",
+                        annot_array.len(),
+                        annot.page + 1
+                    );
+
                     // Copy annotations to the output document
                     let mut output_doc = Document::load(&self.file_path)
                         .map_err(|e| format_err!("Failed to load output PDF with lopdf: {}", e))?;
-                    
+
                     let output_pages_map = output_doc.get_pages();
                     let output_page_ids: Vec<_> = output_pages_map.values().collect();
-                    
+
                     if page_index < output_page_ids.len() {
                         let output_page_id = output_page_ids.get(page_index).unwrap();
-                        let output_page_dict = output_doc.get_object_mut(**output_page_id).unwrap().as_dict_mut().unwrap();
-                        
+                        let output_page_dict = output_doc
+                            .get_object_mut(**output_page_id)
+                            .unwrap()
+                            .as_dict_mut()
+                            .unwrap();
+
                         // Add annotations to output page
                         output_page_dict.set("Annots", annot_ref.clone());
-                        
+
                         // Save the modified document
                         let mut buffer = std::io::Cursor::new(Vec::new());
-                        output_doc.save_to(&mut buffer)
+                        output_doc
+                            .save_to(&mut buffer)
                             .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
                         let bytes = buffer.into_inner();
-                        
+
                         std::fs::write(&self.file_path, bytes)
                             .map_err(|e| format_err!("Failed to write output file: {}", e))?;
                     }
@@ -610,7 +666,10 @@ impl PdfAnnotationExporter {
         std::fs::write(source_path, bytes)
             .map_err(|e| format_err!("Failed to write output file: {}", e))?;
 
-        log_info!("Successfully exported annotation from page {}", annot.page + 1);
+        log_info!(
+            "Successfully exported annotation from page {}",
+            annot.page + 1
+        );
         Ok(())
     }
 
@@ -629,7 +688,10 @@ impl PdfAnnotationExporter {
         std::fs::write(&self.file_path, bytes)
             .map_err(|e| format_err!("Failed to write output file: {}", e))?;
 
-        log_info!("Successfully saved document with annotations to: {:?}", self.file_path);
+        log_info!(
+            "Successfully saved document with annotations to: {:?}",
+            self.file_path
+        );
         Ok(self.file_path.clone())
     }
 }
@@ -647,70 +709,90 @@ impl XfdfHandler {
         xml.push_str(r#"<?xml version="1.0" encoding="UTF-8"?>"#);
         xml.push_str("\n<xfdf xmlns=\"http://ns.adobe.com/xfdf/\" xml:space=\"preserve\">\n");
         xml.push_str(&format!("  <f href=\"{}\"/>\n", pdf_path.display()));
-        
+
         for annot in annotations {
             xml.push_str("  <annotate>\n");
-            xml.push_str(&format!("    <subtype>{}</subtype>\n", annot.subtype.as_str()));
-            xml.push_str(&format!("    <contents>{}</contents>\n", escape_xml(&annot.contents)));
+            xml.push_str(&format!(
+                "    <subtype>{}</subtype>\n",
+                annot.subtype.as_str()
+            ));
+            xml.push_str(&format!(
+                "    <contents>{}</contents>\n",
+                escape_xml(&annot.contents)
+            ));
             xml.push_str(&format!("    <page>{}</page>\n", annot.page));
-            
+
             if let Some(rect) = annot.rect {
-                xml.push_str(&format!("    <rect>{},{},{},{}</rect>\n", rect.0, rect.1, rect.2, rect.3));
+                xml.push_str(&format!(
+                    "    <rect>{},{},{},{}</rect>\n",
+                    rect.0, rect.1, rect.2, rect.3
+                ));
             }
-            
+
             if let Some(color) = annot.color {
-                xml.push_str(&format!("    <color>#{:02X}{:02X}{:02X}</color>\n", color.0, color.1, color.2));
+                xml.push_str(&format!(
+                    "    <color>#{:02X}{:02X}{:02X}</color>\n",
+                    color.0, color.1, color.2
+                ));
             }
-            
+
             if let Some(author) = &annot.author {
                 xml.push_str(&format!("    <author>{}</author>\n", escape_xml(author)));
             }
-            
+
             if let Some(subject) = &annot.subject {
                 xml.push_str(&format!("    <subject>{}</subject>\n", escape_xml(subject)));
             }
-            
-            xml.push_str(&format!("    <created>{}</created>\n", annot.created_at.to_rfc3339()));
-            xml.push_str(&format!("    <modified>{}</modified>\n", annot.modified_at.to_rfc3339()));
+
+            xml.push_str(&format!(
+                "    <created>{}</created>\n",
+                annot.created_at.to_rfc3339()
+            ));
+            xml.push_str(&format!(
+                "    <modified>{}</modified>\n",
+                annot.modified_at.to_rfc3339()
+            ));
             xml.push_str("  </annotate>\n");
         }
-        
+
         xml.push_str("</xfdf>");
         Ok(xml)
     }
-    
+
     /// Import annotations from XFDF format
     pub fn import_from_xfdf(xfdf_content: &str) -> Result<Vec<PdfAnnotation>, Error> {
         use quick_xml::events::Event;
         use quick_xml::Reader;
-        
+
         let mut reader = Reader::from_str(xfdf_content);
-        
+
         let mut annotations = Vec::new();
         let mut current_annot: Option<PdfAnnotation> = None;
         let mut current_text = String::new();
-        
+
         let mut buf = Vec::new();
-        
+
         loop {
             match reader.read_event_into(&mut buf) {
-                Ok(Event::Start(ref e)) => {
-                    match e.name().as_ref() {
-                        b"annotate" => {
-                            current_annot = Some(PdfAnnotation::new(0, AnnotationSubtype::Text, String::new()));
-                        }
-                        b"subtype" => current_text.clear(),
-                        b"contents" => current_text.clear(),
-                        b"page" => current_text.clear(),
-                        b"rect" => current_text.clear(),
-                        b"color" => current_text.clear(),
-                        b"author" => current_text.clear(),
-                        b"subject" => current_text.clear(),
-                        b"created" => current_text.clear(),
-                        b"modified" => current_text.clear(),
-                        _ => {}
+                Ok(Event::Start(ref e)) => match e.name().as_ref() {
+                    b"annotate" => {
+                        current_annot = Some(PdfAnnotation::new(
+                            0,
+                            AnnotationSubtype::Text,
+                            String::new(),
+                        ));
                     }
-                }
+                    b"subtype" => current_text.clear(),
+                    b"contents" => current_text.clear(),
+                    b"page" => current_text.clear(),
+                    b"rect" => current_text.clear(),
+                    b"color" => current_text.clear(),
+                    b"author" => current_text.clear(),
+                    b"subject" => current_text.clear(),
+                    b"created" => current_text.clear(),
+                    b"modified" => current_text.clear(),
+                    _ => {}
+                },
                 Ok(Event::Text(e)) => {
                     current_text.push_str(std::str::from_utf8(&e).unwrap_or(""));
                 }
@@ -729,20 +811,22 @@ impl XfdfHandler {
                                 }
                             }
                             b"rect" => {
-                                let parts: Vec<f32> = current_text.split(',')
+                                let parts: Vec<f32> = current_text
+                                    .split(',')
                                     .filter_map(|s| s.parse().ok())
                                     .collect();
                                 if parts.len() == 4 {
                                     annot.rect = Some((parts[0], parts[1], parts[2], parts[3]));
                                 }
                             }
-                            b"color" => {
-                                if current_text.starts_with('#') && current_text.len() == 7 {
-                                    let r = u8::from_str_radix(&current_text[1..3], 16).unwrap_or(0);
-                                    let g = u8::from_str_radix(&current_text[3..5], 16).unwrap_or(0);
-                                    let b = u8::from_str_radix(&current_text[5..7], 16).unwrap_or(0);
-                                    annot.color = Some((r, g, b));
-                                }
+                            b"color" if current_text.starts_with('#') && current_text.len() == 7 => {
+                                let r =
+                                    u8::from_str_radix(&current_text[1..3], 16).unwrap_or(0);
+                                let g =
+                                    u8::from_str_radix(&current_text[3..5], 16).unwrap_or(0);
+                                let b =
+                                    u8::from_str_radix(&current_text[5..7], 16).unwrap_or(0);
+                                annot.color = Some((r, g, b));
                             }
                             b"author" => annot.author = Some(current_text.clone()),
                             b"subject" => annot.subject = Some(current_text.clone()),
@@ -773,7 +857,7 @@ impl XfdfHandler {
             }
             buf.clear();
         }
-        
+
         Ok(annotations)
     }
 }

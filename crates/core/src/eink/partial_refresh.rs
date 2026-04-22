@@ -2,9 +2,9 @@
 //!
 //! Manages partial refresh regions and optimization strategies.
 
-use crate::geom::Rectangle;
 use crate::eink::damage_tracker::DamageTracker;
-use crate::eink::waveform::{WaveformMode, select_waveform, ContentType, UpdateType};
+use crate::eink::waveform::{select_waveform, ContentType, UpdateType, WaveformMode};
+use crate::geom::Rectangle;
 
 /// Manages partial refresh operations
 #[derive(Debug)]
@@ -25,7 +25,10 @@ impl PartialRefreshManager {
         }
     }
 
-    pub fn track_frame(&mut self, current: &crate::eink::damage_tracker::FrameBuffer) -> Vec<Rectangle> {
+    pub fn track_frame(
+        &mut self,
+        current: &crate::eink::damage_tracker::FrameBuffer,
+    ) -> Vec<Rectangle> {
         let _regions = self.damage_tracker.track_changes(current);
 
         if self.damage_tracker.should_full_refresh() {
@@ -44,7 +47,7 @@ impl PartialRefreshManager {
     pub fn filter_small_regions(&self, regions: Vec<Rectangle>) -> Vec<Rectangle> {
         regions
             .into_iter()
-            .filter(|r| r.width() * r.height() >= self.min_region_size as u32)
+            .filter(|r| r.width() * r.height() >= self.min_region_size)
             .collect()
     }
 
@@ -60,7 +63,11 @@ impl PartialRefreshManager {
         self.partial_update_count = 0;
     }
 
-    pub fn get_waveform_for_regions(&self, regions: &[Rectangle], content: ContentType) -> WaveformMode {
+    pub fn get_waveform_for_regions(
+        &self,
+        regions: &[Rectangle],
+        content: ContentType,
+    ) -> WaveformMode {
         let update_type = if regions.len() == 1 {
             let region = &regions[0];
             let is_full_screen = region.width() * region.height() > 1000000;
@@ -115,7 +122,7 @@ mod tests {
     fn test_filter_small_regions() {
         let manager = PartialRefreshManager::new(10, 5000); // min size 5000 pixels
         let regions = vec![
-            Rectangle::from_coords(0, 0, 50, 50),   // 2500 pixels - filtered
+            Rectangle::from_coords(0, 0, 50, 50), // 2500 pixels - filtered
             Rectangle::from_coords(100, 100, 200, 200), // 10000 pixels - kept
         ];
         let filtered = manager.filter_small_regions(regions);

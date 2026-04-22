@@ -31,7 +31,10 @@ use crate::consts::pdf::{
 };
 
 // Re-export submodule types for backwards compatibility
-pub use annotations::{PdfAnnotation, PdfAnnotationExporter, PdfAnnotationManager, XfdfHandler, AnnotationQuery, AnnotationSubtype};
+pub use annotations::{
+    AnnotationQuery, AnnotationSubtype, PdfAnnotation, PdfAnnotationExporter, PdfAnnotationManager,
+    XfdfHandler,
+};
 pub use redaction::{RedactionEditor, RedactionRegion};
 pub use resources::{ExtractedFont, ExtractedImage, ResourceExtractor, ResourceSummary};
 
@@ -83,16 +86,9 @@ impl Default for OperationOptions {
 ///
 /// This struct provides high-level PDF operations with progress reporting
 /// and memory safety checks for Kobo devices.
+#[derive(Default)]
 pub struct PdfManipulator {
     progress_callback: Option<ProgressCallback>,
-}
-
-impl Default for PdfManipulator {
-    fn default() -> Self {
-        Self {
-            progress_callback: None,
-        }
-    }
 }
 
 impl PdfManipulator {
@@ -181,7 +177,7 @@ impl PdfManipulator {
         log_info!("Rotating pages by {} degrees: {:?}", degrees, pages);
 
         // Normalize degrees to 0-360 range
-        let rotation = (degrees % 360 + 360) % 360;
+        let rotation = degrees.rem_euclid(360);
 
         // Load the PDF document using lopdf
         let mut doc = Document::load(input_path)
@@ -196,7 +192,11 @@ impl PdfManipulator {
             let page_index = page_num - 1; // Convert to 0-indexed
             if page_index < page_ids.len() {
                 if let Some(page_id) = page_ids.get(page_index) {
-                    let page_dict = doc.get_object_mut(**page_id).unwrap().as_dict_mut().unwrap();
+                    let page_dict = doc
+                        .get_object_mut(**page_id)
+                        .unwrap()
+                        .as_dict_mut()
+                        .unwrap();
 
                     // Get current rotation or default to 0
                     let current_rotation = page_dict
@@ -266,7 +266,8 @@ impl PdfManipulator {
 
         // Save the new document to bytes
         let mut buffer = Cursor::new(Vec::new());
-        new_doc.save_to(&mut buffer)
+        new_doc
+            .save_to(&mut buffer)
             .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
         let bytes = buffer.into_inner();
 
@@ -275,7 +276,10 @@ impl PdfManipulator {
         file.write_all(&bytes)
             .map_err(|e| format_err!("Failed to write output file: {}", e))?;
 
-        log_info!("Successfully extracted pages and saved to: {:?}", output_path);
+        log_info!(
+            "Successfully extracted pages and saved to: {:?}",
+            output_path
+        );
         Ok(output_path.to_path_buf())
     }
 
@@ -321,7 +325,8 @@ impl PdfManipulator {
 
         // Save the new document to bytes
         let mut buffer = Cursor::new(Vec::new());
-        new_doc.save_to(&mut buffer)
+        new_doc
+            .save_to(&mut buffer)
             .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
         let bytes = buffer.into_inner();
 
@@ -330,7 +335,10 @@ impl PdfManipulator {
         file.write_all(&bytes)
             .map_err(|e| format_err!("Failed to write output file: {}", e))?;
 
-        log_info!("Successfully reordered pages and saved to: {:?}", output_path);
+        log_info!(
+            "Successfully reordered pages and saved to: {:?}",
+            output_path
+        );
         Ok(output_path.to_path_buf())
     }
 
@@ -348,8 +356,9 @@ impl PdfManipulator {
 
         // Load and merge each input PDF
         for input_path in inputs {
-            let doc = Document::load(input_path)
-                .map_err(|e| format_err!("Failed to load PDF {:?} with lopdf: {}", input_path, e))?;
+            let doc = Document::load(input_path).map_err(|e| {
+                format_err!("Failed to load PDF {:?} with lopdf: {}", input_path, e)
+            })?;
 
             // Get pages map
             let pages_map = doc.get_pages();
@@ -364,7 +373,8 @@ impl PdfManipulator {
 
         // Save the merged document to bytes
         let mut buffer = Cursor::new(Vec::new());
-        merged_doc.save_to(&mut buffer)
+        merged_doc
+            .save_to(&mut buffer)
             .map_err(|e| format_err!("Failed to save merged PDF with lopdf: {}", e))?;
         let bytes = buffer.into_inner();
 
