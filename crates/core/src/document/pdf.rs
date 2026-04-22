@@ -20,7 +20,7 @@
 
 use super::pdfpurr::{
     Document as PdfPurrDocument, MuPdfContext, Page, Link, Outline, FzRect, FzQuad, FzPoint,
-    rect_from_quad, union_rect, scale, PixmapFormat, FZ_PAGE_BLOCK_IMAGE,
+    rect_from_quad, union_rect, PixmapFormat, FZ_PAGE_BLOCK_IMAGE,
 };
 
 use super::{chapter, chapter_relative};
@@ -112,7 +112,7 @@ pub struct PdfDocument {
 
 /// PDF page for rendering and text extraction.
 pub struct PdfPage<'a> {
-    page: Page,
+    page: Page<'a>,
     _doc: &'a PdfDocument,
     page_num: usize,
 }
@@ -426,7 +426,7 @@ impl<'a> PdfPage<'a> {
                 let mut word_rect = FzRect::default();
 
                 for text_char in line.chars() {
-                    if let Some(c) = std::char::from_u32(text_char.char_code() as u32) {
+                    if let Some(c) = std::char::from_u32(text_char.char_code as u32) {
                         if c.is_whitespace() {
                             if !current_word.is_empty() {
                                 let bounds: Boundary = word_rect.into();
@@ -439,7 +439,7 @@ impl<'a> PdfPage<'a> {
                                 word_rect = FzRect::default();
                             }
                         } else {
-                            let quad = text_char.quad();
+                            let quad = text_char.quad;
                             let pdfpurr_quad = FzQuad {
                                 ul: FzPoint { x: quad.ul.x, y: quad.ul.y },
                                 ur: FzPoint { x: quad.ur.x, y: quad.ur.y },
@@ -485,14 +485,51 @@ impl<'a> PdfPage<'a> {
     }
 
     pub fn pixmap(&self, zoom: f32, color_samples: usize) -> Option<Pixmap> {
-        // TODO: Implement with PDFPurr API
-        let _matrix = scale(zoom, zoom);
-        let _color_space = if color_samples == 1 {
-            // Grayscale
+        let color_space = if color_samples == 1 {
+            PixmapFormat::Grayscale
         } else {
-            // RGB
+            PixmapFormat::RGB
         };
-        None // Stub - needs PDFPurr rendering implementation
+        
+        self.page.render_pixmap(zoom, color_space, 0).ok().and_then(|pdfpurr_pixmap| {
+            let width = pdfpurr_pixmap.width();
+            let height = pdfpurr_pixmap.height();
+            let data = pdfpurr_pixmap.data();
+            
+            // Convert RGBA to grayscale if needed
+            let samples = if color_samples == 1 { 1usize } else { 3usize };
+            let mut pixmap_data = vec![0u8; (width * height * samples as u32) as usize];
+            
+            if color_samples == 1 {
+                // Convert RGBA to grayscale using luminance formula
+                for i in 0..(width * height) as usize {
+                    let rgba_idx = i * 4;
+                    let r = data[rgba_idx] as f32;
+                    let g = data[rgba_idx + 1] as f32;
+                    let b = data[rgba_idx + 2] as f32;
+                    // Rec. 709 luma coefficients
+                    let gray = (0.2126 * r + 0.7152 * g + 0.0722 * b) as u8;
+                    pixmap_data[i] = gray;
+                }
+            } else {
+                // RGB
+                for i in 0..(width * height) as usize {
+                    let rgba_idx = i * 4;
+                    let rgb_idx = i * 3;
+                    pixmap_data[rgb_idx] = data[rgba_idx];
+                    pixmap_data[rgb_idx + 1] = data[rgba_idx + 1];
+                    pixmap_data[rgb_idx + 2] = data[rgba_idx + 2];
+                }
+            }
+            
+            Some(Pixmap {
+                width: width,
+                height: height,
+                samples: samples,
+                data: pixmap_data,
+                update_flag: false,
+            })
+        })
     }
 
     pub fn boundary_box(&self) -> Option<Boundary> {

@@ -70,12 +70,7 @@ Example:
 ./build.sh --no-clean arm skip
 ```
 
-The MuPDF wrapper (`libmupdf_wrapper.a`) is automatically linked during the Rust build process via `crates/core/build.rs`. If you modify `mupdf_wrapper/mupdf_wrapper.c`, rebuild it with:
-
-```bash
-cd mupdf_wrapper
-TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh
-```
+PDF rendering is now handled by PDFPurr, a pure Rust library, so no MuPDF wrapper is required.
 
 ## Alternative Build Commands
 

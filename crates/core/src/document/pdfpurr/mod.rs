@@ -1,66 +1,68 @@
-//! Minimal PDFPurr wrapper types for compatibility
+//! PDFPurr integration for Plato
 //!
-//! PDFPurr's API is different from MuPDF, so we provide minimal type definitions
-//! that match the expected interface for pdf.rs.
+//! This module provides a wrapper around PDFPurr (pure Rust PDF library)
+//! to replace the MuPDF C library dependency.
 
 use std::path::Path;
 use anyhow::{Result, bail};
+use pdfpurr::Document as PdfPurrDoc;
+use pdfpurr::rendering::{Renderer, RenderOptions};
+use pdfpurr::content::analysis::TextRun;
 
-/// Stub MuPDF Context type
-pub struct MuPdfContext {
-    _private: (),
-}
+/// MuPDF-compatible context (no-op for PDFPurr)
+pub struct MuPdfContext;
 
 impl MuPdfContext {
     pub fn new() -> Result<Self> {
-        Ok(MuPdfContext { _private: () })
+        Ok(MuPdfContext)
     }
 
     pub fn set_user_css(&self, _css: &str) {
         // PDFPurr doesn't need user CSS
     }
 
-    pub fn device_gray(&self) -> () {
-        // Stub
-    }
-
-    pub fn device_rgb(&self) -> () {
-        // Stub
-    }
-
-    pub fn open_document<P: AsRef<Path>>(&self, _path: P) -> Option<PdfPurrDocument> {
-        Some(PdfPurrDocument { _private: () })
-    }
-
-    pub fn open_document_memory(&self, _magic: &str, _buf: &[u8]) -> Option<PdfPurrDocument> {
-        Some(PdfPurrDocument { _private: () })
-    }
+    pub fn device_gray(&self) {}
+    pub fn device_rgb(&self) {}
 }
 
-/// Stub Document type - uses actual PDFPurr Document internally
+/// Wrapper around PDFPurr Document
 pub struct Document {
-    // Placeholder - will be implemented with actual PDFPurr integration
-    _private: (),
+    inner: PdfPurrDoc,
 }
 
 /// Type alias for compatibility
 pub type PdfPurrDocument = Document;
 
 impl Document {
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
-        Ok(Document { _private: () })
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let inner = PdfPurrDoc::open(path)
+            .map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+        Ok(Document { inner })
     }
 
-    pub fn from_bytes(_data: &[u8]) -> Result<Self> {
-        Ok(Document { _private: () })
+    pub fn from_bytes(data: &[u8]) -> Result<Self> {
+        let inner = PdfPurrDoc::from_bytes(data)
+            .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
+        Ok(Document { inner })
     }
 
     pub fn object_count(&self) -> usize {
-        0 // Placeholder
+        self.inner.object_count()
     }
 
-    pub fn load_page(&self, _index: i32) -> Result<Page> {
-        Ok(Page { _private: () })
+    pub fn load_page(&self, index: i32) -> Result<Page> {
+        if index < 0 {
+            bail!("Invalid page index: {}", index);
+        }
+        let page_index = index as usize;
+        let page_count = self.inner.page_count().unwrap_or(0);
+        if page_index >= page_count {
+            bail!("Page index {} out of range (document has {} pages)", page_index, page_count);
+        }
+        Ok(Page {
+            doc: &self.inner,
+            index: page_index,
+        })
     }
 
     pub fn is_reflowable(&self) -> bool {
@@ -68,210 +70,400 @@ impl Document {
     }
 
     pub fn layout(&mut self, _width: f32, _height: f32) {
-        // Stub
+        // PDFPurr doesn't support reflow
     }
 
     pub fn title(&self) -> Option<String> {
-        None
+        self.inner.metadata().title
     }
 
     pub fn author(&self) -> Option<String> {
-        None
+        self.inner.metadata().author
     }
 
-    pub fn lookup_metadata(&self, _key: &str) -> Option<String> {
-        None
+    pub fn lookup_metadata(&self, key: &str) -> Option<String> {
+        match key.to_lowercase().as_str() {
+            "title" => self.inner.metadata().title,
+            "author" => self.inner.metadata().author,
+            "subject" => self.inner.metadata().subject,
+            "keywords" => self.inner.metadata().keywords,
+            "creator" => self.inner.metadata().creator,
+            "producer" => self.inner.metadata().producer,
+            _ => None,
+        }
     }
 
     pub fn metadata(&self) -> Option<String> {
-        None
+        // Return simple metadata as string since PDFPurr's Metadata doesn't implement Serialize
+        let meta = self.inner.metadata();
+        let mut parts = Vec::new();
+        if let Some(title) = &meta.title {
+            parts.push(format!("Title: {}", title));
+        }
+        if let Some(author) = &meta.author {
+            parts.push(format!("Author: {}", author));
+        }
+        if let Some(subject) = &meta.subject {
+            parts.push(format!("Subject: {}", subject));
+        }
+        if parts.is_empty() {
+            None
+        } else {
+            Some(parts.join("\n"))
+        }
     }
 
     pub fn page_count(&self) -> usize {
-        0 // Placeholder
+        self.inner.page_count().unwrap_or(0)
     }
 
     pub fn load_outline(&self) -> Option<Outline> {
-        Some(Outline { _private: () })
+        let outlines = self.inner.outlines();
+        if outlines.is_empty() {
+            None
+        } else {
+            Some(Outline { outlines })
+        }
     }
 
     pub fn needs_password(&self) -> bool {
+        // PDFPurr handles encryption in from_bytes_with_password
         false
     }
 }
 
-/// Stub Page type
-pub struct Page {
-    _private: (),
+/// Wrapper around PDFPurr page
+pub struct Page<'a> {
+    doc: &'a PdfPurrDoc,
+    index: usize,
 }
 
-impl Page {
+impl<'a> Page<'a> {
     pub fn to_text_page(&self, _options: Option<&()>) -> Option<TextPage> {
-        Some(TextPage { _private: () })
+        // Extract text runs from PDFPurr
+        self.doc.extract_text_runs(self.index).ok().map(|runs| TextPage { runs })
     }
 
     pub fn load_links(&self) -> Option<Link> {
-        Some(Link { _private: () })
+        // TODO: Need to get page dictionary first, then call page_annotations
+        // For now, return empty link list
+        Some(Link { annots: Vec::new(), index: 0 })
     }
 
     pub fn render_pixmap(&self, _matrix: f32, _color_space: PixmapFormat, _flags: i32) -> Result<PdfPurrPixmap> {
-        Ok(PdfPurrPixmap { _private: () })
+        let options = RenderOptions {
+            dpi: 72.0 * _matrix as f64,
+            background: [255, 255, 255, 255],
+        };
+        let renderer = Renderer::new(self.doc, options);
+        let pixmap = renderer.render_page(self.index)
+            .map_err(|e| anyhow::format_err!("Failed to render page: {}", e))?;
+        Ok(PdfPurrPixmap { inner: pixmap })
     }
 
     pub fn dims(&self) -> (f32, f32) {
-        (600.0, 800.0) // Placeholder
+        // PDFPurr doesn't have a simple dims() method
+        // Use default dimensions for now
+        (600.0, 800.0)
     }
 
     pub fn width(&self) -> f32 {
-        600.0
+        self.dims().0
     }
 
     pub fn height(&self) -> f32 {
-        800.0
+        self.dims().1
     }
 
     pub fn media_box(&self) -> FzRect {
+        let (width, height) = self.dims();
         FzRect {
             x0: 0.0,
             y0: 0.0,
-            x1: 600.0,
-            y1: 800.0,
+            x1: width,
+            y1: height,
         }
     }
 
     pub fn search(&self, _needle: &str) -> Option<Vec<FzQuad>> {
+        // TODO: Implement search using PDFPurr text extraction
         Some(Vec::new())
     }
 
     pub fn images(&self) -> Option<Vec<FzRect>> {
+        // TODO: Implement image extraction using PDFPurr
         Some(Vec::new())
     }
 
     pub fn char_count(&self) -> usize {
-        0
+        self.to_text_page(None).map(|tp| tp.chars()).unwrap_or(0)
     }
 }
 
-/// Stub TextPage type
+/// Text page wrapper for PDFPurr text runs
 pub struct TextPage {
-    _private: (),
+    runs: Vec<TextRun>,
 }
 
 impl TextPage {
     pub fn blocks(&self) -> Vec<TextBlock> {
-        Vec::new()
+        // Convert TextRuns to TextBlocks for compatibility
+        if self.runs.is_empty() {
+            return Vec::new();
+        }
+        
+        let mut blocks = Vec::new();
+        let mut current_block_runs = Vec::new();
+        let mut last_y = self.runs[0].y;
+        
+        for run in &self.runs {
+            // Group runs by vertical position (lines)
+            if (run.y - last_y).abs() > run.height {
+                if !current_block_runs.is_empty() {
+                    let bbox = self.bbox_from_runs(&current_block_runs);
+                    blocks.push(TextBlock {
+                        runs: current_block_runs.clone(),
+                        kind: 0, // Text block
+                        bbox,
+                    });
+                    current_block_runs.clear();
+                }
+            }
+            current_block_runs.push(run.clone());
+            last_y = run.y;
+        }
+        
+        if !current_block_runs.is_empty() {
+            let bbox = self.bbox_from_runs(&current_block_runs);
+            blocks.push(TextBlock {
+                runs: current_block_runs,
+                kind: 0,
+                bbox,
+            });
+        }
+        
+        blocks
+    }
+    
+    fn bbox_from_runs(&self, runs: &[TextRun]) -> FzRect {
+        if runs.is_empty() {
+            return FzRect::default();
+        }
+        
+        let min_x = runs.iter().map(|r| r.x).fold(f64::INFINITY, f64::min);
+        let max_x = runs.iter().map(|r| r.x + r.width).fold(f64::NEG_INFINITY, f64::max);
+        let min_y = runs.iter().map(|r| r.y).fold(f64::INFINITY, f64::min);
+        let max_y = runs.iter().map(|r| r.y + r.height).fold(f64::NEG_INFINITY, f64::max);
+        
+        FzRect {
+            x0: min_x as f32,
+            y0: min_y as f32,
+            x1: max_x as f32,
+            y1: max_y as f32,
+        }
+    }
+    
+    pub fn chars(&self) -> usize {
+        self.runs.iter().map(|r| r.text.chars().count()).sum()
     }
 }
 
-/// Stub TextBlock type
+/// Text block wrapper
 pub struct TextBlock {
-    _private: (),
+    runs: Vec<TextRun>,
+    kind: i32,
+    bbox: FzRect,
 }
 
 impl TextBlock {
     pub fn kind(&self) -> i32 {
-        0
+        self.kind
     }
 
     pub fn bbox(&self) -> FzRect {
-        FzRect::default()
+        self.bbox
     }
 
     pub fn lines(&self) -> Vec<TextLine> {
-        Vec::new()
+        // Convert runs to lines
+        self.runs.chunks(10).map(|chunk| TextLine {
+            runs: chunk.to_vec(),
+            bbox: self.bbox_from_runs(chunk),
+        }).collect()
     }
-
+    
     pub fn chars(&self) -> Vec<TextChar> {
-        Vec::new()
+        self.runs.iter().flat_map(|run| {
+            run.text.chars().enumerate().map(move |(i, c)| {
+                let char_x = run.x + (i as f64 * run.width / run.text.len() as f64);
+                TextChar {
+                    char_code: c as u32 as i32,
+                    quad: FzQuad {
+                        ul: FzPoint { x: char_x as f32, y: run.y as f32 },
+                        ur: FzPoint { x: (char_x + run.width / run.text.len() as f64) as f32, y: run.y as f32 },
+                        ll: FzPoint { x: char_x as f32, y: (run.y + run.height) as f32 },
+                        lr: FzPoint { x: (char_x + run.width / run.text.len() as f64) as f32, y: (run.y + run.height) as f32 },
+                    },
+                    origin: 0,
+                }
+            })
+        }).collect()
+    }
+    
+    fn bbox_from_runs(&self, runs: &[TextRun]) -> FzRect {
+        if runs.is_empty() {
+            return FzRect::default();
+        }
+        
+        let min_x = runs.iter().map(|r| r.x).fold(f64::INFINITY, f64::min);
+        let max_x = runs.iter().map(|r| r.x + r.width).fold(f64::NEG_INFINITY, f64::max);
+        let min_y = runs.iter().map(|r| r.y).fold(f64::INFINITY, f64::min);
+        let max_y = runs.iter().map(|r| r.y + r.height).fold(f64::NEG_INFINITY, f64::max);
+        
+        FzRect {
+            x0: min_x as f32,
+            y0: min_y as f32,
+            x1: max_x as f32,
+            y1: max_y as f32,
+        }
     }
 }
 
-/// Stub TextLine type
+/// Text line wrapper
 pub struct TextLine {
-    _private: (),
+    runs: Vec<TextRun>,
+    bbox: FzRect,
 }
 
 impl TextLine {
     pub fn bbox(&self) -> FzRect {
-        FzRect::default()
+        self.bbox
     }
 
     pub fn chars(&self) -> Vec<TextChar> {
-        Vec::new()
+        self.runs.iter().flat_map(|run| {
+            run.text.chars().enumerate().map(move |(i, c)| {
+                let char_x = run.x + (i as f64 * run.width / run.text.len() as f64);
+                TextChar {
+                    char_code: c as u32 as i32,
+                    quad: FzQuad {
+                        ul: FzPoint { x: char_x as f32, y: run.y as f32 },
+                        ur: FzPoint { x: (char_x + run.width / run.text.len() as f64) as f32, y: run.y as f32 },
+                        ll: FzPoint { x: char_x as f32, y: (run.y + run.height) as f32 },
+                        lr: FzPoint { x: (char_x + run.width / run.text.len() as f64) as f32, y: (run.y + run.height) as f32 },
+                    },
+                    origin: 0,
+                }
+            })
+        }).collect()
     }
 }
 
-/// Stub TextChar type
+/// Text character wrapper
 pub struct TextChar {
-    _private: (),
+    pub char_code: i32,
+    pub quad: FzQuad,
+    pub origin: i32,
 }
 
-impl TextChar {
-    pub fn char_code(&self) -> i32 {
-        0
-    }
-
-    pub fn quad(&self) -> FzQuad {
-        FzQuad::default()
-    }
-
-    pub fn origin(&self) -> i32 {
-        0
-    }
-}
-
-/// Stub Link type
+/// Link wrapper for PDFPurr annotations
 pub struct Link {
-    _private: (),
+    annots: Vec<pdfpurr::structure::Annotation>,
+    index: usize,
 }
 
 impl Link {
     pub fn uri(&self) -> String {
+        if self.index < self.annots.len() {
+            if let Some(uri) = &self.annots[self.index].uri {
+                return uri.clone();
+            }
+        }
         String::new()
     }
 
     pub fn rect(&self) -> FzRect {
-        FzRect::default()
+        if self.index < self.annots.len() {
+            let rect = self.annots[self.index].rect;
+            FzRect {
+                x0: rect[0] as f32,
+                y0: rect[1] as f32,
+                x1: rect[2] as f32,
+                y1: rect[3] as f32,
+            }
+        } else {
+            FzRect::default()
+        }
     }
 
     pub fn next(&self) -> Option<Link> {
-        None
+        if self.index + 1 < self.annots.len() {
+            Some(Link {
+                annots: self.annots.clone(),
+                index: self.index + 1,
+            })
+        } else {
+            None
+        }
     }
 }
 
-/// Stub Outline type
+/// Outline wrapper for PDFPurr outlines
 pub struct Outline {
-    _private: (),
+    outlines: Vec<pdfpurr::structure::Outline>,
 }
 
 impl Outline {
     pub fn clone_outline(&self) -> Outline {
-        Outline { _private: () }
+        Outline {
+            outlines: self.outlines.clone(),
+        }
     }
 
     pub fn page(&self) -> FzLocation {
-        FzLocation { chapter: 0, page: 0 }
+        if let Some(first) = self.outlines.first() {
+            FzLocation {
+                chapter: 0,
+                page: first.page.unwrap_or(0) as i32,
+            }
+        } else {
+            FzLocation { chapter: 0, page: 0 }
+        }
     }
 
     pub fn uri(&self) -> Option<String> {
-        None
+        self.outlines.first().and_then(|o| o.uri.clone())
     }
 
     pub fn next(&self) -> Option<Outline> {
-        None
+        if self.outlines.len() > 1 {
+            Some(Outline {
+                outlines: self.outlines[1..].to_vec(),
+            })
+        } else {
+            None
+        }
     }
 
     pub fn title(&self) -> String {
-        String::new()
+        self.outlines.first().map(|o| o.title.clone()).unwrap_or_default()
     }
 
     pub fn down(&self) -> Option<Outline> {
-        None
+        self.outlines.first().and_then(|o| {
+            if !o.children.is_empty() {
+                Some(Outline {
+                    outlines: o.children.clone(),
+                })
+            } else {
+                None
+            }
+        })
     }
 }
 
 /// Stub FzRect type
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct FzRect {
     pub x0: f32,
     pub y0: f32,
@@ -301,14 +493,14 @@ impl From<FzRect> for crate::geom::Boundary {
 }
 
 /// Stub FzPoint type
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct FzPoint {
     pub x: f32,
     pub y: f32,
 }
 
 /// Stub FzQuad type
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct FzQuad {
     pub ul: FzPoint,
     pub ur: FzPoint,
@@ -330,25 +522,54 @@ pub enum PixmapFormat {
     RGB,
 }
 
-/// Stub Pixmap type (renamed to avoid conflict with crate::framebuffer::Pixmap)
+/// Pixmap wrapper for PDFPurr rendering output
 pub struct PdfPurrPixmap {
-    _private: (),
+    inner: tiny_skia::Pixmap,
 }
 
-/// Stub rect_from_quad function
-pub fn rect_from_quad(_quad: FzQuad) -> FzRect {
-    FzRect::default()
+impl PdfPurrPixmap {
+    pub fn data(&self) -> &[u8] {
+        self.inner.data()
+    }
+    
+    pub fn width(&self) -> u32 {
+        self.inner.width()
+    }
+    
+    pub fn height(&self) -> u32 {
+        self.inner.height()
+    }
 }
 
-/// Stub union_rect function
-pub fn union_rect(_a: FzRect, _b: FzRect) -> FzRect {
-    FzRect::default()
+/// Convert quad to rect
+pub fn rect_from_quad(quad: FzQuad) -> FzRect {
+    let min_x = quad.ul.x.min(quad.ll.x).min(quad.ur.x).min(quad.lr.x);
+    let max_x = quad.ul.x.max(quad.ll.x).max(quad.ur.x).max(quad.lr.x);
+    let min_y = quad.ul.y.min(quad.ll.y).min(quad.ur.y).min(quad.lr.y);
+    let max_y = quad.ul.y.max(quad.ll.y).max(quad.ur.y).max(quad.lr.y);
+    
+    FzRect {
+        x0: min_x,
+        y0: min_y,
+        x1: max_x,
+        y1: max_y,
+    }
 }
 
-/// Stub scale function
-pub fn scale(_x: f32, _y: f32) -> f32 {
-    1.0
+/// Union two rects
+pub fn union_rect(a: FzRect, b: FzRect) -> FzRect {
+    FzRect {
+        x0: a.x0.min(b.x0),
+        y0: a.y0.min(b.y0),
+        x1: a.x1.max(b.x1),
+        y1: a.y1.max(b.y1),
+    }
 }
 
-/// Stub FZ_PAGE_BLOCK_IMAGE constant
+/// Scale function (simplified)
+pub fn scale(x: f32, _y: f32) -> f32 {
+    x
+}
+
+/// Image block constant
 pub const FZ_PAGE_BLOCK_IMAGE: i32 = 2;

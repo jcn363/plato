@@ -39,7 +39,8 @@ use plato_core::view::home::Home;
 use plato_core::view::intermission::Intermission;
 use plato_core::view::menu::{Menu, MenuKind};
 use plato_core::view::notification::Notification;
-use plato_core::view::pdf_manipulator::PdfManipulatorView;
+// TODO: Re-enable after migrating pdf_manipulator to PDFPurr API
+// use plato_core::view::pdf_manipulator::PdfManipulatorView;
 use plato_core::view::reader::Reader;
 use plato_core::view::rotation_values::RotationValues;
 use plato_core::view::sketch::Sketch;
@@ -1292,6 +1293,10 @@ pub fn run() -> Result<(), Error> {
                         &mut context,
                     ))),
                     AppCmd::PdfManipulator => {
+                        // TODO: Re-enable after migrating pdf_manipulator to PDFPurr API
+                        log_error!("PDF Manipulator is temporarily disabled during MuPDF to PDFPurr migration");
+                        None
+                        /*
                         match PdfManipulatorView::new(context.fb.rect(), &mut rq, &mut context) {
                             Ok(view) => Some(Box::new(view) as Box<dyn View>),
                             Err(e) => {
@@ -1299,20 +1304,12 @@ pub fn run() -> Result<(), Error> {
                                 None
                             }
                         }
+                        */
                     }
                     AppCmd::OpenPdfManipulator(ref path) => {
-                        match PdfManipulatorView::for_file(
-                            context.fb.rect(),
-                            path.clone(),
-                            &mut rq,
-                            &mut context,
-                        ) {
-                            Ok(view) => Some(Box::new(view) as Box<dyn View>),
-                            Err(e) => {
-                                log_error!("Failed to open PDF Tools: {}", e);
-                                None
-                            }
-                        }
+                        // TODO: Re-enable after migrating pdf_manipulator to PDFPurr API
+                        log_error!("PDF Manipulator is temporarily disabled during MuPDF to PDFPurr migration");
+                        None
                     }
                     AppCmd::TouchEvents => Some(Box::new(TouchEvents::new(
                         context.fb.rect(),
