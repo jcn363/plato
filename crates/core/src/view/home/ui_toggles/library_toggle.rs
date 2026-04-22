@@ -163,8 +163,6 @@ impl Home {
             _visible: self.library_menu.is_some(),
             _active: self.focus == Some(ViewId::LibraryMenu),
             config: LibraryToggleConfig::default(),
-            filter_format: None,
-            filter_category: None,
         }
     }
 

@@ -13,6 +13,10 @@ Implementation of reserved UI features and migration from FFI font dependencies 
 | ARM target build            | ✅ Clean                    |
 | Dead code warnings          | ✅ Zero actionable warnings |
 | Manager integrations        | ✅ All 9 managers wired up  |
+| TODO implementations        | ✅ All high priority done   |
+| PDF Manipulator             | ✅ Fully functional         |
+| Eink controller ioctls      | ✅ Properly documented      |
+| Library toggle filters      | ✅ Implemented              |
 
 ## Completed Features
 
@@ -65,6 +69,17 @@ All 9 WIP module managers now integrated and active:
 | **Phase 3** | Manager Wiring - All 9 managers integrated into Reader functionality              | `44f51b4`, `3784adb` |
 
 ## Recent Updates (April 2026)
+
+### TODO Implementation ✅
+
+- Re-enabled pdf_manipulator module and handlers (migration to PDFPurr/lopdf complete)
+- Implemented annotation copying using lopdf in pdf_manipulator/annotations.rs
+- Implemented text extraction using PDFPurr Document.load_page API in pdf_manipulator/resources.rs
+- Removed unused stub methods from pdf_manipulator/mod.rs
+- Replaced eink controller TODOs with proper error messages for hardware access
+- Implemented library toggle filter functionality (format and category filtering)
+- Fixed build errors: unused imports, wrong method names, type mismatches
+- Removed unused fields from LibraryToggleState
 
 ### EPUB Editor GUI Improvements ✅
 
