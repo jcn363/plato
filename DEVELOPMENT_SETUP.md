@@ -234,7 +234,9 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 | Rust Toolchain      | ✅      | v1.93.0, all targets installed           |
 | Native Dependencies | ✅      | Minimal (SDL2 for emulator only)         |
 | PDF Rendering       | ✅      | PDFPurr (pure Rust) replacing MuPDF      |
-| PDF Manipulation    | ⚠️      | Stubbed with TODOs for lopdf integration |
+| PDF Text Extraction | ✅      | Implemented with basic search            |
+| PDF Outlines        | ✅      | Implemented                              |
+| PDF Manipulation    | ⚠️      | Stubbed for Phase 4 lopdf integration    |
 | Build Scripts       | ✅      | Working correctly                        |
 | Host Build (check)  | ✅      | `cargo check` succeeds                   |
 | Host Build (link)   | ✅      | Works (no C library dependencies)        |

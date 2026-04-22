@@ -8,7 +8,7 @@ This document outlines the comprehensive plan to convert Plato into a fully open
 
 ### Existing Crates
 
-```
+```text
 plato/
 ├── crates/
 │   ├── core/         # Core document handling, rendering, UI (main library)
@@ -42,13 +42,14 @@ The project already uses primarily Rust dependencies:
 
 **Open-Source Alternatives**:
 
-| Library | Pros | Cons |
-|---------|------|------|
-| `lopdf` | Pure Rust, no native deps | Limited feature set |
-| `pdfium` | Feature-complete | Google-native, complex binding |
-| `printpdf` | Pure Rust | Basic rendering only |
+| Library    | Pros                      | Cons                           |
+|------------|---------------------------|--------------------------------|
+| `lopdf`    | Pure Rust, no native deps | Limited feature set            |
+| `pdfium`   | Feature-complete          | Google-native, complex binding |
+| `printpdf` | Pure Rust                 | Basic rendering only           |
 
 **Recommendation**: Keep MuPDF wrapper (`mupdf_wrapper/`) as it's performance-critical for e-ink devices, but:
+
 - Make wrapper fully open-source MIT licensed
 - Document build process clearly
 - Consider alternative for desktop/emulator builds
@@ -58,6 +59,7 @@ The project already uses primarily Rust dependencies:
 **Current State**: Build scripts tie to specific library paths.
 
 **Actions**:
+
 - Document required native dependencies
 - Create Docker container for reproducible builds
 - Add clear BUILD.md documentation

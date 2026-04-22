@@ -173,19 +173,18 @@ impl<'a> Page<'a> {
 
     pub fn search(&self, needle: &str) -> Option<Vec<FzQuad>> {
         // Basic search implementation using PDFPurr text extraction
-        let page = self.doc.load_page(self.index).ok()?;
-        let text_page = page.to_text_page(None)?;
-        let text = text_page.text();
+        let text_runs = self.doc.extract_text_runs(self.index).ok()?;
+        let text: String = text_runs.iter().map(|r| r.text.as_str()).collect();
         
         if text.contains(needle) {
             // Return page-level quad if text is found
             // Full implementation would need character-level position tracking
-            Some(vec![FzRect {
-                x0: 0.0,
-                y0: 0.0,
-                x1: 600.0,
-                y1: 800.0,
-            }.into()])
+            Some(vec![FzQuad {
+                ul: FzPoint { x: 0.0, y: 0.0 },
+                ur: FzPoint { x: 600.0, y: 0.0 },
+                ll: FzPoint { x: 0.0, y: 800.0 },
+                lr: FzPoint { x: 600.0, y: 800.0 },
+            }])
         } else {
             Some(Vec::new())
         }
