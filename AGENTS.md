@@ -183,10 +183,22 @@ where
 
 - Use `#[inline]` on hot-path small functions (pixel operations, geometry math, device checks)
 - Use `FxHashMap`/`FxHashSet` from `fxhash` instead of std `HashMap` for non-cryptographic use
-- Pre-allocate buffers with `String::with_capacity` when size is known
-- Prefer `Cow<str>` for conditional string ownership
+- Pre-allocate buffers with `String::with_capacity` when size is known or can be estimated
+- Prefer `Cow<str>` for conditional string ownership to avoid unnecessary clones
+- Implement thread-local buffer pools for temporary work (thumbnail generation, document parsing)
+- Use `std::sync::LazyLock` for global buffer management
+- Ensure iterator adapters are fused where possible
+- Collect into pre-allocated vectors using `Vec::with_capacity`
+- Use `Rc` for shared immutable data
+- Use `Arc` for data accessed across threads
+- Review all `Clone` implementations to avoid deep copies
+- Validate shared data before creating references
+- Use `smallvec::SmallVec` for vectors that usually hold 0-2 elements
+- Prefer `BTreeMap`/`BTreeSet` for ordered collections
+- Use `IndexMap` for insertion-order preservation
+- Define data structure choices in module-level constants
+- Validate data structure capacity and constraints
 - Reduce unnecessary cloning in hot paths
-- Pre-allocate collections with known capacity
 - Optimize string operations
 - Optimize library search and filtering
 - Optimize large library performance
@@ -195,6 +207,12 @@ where
 - Async thumbnail generation
 - Reduce lock contention
 - Do not use Rayon for data parallelism. Focus on algorithmic improvements and caching instead
+
+### Memory Safety
+
+- Ensure proper cleanup with `Drop` implementations for types that own resources (file handles, FFI pointers, network connections)
+- Return `anyhow::Error` for buffer allocation failures
+- Use `thiserror` for custom memory-related error types
 
 ### DRY (Don't Repeat Yourself)
 
