@@ -9,6 +9,7 @@ pub mod consts;
 pub mod context;
 pub mod cover_editor;
 pub mod device;
+pub mod image_formats;
 pub use device::{Device, FrontlightKind, KoboDevice, Model, Orientation, CURRENT_DEVICE};
 mod dictionary;
 pub mod document;

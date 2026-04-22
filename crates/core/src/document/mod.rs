@@ -1,7 +1,7 @@
 //! Document Handling Module
 //!
 //! This module provides document loading, rendering, and manipulation for multiple
-//! document formats including PDF, EPUB, HTML, and various image formats.
+//! document formats including PDF, EPUB, HTML, DJVU, and various image formats.
 //!
 //! ## Architecture
 //!
@@ -17,6 +17,9 @@
 //! - **html/**: HTML document support
 //!   - Custom HTML/CSS rendering engine optimized for e-ink
 //!   - DOM, layout, text shaping, line breaking
+//! - **djvu/**: DJVU document support via djvu-rs
+//!   - `DjvuDocument` for DJVU rendering
+//!   - Page extraction, navigation
 //! - **pdfpurr/**: PDFPurr integration layer
 //!   - Safe wrappers for PDFPurr
 //!   - Document abstraction, rendering
@@ -78,6 +81,7 @@ pub mod epub;
 pub mod html;
 pub mod buffer_pool;
 pub mod cache;
+pub mod djvu;
 pub mod pdf;
 pub mod pdf_manipulator;
 pub mod pdfpurr;
@@ -87,6 +91,7 @@ pub mod sysinfo;
 #[cfg(test)]
 mod document_tests;
 
+use self::djvu::DjvuDocument;
 use self::epub::EpubDocument;
 use self::html::HtmlDocument;
 use self::pdf::PdfOpener;
@@ -343,6 +348,9 @@ pub fn guess_kind<P: AsRef<Path>>(path: P) -> Result<&'static str, Error> {
         }
     } else if &magic == b"%PDF" {
         return Ok("pdf");
+    } else if &magic == b"AT&T" {
+        // DJVU files start with "AT&T" magic bytes
+        return Ok("djvu");
     }
 
     Err(format_err!("Unknown file type"))
@@ -408,6 +416,16 @@ pub fn open<P: AsRef<Path>>(path: P) -> Option<Box<dyn Document>> {
             .map_err(|e| {
                 log_error!(
                     "Failed to open HTML {}: {}. Please check the file is valid.",
+                    path.as_ref().display(),
+                    e
+                )
+            })
+            .map(|d| Box::new(d) as Box<dyn Document>)
+            .ok(),
+        "djvu" | "djv" => DjvuDocument::new(&path)
+            .map_err(|e| {
+                log_error!(
+                    "Failed to open DJVU {}: {}. Please check the file is not corrupted.",
                     path.as_ref().display(),
                     e
                 )

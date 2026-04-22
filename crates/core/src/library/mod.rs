@@ -6,6 +6,8 @@
 //! - Metadata management
 //! - File operations (rename, move, copy, remove)
 //! - Library maintenance and cleanup
+//! - Fuzzy search for book titles and authors using Levenshtein distance
+//! - Advanced regex search for pattern matching in metadata
 //!
 //! ## Architecture
 //!
@@ -16,7 +18,7 @@
 //! - **scan**: Directory scanning and book discovery
 //! - **manage**: File operations (rename, move, copy, remove)
 //! - **maintenance**: Library cleanup and optimization
-//! - **query**: Book searching and filtering
+//! - **query**: Book searching and filtering including fuzzy and regex search
 //!
 //! ## Module Hierarchy
 //!
@@ -37,6 +39,8 @@
 //! - `metadata` - For book metadata extraction
 //! - `settings` - For library configuration
 //! - `helpers` - For file system utilities
+//! - `levenshtein` - For fuzzy string matching
+//! - `regex` - For regex pattern matching
 //!
 //! ## Usage
 //!
@@ -45,6 +49,12 @@
 //! use plato_core::settings::LibraryMode;
 //!
 //! let library = Library::new("/path/to/library", LibraryMode::Database)?;
+//!
+//! // Fuzzy search for books
+//! let results = library.fuzzy_search("hary poter", Some(0.7));
+//!
+//! // Regex search for books
+//! let results = library.regex_search(r"Harry.*Potter")?;
 //! ```
 
 mod import;

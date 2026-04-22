@@ -1,16 +1,33 @@
+//! Library data structures and core types
+//!
+//! This module defines the core Library struct and related types including:
+//! - Library database management
+//! - Book metadata handling
+//! - Reading state tracking
+//! - Concurrent caching with DashMap for fast lookups during indexing
+//!
+//! ## Dependencies
+//!
+//! - `dashmap` - For concurrent hash map operations
+//! - `rustc-hash` - For fast hashing (FxHashMap, FxHashSet, FxBuildHasher)
+//! - `indexmap` - For ordered collections (IndexMap)
+
 use crate::helpers::{load_json, Fingerprint, Fp};
 use crate::metadata::{Info, ReaderInfo, SortMethod};
 use crate::settings::{ImportSettings, LibraryMode};
-use crate::validation::validate_library_path;
-use crate::{log_error, log_warn};
 use anyhow::{bail, Error};
+use dashmap::DashMap;
 use indexmap::IndexMap;
 use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use std::fs::{self, File};
 use std::io::{Error as IoError, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime};
+
+// Import validate_library_path from validation module
+use crate::validation::validate_library_path;
 
 // Re-export library constants from canonical source in consts::library
 // per Single Source of Truth rule.
@@ -31,6 +48,8 @@ pub struct Library {
     pub reverse_order: bool,
     pub show_hidden: bool,
     pub import_settings: ImportSettings,
+    /// Concurrent cache for fast lookups during indexing
+    pub concurrent_cache: Arc<DashMap<String, Info>>,
 }
 
 impl Library {
@@ -41,10 +60,11 @@ impl Library {
         Self::create_home_dir(&home)?;
 
         let mut db = Self::load_database(&home, mode)?;
+        let fat32_epoch = Self::ensure_fat32_epoch_file(&home)?;
+        let import_settings = ImportSettings::default();
+        let paths = Self::build_paths_map(&db, mode);
         let reading_states = Self::load_reading_states(&home, mode, &mut db)?;
         Self::create_thumbnail_previews_dir(&home);
-        let paths = Self::build_paths_map(&db, mode);
-        let fat32_epoch = Self::ensure_fat32_epoch_file(&home)?;
 
         Ok(Library {
             home: home.as_ref().to_path_buf(),
@@ -58,7 +78,8 @@ impl Library {
             sort_method: SortMethod::Opened,
             reverse_order: false,
             show_hidden: false,
-            import_settings: ImportSettings::default(),
+            import_settings,
+            concurrent_cache: Arc::new(DashMap::new()),
         })
     }
 
@@ -115,13 +136,13 @@ impl Library {
                 .and_then(|v| Fp::from_str(v).ok())
             {
                 if let Ok(reader_info) =
-                    load_json(path).map_err(|e| log_error!("Can't load reading state: {:#}.", e))
+                    load_json(path).map_err(|e| eprintln!("Can't load reading state: {:#}.", e))
                 {
                     if mode == LibraryMode::Database {
                         if let Some(info) = db.get_mut(&fp) {
                             info.reader = Some(reader_info);
                         } else {
-                            log_warn!("Unknown fingerprint: {}.", fp);
+                            eprintln!("Unknown fingerprint: {}.", fp);
                         }
                     } else {
                         reading_states.insert(fp, reader_info);

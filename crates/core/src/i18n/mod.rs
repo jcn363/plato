@@ -1,4 +1,8 @@
-use rustc_hash::FxHashMap;
+use anyhow::{Context, Error};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
 use std::sync::{LazyLock, RwLock};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Default)]
@@ -6,6 +10,14 @@ pub enum Language {
     #[default]
     English,
     Spanish,
+    French,
+    German,
+    Italian,
+    Portuguese,
+    Russian,
+    Chinese,
+    Japanese,
+    Korean,
 }
 
 impl Language {
@@ -13,6 +25,29 @@ impl Language {
         match self {
             Language::English => "en",
             Language::Spanish => "es",
+            Language::French => "fr",
+            Language::German => "de",
+            Language::Italian => "it",
+            Language::Portuguese => "pt",
+            Language::Russian => "ru",
+            Language::Chinese => "zh",
+            Language::Japanese => "ja",
+            Language::Korean => "ko",
+        }
+    }
+
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Language::English => "English",
+            Language::Spanish => "Español",
+            Language::French => "Français",
+            Language::German => "Deutsch",
+            Language::Italian => "Italiano",
+            Language::Portuguese => "Português",
+            Language::Russian => "Русский",
+            Language::Chinese => "中文",
+            Language::Japanese => "日本語",
+            Language::Korean => "한국어",
         }
     }
 
@@ -20,13 +55,75 @@ impl Language {
         match code {
             "en" => Some(Language::English),
             "es" => Some(Language::Spanish),
+            "fr" => Some(Language::French),
+            "de" => Some(Language::German),
+            "it" => Some(Language::Italian),
+            "pt" => Some(Language::Portuguese),
+            "ru" => Some(Language::Russian),
+            "zh" => Some(Language::Chinese),
+            "ja" => Some(Language::Japanese),
+            "ko" => Some(Language::Korean),
             _ => None,
         }
     }
+
+    pub fn all() -> Vec<Language> {
+        vec![
+            Language::English,
+            Language::Spanish,
+            Language::French,
+            Language::German,
+            Language::Italian,
+            Language::Portuguese,
+            Language::Russian,
+            Language::Chinese,
+            Language::Japanese,
+            Language::Korean,
+        ]
+    }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TranslationEntry {
+    pub value: String,
+    pub plural: Option<PluralForms>,
+    pub context: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PluralForms {
+    pub zero: Option<String>,
+    pub one: Option<String>,
+    pub two: Option<String>,
+    pub few: Option<String>,
+    pub many: Option<String>,
+    pub other: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TranslationData {
+    pub language: String,
+    pub region: Option<String>,
+    pub translations: HashMap<String, TranslationEntry>,
+    pub metadata: TranslationMetadata,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TranslationMetadata {
+    pub version: String,
+    pub last_modified: String,
+    pub translators: Vec<String>,
+    pub completeness: f64,
+}
+
+pub type TranslationMap = HashMap<String, TranslationEntry>;
 
 pub static CURRENT_LANGUAGE: LazyLock<RwLock<Language>> =
     LazyLock::new(|| RwLock::new(Language::English));
+
+pub static TRANSLATIONS: LazyLock<RwLock<HashMap<String, TranslationData>>> =
+    LazyLock::new(|| RwLock::new(HashMap::new()));
+
 
 pub fn set_language(lang: Language) {
     *CURRENT_LANGUAGE
@@ -40,176 +137,215 @@ pub fn get_language() -> Language {
         .expect("CURRENT_LANGUAGE lock poisoned")
 }
 
+/// Load translations from JSON files in a directory
+pub fn load_translations_from_dir<P: AsRef<Path>>(dir: P) -> Result<(), Error> {
+    let dir = dir.as_ref();
+    if !dir.exists() {
+        return Ok(()); // No translations directory is fine
+    }
+
+    let mut translations = TRANSLATIONS
+        .write()
+        .expect("TRANSLATIONS lock poisoned");
+
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        
+        if path.extension().and_then(|s| s.to_str()) == Some("json") {
+            let content = fs::read_to_string(&path)
+                .with_context(|| format!("Failed to read translation file {}", path.display()))?;
+            
+            let data: TranslationData = serde_json::from_str(&content)
+                .with_context(|| format!("Failed to parse translation file {}", path.display()))?;
+            
+            translations.insert(data.language.clone(), data);
+        }
+    }
+
+    Ok(())
+}
+
+/// Simple translation function
 pub fn t(key: &str) -> String {
+    t_with_context(key, None)
+}
+
+/// Translation with context
+pub fn t_with_context(key: &str, context: Option<&str>) -> String {
     let lang = get_language();
+    let lang_code = lang.code();
+    
+    let translations = TRANSLATIONS
+        .read()
+        .expect("TRANSLATIONS lock poisoned");
+    
+    // Try to get translation from loaded files
+    if let Some(data) = translations.get(lang_code) {
+        if let Some(entry) = data.translations.get(key) {
+            // Check context if provided
+            if let Some(req_context) = context {
+                if let Some(entry_context) = &entry.context {
+                    if entry_context != req_context {
+                        // Context mismatch, try fallback
+                        return get_fallback_translation(key);
+                    }
+                }
+            }
+            return entry.value.clone();
+        }
+    }
+    
+    // Fallback to hardcoded translations
+    get_fallback_translation(key)
+}
+
+/// Pluralized translation
+pub fn tn(key: &str, count: usize) -> String {
+    tn_with_context(key, count, None)
+}
+
+/// Pluralized translation with context
+pub fn tn_with_context(key: &str, count: usize, context: Option<&str>) -> String {
+    let lang = get_language();
+    let lang_code = lang.code();
+    
+    let translations = TRANSLATIONS
+        .read()
+        .expect("TRANSLATIONS lock poisoned");
+    
+    // Try to get translation from loaded files
+    if let Some(data) = translations.get(lang_code) {
+        if let Some(entry) = data.translations.get(key) {
+            if let Some(ref plural) = entry.plural {
+                let plural_form = get_plural_form(lang, count);
+                return match plural_form {
+                    PluralForm::Zero => plural.zero.as_ref().unwrap_or(&plural.other).clone(),
+                    PluralForm::One => plural.one.as_ref().unwrap_or(&plural.other).clone(),
+                    PluralForm::Two => plural.two.as_ref().unwrap_or(&plural.other).clone(),
+                    PluralForm::Few => plural.few.as_ref().unwrap_or(&plural.other).clone(),
+                    PluralForm::Many => plural.many.as_ref().unwrap_or(&plural.other).clone(),
+                    PluralForm::Other => plural.other.clone(),
+                };
+            }
+        }
+    }
+    
+    // Fallback to simple translation
+    t_with_context(key, context)
+}
+
+/// Interpolated translation with variables
+pub fn ti(key: &str, vars: &[(&str, &str)]) -> String {
+    let mut result = t(key);
+    
+    for (var_name, var_value) in vars {
+        result = result.replace(&format!("{{{}}}", var_name), var_value);
+    }
+    
+    result
+}
+
+/// Interpolated pluralized translation
+pub fn tni(key: &str, count: usize, vars: &[(&str, &str)]) -> String {
+    let mut result = tn(key, count);
+    
+    for (var_name, var_value) in vars {
+        result = result.replace(&format!("{{{}}}", var_name), var_value);
+    }
+    
+    result
+}
+
+fn get_fallback_translation(key: &str) -> String {
+    // Return the key as last resort - no hardcoded fallbacks
+    format!("[{}]", key)
+}
+
+#[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
+enum PluralForm {
+    Zero,
+    One,
+    Two,
+    Few,
+    Many,
+    Other,
+}
+
+fn get_plural_form(lang: Language, count: usize) -> PluralForm {
     match lang {
-        Language::English => ENGLISH
-            .get(key)
-            .map(|&s| s.to_string())
-            .unwrap_or_else(|| key.to_string()),
-        Language::Spanish => SPANISH
-            .get(key)
-            .map(|&s| s.to_string())
-            .unwrap_or_else(|| key.to_string()),
+        Language::English | Language::German | Language::Italian | Language::Portuguese | Language::Chinese | Language::Japanese | Language::Korean => {
+            if count == 1 {
+                PluralForm::One
+            } else {
+                PluralForm::Other
+            }
+        },
+        Language::Spanish => {
+            if count == 1 {
+                PluralForm::One
+            } else {
+                PluralForm::Other
+            }
+        },
+        Language::French => {
+            if count == 0 || count == 1 {
+                PluralForm::One
+            } else {
+                PluralForm::Other
+            }
+        },
+        Language::Russian => {
+            let tens = count % 100;
+            let ones = count % 10;
+            
+            if tens >= 10 && tens <= 20 {
+                PluralForm::Many
+            } else if ones == 1 {
+                PluralForm::One
+            } else if ones >= 2 && ones <= 4 {
+                PluralForm::Few
+            } else {
+                PluralForm::Many
+            }
+        },
     }
 }
 
-type TranslationMap = FxHashMap<&'static str, &'static str>;
+/// Get available languages with their translation completeness
+pub fn get_available_languages() -> Vec<(Language, f64)> {
+    let translations = TRANSLATIONS
+        .read()
+        .expect("TRANSLATIONS lock poisoned");
+    
+    Language::all()
+        .into_iter()
+        .map(|lang| {
+            let completeness = translations
+                .get(lang.code())
+                .map(|data| data.metadata.completeness)
+                .unwrap_or(0.0);
+            (lang, completeness)
+        })
+        .collect()
+}
 
-pub static ENGLISH: LazyLock<TranslationMap> = LazyLock::new(|| {
-    let mut t = FxHashMap::default();
+/// Export current translations to JSON format
+pub fn export_translations<P: AsRef<Path>>(output_dir: P) -> Result<(), Error> {
+    let translations = TRANSLATIONS
+        .read()
+        .expect("TRANSLATIONS lock poisoned");
+    
+    fs::create_dir_all(&output_dir)?;
+    
+    for (lang_code, data) in translations.iter() {
+        let file_path = output_dir.as_ref().join(format!("{}.json", lang_code));
+        let json = serde_json::to_string_pretty(data)?;
+        fs::write(file_path, json)?;
+    }
+    
+    Ok(())
+}
 
-    // General
-    t.insert("close", "Close");
-    t.insert("save", "Save");
-    t.insert("cancel", "Cancel");
-    t.insert("ok", "OK");
-    t.insert("yes", "Yes");
-    t.insert("no", "No");
-    t.insert("settings", "Settings");
-    t.insert("loading", "Loading...");
 
-    // Menu
-    t.insert("menu", "Menu");
-    t.insert("about", "About");
-    t.insert("system_info", "System Info");
-    t.insert("applications", "Applications");
-    t.insert("rotate", "Rotate");
-
-    // Settings Editor
-    t.insert("frontlight", "Frontlight");
-    t.insert("wifi", "WiFi");
-    t.insert("inverted", "Inverted");
-    t.insert("sleep_cover", "Sleep Cover");
-    t.insert("auto_suspend", "Auto Suspend (min)");
-    t.insert("auto_power_off", "Auto Power Off (h)");
-    t.insert("auto_dual_page", "Auto Dual Page");
-    t.insert("finished_action", "Finished Action");
-    t.insert("language", "Language");
-    t.insert("on", "On");
-    t.insert("off", "Off");
-
-    // Reader
-    t.insert("table_of_contents", "Table of Contents");
-    t.insert("go_to_page", "Go to page");
-    t.insert("bookmarks", "Bookmarks");
-    t.insert("annotations", "Annotations");
-    t.insert("search", "Search");
-    t.insert("no_results", "No results found");
-    t.insert("no_next_page", "No next page.");
-    t.insert("no_next_file", "No next file.");
-    t.insert("previous_page", "Previous page");
-    t.insert("next_page", "Next page");
-
-    // Library
-    t.insert("library", "Library");
-    t.insert("all_books", "All Books");
-    t.insert("recent_books", "Recent Books");
-    t.insert("authors", "Authors");
-    t.insert("series", "Series");
-    t.insert("folders", "Folders");
-    t.insert("no_books", "No books found");
-    t.insert("import", "Import");
-    t.insert("delete", "Delete");
-    t.insert("rename", "Rename");
-
-    // Dictionary
-    t.insert("dictionary", "Dictionary");
-    t.insert("enter_word", "Enter a word");
-    t.insert("not_found", "Word not found");
-
-    // Calculator
-    t.insert("calculator", "Calculator");
-
-    // Sketch
-    t.insert("sketch", "Sketch");
-    t.insert("clear", "Clear");
-    t.insert("pen", "Pen");
-    t.insert("eraser", "Eraser");
-
-    // Messages
-    t.insert("confirm_delete", "Confirm delete?");
-    t.insert("processing", "Processing...");
-    t.insert("error", "Error");
-
-    t
-});
-
-pub static SPANISH: LazyLock<TranslationMap> = LazyLock::new(|| {
-    let mut t = FxHashMap::default();
-
-    // General
-    t.insert("close", "Cerrar");
-    t.insert("save", "Guardar");
-    t.insert("cancel", "Cancelar");
-    t.insert("ok", "Aceptar");
-    t.insert("yes", "Sí");
-    t.insert("no", "No");
-    t.insert("settings", "Configuración");
-    t.insert("loading", "Cargando...");
-
-    // Menu
-    t.insert("menu", "Menú");
-    t.insert("about", "Acerca de");
-    t.insert("system_info", "Info del sistema");
-    t.insert("applications", "Aplicaciones");
-    t.insert("rotate", "Rotar");
-
-    // Settings Editor
-    t.insert("frontlight", "Luz frontal");
-    t.insert("wifi", "WiFi");
-    t.insert("inverted", "Invertido");
-    t.insert("sleep_cover", "Cubierta de suspensión");
-    t.insert("auto_suspend", "Suspensión auto (min)");
-    t.insert("auto_power_off", "Apagado auto (h)");
-    t.insert("auto_dual_page", "Doble página auto");
-    t.insert("finished_action", "Acción al finalizar");
-    t.insert("language", "Idioma");
-    t.insert("on", "Activado");
-    t.insert("off", "Desactivado");
-
-    // Reader
-    t.insert("table_of_contents", "Tabla de contenidos");
-    t.insert("go_to_page", "Ir a página");
-    t.insert("bookmarks", "Marcadores");
-    t.insert("annotations", "Anotaciones");
-    t.insert("search", "Buscar");
-    t.insert("no_results", "No se encontraron resultados");
-    t.insert("no_next_page", "No hay página siguiente.");
-    t.insert("no_next_file", "No hay siguiente archivo.");
-    t.insert("previous_page", "Página anterior");
-    t.insert("next_page", "Página siguiente");
-
-    // Library
-    t.insert("library", "Biblioteca");
-    t.insert("all_books", "Todos los libros");
-    t.insert("recent_books", "Libros recientes");
-    t.insert("authors", "Autores");
-    t.insert("series", "Series");
-    t.insert("folders", "Carpetas");
-    t.insert("no_books", "No se encontraron libros");
-    t.insert("import", "Importar");
-    t.insert("delete", "Eliminar");
-    t.insert("rename", "Renombrar");
-
-    // Dictionary
-    t.insert("dictionary", "Diccionario");
-    t.insert("enter_word", "Introduce una palabra");
-    t.insert("not_found", "Palabra no encontrada");
-
-    // Calculator
-    t.insert("calculator", "Calculadora");
-
-    // Sketch
-    t.insert("sketch", "Dibujo");
-    t.insert("clear", "Limpiar");
-    t.insert("pen", "Bolígrafo");
-    t.insert("eraser", "Borrador");
-
-    // Messages
-    t.insert("confirm_delete", "¿Confirmar eliminación?");
-    t.insert("processing", "Procesando...");
-    t.insert("error", "Error");
-
-    t
-});

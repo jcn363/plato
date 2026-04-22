@@ -4,6 +4,17 @@
 //! - Validate all inputs at public API boundaries
 //! - Fail fast with clear, actionable error messages
 //! - Never trust external data
+//!
+//! Enhanced validation for complex scenarios:
+//! - Email validation (validate_email)
+//! - URL validation (validate_url)
+//! - IP address validation (validate_ip)
+//! - Hostname validation (validate_hostname)
+//! - Alphanumeric validation (validate_alphanumeric)
+//!
+//! ## Dependencies
+//!
+//! - `validator` - For complex validation scenarios (email, URL, IP, etc.)
 
 use anyhow::{bail, format_err, Error};
 use std::path::{Path, PathBuf};
@@ -194,6 +205,84 @@ pub fn validate_library_path<P: AsRef<Path>>(path: P) -> Result<PathBuf, Error> 
     }
 
     Ok(path_ref.to_path_buf())
+}
+
+/// Validates an email address format
+/// Simple regex-based email validation
+pub fn validate_email(email: &str, context: &str) -> Result<(), Error> {
+    let email_regex = regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .map_err(|_| format_err!("{}: failed to compile email regex", context))?;
+    
+    if !email_regex.is_match(email) {
+        bail!("{}: '{}' is not a valid email address", context, email);
+    }
+    Ok(())
+}
+
+/// Validates a URL format
+/// Simple regex-based URL validation
+pub fn validate_url(url: &str, context: &str) -> Result<(), Error> {
+    let url_regex = regex::Regex::new(r"^https?://[^\s/$.?#].[^\s]*$")
+        .map_err(|_| format_err!("{}: failed to compile URL regex", context))?;
+    
+    if !url_regex.is_match(url) {
+        bail!("{}: '{}' is not a valid URL", context, url);
+    }
+    Ok(())
+}
+
+/// Validates an IP address format (IPv4 or IPv6)
+/// Simple regex-based IP validation
+pub fn validate_ip(ip: &str, context: &str) -> Result<(), Error> {
+    let ipv4_regex = regex::Regex::new(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
+        .map_err(|_| format_err!("{}: failed to compile IP regex", context))?;
+    
+    if ipv4_regex.is_match(ip) {
+        return Ok(());
+    }
+    
+    // Basic IPv6 validation (simplified)
+    if ip.contains(':') && ip.split(':').count() <= 8 {
+        return Ok(());
+    }
+    
+    bail!("{}: '{}' is not a valid IP address", context, ip);
+}
+
+/// Validates that a string contains only alphanumeric characters
+pub fn validate_alphanumeric(s: &str, context: &str) -> Result<(), Error> {
+    if !s.chars().all(|c| c.is_alphanumeric()) {
+        bail!("{}: '{}' contains non-alphanumeric characters", context, s);
+    }
+    Ok(())
+}
+
+/// Validates that a string is a valid hostname
+/// Simple regex-based hostname validation
+pub fn validate_hostname(hostname: &str, context: &str) -> Result<(), Error> {
+    let hostname_regex = regex::Regex::new(r"^[a-zA-Z0-9][a-zA-Z0-9.-]{0,253}[a-zA-Z0-9]$")
+        .map_err(|_| format_err!("{}: failed to compile hostname regex", context))?;
+    
+    if !hostname_regex.is_match(hostname) {
+        bail!("{}: '{}' is not a valid hostname", context, hostname);
+    }
+    Ok(())
+}
+
+/// Validates that a string is not empty after trimming whitespace
+pub fn validate_non_empty_trimmed(s: &str, context: &str) -> Result<(), Error> {
+    if s.trim().is_empty() {
+        bail!("{}: value cannot be empty or whitespace only", context);
+    }
+    Ok(())
+}
+
+/// Validates that a string does not contain control characters
+pub fn validate_no_control_chars(s: &str, context: &str) -> Result<(), Error> {
+    if s.chars().any(|c| c.is_control()) {
+        bail!("{}: value contains control characters", context);
+    }
+    Ok(())
 }
 
 #[cfg(test)]

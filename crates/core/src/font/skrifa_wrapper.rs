@@ -3,7 +3,9 @@
 //! This module provides a high-level interface to skrifa,
 //! replacing the previous FreeType FFI bindings.
 //!
-//! Glyph rasterization is handled via ab_glyph integration.
+//! Note: ab_glyph is available but not used for rasterization in this wrapper
+//! because it uses character-based glyph lookup while skrifa uses glyph indices.
+//! Actual rendering is handled by the document rendering system (e.g., MuPDF).
 
 use anyhow::{bail, format_err, Result};
 use skrifa::raw::tables::name::NameId;
@@ -185,11 +187,15 @@ impl Face {
     }
 
     /// Render a glyph outline to a bitmap.
-    /// Note: Full rasterization requires ab_glyph integration.
+    /// 
+    /// Note: Actual glyph rasterization is handled by the document rendering system
+    /// (e.g., MuPDF for PDFs, HTML rendering engine for HTML). This wrapper provides
+    /// metrics and glyph information, but not actual bitmap rendering.
     pub fn rasterize_glyph(&self, glyph_id: u16, ppem: u16) -> Result<GlyphBitmap> {
         let metrics = self.get_glyph_metrics(glyph_id)?;
         let scale = if ppem > 0 { ppem as f32 } else { self.scale };
 
+        // Return empty bitmap - actual rendering handled by document system
         Ok(GlyphBitmap {
             width: 0,
             height: 0,

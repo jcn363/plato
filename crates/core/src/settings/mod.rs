@@ -47,6 +47,9 @@
 //!
 //! // Or use defaults if file missing
 //! let settings = ConfigManager::new().load_or_default();
+//!
+//! // Enhanced: User profiles for different configurations
+//! let profile_settings = ConfigManager::new().load_profile("reading")?;
 //! ```
 
 mod defaults;

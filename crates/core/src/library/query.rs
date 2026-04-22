@@ -1,12 +1,80 @@
 use crate::metadata::sorter;
 use crate::metadata::{Info, ReaderInfo, SimpleStatus, SortMethod};
 use crate::settings::LibraryMode;
+use levenshtein::levenshtein;
+use regex::Regex;
 use std::fs;
 use std::path::Path;
 
 use super::types::{Library, THUMBNAIL_PREVIEWS_DIRNAME};
 
 impl Library {
+    /// Fuzzy search for books by title or author using Levenshtein distance
+    /// Returns books with similarity score above threshold (default: 0.7)
+    pub fn fuzzy_search(&self, query: &str, threshold: Option<f64>) -> Vec<(String, Info)> {
+        let threshold = threshold.unwrap_or(0.7);
+        let query_lower = query.to_lowercase();
+        let mut results = Vec::new();
+
+        if self.mode == LibraryMode::Filesystem {
+            return results;
+        }
+
+        for (fp, info) in &self.db {
+            let title_lower = info.title.to_lowercase();
+            let author_lower = info.author.to_lowercase();
+
+            // Calculate similarity scores
+            let title_distance = levenshtein(&query_lower, &title_lower);
+            let title_similarity = 1.0 - (title_distance as f64 / query_lower.len().max(title_lower.len()) as f64);
+
+            let author_distance = levenshtein(&query_lower, &author_lower);
+            let author_similarity = 1.0 - (author_distance as f64 / query_lower.len().max(author_lower.len()) as f64);
+
+            // Use the higher similarity score
+            let max_similarity = title_similarity.max(author_similarity);
+
+            if max_similarity >= threshold {
+                results.push((fp.to_string(), info.clone()));
+            }
+        }
+
+        results
+    }
+
+    /// Advanced regex search for books by title, author, or other metadata
+    /// Returns books matching the regex pattern
+    pub fn regex_search(&self, pattern: &str) -> Result<Vec<(String, Info)>, regex::Error> {
+        let regex = Regex::new(pattern)?;
+        let mut results = Vec::new();
+
+        if self.mode == LibraryMode::Filesystem {
+            return Ok(results);
+        }
+
+        for (fp, info) in &self.db {
+            // Search in title
+            if regex.is_match(&info.title) {
+                results.push((fp.to_string(), info.clone()));
+                continue;
+            }
+
+            // Search in author
+            if regex.is_match(&info.author) {
+                results.push((fp.to_string(), info.clone()));
+                continue;
+            }
+
+            // Search in series
+            if regex.is_match(&info.series) {
+                results.push((fp.to_string(), info.clone()));
+                continue;
+            }
+        }
+
+        Ok(results)
+    }
+
     pub fn sort(&mut self, sort_method: SortMethod, reverse_order: bool) {
         self.sort_method = sort_method;
         self.reverse_order = reverse_order;

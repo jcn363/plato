@@ -136,6 +136,33 @@ impl ConfigManager {
     pub fn set_settings_path<P: AsRef<Path>>(&mut self, path: P) {
         self.settings_path = path.as_ref().to_path_buf();
     }
+
+    /// Load settings from a named profile file
+    ///
+    /// Profiles are stored as Settings-{profile}.toml files
+    /// This allows users to maintain different configurations for different use cases
+    ///
+    /// # Arguments
+    /// * `profile_name` - Name of the profile (e.g., "reading", "night", "high-contrast")
+    ///
+    /// # Returns
+    /// Settings from the profile file, or defaults if profile doesn't exist
+    pub fn load_profile(&self, profile_name: &str) -> Result<Settings, Error> {
+        let profile_path = self.settings_path.with_file_name(format!("Settings-{}.toml", profile_name));
+        let profile_manager = ConfigManager::with_path(&profile_path);
+        profile_manager.load()
+    }
+
+    /// Save settings to a named profile file
+    ///
+    /// # Arguments
+    /// * `profile_name` - Name of the profile
+    /// * `settings` - Settings to save
+    pub fn save_profile(&self, profile_name: &str, settings: &Settings) -> Result<(), Error> {
+        let profile_path = self.settings_path.with_file_name(format!("Settings-{}.toml", profile_name));
+        let profile_manager = ConfigManager::with_path(&profile_path);
+        profile_manager.save(settings)
+    }
 }
 
 impl Default for ConfigManager {

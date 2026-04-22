@@ -5,9 +5,11 @@
 //! - Extracted text
 //! - Page metadata
 //! - Outlines
+//!
+//! Uses DashMap for outlines cache to support concurrent access
 
+use dashmap::DashMap;
 use lru::LruCache;
-use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::{Arc, Mutex};
 
@@ -52,7 +54,7 @@ pub struct PdfCache {
     rendered_pages: Arc<Mutex<LruCache<PageCacheKey, CachedPage>>>,
     extracted_text: Arc<Mutex<LruCache<PageCacheKey, CachedText>>>,
     metadata: Arc<Mutex<LruCache<PageCacheKey, CachedMetadata>>>,
-    outlines: Arc<Mutex<HashMap<String, Vec<String>>>>,
+    outlines: Arc<DashMap<String, Vec<String>>>,
 }
 
 impl PdfCache {
@@ -64,7 +66,7 @@ impl PdfCache {
             rendered_pages: Arc::new(Mutex::new(LruCache::new(capacity))),
             extracted_text: Arc::new(Mutex::new(LruCache::new(capacity))),
             metadata: Arc::new(Mutex::new(LruCache::new(capacity))),
-            outlines: Arc::new(Mutex::new(HashMap::new())),
+            outlines: Arc::new(DashMap::new()),
         }
     }
 
@@ -115,12 +117,12 @@ impl PdfCache {
 
     /// Get cached outlines
     pub fn get_outlines(&self, doc_id: &str) -> Option<Vec<String>> {
-        self.outlines.lock().unwrap().get(doc_id).cloned()
+        self.outlines.get(doc_id).map(|v| v.clone())
     }
 
     /// Cache outlines
     pub fn put_outlines(&self, doc_id: String, outlines: Vec<String>) {
-        self.outlines.lock().unwrap().insert(doc_id, outlines);
+        self.outlines.insert(doc_id, outlines);
     }
 
     /// Clear all caches
@@ -128,7 +130,7 @@ impl PdfCache {
         self.rendered_pages.lock().unwrap().clear();
         self.extracted_text.lock().unwrap().clear();
         self.metadata.lock().unwrap().clear();
-        self.outlines.lock().unwrap().clear();
+        self.outlines.clear();
     }
 
     /// Clear cache for a specific document
@@ -136,7 +138,6 @@ impl PdfCache {
         let mut rendered = self.rendered_pages.lock().unwrap();
         let mut text = self.extracted_text.lock().unwrap();
         let mut meta = self.metadata.lock().unwrap();
-        let mut outlines = self.outlines.lock().unwrap();
 
         // LruCache doesn't have retain, so we collect keys to remove
         let rendered_keys: Vec<_> = rendered.iter().map(|(k, _)| k.clone()).collect();
@@ -160,7 +161,7 @@ impl PdfCache {
             }
         }
 
-        outlines.remove(doc_id);
+        self.outlines.remove(doc_id);
     }
 
     /// Get cache statistics
@@ -169,7 +170,7 @@ impl PdfCache {
             rendered_pages: self.rendered_pages.lock().unwrap().len(),
             extracted_text: self.extracted_text.lock().unwrap().len(),
             metadata: self.metadata.lock().unwrap().len(),
-            outlines: self.outlines.lock().unwrap().len(),
+            outlines: self.outlines.len(),
         }
     }
 }
