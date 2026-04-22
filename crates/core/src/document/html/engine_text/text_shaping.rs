@@ -1,6 +1,7 @@
 //! Text Shaping Module
 //!
-//! This module provides text shaping functionality using HarfBuzz for complex scripts.
+//! This module provides text shaping functionality using rustybuzz (pure Rust)
+//! for complex scripts, replacing the previous HarfBuzz dependency.
 
 use rustc_hash::FxHashMap;
 

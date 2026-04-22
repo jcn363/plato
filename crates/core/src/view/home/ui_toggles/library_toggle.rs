@@ -350,7 +350,7 @@ impl Home {
         self.children.push(Box::new(notif) as Box<dyn View>);
 
         // Update library view to show filtered results
-        // In a full implementation, this would update the shelf view's filter state
+        // TODO: this would update the shelf view's filter state
         // For now, we show the notification with the count
 
         // Trigger library refresh to apply visual filter
@@ -373,7 +373,7 @@ impl Home {
         let notif = Notification::new(msg, hub, rq, context);
         self.children.push(Box::new(notif) as Box<dyn View>);
 
-        // In a full implementation, this would filter by tags/categories from metadata
+        // TODO: this would filter by tags/categories from metadata
         // For now, we acknowledge the filter request
 
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));

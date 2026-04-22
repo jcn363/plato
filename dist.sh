@@ -37,7 +37,7 @@ if [ ! -d "$LIB_DIR" ]; then
 fi
 
 # Check for required shared libraries
-required_libs="libz.so libbz2.so libpng16.so libjpeg.so libopenjp2.so libjbig2dec.so libfreetype.so libharfbuzz.so libgumbo.so libdjvulibre.so libmupdf.so"
+required_libs=""
 for lib in $required_libs; do
 	if [ ! -e "$LIB_DIR/$lib" ]; then
 		echo "Error: Required library '$LIB_DIR/$lib' not found."
@@ -67,21 +67,6 @@ fi
 
 mkdir -p dist/libs
 mkdir dist/dictionaries
-
-cp "$LIB_DIR/libz.so" dist/libs/libz.so.1
-cp "$LIB_DIR/libbz2.so" dist/libs/libbz2.so.1.0
-
-cp "$LIB_DIR/libpng16.so" dist/libs/libpng16.so.16
-cp "$LIB_DIR/libjpeg.so" dist/libs/libjpeg.so.9
-cp "$LIB_DIR/libopenjp2.so" dist/libs/libopenjp2.so.7
-cp "$LIB_DIR/libjbig2dec.so" dist/libs/libjbig2dec.so.0
-
-cp "$LIB_DIR/libfreetype.so" dist/libs/libfreetype.so.6
-cp "$LIB_DIR/libharfbuzz.so" dist/libs/libharfbuzz.so.0
-
-cp "$LIB_DIR/libgumbo.so" dist/libs/libgumbo.so.2
-cp "$LIB_DIR/libdjvulibre.so" dist/libs/libdjvulibre.so.21
-cp "$LIB_DIR/libmupdf.so" dist/libs
 
 cp -R hyphenation-patterns dist
 cp -R keyboard-layouts dist

@@ -40,6 +40,7 @@ mod transform;
 use crate::theme;
 
 use crate::color::{background, foreground, Color};
+use crate::color::rgb_to_grayscale_bulk;
 use crate::geom::{lerp, nearest_segment_point, surface_area, Point, Rectangle};
 use crate::geom::{BorderSpec, ColorSource, CornerSpec, Vec2};
 use anyhow::Error;
@@ -135,8 +136,89 @@ pub trait Framebuffer {
         self.draw_rectangle(&rect, color);
     }
 
-    #[inline]
     fn draw_rectangle(&mut self, rect: &Rectangle, color: Color) {
+        self.draw_rectangle_simd(rect, color)
+    }
+
+    /// SIMD-optimized rectangle drawing for ARM NEON
+    #[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
+    fn draw_rectangle_simd(&mut self, rect: &Rectangle, color: Color) {
+        let width = (rect.max.x - rect.min.x) as usize;
+        let height = (rect.max.y - rect.min.y) as usize;
+        
+        // Use SIMD for large rectangles
+        if width >= 16 && height >= 1 {
+            self.draw_rectangle_simd_neon(rect, color);
+        } else {
+            // Fallback to scalar for small rectangles
+            for y in rect.min.y..rect.max.y {
+                for x in rect.min.x..rect.max.x {
+                    self.set_pixel(x as u32, y as u32, color);
+                }
+            }
+        }
+    }
+
+    /// NEON-optimized rectangle drawing
+    #[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
+    fn draw_rectangle_simd_neon(&mut self, rect: &Rectangle, color: Color) {
+        let width = (rect.max.x - rect.min.x) as usize;
+        let start_y = rect.min.y as u32;
+        
+        // Create aligned color buffer for SIMD operations
+        let color_bytes = color.rgb();
+        let mut color_buffer = vec![color_bytes[0]; width * 3];
+        
+        for i in 1..width {
+            color_buffer[i * 3] = color_bytes[0];
+            color_buffer[i * 3 + 1] = color_bytes[1];
+            color_buffer[i * 3 + 2] = color_bytes[2];
+        }
+        
+        // Draw rows using SIMD-optimized pixel setting
+        for y in 0..(rect.max.y - rect.min.y) {
+            let py = start_y + y;
+            self.set_row_simd(rect.min.x as u32, py, &color_buffer);
+        }
+    }
+
+    /// SIMD-optimized row drawing
+    #[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
+    fn set_row_simd(&mut self, start_x: u32, y: u32, color_data: &[u8]) {
+        let width = color_data.len() / 3;
+        
+        #[cfg(target_arch = "aarch64")]
+        {
+            if crate::color::is_neon_available() && width >= 16 {
+                unsafe {
+                    let color_vec = vld1q_u8(color_data.as_ptr());
+                    for x in (0..width).step_by(16) {
+                        let px = start_x + x as u32;
+                        if px < self.width() {
+                            self.set_pixel(px, y, Color::Rgb(
+                                vgetq_lane_u8(color_vec, 0),
+                                vgetq_lane_u8(color_vec, 1), 
+                                vgetq_lane_u8(color_vec, 2)
+                            ));
+                        }
+                    }
+                }
+                return;
+            }
+        }
+        
+        // Fallback to scalar
+        for (i, chunk) in color_data.chunks_exact(3).enumerate() {
+            let px = start_x + i as u32;
+            if px < self.width() {
+                self.set_pixel(px, y, Color::Rgb(chunk[0], chunk[1], chunk[2]));
+            }
+        }
+    }
+
+    /// Fallback rectangle drawing for non-ARM architectures
+    #[cfg(not(any(target_arch = "aarch64", target_arch = "arm")))]
+    fn draw_rectangle_simd(&mut self, rect: &Rectangle, color: Color) {
         for y in rect.min.y..rect.max.y {
             for x in rect.min.x..rect.max.x {
                 self.set_pixel(x as u32, y as u32, color);

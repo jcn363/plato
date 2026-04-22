@@ -18,11 +18,11 @@ The following features were implemented in the latest updates:
 10. **EPUB Editor Enhancements** - Added Undo, Preview, and improved error handling
 11. **MuPDF Native Search** - Added option to use MuPDF's `fz_search_page` for PDF text search
 12. **Settings UI Improvements** - Added Manga Mode, MuPDF Search, Show Time, Show Battery, External Storage, and Dithering toggles to the in-app settings
-13. **PDF Document Manipulation** - Added full PDF manipulation library and UI with delete, rotate, extract, merge, and reorder pages
+13. **PDF Document Manipulation** - Added full PDF manipulation library and UI with delete, rotate, extract, merge, and reorder pages using lopdf (pure Rust)
 14. **Progressive Document Loading** - Added `ProgressiveDocLoader` with LRU caching and preloading for large PDFs
-15. **Redaction Support** - Added `RedactionEditor` struct with FFI bindings for marking and permanently removing content from PDFs
-16. **Resource Extraction** - Added `ResourceExtractor` for extracting images, fonts, and listing PDF resources
-17. **PDF-Native Annotations** - Added `PdfAnnotationExporter` for exporting annotations to PDF (new file, preserves original)
+15. **Redaction Support** - Added `RedactionEditor` struct using lopdf for marking and permanently removing content from PDFs
+16. **Resource Extraction** - Added `ResourceExtractor` using lopdf for extracting images, fonts, and listing PDF resources
+17. **PDF-Native Annotations** - Added `PdfAnnotationExporter` using lopdf for exporting annotations to PDF (new file, preserves original)
 18. **Memory Optimizations** - Fixed `get_available_memory_mb()` to actually read `/proc/meminfo`, reduced thumbnail memory by 75% (RGBA→grayscale), fixed page leaks on error paths, added `MAX_CACHED_PAGES` constant
 19. **Performance Improvements** - Reduced MuPDF context cache from 32MB→16MB, fixed Pixmap OOM panics, added PDF/A detection, improved error messages
 20. **PDF Annotation Reading** - Added `read_annotations()` to read existing PDF annotations and display count

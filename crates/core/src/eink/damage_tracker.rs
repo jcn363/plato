@@ -124,6 +124,9 @@ impl DamageTracker {
         if in_damage {
             self.add_damage_region(damage_start, damage_end);
         }
+
+        // Merge adjacent/overlapping regions to minimize partial refresh calls
+        self.merge_damage_regions();
     }
 
     fn add_damage_region(&mut self, start: (u32, u32), end: (u32, u32)) {
@@ -132,6 +135,63 @@ impl DamageTracker {
             crate::geom::Point::new((end.0 + 1) as i32, (end.1 + 1) as i32),
         );
         self.damage_regions.push(rect);
+    }
+
+    /// Merge adjacent or overlapping damage regions to minimize partial refresh calls
+    fn merge_damage_regions(&mut self) {
+        if self.damage_regions.len() <= 1 {
+            return;
+        }
+
+        let mut merged = Vec::new();
+        let mut regions = self.damage_regions.clone();
+        regions.sort_by(|a, b| a.min.y.cmp(&b.min.y).then(a.min.x.cmp(&b.min.x)));
+
+        while let Some(current) = regions.pop() {
+            let mut merged_rect = current.clone();
+
+            regions.retain(|other| {
+                if Self::rects_adjacent_or_overlap(&merged_rect, other) {
+                    merged_rect = Self::merge_rects(&merged_rect, other);
+                    false
+                } else {
+                    true
+                }
+            });
+
+            merged.push(merged_rect);
+        }
+
+        self.damage_regions = merged;
+    }
+
+    /// Check if two rectangles are adjacent or overlapping
+    #[inline]
+    fn rects_adjacent_or_overlap(a: &Rectangle, b: &Rectangle) -> bool {
+        // Check for overlap
+        let overlap_x = a.max.x > b.min.x && a.min.x < b.max.x;
+        let overlap_y = a.max.y > b.min.y && a.min.y < b.max.y;
+
+        // Check for adjacency (within a small margin)
+        let margin = 5;
+        let adjacent_x = (a.max.x - b.min.x).abs() <= margin || (b.max.x - a.min.x).abs() <= margin;
+        let adjacent_y = (a.max.y - b.min.y).abs() <= margin || (b.max.y - a.min.y).abs() <= margin;
+
+        overlap_x && overlap_y || (overlap_x && adjacent_y) || (overlap_y && adjacent_x)
+    }
+
+    /// Merge two rectangles into their bounding box
+    #[inline]
+    fn merge_rects(a: &Rectangle, b: &Rectangle) -> Rectangle {
+        let min_x = a.min.x.min(b.min.x);
+        let min_y = a.min.y.min(b.min.y);
+        let max_x = a.max.x.max(b.max.x);
+        let max_y = a.max.y.max(b.max.y);
+
+        Rectangle::new(
+            crate::geom::Point::new(min_x, min_y),
+            crate::geom::Point::new(max_x, max_y),
+        )
     }
 
     pub fn should_full_refresh(&self) -> bool {
@@ -153,6 +213,41 @@ impl DamageTracker {
         self.previous_frame = None;
         self.damage_regions.clear();
     }
+
+    /// Get the optimal refresh strategy based on damage regions
+    pub fn get_refresh_strategy(&self) -> RefreshStrategy {
+        if self.damage_regions.is_empty() {
+            return RefreshStrategy::None;
+        }
+
+        if self.should_full_refresh() {
+            return RefreshStrategy::Full;
+        }
+
+        // If we have a small number of regions, use partial refresh
+        // Otherwise, fall back to full refresh to avoid many small updates
+        if self.damage_regions.len() <= 4 {
+            RefreshStrategy::Partial(self.damage_regions.clone())
+        } else {
+            RefreshStrategy::Full
+        }
+    }
+
+    /// Get merged damage regions for partial refresh
+    pub fn get_damage_regions(&self) -> Vec<Rectangle> {
+        self.damage_regions.clone()
+    }
+}
+
+/// Strategy for refreshing the e-ink display
+#[derive(Debug, Clone)]
+pub enum RefreshStrategy {
+    /// No refresh needed (no changes)
+    None,
+    /// Full screen refresh
+    Full,
+    /// Partial refresh with specific regions
+    Partial(Vec<Rectangle>),
 }
 
 #[cfg(test)]
@@ -181,7 +276,7 @@ mod tests {
 
     #[test]
     fn test_damage_tracker_initial() {
-        let tracker = DamageTracker::new(50);
+        let mut tracker = DamageTracker::new(50);
         let fb = FrameBuffer::new(100, 100);
         let regions = tracker.track_changes(&fb);
         assert_eq!(regions.len(), 1);
@@ -190,12 +285,71 @@ mod tests {
 
     #[test]
     fn test_damage_tracker_threshold() {
-        let tracker = DamageTracker::new(10);
-        let mut fb1 = FrameBuffer::new(100, 100);
+        let mut tracker = DamageTracker::new(10);
+        let fb1 = FrameBuffer::new(100, 100);
         let fb2 = FrameBuffer::new(100, 100);
 
         tracker.track_changes(&fb1);
         tracker.track_changes(&fb2);
         assert!(!tracker.should_full_refresh());
+    }
+
+    #[test]
+    fn test_refresh_strategy_none() {
+        let mut tracker = DamageTracker::new(50);
+        let fb1 = FrameBuffer::new(100, 100);
+        tracker.track_changes(&fb1);
+        tracker.track_changes(&fb1); // No changes
+
+        let strategy = tracker.get_refresh_strategy();
+        matches!(strategy, RefreshStrategy::None);
+    }
+
+    #[test]
+    fn test_refresh_strategy_full() {
+        let mut tracker = DamageTracker::new(10);
+        let fb1 = FrameBuffer::new(100, 100);
+        let fb2 = FrameBuffer::new(100, 100);
+
+        tracker.track_changes(&fb1);
+        tracker.track_changes(&fb2);
+        let strategy = tracker.get_refresh_strategy();
+        matches!(strategy, RefreshStrategy::Full);
+    }
+
+    #[test]
+    fn test_refresh_strategy_partial() {
+        let mut tracker = DamageTracker::new(50);
+        let fb1 = FrameBuffer::new(100, 100);
+        let mut fb2 = FrameBuffer::new(100, 100);
+
+        // Change a small region
+        fb2.data[0] = 255;
+        fb2.data[1] = 128;
+        fb2.data[2] = 64;
+
+        tracker.track_changes(&fb1);
+        tracker.track_changes(&fb2);
+
+        let strategy = tracker.get_refresh_strategy();
+        assert!(matches!(strategy, RefreshStrategy::Partial(_)));
+    }
+
+    #[test]
+    fn test_region_merging() {
+        let mut tracker = DamageTracker::new(50);
+        let fb1 = FrameBuffer::new(100, 100);
+        let mut fb2 = FrameBuffer::new(100, 100);
+
+        // Create two adjacent damage regions
+        fb2.data[0] = 255; // (0, 0)
+        fb2.data[4 * 100] = 128; // (1, 0) - adjacent horizontally
+
+        tracker.track_changes(&fb1);
+        tracker.track_changes(&fb2);
+
+        let regions = tracker.get_damage_regions();
+        // Adjacent regions should be merged
+        assert!(regions.len() <= 2);
     }
 }

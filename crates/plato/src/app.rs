@@ -1306,7 +1306,7 @@ pub fn run() -> Result<(), Error> {
                         }
                         */
                     }
-                    AppCmd::OpenPdfManipulator(ref path) => {
+                    AppCmd::OpenPdfManipulator(ref _path) => {
                         // TODO: Re-enable after migrating pdf_manipulator to PDFPurr API
                         log_error!("PDF Manipulator is temporarily disabled during MuPDF to PDFPurr migration");
                         None

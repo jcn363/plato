@@ -137,16 +137,6 @@ ensure_symlinks() {
         echo "Ensuring symlinks in $dir..."
         (
             cd "$dir"
-            ln -sf libz.so.1 libz.so 2>/dev/null || true
-            ln -sf libbz2.so.1.0 libbz2.so 2>/dev/null || true
-            ln -sf libpng16.so.16 libpng16.so 2>/dev/null || true
-            ln -sf libjpeg.so.9 libjpeg.so 2>/dev/null || true
-            ln -sf libopenjp2.so.7 libopenjp2.so 2>/dev/null || true
-            ln -sf libjbig2dec.so.0 libjbig2dec.so 2>/dev/null || true
-            ln -sf libfreetype.so.6 libfreetype.so 2>/dev/null || true
-            ln -sf libharfbuzz.so.0 libharfbuzz.so 2>/dev/null || true
-            ln -sf libgumbo.so.2 libgumbo.so 2>/dev/null || true
-            ln -sf libdjvulibre.so.21 libdjvulibre.so 2>/dev/null || true
         )
     fi
 }
@@ -189,15 +179,8 @@ THIRDPARTY_NEED_REBUILD=0
 
 if [ "$METHOD" = "fast" ] || [ "$METHOD" = "slow" ] || [ "$METHOD" = "skip" ]; then
     mkdir -p "$LIB_DIR"
-    
+
     NEED_REBUILD=0
-    for lib in libmupdf.so libfreetype.so libharfbuzz.so libpng16.so libjpeg.so libopenjp2.so libz.so libbz2.so libjbig2dec.so libdjvulibre.so libgumbo.so; do
-        if ! check_lib_exists "$lib"; then
-            NEED_REBUILD=1
-            echo "Library $lib not found in $LIB_DIR"
-            break
-        fi
-    done
     
     if [ "$METHOD" = "fast" ]; then
         if [ ! -d "$LIB_DIR" ] || [ "$NEED_REBUILD" = "1" ]; then
@@ -216,17 +199,6 @@ if [ "$METHOD" = "fast" ] || [ "$METHOD" = "slow" ] || [ "$METHOD" = "skip" ]; t
             mkdir -p "$LIB_DIR"
             case "$TARGET" in
                 arm|arm64)
-                    cp thirdparty/zlib/libz.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/bzip2/libbz2.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/libpng/.libs/libpng16.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/libjpeg/.libs/libjpeg.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/openjpeg/build/bin/libopenjp2.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/jbig2dec/.libs/libjbig2dec.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/freetype2/objs/.libs/libfreetype.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/harfbuzz/build/src/libharfbuzz.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/gumbo/.libs/libgumbo.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/djvulibre/libdjvu/.libs/libdjvulibre.so "$LIB_DIR/" 2>/dev/null || true
-                    cp thirdparty/mupdf/build/release/libmupdf.so "$LIB_DIR/" 2>/dev/null || true
                     ;;
                 host)
                     find thirdparty -name "*.so*" -type f -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
@@ -247,40 +219,7 @@ if [ "$METHOD" = "fast" ] || [ "$METHOD" = "slow" ] || [ "$METHOD" = "skip" ]; t
     fi
 fi
 
-# Build mupdf_wrapper if needed
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MUPDF_WRAPPER_DIR="$SCRIPT_DIR/target/mupdf_wrapper/Kobo"
-MUPDF_WRAPPER_LIB="$MUPDF_WRAPPER_DIR/libmupdf_wrapper.a"
-MUPDF_WRAPPER_C="$SCRIPT_DIR/mupdf_wrapper/mupdf_wrapper.c"
-
-echo "Checking mupdf_wrapper..."
-cd "$SCRIPT_DIR/mupdf_wrapper"
-NEED_BUILD=0
-if [ ! -f "$MUPDF_WRAPPER_LIB" ]; then
-    NEED_BUILD=1
-    echo "mupdf_wrapper not found, building..."
-elif [ "$MUPDF_WRAPPER_C" -nt "$MUPDF_WRAPPER_LIB" ]; then
-    NEED_BUILD=1
-    echo "mupdf_wrapper.c modified, rebuilding..."
-fi
-
-if [ "$NEED_BUILD" = "1" ]; then
-    echo "Building mupdf_wrapper for $TARGET target..."
-    case "$TARGET" in
-        arm)
-            TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh
-            ;;
-        arm64)
-            TARGET_OS=Kobo CC=aarch64-linux-gnu-gcc AR=aarch64-linux-gnu-ar ./build.sh
-            ;;
-        host)
-            ./build.sh
-            ;;
-    esac
-else
-    echo "mupdf_wrapper up to date, skipping build."
-fi
-cd "$SCRIPT_DIR"
+# mupdf and mupdf_wrapper removed - MuPDF replaced by PDFPurr (pure Rust)
 
 # Build all crates in the workspace
 echo "Building Plato workspace crates..."

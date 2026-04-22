@@ -91,7 +91,7 @@
 //! The Reader view is difficult to unit test because:
 //! 1. Heavy dependency on Context (device info, display settings)
 //! 2. Requires actual document files (EPUB, PDF)
-//! 3. MuPDF/FreeType initialization needed (native libs)
+//! 3. No native library dependencies (pure Rust PDFPurr + font stack)
 //!
 //! **Current approach**: Integration tests in `tests/` directory with fixture documents.
 //! Unit tests for pure functions (text extraction, search) are in `reader_rendering.rs`.

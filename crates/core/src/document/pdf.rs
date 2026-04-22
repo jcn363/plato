@@ -112,7 +112,7 @@ pub struct PdfDocument {
 pub struct PdfPage<'a> {
     page: Page<'a>,
     _doc: &'a PdfDocument,
-    page_num: usize,
+    _page_num: usize,
 }
 
 impl PdfOpener {
@@ -171,7 +171,7 @@ impl PdfDocument {
         self.doc
             .load_page(index as i32)
             .ok()
-            .map(|page| PdfPage { page, _doc: self, page_num: index })
+            .map(|page| PdfPage { page, _doc: self, _page_num: index })
     }
 
     fn walk_toc(outline: &Outline, index: &mut usize) -> Vec<TocEntry> {

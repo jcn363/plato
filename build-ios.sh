@@ -42,7 +42,7 @@ echo "Building native libraries for iOS..."
 cd thirdparty
 
 # Check if build-ios.sh exists for each library
-LIBS=("zlib" "bzip2" "libpng" "libjpeg" "openjpeg" "jbig2dec" "freetype2" "harfbuzz" "gumbo" "djvulibre" "mupdf")
+LIBS=()
 
 for lib in "${LIBS[@]}"; do
   if [ -f "$lib/build-ios.sh" ]; then
@@ -57,20 +57,7 @@ done
 
 cd ..
 
-# Build mupdf_wrapper for iOS
-echo "Building mupdf_wrapper for iOS..."
-if [ "$ON_MACOS" = true ]; then
-  if [ -f "mupdf_wrapper/build-ios.sh" ]; then
-    cd mupdf_wrapper
-    ./build-ios.sh
-    cd ..
-  else
-    echo "Warning: mupdf_wrapper/build-ios.sh not found, skipping..."
-  fi
-else
-  echo "Skipping mupdf_wrapper build on Linux (requires macOS)"
-  echo "Native libraries will be built on macOS CI or manually on macOS"
-fi
+# mupdf and mupdf_wrapper removed - MuPDF replaced by PDFPurr (pure Rust)
 
 echo "Native library build step completed."
 

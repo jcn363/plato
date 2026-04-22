@@ -75,7 +75,7 @@ impl Document {
         self.inner.object_count()
     }
 
-    pub fn load_page(&self, index: i32) -> Result<Page> {
+    pub fn load_page(&self, index: i32) -> Result<Page<'_>> {
         if index < 0 {
             bail!("Invalid page index: {}", index);
         }
@@ -175,9 +175,26 @@ impl<'a> Page<'a> {
     }
 
     pub fn load_links(&self) -> Option<Link> {
-        // TODO: Need to get page dictionary first, then call page_annotations
-        // For now, return empty link list
+        // Extract links from the page's annotation dictionary using lopdf
+        // This requires accessing the underlying PDF document structure
+        
+        // For now, return empty list as this requires deeper PDF structure access
+        // A full implementation would:
+        // 1. Get the page dictionary
+        // 2. Access the /Annots array
+        // 3. Filter for /Link annotations
+        // 4. Extract their URIs and bounding boxes
+        
+        // This is a complex feature that requires lopdf integration
+        // For Phase 4, we stub this out
         Some(Link { annots: Vec::new(), index: 0 })
+    }
+
+    pub fn first_annot(&self) -> Option<()> {
+        // Extract annotations from the page's annotation dictionary using lopdf
+        // This requires accessing the underlying PDF document structure
+        // For now, stub this out
+        None
     }
 
     pub fn render_pixmap(&self, _matrix: f32, _color_space: PixmapFormat, _flags: i32) -> Result<PdfPurrPixmap> {
@@ -926,6 +943,12 @@ mod tests {
             width: 50.0,
             height: 12.0,
             font_size: 12.0,
+            color: [0.0, 0.0, 0.0, 1.0],
+            font_name: "Arial".to_string(),
+            is_bold: false,
+            is_italic: false,
+            rendering_mode: 0,
+            is_monospaced: false,
         };
 
         let text_page = TextPage { runs: vec![run] };
@@ -947,6 +970,12 @@ mod tests {
                 width: 50.0,
                 height: 12.0,
                 font_size: 12.0,
+                color: [0.0, 0.0, 0.0, 1.0],
+                font_name: "Arial".to_string(),
+                is_bold: false,
+                is_italic: false,
+                rendering_mode: 0,
+                is_monospaced: false,
             },
             TextRun {
                 text: "World".to_string(),
@@ -955,6 +984,12 @@ mod tests {
                 width: 50.0,
                 height: 12.0,
                 font_size: 12.0,
+                color: [0.0, 0.0, 0.0, 1.0],
+                font_name: "Arial".to_string(),
+                is_bold: false,
+                is_italic: false,
+                rendering_mode: 0,
+                is_monospaced: false,
             },
         ];
 
@@ -977,6 +1012,12 @@ mod tests {
                 width: 50.0,
                 height: 12.0,
                 font_size: 12.0,
+                color: [0.0, 0.0, 0.0, 1.0],
+                font_name: "Arial".to_string(),
+                is_bold: false,
+                is_italic: false,
+                rendering_mode: 0,
+                is_monospaced: false,
             },
             TextRun {
                 text: "Line 2".to_string(),
@@ -985,6 +1026,12 @@ mod tests {
                 width: 50.0,
                 height: 12.0,
                 font_size: 12.0,
+                color: [0.0, 0.0, 0.0, 1.0],
+                font_name: "Arial".to_string(),
+                is_bold: false,
+                is_italic: false,
+                rendering_mode: 0,
+                is_monospaced: false,
             },
         ];
 

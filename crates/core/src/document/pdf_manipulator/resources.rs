@@ -3,11 +3,11 @@
 //! Provides functionality for extracting resources from PDF documents
 //! including images, fonts, and metadata.
 //!
-//! TODO: Implement using lopdf for PDF manipulation
-//! PDFPurr is primarily for rendering and text extraction
+//! Implemented using lopdf for PDF manipulation
 
-use crate::log_warn;
+use crate::{log_info, log_warn};
 use anyhow::{format_err, Error};
+use lopdf::Document;
 use std::path::{Path, PathBuf};
 
 /// Extracted image information
@@ -42,7 +42,7 @@ pub struct ResourceSummary {
 ///
 /// Extracts images, fonts, and other resources from PDF documents.
 pub struct ResourceExtractor {
-    file_path: PathBuf,
+    _file_path: PathBuf,
     total_pages: usize,
 }
 
@@ -55,7 +55,7 @@ impl ResourceExtractor {
         let total_pages = doc.page_count();
 
         Ok(ResourceExtractor {
-            file_path: path.to_path_buf(),
+            _file_path: path.to_path_buf(),
             total_pages,
         })
     }
@@ -71,16 +71,86 @@ impl ResourceExtractor {
             return Err(format_err!("Page {} does not exist", page_num + 1));
         }
 
-        // TODO: Implement using lopdf for PDF manipulation
-        log_warn!("extract_images_from_page not yet implemented with PDFPurr/lopdf");
-        Ok(Vec::new())
+        log_info!("Extracting images from page {}", page_num + 1);
+
+        // Load the PDF document using lopdf
+        let doc = Document::load(&self._file_path)
+            .map_err(|e| format_err!("Failed to load PDF with lopdf: {}", e))?;
+
+        let pages_map = doc.get_pages();
+        let page_ids: Vec<_> = pages_map.values().collect();
+        let page_index = page_num;
+        if page_index >= page_ids.len() {
+            return Ok(Vec::new());
+        }
+
+        let page_id = page_ids.get(page_index).unwrap();
+        let page_dict = doc.get_object(**page_id).unwrap().as_dict().unwrap();
+
+        let mut images = Vec::new();
+
+        // Get resources dictionary
+        if let Ok(resources) = page_dict.get(b"Resources") {
+            if let Ok(res_dict) = resources.as_dict() {
+                // Get XObject dictionary for images
+                if let Ok(xobject) = res_dict.get(b"XObject") {
+                    if let Ok(xobj_dict) = xobject.as_dict() {
+                        let mut image_index = 0;
+                        for (_name, obj_ref) in xobj_dict.iter() {
+                            if let Ok(dict) = obj_ref.as_dict() {
+                                // Check if it's an image
+                                if dict.get(b"Subtype").is_ok() {
+                                    let subtype = dict.get(b"Subtype").unwrap();
+                                    if let Ok(name_bytes) = subtype.as_name() {
+                                        if name_bytes == b"Image" {
+                                            // Extract image dimensions if available
+                                            let width = dict.get(b"Width")
+                                                .and_then(|w| w.as_i64())
+                                                .unwrap_or(0) as i32;
+                                            let height = dict.get(b"Height")
+                                                .and_then(|h| h.as_i64())
+                                                .unwrap_or(0) as i32;
+
+                                            images.push(ExtractedImage {
+                                                page: page_num,
+                                                index: image_index,
+                                                width,
+                                                height,
+                                                data: Vec::new(), // Image data extraction requires more complex handling
+                                            });
+                                            image_index += 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        log_info!("Found {} images on page {}", images.len(), page_num + 1);
+        Ok(images)
     }
 
     /// Extract images from all pages (up to max_pages limit)
-    pub fn extract_all_images(&self, _max_pages: usize) -> Result<Vec<ExtractedImage>, Error> {
-        // TODO: Implement using lopdf for PDF manipulation
-        log_warn!("extract_all_images not yet implemented with PDFPurr/lopdf");
-        Ok(Vec::new())
+    pub fn extract_all_images(&self, max_pages: usize) -> Result<Vec<ExtractedImage>, Error> {
+        log_info!("Extracting images from all pages (max {})", max_pages);
+
+        let mut all_images = Vec::new();
+        let pages_to_scan = self.total_pages.min(max_pages);
+
+        for page_num in 0..pages_to_scan {
+            match self.extract_images_from_page(page_num) {
+                Ok(mut images) => all_images.append(&mut images),
+                Err(e) => {
+                    log_info!("Failed to extract images from page {}: {}", page_num + 1, e);
+                }
+            }
+        }
+
+        log_info!("Extracted {} total images", all_images.len());
+        Ok(all_images)
     }
 
     /// Count fonts on a specific page
@@ -89,9 +159,38 @@ impl ResourceExtractor {
             return Err(format_err!("Page {} does not exist", page_num + 1));
         }
 
-        // TODO: Implement using lopdf for PDF manipulation
-        log_warn!("count_page_fonts not yet implemented with PDFPurr/lopdf");
-        Ok(0)
+        log_info!("Counting fonts on page {}", page_num + 1);
+
+        // Load the PDF document using lopdf
+        let doc = Document::load(&self._file_path)
+            .map_err(|e| format_err!("Failed to load PDF with lopdf: {}", e))?;
+
+        let pages_map = doc.get_pages();
+        let page_ids: Vec<_> = pages_map.values().collect();
+        let page_index = page_num;
+        if page_index >= page_ids.len() {
+            return Ok(0);
+        }
+
+        let page_id = page_ids.get(page_index).unwrap();
+        let page_dict = doc.get_object(**page_id).unwrap().as_dict().unwrap();
+
+        let mut font_count = 0;
+
+        // Get resources dictionary
+        if let Ok(resources) = page_dict.get(b"Resources") {
+            if let Ok(res_dict) = resources.as_dict() {
+                // Get Font dictionary
+                if let Ok(font_dict) = res_dict.get(b"Font") {
+                    if let Ok(fonts) = font_dict.as_dict() {
+                        font_count = fonts.len();
+                    }
+                }
+            }
+        }
+
+        log_info!("Found {} fonts on page {}", font_count, page_num + 1);
+        Ok(font_count)
     }
 
     /// Extract text from a page (placeholder - use Plato's built-in text selection)
@@ -144,14 +243,112 @@ impl ResourceExtractor {
 
     /// Get the PDF/A version if applicable
     pub fn pdf_a_version(&self) -> String {
-        // TODO: Implement using PDFPurr/lopdf
+        // Load the PDF document using lopdf
+        if let Ok(doc) = Document::load(&self._file_path) {
+            // Check for PDF/A metadata in the document catalog
+            if let Ok(catalog) = doc.catalog() {
+                if let Ok(metadata) = catalog.get(b"Metadata") {
+                    // Check for PDF/A identifier in metadata
+                    if let Ok(metadata_ref) = metadata.as_reference() {
+                        if let Ok(metadata_obj) = doc.get_object(metadata_ref) {
+                            if let Ok(metadata_stream) = metadata_obj.as_stream() {
+                                if let Ok(content) = metadata_stream.get_plain_content() {
+                                    let content_str = String::from_utf8_lossy(&content);
+                                    if content_str.contains("pdfaid") || content_str.contains("PDF/A") {
+                                        if content_str.contains("1") {
+                                            return "PDF/A-1".to_string();
+                                        } else if content_str.contains("2") {
+                                            return "PDF/A-2".to_string();
+                                        } else if content_str.contains("3") {
+                                            return "PDF/A-3".to_string();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         String::new()
     }
 
     /// Read all annotations from the PDF
     pub fn read_annotations(&self) -> Result<Vec<super::PdfAnnotation>, Error> {
-        // TODO: Implement using PDFPurr/lopdf for annotation extraction
-        log_warn!("read_annotations not yet implemented with PDFPurr/lopdf");
-        Ok(Vec::new())
+        log_info!("Reading annotations from PDF");
+
+        // Load the PDF document using lopdf
+        let doc = Document::load(&self._file_path)
+            .map_err(|e| format_err!("Failed to load PDF with lopdf: {}", e))?;
+
+        let mut annotations = Vec::new();
+
+        // Get pages map
+        let pages_map = doc.get_pages();
+        let page_ids: Vec<_> = pages_map.values().collect();
+
+        // Iterate through all pages
+        for (page_num, page_id) in page_ids.iter().enumerate() {
+            let page_dict = doc.get_object(**page_id).unwrap().as_dict().unwrap();
+
+            // Get annotations array
+            if let Ok(annot_ref) = page_dict.get(b"Annots") {
+                if let Ok(annot_array) = annot_ref.as_array() {
+                    for annot_obj_ref in annot_array {
+                        if let Ok(annot_ref) = annot_obj_ref.as_reference() {
+                            if let Ok(annot_obj) = doc.get_object(annot_ref) {
+                                if let Ok(annot_dict) = annot_obj.as_dict() {
+                                    // Extract annotation type
+                                    let annot_type = annot_dict.get(b"Subtype")
+                                        .and_then(|s| s.as_name())
+                                        .map(|n| String::from_utf8_lossy(n).to_string())
+                                        .unwrap_or_else(|_| "Unknown".to_string());
+
+                                    // Extract contents
+                                    let contents = match annot_dict.get(b"Contents") {
+                                        Ok(obj) => {
+                                            obj.as_str()
+                                                .ok()
+                                                .and_then(|s| std::str::from_utf8(s).ok())
+                                                .unwrap_or("")
+                                                .to_string()
+                                        }
+                                        Err(_) => String::new(),
+                                    };
+
+                                    // Extract rectangle
+                                    let rect = annot_dict.get(b"Rect")
+                                        .and_then(|r| r.as_array())
+                                        .ok()
+                                        .and_then(|arr| {
+                                            if arr.len() >= 4 {
+                                                Some((
+                                                    arr[0].as_i64().ok().map(|f| f as f32).unwrap_or(0.0),
+                                                    arr[1].as_i64().ok().map(|f| f as f32).unwrap_or(0.0),
+                                                    arr[2].as_i64().ok().map(|f| f as f32).unwrap_or(0.0),
+                                                    arr[3].as_i64().ok().map(|f| f as f32).unwrap_or(0.0),
+                                                ))
+                                            } else {
+                                                None
+                                            }
+                                        });
+
+                                    annotations.push(super::PdfAnnotation {
+                                        page: page_num,
+                                        annot_type,
+                                        contents,
+                                        rect,
+                                        color: None,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        log_info!("Found {} annotations", annotations.len());
+        Ok(annotations)
     }
 }

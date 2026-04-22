@@ -55,7 +55,6 @@ jobs:
         echo "Building native libraries for iOS..."
         chmod +x build-ios.sh || true
         chmod +x thirdparty/build-ios.sh || true
-        chmod +x mupdf_wrapper/build-ios.sh || true
         ./build-ios.sh universal
 
     - name: Build Rust core for iOS device

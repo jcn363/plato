@@ -9,7 +9,7 @@
 //! - **dom**: Document Object Model for XML/HTML tree structure
 //! - **engine**: Layout and rendering engine
 //! - **layout**: Text layout, line breaking (Knuth-Plass), and drawing commands
-//! - **parse**: HTML/XML parsing using gumbo
+//! - **parse**: HTML/XML parsing using html5ever (pure Rust)
 //! - **style**: Style computation and inheritance
 //! - **xml**: XML parsing utilities
 

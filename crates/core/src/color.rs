@@ -1,6 +1,11 @@
 use crate::geom::lerp;
 use serde::{Deserialize, Serialize};
 
+#[cfg(target_arch = "aarch64")]
+use std::arch::aarch64::*;
+#[cfg(target_arch = "arm")]
+use std::arch::arm::*;
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Color {
@@ -14,7 +19,7 @@ impl Color {
         match *self {
             Color::Gray(level) => level,
             Color::Rgb(red, green, blue) => {
-                (red as f32 * 0.2126 + green as f32 * 0.7152 + blue as f32 * 0.0722) as u8
+                rgb_to_grayscale_scalar(red, green, blue)
             }
         }
     }
@@ -89,6 +94,115 @@ impl Color {
                 *blue = blue.saturating_sub(drift);
             }
         }
+    }
+}
+
+/// Scalar RGB to grayscale conversion (fallback)
+#[inline]
+fn rgb_to_grayscale_scalar(red: u8, green: u8, blue: u8) -> u8 {
+    (red as f32 * 0.2126 + green as f32 * 0.7152 + blue as f32 * 0.0722) as u8
+}
+
+/// SIMD-optimized RGB to grayscale conversion for ARM NEON
+#[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
+#[inline]
+unsafe fn rgb_to_grayscale_simd_neon(rgb_data: &[u8]) -> Vec<u8> {
+    let len = rgb_data.len() / 3;
+    let mut result = Vec::with_capacity(len);
+    
+    // Process 8 pixels (24 bytes) at a time
+    let chunks = rgb_data.chunks_exact(24);
+    let remainder = chunks.remainder();
+    
+    for chunk in chunks {
+        #[cfg(target_arch = "aarch64")]
+        {
+            let rgb_pixels = std::mem::transmute::<[u8; 24], uint8x16x3_t>(*chunk.as_ptr());
+            let r = vld1q_u8(rgb_pixels.as_ptr().add(0));
+            let g = vld1q_u8(rgb_pixels.as_ptr().add(8));
+            let b = vld1q_u8(rgb_pixels.as_ptr().add(16));
+            
+            // Convert to 16-bit for multiplication
+            let r16 = vmovl_u8_vdupq_n_u8(r);
+            let g16 = vmovl_u8_vdupq_n_u8(g);
+            let b16 = vmovl_u8_vdupq_n_u8(b);
+            
+            // Fixed-point arithmetic: multiply by 65536 then divide
+            // 0.2126 ≈ 13932/65536, 0.7152 ≈ 46869/65536, 0.0722 ≈ 4732/65536
+            let gray = vmlaq_n_u16q(vmlsq_n_u16q(r16, 13932), 
+                                   vmlaq_n_u16q(vmlsq_n_u16q(g16, 46869), 
+                                                 vmlsq_n_u16q(b16, 4732)));
+            
+            // Extract low 8 bits and store
+            let gray8 = vshrn_n_u16(gray, 8);
+            vst1q_u8(result.as_mut_ptr().add(result.len()), gray8);
+            result.set_len(result.len() + 16);
+        }
+        
+        #[cfg(target_arch = "arm")]
+        {
+            let rgb_pixels = std::mem::transmute::<[u8; 24], uint8x8x3_t>(*chunk.as_ptr());
+            let r = vld1_u8(rgb_pixels.as_ptr());
+            let g = vld1_u8(rgb_pixels.as_ptr().add(8));
+            let b = vld1_u8(rgb_pixels.as_ptr().add(16));
+            
+            // Convert to 16-bit for multiplication
+            let r16 = vmovl_u8(r);
+            let g16 = vmovl_u8(g);
+            let b16 = vmovl_u8(b);
+            
+            // Fixed-point arithmetic
+            let gray = vmlaq_n_u16(vmlsq_n_u16(r16, 13932), 
+                                   vmlaq_n_u16(vmlsq_n_u16(g16, 46869), 
+                                                 vmlsq_n_u16(b16, 4732)));
+            
+            // Extract low 8 bits and store
+            let gray8 = vshrn_n_u16(gray, 8);
+            vst1_u8(result.as_mut_ptr().add(result.len()), gray8);
+            result.set_len(result.len() + 8);
+        }
+    }
+    
+    // Handle remaining pixels with scalar code
+    for chunk in remainder.chunks(3) {
+        if chunk.len() == 3 {
+            result.push(rgb_to_grayscale_scalar(chunk[0], chunk[1], chunk[2]));
+        }
+    }
+    
+    result
+}
+
+/// Bulk RGB to grayscale conversion with SIMD acceleration
+pub fn rgb_to_grayscale_bulk(rgb_data: &[u8]) -> Vec<u8> {
+    #[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
+    {
+        if is_neon_available() {
+            return unsafe { rgb_to_grayscale_simd_neon(rgb_data) };
+        }
+    }
+    
+    // Fallback to scalar implementation
+    let len = rgb_data.len() / 3;
+    let mut result = Vec::with_capacity(len);
+    for chunk in rgb_data.chunks_exact(3) {
+        if chunk.len() == 3 {
+            result.push(rgb_to_grayscale_scalar(chunk[0], chunk[1], chunk[2]));
+        }
+    }
+    result
+}
+
+/// Check if NEON instructions are available at runtime
+#[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
+fn is_neon_available() -> bool {
+    #[cfg(target_arch = "aarch64")]
+    {
+        std::arch::is_aarch64_feature_detected!("neon")
+    }
+    #[cfg(target_arch = "arm")]
+    {
+        std::arch::is_arm_feature_detected!("neon")
     }
 }
 

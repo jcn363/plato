@@ -67,14 +67,18 @@ fn test_open_no_real_component() {
 fn test_open_html_empty_content() {
     let result = open_html("");
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("cannot be empty"));
+    if let Err(e) = result {
+        assert!(e.to_string().contains("cannot be empty"));
+    }
 }
 
 #[test]
 fn test_open_html_whitespace_only() {
     let result = open_html("   \n\t  ");
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("cannot be empty"));
+    if let Err(e) = result {
+        assert!(e.to_string().contains("cannot be empty"));
+    }
 }
 
 #[test]

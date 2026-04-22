@@ -49,6 +49,13 @@ crossbeam-channel = "0.5.15"
 lru = "0.17.0"
 dashmap = "6.1.0"
 
+# Pure Rust compression and image libraries (replaces C libraries)
+bzip2 = "0.6.1"
+html5ever = "0.39.0"
+openjp2 = "0.6.1"
+hayro-jbig2 = "0.3.0"
+djvu-rs = "0.13.0"
+
 # Rust-native font stack (replaces FreeType + HarfBuzz)
 skrifa = "0.42.0"
 rustybuzz = "0.20.1"

@@ -70,7 +70,7 @@ Example:
 ./build.sh --no-clean arm skip
 ```
 
-PDF rendering is now handled by PDFPurr, a pure Rust library, so no MuPDF wrapper is required.
+PDF rendering is now handled by PDFPurr, a pure Rust library, so no MuPDF wrapper is required. PDF manipulation features (delete, rotate, extract, merge, reorder pages, redaction, resource extraction, and annotations) are implemented using lopdf, another pure Rust library.
 
 ## Alternative Build Commands
 

@@ -120,64 +120,260 @@ impl PdfManipulator {
     pub fn delete_pages(
         &mut self,
         input_path: &Path,
-        _output_path: &Path,
-        _pages: &[usize],
+        output_path: &Path,
+        pages: &[usize],
     ) -> Result<PathBuf, Error> {
-        // TODO: Implement using lopdf for PDF manipulation
-        // PDFPurr is primarily for rendering and text extraction
-        // Use lopdf for manipulation operations like page deletion
-        log_warn!("delete_pages not yet implemented with PDFPurr/lopdf");
-        Ok(input_path.to_path_buf())
+        use lopdf::Document;
+        use std::fs::File;
+        use std::io::Cursor;
+        use std::io::Write;
+
+        log_info!("Deleting pages from PDF: {:?}", pages);
+
+        // Load the PDF document using lopdf
+        let mut doc = Document::load(input_path)
+            .map_err(|e| format_err!("Failed to load PDF with lopdf: {}", e))?;
+
+        // Get pages map
+        let pages_map = doc.get_pages();
+        let page_ids: Vec<_> = pages_map.values().collect();
+
+        // Convert pages to 0-indexed and sort in descending order to avoid index shifting
+        let mut pages_to_delete: Vec<usize> = pages.iter().map(|p| p - 1).collect();
+        pages_to_delete.sort();
+        pages_to_delete.reverse();
+
+        // Delete pages by removing from pages dictionary
+        for page_num in pages_to_delete {
+            if page_num < page_ids.len() {
+                doc.delete_pages(&[page_num as u32]);
+            }
+        }
+
+        // Save the modified document to bytes
+        let mut buffer = Cursor::new(Vec::new());
+        doc.save_to(&mut buffer)
+            .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
+        let bytes = buffer.into_inner();
+
+        let mut file = File::create(output_path)
+            .map_err(|e| format_err!("Failed to create output file: {}", e))?;
+        file.write_all(&bytes)
+            .map_err(|e| format_err!("Failed to write output file: {}", e))?;
+
+        log_info!("Successfully deleted pages and saved to: {:?}", output_path);
+        Ok(output_path.to_path_buf())
     }
 
     /// Rotate pages in a PDF
     pub fn rotate_pages(
         &mut self,
         input_path: &Path,
-        _output_path: &Path,
-        _pages: &[(usize, i32)],
+        output_path: &Path,
+        pages: &[usize],
+        degrees: i32,
     ) -> Result<PathBuf, Error> {
-        // TODO: Implement using lopdf for PDF manipulation
-        // PDFPurr is primarily for rendering and text extraction
-        // Use lopdf for manipulation operations like page rotation
-        log_warn!("rotate_pages not yet implemented with PDFPurr/lopdf");
-        Ok(input_path.to_path_buf())
+        use lopdf::{Document, Object};
+        use std::fs::File;
+        use std::io::Cursor;
+        use std::io::Write;
+
+        log_info!("Rotating pages by {} degrees: {:?}", degrees, pages);
+
+        // Normalize degrees to 0-360 range
+        let rotation = (degrees % 360 + 360) % 360;
+
+        // Load the PDF document using lopdf
+        let mut doc = Document::load(input_path)
+            .map_err(|e| format_err!("Failed to load PDF with lopdf: {}", e))?;
+
+        // Get pages map
+        let pages_map = doc.get_pages();
+        let page_ids: Vec<_> = pages_map.values().collect();
+
+        // Rotate specified pages
+        for page_num in pages {
+            let page_index = page_num - 1; // Convert to 0-indexed
+            if page_index < page_ids.len() {
+                if let Some(page_id) = page_ids.get(page_index) {
+                    let page_dict = doc.get_object_mut(**page_id).unwrap().as_dict_mut().unwrap();
+
+                    // Get current rotation or default to 0
+                    let current_rotation = page_dict
+                        .get(b"Rotate")
+                        .and_then(|obj| obj.as_i64())
+                        .unwrap_or(0) as i32;
+
+                    // Set new rotation
+                    let new_rotation = (current_rotation + rotation) % 360;
+                    page_dict.set("Rotate", Object::Integer(new_rotation as i64));
+                }
+            }
+        }
+
+        // Save the modified document to bytes
+        let mut buffer = Cursor::new(Vec::new());
+        doc.save_to(&mut buffer)
+            .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
+        let bytes = buffer.into_inner();
+
+        let mut file = File::create(output_path)
+            .map_err(|e| format_err!("Failed to create output file: {}", e))?;
+        file.write_all(&bytes)
+            .map_err(|e| format_err!("Failed to write output file: {}", e))?;
+
+        log_info!("Successfully rotated pages and saved to: {:?}", output_path);
+        Ok(output_path.to_path_buf())
     }
 
     /// Extract pages from a PDF into a new file
     pub fn extract_pages(
         &mut self,
         input_path: &Path,
-        _output_path: &Path,
-        _pages: &[usize],
+        output_path: &Path,
+        pages: &[usize],
     ) -> Result<PathBuf, Error> {
-        // TODO: Implement using lopdf for PDF manipulation
-        // PDFPurr is primarily for rendering and text extraction
-        // Use lopdf for manipulation operations like page extraction
-        log_warn!("extract_pages not yet implemented with PDFPurr/lopdf");
-        Ok(input_path.to_path_buf())
+        use lopdf::Document;
+        use std::fs::File;
+        use std::io::Cursor;
+        use std::io::Write;
+
+        log_info!("Extracting pages from PDF: {:?}", pages);
+
+        // Load the PDF document using lopdf
+        let doc = Document::load(input_path)
+            .map_err(|e| format_err!("Failed to load PDF with lopdf: {}", e))?;
+
+        // Get pages map
+        let pages_map = doc.get_pages();
+        let page_ids: Vec<_> = pages_map.values().collect();
+
+        // Create a new document with only the specified pages
+        let mut new_doc = Document::with_version("1.4");
+
+        // Convert pages to 0-indexed
+        let pages_to_extract: Vec<usize> = pages.iter().map(|p| p - 1).collect();
+
+        // Copy pages to new document
+        for page_num in pages_to_extract {
+            if page_num < page_ids.len() {
+                if let Some(page_id) = page_ids.get(page_num) {
+                    let page_object = doc.get_object(**page_id).unwrap();
+                    new_doc.add_object(page_object.clone());
+                }
+            }
+        }
+
+        // Save the new document to bytes
+        let mut buffer = Cursor::new(Vec::new());
+        new_doc.save_to(&mut buffer)
+            .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
+        let bytes = buffer.into_inner();
+
+        let mut file = File::create(output_path)
+            .map_err(|e| format_err!("Failed to create output file: {}", e))?;
+        file.write_all(&bytes)
+            .map_err(|e| format_err!("Failed to write output file: {}", e))?;
+
+        log_info!("Successfully extracted pages and saved to: {:?}", output_path);
+        Ok(output_path.to_path_buf())
     }
 
     /// Reorder pages in a PDF
     pub fn reorder_pages(
         &mut self,
         input_path: &Path,
-        _output_path: &Path,
-        _order: &[(usize, usize)],
+        output_path: &Path,
+        order: &[(usize, usize)],
     ) -> Result<PathBuf, Error> {
-        // TODO: Implement using lopdf for PDF manipulation
-        // PDFPurr is primarily for rendering and text extraction
-        // Use lopdf for manipulation operations like page reordering
-        log_warn!("reorder_pages not yet implemented with PDFPurr/lopdf");
-        Ok(input_path.to_path_buf())
+        use lopdf::Document;
+        use std::fs::File;
+        use std::io::Cursor;
+        use std::io::Write;
+
+        log_info!("Reordering pages in PDF: {:?}", order);
+
+        // Load the PDF document using lopdf
+        let doc = Document::load(input_path)
+            .map_err(|e| format_err!("Failed to load PDF with lopdf: {}", e))?;
+
+        // Get pages map
+        let pages_map = doc.get_pages();
+        let page_ids: Vec<_> = pages_map.values().collect();
+
+        // Collect all pages in the desired order
+        let mut pages_in_order = Vec::new();
+        for (from, _to) in order {
+            let from_index = from - 1; // Convert to 0-indexed
+            if from_index < page_ids.len() {
+                if let Some(page_id) = page_ids.get(from_index) {
+                    let page_object = doc.get_object(**page_id).unwrap();
+                    pages_in_order.push(page_object.clone());
+                }
+            }
+        }
+
+        // Create a new document with reordered pages
+        let mut new_doc = Document::with_version("1.4");
+        for page_object in pages_in_order {
+            new_doc.add_object(page_object);
+        }
+
+        // Save the new document to bytes
+        let mut buffer = Cursor::new(Vec::new());
+        new_doc.save_to(&mut buffer)
+            .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
+        let bytes = buffer.into_inner();
+
+        let mut file = File::create(output_path)
+            .map_err(|e| format_err!("Failed to create output file: {}", e))?;
+        file.write_all(&bytes)
+            .map_err(|e| format_err!("Failed to write output file: {}", e))?;
+
+        log_info!("Successfully reordered pages and saved to: {:?}", output_path);
+        Ok(output_path.to_path_buf())
     }
 
     /// Merge multiple PDFs into a single file
-    pub fn merge_pdfs(&mut self, _inputs: &[&Path], output_path: &Path) -> Result<PathBuf, Error> {
-        // TODO: Implement using lopdf for PDF manipulation
-        // PDFPurr is primarily for rendering and text extraction
-        // Use lopdf for manipulation operations like PDF merging
-        log_warn!("merge_pdfs not yet implemented with PDFPurr/lopdf");
+    pub fn merge_pdfs(&mut self, inputs: &[&Path], output_path: &Path) -> Result<PathBuf, Error> {
+        use lopdf::Document;
+        use std::fs::File;
+        use std::io::Cursor;
+        use std::io::Write;
+
+        log_info!("Merging PDFs: {:?}", inputs);
+
+        // Create a new document for the merged result
+        let mut merged_doc = Document::with_version("1.4");
+
+        // Load and merge each input PDF
+        for input_path in inputs {
+            let doc = Document::load(input_path)
+                .map_err(|e| format_err!("Failed to load PDF {:?} with lopdf: {}", input_path, e))?;
+
+            // Get pages map
+            let pages_map = doc.get_pages();
+            let page_ids: Vec<_> = pages_map.values().collect();
+
+            // Copy all pages from the input document to the merged document
+            for page_id in page_ids {
+                let page_object = doc.get_object(*page_id).unwrap();
+                merged_doc.add_object(page_object.clone());
+            }
+        }
+
+        // Save the merged document to bytes
+        let mut buffer = Cursor::new(Vec::new());
+        merged_doc.save_to(&mut buffer)
+            .map_err(|e| format_err!("Failed to save merged PDF with lopdf: {}", e))?;
+        let bytes = buffer.into_inner();
+
+        let mut file = File::create(output_path)
+            .map_err(|e| format_err!("Failed to create output file: {}", e))?;
+        file.write_all(&bytes)
+            .map_err(|e| format_err!("Failed to write output file: {}", e))?;
+
+        log_info!("Successfully merged PDFs and saved to: {:?}", output_path);
         Ok(output_path.to_path_buf())
     }
 
@@ -204,7 +400,7 @@ impl PdfManipulator {
 
     // Private helper methods
 
-    fn get_available_memory_mb() -> u64 {
+    fn _get_available_memory_mb() -> u64 {
         #[cfg(target_os = "linux")]
         {
             fs::read_to_string("/proc/meminfo")
@@ -232,8 +428,8 @@ impl PdfManipulator {
         }
     }
 
-    fn check_memory_available(&self, required_mb: u64) -> Result<u64, Error> {
-        let available = Self::get_available_memory_mb();
+    fn _check_memory_available(&self, required_mb: u64) -> Result<u64, Error> {
+        let available = Self::_get_available_memory_mb();
         if available < required_mb {
             return Err(format_err!(
                 "Insufficient memory. Need {}MB, have {}MB available. \
@@ -245,7 +441,7 @@ impl PdfManipulator {
         Ok(available)
     }
 
-    fn check_file_warnings(&self, path: &Path) -> Result<MemoryWarning, Error> {
+    fn _check_file_warnings(&self, path: &Path) -> Result<MemoryWarning, Error> {
         let metadata = fs::metadata(path)?;
         let file_size_bytes = metadata.len();
         let file_size_mb = file_size_bytes / (1024 * 1024);
@@ -262,7 +458,7 @@ impl PdfManipulator {
         })
     }
 
-    fn create_backup(&self, path: &Path) -> Result<PathBuf, Error> {
+    fn _create_backup(&self, path: &Path) -> Result<PathBuf, Error> {
         let backup_dir = path.parent().unwrap_or(path);
         let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
         let backup_name = format!(
@@ -277,7 +473,7 @@ impl PdfManipulator {
         Ok(backup_path)
     }
 
-    fn report_progress(&self, current: usize, total: usize, message: &str) {
+    fn _report_progress(&self, current: usize, total: usize, message: &str) {
         if let Some(ref callback) = self.progress_callback {
             callback(OperationProgress {
                 current,
@@ -288,8 +484,8 @@ impl PdfManipulator {
         }
     }
 
-    fn validate_operation(&self, path: &Path) -> Result<MemoryWarning, Error> {
-        let warning = self.check_file_warnings(path)?;
+    fn _validate_operation(&self, path: &Path) -> Result<MemoryWarning, Error> {
+        let warning = self._check_file_warnings(path)?;
 
         if warning.file_size_mb > MAX_FILE_SIZE_MB {
             return Err(format_err!(
@@ -310,7 +506,7 @@ impl PdfManipulator {
             ));
         }
 
-        self.check_memory_available(warning.file_size_mb + 20)?;
+        self._check_memory_available(warning.file_size_mb + 20)?;
 
         if warning.is_large_file || warning.is_large_page_count {
             log_warn!(
@@ -324,7 +520,7 @@ impl PdfManipulator {
         Ok(warning)
     }
 
-    fn calculate_total_size(&self, inputs: &[&Path]) -> Result<u64, Error> {
+    fn _calculate_total_size(&self, inputs: &[&Path]) -> Result<u64, Error> {
         let mut total_size: u64 = 0;
         for input_path in inputs {
             if let Ok(meta) = fs::metadata(input_path) {
@@ -334,7 +530,7 @@ impl PdfManipulator {
         Ok(total_size / (1024 * 1024))
     }
 
-    fn validate_merge_size(&self, total_mb: u64) -> Result<(), Error> {
+    fn _validate_merge_size(&self, total_mb: u64) -> Result<(), Error> {
         if total_mb > MAX_FILE_SIZE_MB {
             return Err(format_err!(
                 "Total size of files to merge ({}MB) exceeds limit of {}MB. \
@@ -346,7 +542,7 @@ impl PdfManipulator {
         Ok(())
     }
 
-    fn merge_documents(
+    fn _merge_documents(
         &mut self,
         _inputs: &[&Path],
         _new_doc: &(),
@@ -356,17 +552,17 @@ impl PdfManipulator {
         Ok(())
     }
 
-    fn add_document_pages(&mut self, _doc: &(), _new_doc: &()) {
+    fn _add_document_pages(&mut self, _doc: &(), _new_doc: &()) {
         // TODO: Implement using lopdf for PDF manipulation
     }
 
-    fn save_merged_document(
+    fn _save_merged_document(
         &mut self,
         _new_doc: &(),
         _output_path: &Path,
         total: usize,
     ) -> Result<(), Error> {
-        self.report_progress(total, total, "Merge complete!");
+        self._report_progress(total, total, "Merge complete!");
         Ok(())
     }
 }

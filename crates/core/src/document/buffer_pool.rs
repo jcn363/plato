@@ -6,13 +6,45 @@
 use anyhow::Result;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
+use std::alloc::Layout;
 
-/// Reusable buffer for pixel data
+/// Reusable buffer for pixel data with SIMD alignment
 #[derive(Debug)]
 pub struct PixelBuffer {
     data: Vec<u8>,
     capacity: usize,
 }
+
+impl PixelBuffer {
+    /// Create a new buffer with specified capacity and SIMD alignment
+    pub fn new(capacity: usize) -> Self {
+        let aligned_capacity = (capacity + 31) & !31; // 32-byte alignment
+        Self {
+            data: Vec::with_capacity(aligned_capacity),
+            capacity: aligned_capacity,
+        }
+    }
+
+    /// Create a new SIMD-aligned buffer for specific size
+    pub fn new_aligned(size: usize) -> Self {
+        let layout = Layout::from_size_align(size, 32)
+            .expect("Invalid alignment layout");
+        let ptr = unsafe { std::alloc::alloc(layout) };
+        let vec = if ptr.is_null() {
+            Vec::with_capacity(size)
+        } else {
+            unsafe {
+                let mut vec = Vec::from_raw_parts(ptr, size, size);
+                vec.set_len(size);
+                vec
+            }
+        };
+        
+        Self {
+            data: vec,
+            capacity: size,
+        }
+    }
 
 impl PixelBuffer {
     /// Create a new buffer with specified capacity
