@@ -313,32 +313,31 @@ fn test_region_filtering() {
 }
 
 // ============================================================================
-// Controller Mock Tests
+// Controller Tests (Hardware-independent)
 // ============================================================================
 
 #[test]
-fn test_sunxi_controller_mock() {
+fn test_sunxi_controller_creation() {
+    // Test controller creation and name (does not require hardware)
     let controller = SunxiController::default().unwrap();
-    
     assert_eq!(controller.get_controller_name(), "sunxi-disp2");
-
+    
+    // Verify update() returns error without hardware (expected behavior)
     let data = vec![0u8; 100];
     let region = Rectangle::from_coords(0, 0, 10, 10);
-    
-    // Mock implementation should accept valid data
-    assert!(controller.update(region, &data, WaveformMode::GC16).is_ok());
+    assert!(controller.update(region, &data, WaveformMode::GC16).is_err());
 }
 
 #[test]
-fn test_mxc_controller_mock() {
+fn test_mxc_controller_creation() {
+    // Test controller creation and name (does not require hardware)
     let controller = MxcController::default().unwrap();
-    
     assert_eq!(controller.get_controller_name(), "mxc-epdc");
-
+    
+    // Verify update() returns error without hardware (expected behavior)
     let data = vec![0u8; 100];
     let region = Rectangle::from_coords(0, 0, 10, 10);
-    
-    assert!(controller.update(region, &data, WaveformMode::GC16).is_ok());
+    assert!(controller.update(region, &data, WaveformMode::GC16).is_err());
 }
 
 #[test]

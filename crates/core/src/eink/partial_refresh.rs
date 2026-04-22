@@ -27,9 +27,6 @@ impl PartialRefreshManager {
 
     pub fn track_frame(&mut self, current: &crate::eink::damage_tracker::FrameBuffer) -> Vec<Rectangle> {
         let _regions = self.damage_tracker.track_changes(current);
-        
-        #[cfg(test)]
-        eprintln!("DEBUG: should_full_refresh = {}", self.damage_tracker.should_full_refresh());
 
         if self.damage_tracker.should_full_refresh() {
             self.partial_update_count = 0;
@@ -41,8 +38,6 @@ impl PartialRefreshManager {
 
         // Use DamageTracker's merged regions
         let merged_regions = self.damage_tracker.get_damage_regions();
-        #[cfg(test)]
-        eprintln!("DEBUG: merged_regions before filter: {:?}", merged_regions);
         self.filter_small_regions(merged_regions)
     }
 
