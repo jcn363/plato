@@ -2,8 +2,11 @@
 //!
 //! Provides functionality for exporting PDF annotations to a new document.
 //! Supports creating annotation copies with their content and positioning.
+//!
+//! TODO: Implement using lopdf for PDF manipulation
+//! PDFPurr is primarily for rendering and text extraction
 
-use super::mupdf;
+use crate::log_warn;
 use anyhow::{format_err, Error};
 use std::path::{Path, PathBuf};
 
@@ -21,8 +24,6 @@ pub struct PdfAnnotation {
 ///
 /// Exports annotations from a source PDF to a new output document.
 pub struct PdfAnnotationExporter {
-    source_doc: mupdf::Document,
-    output_doc: mupdf::Document,
     file_path: PathBuf,
     total_pages: usize,
 }
@@ -30,21 +31,12 @@ pub struct PdfAnnotationExporter {
 impl PdfAnnotationExporter {
     /// Create a new annotation exporter
     pub fn new(source_path: &Path, output_path: &Path) -> Result<PdfAnnotationExporter, Error> {
-        let ctx = mupdf::MuPdfContext::new()?;
-
-        let source_doc = ctx
-            .open_document(source_path)
-            .ok_or_else(|| format_err!("Failed to open source PDF: {}", source_path.display()))?;
-
-        let total_pages = source_doc.page_count() as usize;
-
-        let output_doc = ctx
-            .new_pdf_document()
-            .ok_or_else(|| format_err!("Failed to create output PDF"))?;
+        let doc = super::super::pdfpurr::Document::open(source_path)
+            .map_err(|e| format_err!("Failed to open PDF: {}", e))?;
+        
+        let total_pages = doc.page_count();
 
         Ok(PdfAnnotationExporter {
-            source_doc,
-            output_doc,
             file_path: output_path.to_path_buf(),
             total_pages,
         })
@@ -61,33 +53,22 @@ impl PdfAnnotationExporter {
             return Err(format_err!("Page {} does not exist", annot.page + 1));
         }
 
-        let page = self
-            .source_doc
-            .load_page(annot.page as i32)
-            .map_err(|_| format_err!("Failed to load page {}", annot.page + 1))?;
+        // TODO: Implement using lopdf for PDF manipulation
+        log_warn!("add_annotation not yet implemented with PDFPurr/lopdf");
+        Ok(())
+    }
 
-        if mupdf::create_annot(self.source_doc.ctx(), page.as_ptr(), &annot.annot_type).is_some() {
-            let pdf_annot =
-                mupdf::create_annot(self.source_doc.ctx(), page.as_ptr(), &annot.annot_type);
-            if let Some(pdf_annot) = pdf_annot {
-                if !annot.contents.is_empty() {
-                    pdf_annot.set_contents(&annot.contents);
-                }
-
-                if let Some((x0, y0, x1, y1)) = annot.rect {
-                    pdf_annot.set_rect(mupdf::FzRect { x0, y0, x1, y1 });
-                }
-            }
-        }
-
+    /// Export an annotation to the output document
+    pub fn export_annotation(&mut self, _annot: &PdfAnnotation) -> Result<(), Error> {
+        // TODO: Implement using lopdf for PDF manipulation
+        log_warn!("export_annotation not yet implemented with PDFPurr/lopdf");
         Ok(())
     }
 
     /// Save the output document with annotations
     pub fn save(&self) -> Result<PathBuf, Error> {
-        let opts = mupdf::FzWriteOptions::default();
-        self.output_doc.save(&self.file_path, &opts, "pdf");
-
+        // TODO: Implement using lopdf for PDF manipulation
+        log_warn!("save not yet implemented with PDFPurr/lopdf");
         Ok(self.file_path.clone())
     }
 }

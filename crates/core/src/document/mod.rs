@@ -81,9 +81,10 @@
 pub mod epub;
 pub mod html;
 pub mod pdf;
+pub mod pdf_manipulator;
 pub mod pdfpurr;
+pub mod progressive_loader;
 pub mod sysinfo;
-// pub mod progressive_loader; // TODO: Migrate to PDFPurr API
 
 #[cfg(test)]
 mod document_tests;

@@ -1,4 +1,4 @@
-use crate::document::mupdf::{self, Document as MuPdfDocument, MuPdfContext};
+use crate::document::pdfpurr::{Document as PdfPurrDocument, MuPdfContext};
 use crate::framebuffer::Pixmap;
 use crate::{log_error, log_info, log_warn};
 use anyhow::{format_err, Error};
@@ -27,13 +27,13 @@ pub struct CachedPage {
 
 pub struct ProgressiveDocLoader {
     ctx: MuPdfContext,
-    doc: MuPdfDocument,
+    doc: PdfPurrDocument,
     _path: PathBuf,
-    total_pages: i32,
-    current_page: i32,
+    total_pages: usize,
+    current_page: usize,
     is_linearized: bool,
-    page_cache: RwLock<HashMap<i32, CachedPage>>,
-    access_order: RwLock<VecDeque<i32>>,
+    page_cache: RwLock<HashMap<usize, CachedPage>>,
+    access_order: RwLock<VecDeque<usize>>,
     cache_size_bytes: RwLock<usize>,
     last_loading_error: Mutex<Option<String>>,
     enable_progressive: bool,
@@ -42,9 +42,10 @@ pub struct ProgressiveDocLoader {
 impl ProgressiveDocLoader {
     pub fn new(path: &Path) -> Result<ProgressiveDocLoader, Error> {
         let ctx = MuPdfContext::new()
-            .map_err(|e| format_err!("Failed to create MuPDF context: {}", e))?;
+            .map_err(|e| format_err!("Failed to create PDFPurr context: {}", e))?;
 
-        let doc = MuPdfDocument::open(&ctx, path)?;
+        let doc = PdfPurrDocument::open(path)
+            .map_err(|e| format_err!("Failed to open PDF: {}", e))?;
 
         let total_pages = doc.page_count();
         let is_linearized = false;
@@ -73,7 +74,7 @@ impl ProgressiveDocLoader {
         Ok(loader)
     }
 
-    pub fn total_pages(&self) -> i32 {
+    pub fn total_pages(&self) -> usize {
         self.total_pages
     }
 
@@ -81,12 +82,12 @@ impl ProgressiveDocLoader {
         self.is_linearized
     }
 
-    pub fn current_page(&self) -> i32 {
+    pub fn current_page(&self) -> usize {
         self.current_page
     }
 
-    pub fn set_current_page(&mut self, page: i32) {
-        if page >= 0 && page < self.total_pages {
+    pub fn set_current_page(&mut self, page: usize) {
+        if page < self.total_pages {
             self.current_page = page;
             self.preload_nearby_pages(page);
         }
@@ -99,7 +100,7 @@ impl ProgressiveDocLoader {
             .expect("cache_size_bytes lock poisoned")
     }
 
-    fn evict_lru_page(&self) -> Option<i32> {
+    fn evict_lru_page(&self) -> Option<usize> {
         let mut access = self
             .access_order
             .write()
@@ -138,28 +139,28 @@ impl ProgressiveDocLoader {
         }
     }
 
-    fn preload_nearby_pages(&self, current: i32) {
+    fn preload_nearby_pages(&self, current: usize) {
         if !self.enable_progressive {
             return;
         }
 
         let ahead_start = (current + 1).min(self.total_pages);
-        let ahead_end = (current + 1 + PRELOAD_AHEAD_PAGES as i32).min(self.total_pages);
+        let ahead_end = (current + 1 + PRELOAD_AHEAD_PAGES).min(self.total_pages);
 
         for page_idx in ahead_start..ahead_end {
             let _ = self.load_page_thumbnail(page_idx);
         }
 
-        let behind_start = (current - PRELOAD_BEHIND_PAGES as i32).max(0);
-        let behind_end = current.max(0);
+        let behind_start = if current >= PRELOAD_BEHIND_PAGES { current - PRELOAD_BEHIND_PAGES } else { 0 };
+        let behind_end = current;
 
         for page_idx in behind_start..behind_end {
             let _ = self.load_page_thumbnail(page_idx);
         }
     }
 
-    pub fn load_page_thumbnail(&self, page_idx: i32) -> Result<Pixmap, Error> {
-        if page_idx < 0 || page_idx >= self.total_pages {
+    pub fn load_page_thumbnail(&self, page_idx: usize) -> Result<Pixmap, Error> {
+        if page_idx >= self.total_pages {
             return Err(format_err!("Page index out of range"));
         }
 
@@ -183,24 +184,24 @@ impl ProgressiveDocLoader {
         let size_bytes = (800 * 1200) as usize;
         self.ensure_cache_space(size_bytes);
 
-        let page = self.doc.load_page(page_idx)?;
+        let page = self.doc.load_page(page_idx as i32)?;
 
-        let matrix = mupdf::scale(800.0 / 600.0, 1200.0 / 800.0);
-        let colorspace = self.ctx.device_gray();
+        let matrix = 800.0 / 600.0;
+        let colorspace = crate::document::pdfpurr::PixmapFormat::Grayscale;
 
-        let pixmap = page.render_pixmap(matrix, colorspace, 0)?;
+        let pdfpurr_pixmap = page.render_pixmap(matrix, colorspace, 0)?;
 
-        let data_len = pixmap.data.len();
+        let data_len = pdfpurr_pixmap.data().len();
         let pixmap = Pixmap {
             width: 800,
             height: 1200,
             samples: 1,
-            data: pixmap.data,
+            data: pdfpurr_pixmap.data().to_vec(),
             update_flag: false,
         };
 
         let page_info = PageInfo {
-            index: page_idx as usize,
+            index: page_idx,
             width: 800,
             height: 1200,
             loaded: true,
@@ -234,13 +235,13 @@ impl ProgressiveDocLoader {
         Ok(pixmap)
     }
 
-    pub fn preload_page(&self, page_idx: i32) {
+    pub fn preload_page(&self, page_idx: usize) {
         if let Err(e) = self.load_page_thumbnail(page_idx) {
             log_error!("Failed to preload page {}: {}", page_idx, e);
         }
     }
 
-    pub fn get_page_count(&self) -> i32 {
+    pub fn get_page_count(&self) -> usize {
         self.total_pages
     }
 
@@ -277,9 +278,13 @@ impl ProgressiveDocLoader {
             .clone()
     }
 
-    pub fn estimate_load_time(&self, page_idx: i32) -> Duration {
+    pub fn estimate_load_time(&self, page_idx: usize) -> Duration {
         if self.is_linearized {
-            let distance = (page_idx - self.current_page).abs();
+            let distance = if page_idx > self.current_page {
+                page_idx - self.current_page
+            } else {
+                self.current_page - page_idx
+            };
             Duration::from_millis(distance as u64 * 50)
         } else {
             Duration::from_millis(page_idx as u64 * 100)

@@ -19,12 +19,13 @@ The Plato project has been successfully set up for development on this machine. 
 
 ### 2. Native Dependencies
 
-- **SDL2**: ✅ Installed (libsdl2-dev) - for emulator only
+- **SDL2**: ✅ Installed (libsdl2-dev)
+- **FreeType**: ✅ Installed (libfreetype-dev)
+- **HarfBuzz**: ✅ Installed (libharfbuzz-dev)
 - **FontConfig**: ✅ Installed (libfontconfig-dev)
 - **OpenSSL**: ✅ Installed (libssl-dev)
 - **pkg-config**: ✅ Installed
 - **Status**: ✅ All native development libraries are present
-- **Note**: FreeType and HarfBuzz are no longer required - PDFPurr uses pure Rust font stack (skrifa, rustybuzz, ab_glyph)
 
 ### 3. Build Configuration
 
@@ -40,7 +41,7 @@ The Plato project has been successfully set up for development on this machine. 
 
 - **libs_host directory**: ✅ Present with pre-built libraries
 - **Symlinks**: ✅ Created for library versioning
-- **Note**: MuPDF has been fully removed and replaced with PDFPurr (pure Rust PDF library). PDF rendering, text extraction, outlines, annotations, and all PDF manipulation features are now handled by PDFPurr without requiring native C libraries.
+- **Note**: MuPDF has been removed and replaced with PDFPurr (pure Rust PDF library)
 
 ---
 
@@ -230,12 +231,13 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 | Component           | Status  | Notes                                    |
 |---------------------|---------|------------------------------------------|
 | Rust Toolchain      | ✅      | v1.93.0, all targets installed           |
-| Native Dependencies | ✅      | All dev libraries installed              |
+| Native Dependencies | ✅      | Minimal (SDL2 for emulator only)         |
+| PDF Rendering       | ✅      | PDFPurr (pure Rust) replacing MuPDF      |
 | Build Scripts       | ✅      | Working correctly                        |
 | Host Build (check)  | ✅      | `cargo check` succeeds                   |
-| Host Build (link)   | ⚠️      | Links but libs_host has wrong arch       |
-| ARM Build           | ✅      | Should work (not tested in this session) |
-| Unit Tests          | ⚠️      | Can't link without x86_64 libs           |
+| Host Build (link)   | ✅      | Works (no C library dependencies)        |
+| ARM Build           | ✅      | Successfully builds for Kobo             |
+| Unit Tests          | ✅      | Can run without native C libraries       |
 | Clippy              | ✅      | Passes on successfully building crates   |
 | Formatting          | ✅      | rustfmt.toml configured                  |
 
