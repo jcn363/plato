@@ -13,26 +13,41 @@ pub const DEFAULT_DPI: u16 = BASE_DPI as u16;
 
 #[inline]
 pub fn pt_to_px(pt: f32, dpi: u16) -> f32 {
+    if dpi == 0 {
+        return pt; // Return unchanged if DPI is invalid
+    }
     pt * (dpi as f32 / POINTS_PER_INCH)
 }
 
 #[inline]
 pub fn pc_to_px(pc: f32, dpi: u16) -> f32 {
+    if dpi == 0 {
+        return pc; // Return unchanged if DPI is invalid
+    }
     pc * (dpi as f32 / PICAS_PER_INCH)
 }
 
 #[inline]
 pub fn in_to_px(inc: f32, dpi: u16) -> f32 {
+    if dpi == 0 {
+        return inc; // Return unchanged if DPI is invalid
+    }
     inc * (dpi as f32)
 }
 
 #[inline]
 pub fn mm_to_px(mm: f32, dpi: u16) -> f32 {
+    if dpi == 0 {
+        return mm; // Return unchanged if DPI is invalid
+    }
     mm * (dpi as f32 / MILLIMETERS_PER_INCH)
 }
 
 #[inline]
 pub fn scale_by_dpi_raw(x: f32, dpi: u16) -> f32 {
+    if dpi == 0 {
+        return x; // Return unchanged if DPI is invalid
+    }
     x * (dpi as f32) / BASE_DPI
 }
 
