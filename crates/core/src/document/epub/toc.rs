@@ -153,6 +153,9 @@ impl EpubDocument {
     }
 
     pub fn resolve_link(&mut self, uri: &str, cache: &mut UriCache) -> Option<usize> {
+        if uri.is_empty() {
+            return None;
+        }
         use crate::document::html::layout::DrawCommand;
 
         let frag_index_opt = uri.find('#');
