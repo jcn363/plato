@@ -239,6 +239,9 @@ pub fn big_half(n: i32) -> i32 {
 /// let parts = divide(10, 3);  // [4, 3, 3] or [3, 4, 3]
 /// ```
 pub fn divide(n: i32, p: i32) -> Vec<i32> {
+    if p <= 0 {
+        return vec![n]; // Return single part if partition count is invalid
+    }
     let size = n.checked_div(p).unwrap_or(0);
     let mut rem = n - p * size;
     let tick = p.checked_div(rem).unwrap_or(0);
