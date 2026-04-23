@@ -1,27 +1,22 @@
 #![allow(clippy::all)]
 #![warn(missing_docs)]
 
+mod constants;
+mod helpers;
+use constants::{APP_NAME, CLOCK_REFRESH_INTERVAL, DEFAULT_ROTATION};
+use helpers::{build_context, device_event, seconds};
+
 use plato_core::anyhow::{Context as ResultExt, Error};
-use plato_core::battery::{Battery, FakeBattery};
 use plato_core::chrono::Local;
 use plato_core::color::Color;
-use plato_core::context::Context;
 use plato_core::device::CURRENT_DEVICE;
 use plato_core::document::sys_info_as_html;
-use plato_core::font::Fonts;
 use plato_core::framebuffer::{Framebuffer, UpdateMode};
-use plato_core::frontlight::{Frontlight, LightLevels};
 use plato_core::geom::{Axis, Rectangle};
 use plato_core::gesture::{gesture_events, GestureEvent};
-use plato_core::helpers::{load_toml, save_toml};
-use plato_core::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
-use plato_core::library::Library;
-use plato_core::lightsensor::LightSensor;
-use plato_core::plugin::PluginSystem;
-use plato_core::png;
-use plato_core::pt;
-use plato_core::settings::{IntermKind, Settings, SETTINGS_PATH};
-use plato_core::sync::BackgroundSync;
+use plato_core::helpers::save_toml;
+use plato_core::input::{ButtonCode, ButtonStatus, DeviceEvent};
+use plato_core::settings::{IntermKind, SETTINGS_PATH};
 use plato_core::view::calculator::Calculator;
 use plato_core::view::common::{
     locate, locate_by_id, overlapping_rectangle, transfer_notifications,
@@ -55,73 +50,6 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
-
-pub const APP_NAME: &str = "Plato";
-const DEFAULT_ROTATION: i8 = 1;
-
-const CLOCK_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
-
-pub fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
-    let settings = load_toml::<Settings, _>(SETTINGS_PATH)?;
-    let library_settings = &settings.libraries[settings.selected_library];
-    let library = Library::new(&library_settings.path, library_settings.mode)?;
-
-    let battery = Box::new(FakeBattery::new()) as Box<dyn Battery>;
-    let frontlight = Box::new(LightLevels::default()) as Box<dyn Frontlight>;
-    let lightsensor = Box::new(0u16) as Box<dyn LightSensor>;
-    let fonts = Fonts::load()?;
-    let plugin_settings = settings.plugin_settings.clone();
-    let background_sync = settings.background_sync.clone();
-
-    Ok(Context::new(
-        fb,
-        None,
-        library,
-        settings,
-        fonts,
-        battery,
-        frontlight,
-        lightsensor,
-        PluginSystem::new(&plugin_settings),
-        BackgroundSync::new(&background_sync),
-    ))
-}
-
-#[inline]
-fn seconds(timestamp: u32) -> f64 {
-    timestamp as f64 / 1000.0
-}
-
-#[inline]
-pub fn device_event(event: SdlEvent) -> Option<DeviceEvent> {
-    match event {
-        SdlEvent::MouseButtonDown {
-            timestamp, x, y, ..
-        } => Some(DeviceEvent::Finger {
-            id: 0,
-            status: FingerStatus::Down,
-            position: pt!(x, y),
-            time: seconds(timestamp),
-        }),
-        SdlEvent::MouseButtonUp {
-            timestamp, x, y, ..
-        } => Some(DeviceEvent::Finger {
-            id: 0,
-            status: FingerStatus::Up,
-            position: pt!(x, y),
-            time: seconds(timestamp),
-        }),
-        SdlEvent::MouseMotion {
-            timestamp, x, y, ..
-        } => Some(DeviceEvent::Finger {
-            id: 0,
-            status: FingerStatus::Motion,
-            position: pt!(x, y),
-            time: seconds(timestamp),
-        }),
-        _ => None,
-    }
-}
 
 fn code_from_key(key: Scancode) -> Option<ButtonCode> {
     match key {

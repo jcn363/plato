@@ -219,6 +219,10 @@ All 9 WIP module managers now integrated and active:
   - PdfAnnotation struct with full metadata and builder methods
   - AnnotationQuery struct with builder pattern for search filtering
   - Reduced annotations.rs from 880 lines to 648 lines (232 lines reduction)
+- **emulator**: Extracted constants and helpers to separate modules
+  - `constants.rs`: APP_NAME, DEFAULT_ROTATION, CLOCK_REFRESH_INTERVAL
+  - `helpers.rs`: build_context, device_event, seconds functions
+  - Reduced main.rs from 848 lines to 775 lines (73 lines reduction)
 
 ## Verification
 
