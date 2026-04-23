@@ -79,6 +79,9 @@ pub fn query_to_content(
 impl Dictionary {
     pub fn define(&mut self, text: Option<&str>, rq: &mut RenderQueue, context: &mut Context) {
         if let Some(query) = text {
+            if query.is_empty() {
+                return;
+            }
             self.query = query.to_string();
             if let Some(search_bar) = self.children[2].downcast_mut::<SearchBar>() {
                 search_bar.set_text(query, rq, context);
