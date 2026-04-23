@@ -51,6 +51,9 @@ impl Annotation {
 }
 
 pub fn export_annotations_markdown(annotations: &[Annotation], book_title: &str) -> String {
+    if annotations.is_empty() {
+        return String::new();
+    }
     let mut md = format!("# Annotations for \"{}\"\n\n", book_title);
     for (i, annotation) in annotations.iter().enumerate() {
         md.push_str(&format!("## Annotation {}\n\n", i + 1));
@@ -61,5 +64,8 @@ pub fn export_annotations_markdown(annotations: &[Annotation], book_title: &str)
 }
 
 pub fn export_annotations_json(annotations: &[Annotation]) -> String {
+    if annotations.is_empty() {
+        return String::new();
+    }
     serde_json::to_string_pretty(annotations).unwrap_or_default()
 }
