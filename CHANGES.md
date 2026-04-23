@@ -214,6 +214,11 @@ All 9 WIP module managers now integrated and active:
   - ManipulationMode enum (SelectFile, SelectAction, SelectRedactionPage, DefiningRedaction, Processing)
   - Constants: WARNING_FILE_SIZE, PADDING, BUTTON_HEIGHT, BUTTON_SPACING
   - Reduced pdf_manipulator.rs from 887 lines to 866 lines (21 lines reduction)
+- **pdf_manipulator/annotations**: Extracted types to `types.rs` module
+  - AnnotationSubtype enum (23 annotation types with from_str/as_str methods)
+  - PdfAnnotation struct with full metadata and builder methods
+  - AnnotationQuery struct with builder pattern for search filtering
+  - Reduced annotations.rs from 880 lines to 648 lines (232 lines reduction)
 
 ## Verification
 
