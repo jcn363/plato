@@ -52,6 +52,9 @@ impl Language {
     }
 
     pub fn from_code(code: &str) -> Option<Language> {
+        if code.is_empty() {
+            return None;
+        }
         match code {
             "en" => Some(Language::English),
             "es" => Some(Language::Spanish),
