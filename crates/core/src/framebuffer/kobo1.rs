@@ -471,6 +471,7 @@ impl Framebuffer for KoboFramebuffer1 {
 impl Drop for KoboFramebuffer1 {
     fn drop(&mut self) {
         // SAFETY: Frame pointer and smem_len were initialized during construction and are valid.
+        // The File handle is automatically closed by Rust's Drop implementation.
         unsafe {
             libc::munmap(self.frame, self.fix_info.smem_len as usize);
         }

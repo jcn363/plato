@@ -12,6 +12,8 @@ const VISIBLE_PHOTODIODE: &str = "/sys/devices/virtual/input/input3/als_vis_data
 /// Caches reading for a short interval to avoid excessive reads.
 const CACHE_DURATION: Duration = Duration::from_millis(500);
 
+/// Kobo light sensor implementation using sysfs interface.
+/// The File handle is automatically closed when dropped.
 pub struct KoboLightSensor {
     file: File,
     cached_level: Option<(u16, Instant)>,

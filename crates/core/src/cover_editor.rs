@@ -174,14 +174,6 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
         .with_context(|| format!("can't open EPUB file {}", path.display()))?;
     let mut archive = zip::ZipArchive::new(file)?;
 
-    let _cover_patterns = [
-        "cover.jpg",
-        "cover.jpeg",
-        "cover.png",
-        "Cover.jpg",
-        "Cover.jpeg",
-    ];
-
     let names: Vec<String> = archive.file_names().map(|n: &str| n.to_string()).collect();
 
     // Helper for case-insensitive prefix check without allocation
