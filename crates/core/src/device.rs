@@ -125,6 +125,9 @@ pub enum FrontlightKind {
 
 impl KoboDevice {
     pub fn new(product: &str, model_number: &str) -> KoboDevice {
+        if product.is_empty() {
+            eprintln!("KoboDevice::new called with empty product string, using default");
+        }
         match product {
             "kraken" => Self::create_device(Model::Glo, TouchProto::Single, (758, 1024), 212),
             "pixie" => Self::create_device(Model::Mini, TouchProto::Single, (600, 800), 200),
