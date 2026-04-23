@@ -31,60 +31,74 @@ use std::path::Path;
 
 const USER_STYLESHEET: &str = "css/html-user.css";
 
+/// Check if a pixel is blank (above threshold)
+fn is_blank_pixel(data: &[u8], samples: usize, width: usize, x: usize, y: usize, threshold: u8) -> bool {
+    let addr = samples * (y * width + x);
+    if samples == 1 {
+        data[addr] > threshold
+    } else {
+        data[addr] > threshold && data[addr + 1] > threshold && data[addr + 2] > threshold
+    }
+}
+
+/// Find the first non-blank row from the top
+fn find_top_margin(data: &[u8], samples: usize, width: usize, height: usize, threshold: u8) -> usize {
+    for y in 0..height {
+        for x in 0..width {
+            if !is_blank_pixel(data, samples, width, x, y, threshold) {
+                return y;
+            }
+        }
+    }
+    0
+}
+
+/// Find the first non-blank row from the bottom
+fn find_bottom_margin(data: &[u8], samples: usize, width: usize, height: usize, threshold: u8) -> usize {
+    for y in (0..height).rev() {
+        for x in 0..width {
+            if !is_blank_pixel(data, samples, width, x, y, threshold) {
+                return y + 1;
+            }
+        }
+    }
+    height
+}
+
+/// Find the first non-blank column from the left
+fn find_left_margin(data: &[u8], samples: usize, width: usize, top: usize, bottom: usize, threshold: u8) -> usize {
+    for x in 0..width {
+        for y in top..bottom {
+            if !is_blank_pixel(data, samples, width, x, y, threshold) {
+                return x;
+            }
+        }
+    }
+    0
+}
+
+/// Find the first non-blank column from the right
+fn find_right_margin(data: &[u8], samples: usize, width: usize, top: usize, bottom: usize, threshold: u8) -> usize {
+    for x in (0..width).rev() {
+        for y in top..bottom {
+            if !is_blank_pixel(data, samples, width, x, y, threshold) {
+                return x + 1;
+            }
+        }
+    }
+    width
+}
+
 fn auto_detect_margins(pixmap: &Pixmap, threshold: u8) -> (f32, f32, f32, f32) {
     let width = pixmap.width as usize;
     let height = pixmap.height as usize;
     let samples = pixmap.samples;
     let data = &pixmap.data;
 
-    let is_blank = |x: usize, y: usize| -> bool {
-        let addr = samples * (y * width + x);
-        if samples == 1 {
-            data[addr] > threshold
-        } else {
-            data[addr] > threshold && data[addr + 1] > threshold && data[addr + 2] > threshold
-        }
-    };
-
-    let mut top = 0;
-    'top_loop: for y in 0..height {
-        for x in 0..width {
-            if !is_blank(x, y) {
-                top = y;
-                break 'top_loop;
-            }
-        }
-    }
-
-    let mut bottom = height;
-    'bottom_loop: for y in (0..height).rev() {
-        for x in 0..width {
-            if !is_blank(x, y) {
-                bottom = y + 1;
-                break 'bottom_loop;
-            }
-        }
-    }
-
-    let mut left = 0;
-    'left_loop: for x in 0..width {
-        for y in top..bottom {
-            if !is_blank(x, y) {
-                left = x;
-                break 'left_loop;
-            }
-        }
-    }
-
-    let mut right = width;
-    'right_loop: for x in (0..width).rev() {
-        for y in top..bottom {
-            if !is_blank(x, y) {
-                right = x + 1;
-                break 'right_loop;
-            }
-        }
-    }
+    let top = find_top_margin(data, samples, width, height, threshold);
+    let bottom = find_bottom_margin(data, samples, width, height, threshold);
+    let left = find_left_margin(data, samples, width, top, bottom, threshold);
+    let right = find_right_margin(data, samples, width, top, bottom, threshold);
 
     let content_left = left as f32 / width as f32;
     let content_right = right as f32 / width as f32;
