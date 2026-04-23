@@ -46,6 +46,7 @@ impl Color {
 
     #[inline]
     pub fn lerp(&self, color: Color, alpha: f32) -> Color {
+        let alpha = alpha.clamp(0.0, 1.0);
         match (*self, color) {
             (Color::Gray(l1), Color::Gray(l2)) => {
                 Color::Gray(lerp(l1 as f32, l2 as f32, alpha) as u8)
