@@ -51,6 +51,7 @@ impl Rectangle {
     #[inline]
     #[must_use]
     pub fn from_disk(center: Point, radius: i32) -> Rectangle {
+        let radius = radius.max(0); // Ensure radius is non-negative
         Rectangle {
             min: center - radius,
             max: center + radius,
@@ -60,6 +61,8 @@ impl Rectangle {
     #[inline]
     #[must_use]
     pub fn from_segment(start: Point, end: Point, start_radius: i32, end_radius: i32) -> Rectangle {
+        let start_radius = start_radius.max(0); // Ensure radius is non-negative
+        let end_radius = end_radius.max(0); // Ensure radius is non-negative
         let x_min = (start.x - start_radius).min(end.x - end_radius);
         let x_max = (start.x + start_radius).max(end.x + end_radius);
         let y_min = (start.y - start_radius).min(end.y - end_radius);
