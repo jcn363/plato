@@ -39,14 +39,14 @@ impl BackgroundSync {
         false
     }
 
-    pub fn enable_wifi() -> Result<(), Error> {
+    fn run_connman_command(action: &str) -> Result<(), Error> {
         #[cfg(target_os = "linux")]
         {
             Command::new("sh")
                 .arg("-c")
-                .arg("connmanctl enable wifi")
+                .arg(format!("connmanctl {} wifi", action))
                 .output()
-                .map_err(|e| format_err!("Failed to enable WiFi: {}", e))?;
+                .map_err(|e| format_err!("Failed to {} WiFi: {}", action, e))?;
         }
         #[cfg(target_os = "ios")]
         {
@@ -55,20 +55,12 @@ impl BackgroundSync {
         Ok(())
     }
 
+    pub fn enable_wifi() -> Result<(), Error> {
+        Self::run_connman_command("enable")
+    }
+
     pub fn disable_wifi() -> Result<(), Error> {
-        #[cfg(target_os = "linux")]
-        {
-            Command::new("sh")
-                .arg("-c")
-                .arg("connmanctl disable wifi")
-                .output()
-                .map_err(|e| format_err!("Failed to disable WiFi: {}", e))?;
-        }
-        #[cfg(target_os = "ios")]
-        {
-            // iOS manages WiFi automatically
-        }
-        Ok(())
+        Self::run_connman_command("disable")
     }
 
     pub fn sync_needed(&self) -> bool {
