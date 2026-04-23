@@ -38,7 +38,7 @@ impl<'a> Page<'a> {
         self.doc
             .extract_text_runs(self.index)
             .ok()
-            .map(|runs| TextPage::new(runs))
+            .map(TextPage::new)
     }
 
     pub fn load_links(&self) -> Option<Link> {
