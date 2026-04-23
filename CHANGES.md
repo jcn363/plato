@@ -7,12 +7,14 @@ Implementation of reserved UI features and migration from FFI font dependencies 
 ## Code Quality Improvements (2026-04-22)
 
 ### Error Handling ✅
+
 - Replaced `unwrap()` calls with proper error handling using `expect()` for lock poisoning and buffer operations
 - Updated `buffer_pool.rs`: 12 `unwrap()` calls replaced with descriptive `expect()` messages
 - Updated `cache.rs`: 15 `unwrap()` calls replaced with `expect()` for mutex locks and system time operations
 - Updated `pdf_manipulator` files (`annotations.rs`, `mod.rs`, `redaction.rs`, `resources.rs`): Replaced `unwrap()` with `expect()` for lopdf-specific operations where error conversion is complex
 
 ### Input Validation ✅
+
 - Added `validator::Validate` derive to `Settings` struct in `settings/mod.rs`
 - Added validation attributes to key fields:
   - `selected_library`: range(min = 0)
@@ -26,6 +28,7 @@ Implementation of reserved UI features and migration from FFI font dependencies 
   - `libraries`: length(min = 1)
 
 ### Documentation ✅
+
 - Enabled `#![warn(missing_docs)]` in all crate entry points:
   - `crates/core/src/lib.rs`
   - `crates/epub_edit/src/lib.rs`
@@ -37,6 +40,7 @@ Implementation of reserved UI features and migration from FFI font dependencies 
   - `crates/plato/src/main.rs`
 
 ### Unsafe Code Safety ✅
+
 - Added `// SAFETY:` comments to unsafe blocks:
   - `buffer_pool.rs`: Memory allocation and Vec reconstruction
   - `pdf.rs`: Send/Sync impl for PdfDocument
@@ -55,6 +59,7 @@ Implementation of reserved UI features and migration from FFI font dependencies 
   - `framebuffer/kobo2.rs`: Ion allocation and mapping
 
 ### Testing ✅
+
 - Ran `cargo clippy` with no errors (only minor warnings about style)
 - Ran `cargo test` - 204 tests passed, 2 pre-existing failures in XFDF (unrelated to changes)
 
@@ -185,6 +190,20 @@ All 9 WIP module managers now integrated and active:
 - Created docs/README.md index
 - Archived outdated plans to docs/archive/
 - Consolidated PDF documentation
+
+### Code Modularity ✅
+
+- **epub_edit**: Extracted type definitions to `types.rs` module (11 types with full documentation)
+  - EpubMetadata, EpubChapter, UndoAction, SearchOptions
+  - ValidationIssue, ValidationResult, SpellError, SpellCheckResult
+  - ChapterStatistics, ImageInfo, CSSInfo, Bookmark
+- **pdfpurr**: Extracted stub types to `types.rs` module (MuPDF compatibility layer)
+  - FzRect, FzPoint, FzQuad, FzLocation, PixmapFormat
+  - PdfPurrPixmap with constructor for proper encapsulation
+  - Utility functions: rect_from_quad, union_rect, scale
+- **epub_editor**: Extracted UI state types to `state.rs` module
+  - EditorState enum (ChapterList, EditingChapter)
+  - SearchReplaceState struct (search_text, replace_text)
 
 ## Verification
 

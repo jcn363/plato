@@ -1,8 +1,14 @@
 #![warn(missing_docs)]
 
+mod types;
+
+pub use types::{
+    Bookmark, ChapterStatistics, CSSInfo, EpubChapter, EpubMetadata, ImageInfo, SearchOptions,
+    SpellCheckResult, SpellError, UndoAction, ValidationIssue, ValidationResult,
+};
+
 use anyhow::{bail, format_err, Context, Result};
 use regex::Regex;
-use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
@@ -30,119 +36,6 @@ static ITEM_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<item[^>]+href="([^"]+)"[^>]+id="([^"]+)"[^>]*>"#).unwrap());
 static SPINE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<itemref[^>]+idref="([^"]+)"[^>]*>"#).unwrap());
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EpubMetadata {
-    pub title: String,
-    pub author: String,
-    pub language: String,
-    pub identifier: String,
-    pub publisher: Option<String>,
-    pub date: Option<String>,
-    pub description: Option<String>,
-}
-
-impl Default for EpubMetadata {
-    fn default() -> Self {
-        Self {
-            title: String::new(),
-            author: String::new(),
-            language: String::from("en"),
-            identifier: String::new(),
-            publisher: None,
-            date: None,
-            description: None,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EpubChapter {
-    pub id: String,
-    pub href: String,
-    pub title: String,
-    pub content: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum UndoAction {
-    Metadata(EpubMetadata),
-    Chapter(usize, String),
-    RenameChapter(usize, String),
-    ReorderChapters(usize, usize),
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct SearchOptions {
-    pub use_regex: bool,
-    pub case_sensitive: bool,
-    pub whole_word: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ValidationIssue {
-    pub chapter_index: usize,
-    pub chapter_title: String,
-    pub issue_type: String,
-    pub message: String,
-    pub location: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ValidationResult {
-    pub issues: Vec<ValidationIssue>,
-    pub total_chapters: usize,
-    pub chapters_with_issues: usize,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SpellError {
-    pub chapter_index: usize,
-    pub chapter_title: String,
-    pub word: String,
-    pub position: usize,
-    pub suggestions: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SpellCheckResult {
-    pub errors: Vec<SpellError>,
-    pub total_words: usize,
-    pub chapters_checked: usize,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChapterStatistics {
-    pub chapter_index: usize,
-    pub chapter_title: String,
-    pub word_count: usize,
-    pub character_count: usize,
-    pub paragraph_count: usize,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ImageInfo {
-    pub chapter_index: usize,
-    pub chapter_title: String,
-    pub src: String,
-    pub alt: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CSSInfo {
-    pub chapter_index: usize,
-    pub chapter_title: String,
-    pub href: String,
-    pub media_type: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Bookmark {
-    pub chapter_index: usize,
-    pub chapter_title: String,
-    pub position: usize,
-    pub note: Option<String>,
-}
 
 const MAX_HISTORY_SIZE: usize = 50;
 

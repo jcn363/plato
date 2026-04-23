@@ -4,6 +4,10 @@
 //! chapter content directly on their device. It's designed to fix errors
 //! encountered while reading EPUB books.
 
+mod state;
+
+pub use state::{EditorState, SearchReplaceState};
+
 use std::path::Path;
 
 use crate::color;
@@ -34,14 +38,6 @@ use crate::view::{
 use anyhow::Error;
 use epub_edit::EpubEditorCore;
 
-/// Current state of the editor UI.
-enum EditorState {
-    /// Showing the list of chapters to choose from
-    ChapterList,
-    /// Currently editing a specific chapter
-    EditingChapter { index: usize },
-}
-
 /// EPUB Editor view providing on-device editing capabilities.
 pub struct EpubEditor {
     id: Id,
@@ -52,11 +48,6 @@ pub struct EpubEditor {
     modified: bool,
     modified_chapters: Vec<usize>,
     search_replace: Option<SearchReplaceState>,
-}
-
-struct SearchReplaceState {
-    search_text: String,
-    replace_text: String,
 }
 
 impl EpubEditor {
