@@ -96,7 +96,16 @@ fn rgb_to_grayscale_scalar(red: u8, green: u8, blue: u8) -> u8 {
     (red as f32 * 0.2126 + green as f32 * 0.7152 + blue as f32 * 0.0722) as u8
 }
 
-/// Bulk RGB to grayscale conversion
+/// Bulk RGB to grayscale conversion using luminance formula
+///
+/// Converts RGB pixel data to grayscale using the ITU-R BT.709 luminance formula:
+/// Y = 0.2126 * R + 0.7152 * G + 0.0722 * B
+///
+/// # Arguments
+/// * `rgb_data` - Slice of RGB data in RGBRGB... format (3 bytes per pixel)
+///
+/// # Returns
+/// A vector of grayscale values (1 byte per pixel)
 pub fn rgb_to_grayscale_bulk(rgb_data: &[u8]) -> Vec<u8> {
     let len = rgb_data.len() / 3;
     let mut result = Vec::with_capacity(len);
@@ -181,6 +190,13 @@ pub const RED: Color = Color::Rgb(255, 0, 0);
 pub const ORANGE: Color = Color::Rgb(255, 165, 0);
 pub const PURPLE: Color = Color::Rgb(128, 0, 128);
 
+/// Get the background color for the current theme
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// The appropriate background color (WHITE for light mode, DARK_BACKGROUND for dark mode)
 #[inline]
 pub fn background(dark: bool) -> Color {
     if dark {
@@ -190,6 +206,13 @@ pub fn background(dark: bool) -> Color {
     }
 }
 
+/// Get the foreground color for the current theme
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// The appropriate foreground color (BLACK for light mode, DARK_FOREGROUND for dark mode)
 #[inline]
 pub fn foreground(dark: bool) -> Color {
     if dark {
@@ -199,6 +222,15 @@ pub fn foreground(dark: bool) -> Color {
     }
 }
 
+/// Get the normal text color gradient for the current theme
+///
+/// Returns a 3-color gradient for text rendering (light, normal, dark)
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// Array of 3 colors for text gradient
 #[inline]
 pub fn text_normal(dark: bool) -> [Color; 3] {
     if dark {
@@ -208,6 +240,15 @@ pub fn text_normal(dark: bool) -> [Color; 3] {
     }
 }
 
+/// Get the small bump text color gradient for the current theme
+///
+/// Returns a 3-color gradient for small text emphasis
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// Array of 3 colors for text gradient
 #[inline]
 pub fn text_bump_small(dark: bool) -> [Color; 3] {
     if dark {
@@ -217,6 +258,13 @@ pub fn text_bump_small(dark: bool) -> [Color; 3] {
     }
 }
 
+/// Get the separator color for the current theme
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// The appropriate separator color
 #[inline]
 pub fn separator(dark: bool) -> Color {
     if dark {
@@ -226,6 +274,13 @@ pub fn separator(dark: bool) -> Color {
     }
 }
 
+/// Get the keyboard background color for the current theme
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// The appropriate keyboard background color
 #[inline]
 pub fn keyboard_bg(dark: bool) -> Color {
     if dark {
@@ -235,6 +290,15 @@ pub fn keyboard_bg(dark: bool) -> Color {
     }
 }
 
+/// Get the hard inverted text color gradient for the current theme
+///
+/// Returns a 3-color gradient for hard inverted text (high contrast)
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// Array of 3 colors for text gradient
 #[inline]
 pub fn text_inverted_hard(dark: bool) -> [Color; 3] {
     if dark {
@@ -244,6 +308,15 @@ pub fn text_inverted_hard(dark: bool) -> [Color; 3] {
     }
 }
 
+/// Get the soft inverted text color gradient for the current theme
+///
+/// Returns a 3-color gradient for soft inverted text (medium contrast)
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// Array of 3 colors for text gradient
 #[inline]
 pub fn text_inverted_soft(dark: bool) -> [Color; 3] {
     if dark {
@@ -253,6 +326,15 @@ pub fn text_inverted_soft(dark: bool) -> [Color; 3] {
     }
 }
 
+/// Get the large bump text color gradient for the current theme
+///
+/// Returns a 3-color gradient for large text emphasis
+///
+/// # Arguments
+/// * `dark` - Whether dark mode is enabled
+///
+/// # Returns
+/// Array of 3 colors for text gradient
 #[inline]
 pub fn text_bump_large(dark: bool) -> [Color; 3] {
     if dark {
