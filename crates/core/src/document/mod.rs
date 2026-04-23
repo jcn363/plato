@@ -91,6 +91,17 @@ pub mod sysinfo;
 #[cfg(test)]
 mod document_tests;
 
+use std::collections::BTreeSet;
+use std::ffi::OsStr;
+use std::fs::File;
+use std::os::unix::fs::FileExt;
+use std::path::Path;
+
+use anyhow::{format_err, Context, Error};
+use serde::{Deserialize, Serialize};
+use unicode_normalization::char::is_combining_mark;
+use unicode_normalization::UnicodeNormalization;
+
 use self::djvu::DjvuDocument;
 use self::epub::EpubDocument;
 use self::html::HtmlDocument;
@@ -100,15 +111,6 @@ use crate::geom::{Boundary, CycleDir, Point};
 use crate::log_error;
 use crate::metadata::{Annotation, TextAlign};
 use crate::validation::validate_path;
-use anyhow::{format_err, Context, Error};
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
-use std::ffi::OsStr;
-use std::fs::File;
-use std::os::unix::fs::FileExt;
-use std::path::Path;
-use unicode_normalization::char::is_combining_mark;
-use unicode_normalization::UnicodeNormalization;
 
 pub const BYTES_PER_PAGE: f64 = 2048.0;
 
