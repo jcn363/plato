@@ -27,7 +27,7 @@ pub struct Dictionary {
 /// The special metadata entries that we care about.
 ///
 /// These entries should appear close to the beginning of the index file.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
 pub struct Metadata {
     pub all_chars: bool,
     pub case_sensitive: bool,
