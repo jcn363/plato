@@ -73,6 +73,9 @@ impl Dictionary {
     ///
     /// The metadata headwords start with `00-database-` or `00database`.
     pub fn metadata(&mut self, name: &str) -> Result<String, errors::DictError> {
+        if name.is_empty() {
+            return Err(errors::DictError::WordNotFound(name.into()));
+        }
         let mut query = format!("00-database-{}", name);
         if !self.metadata.all_chars {
             query = query.replace(|c: char| !c.is_alphanumeric(), "");
