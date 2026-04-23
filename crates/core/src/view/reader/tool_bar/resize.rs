@@ -265,6 +265,7 @@ pub(super) fn update_margin_width(
     rq: &mut RenderQueue,
     reflowable: bool,
 ) {
+    let margin_width = margin_width.max(0);
     let index = if reflowable { 0 } else { 8 };
     if let Some(labeled_icon) = children[index].downcast_mut::<LabeledIcon>() {
         labeled_icon.update(&format!("{} mm", margin_width), rq);
@@ -286,6 +287,7 @@ pub(super) fn update_line_height(
     line_height: f32,
     rq: &mut RenderQueue,
 ) {
+    let line_height = line_height.max(0.0);
     if let Some(labeled_icon) = children[2].downcast_mut::<LabeledIcon>() {
         labeled_icon.update(&format!("{:.1} em", line_height), rq);
     }
@@ -311,6 +313,7 @@ pub(super) fn update_font_size_slider(
     font_size: f32,
     rq: &mut RenderQueue,
 ) {
+    let font_size = font_size.max(0.0);
     let Some(slider) = children[6].as_mut().downcast_mut::<Slider>() else {
         return;
     };
@@ -322,6 +325,7 @@ pub(super) fn update_contrast_exponent_slider(
     exponent: f32,
     rq: &mut RenderQueue,
 ) {
+    let exponent = exponent.max(0.0);
     let Some(slider) = children[1].as_mut().downcast_mut::<Slider>() else {
         return;
     };
@@ -333,6 +337,7 @@ pub(super) fn update_contrast_gray_slider(
     gray: f32,
     rq: &mut RenderQueue,
 ) {
+    let gray = gray.max(0.0);
     let Some(slider) = children[3].as_mut().downcast_mut::<Slider>() else {
         return;
     };
