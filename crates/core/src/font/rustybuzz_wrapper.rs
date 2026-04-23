@@ -15,6 +15,9 @@ impl Buffer {
 
     /// Add UTF-8 text to the buffer.
     pub fn add_utf8(&mut self, text: &str, _item_offset: usize, _item_length: usize) {
+        if text.is_empty() {
+            return;
+        }
         self.unicode_buffer.push_str(text);
     }
 
