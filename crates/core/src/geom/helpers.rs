@@ -261,6 +261,7 @@ pub fn divide(n: i32, p: i32) -> Vec<i32> {
 
 #[inline]
 pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
+    let t = t.clamp(0.0, 1.0);
     (1.0 - t) * a + t * b
 }
 
