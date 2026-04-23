@@ -19,6 +19,17 @@ pub struct Label {
 
 impl Label {
     pub fn new(rect: Rectangle, text: String, align: Align) -> Label {
+        if text.is_empty() {
+            return Label {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                text: String::new(),
+                align,
+                event: None,
+                hold_event: None,
+            };
+        }
         Label {
             id: ID_FEEDER.next(),
             rect,
