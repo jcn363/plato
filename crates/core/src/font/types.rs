@@ -48,6 +48,7 @@ impl RenderPlan {
     }
 
     pub fn split_off(&mut self, index: usize, width: i32) -> RenderPlan {
+        let index = index.min(self.glyphs.len()); // Clamp to valid range
         let mut next_scripts = rustc_hash::FxHashMap::default();
         if !self.scripts.is_empty() {
             for i in index..self.glyphs.len() {
