@@ -79,6 +79,14 @@ impl Font {
     }
 
     pub fn set_size(&mut self, size: u32, dpi: u16) {
+        if size == 0 {
+            log_error!("Font size must be greater than 0");
+            return;
+        }
+        if dpi == 0 {
+            log_error!("DPI must be greater than 0");
+            return;
+        }
         if self.size == size && self.dpi == dpi {
             return;
         }
