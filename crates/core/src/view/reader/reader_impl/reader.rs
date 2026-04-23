@@ -8,121 +8,16 @@
 //! This implementation follows a modular design where related functionality is split
 //! across specialized submodules:
 //!
-//! - `reader.rs` (3,300 lines) - Main Reader struct and core methods
-//! - `reader_settings.rs` (947 lines) - Settings menus and configuration helpers
-//! - `reader_rendering.rs` (231 lines) - Text and selection rendering utilities
-//! - `reader_search.rs` (161 lines) - Search functionality
-//! - `reader_annotations.rs` (90 lines) - Annotation and bookmark helpers
-//! - `reader_dialogs.rs` (141 lines) - Dialog and input handling
-//! - `reader_gestures.rs` (810 lines) - Touch/gesture handling and input processing
-//! - `reader_core.rs` (128 lines) - Shared type definitions
-//!
-//! ## Key Design Decisions
-//!
-//! ### 1. Monolithic Reader Struct (INTENTIONAL)
-//! The Reader struct contains 50+ fields representing:
-//! - Document state (current_page, pages_count, doc, synthetic)
-//! - View state (view_port, rect, reflowable)
-//! - UI state (menus, focus, selection, search)
-//! - Rendering cache (cache, text, annotations)
-//!
-//! **Why not split?** Splitting into sub-structs would require extensive refactoring
-//! of 100+ methods that access multiple fields. The current approach is pragmatic
-//! given the high interdependency.
-//!
-//!
-//! ### 2. Complex Setter Methods (DOCUMENTED LIMITATIONS)
-//! Several setter methods (`set_font_size`, `set_text_align`, etc.) perform:
-//! 1. Arc strong count validation
-//! 2. Info metadata update
-//! 3. Document lock and manipulation
-//! 4. Page recalculation
-//! 5. Cache invalidation
-//! 6. UI update
-//!
-//! **Why keep these in reader.rs?** Extracting these would require passing 8-12
-//! parameters per method, creating more complexity than the original code.
-//! **Attempted extraction**: Phase 3 concluded that full extraction is not beneficial.
-//!
-//! ### 3. Event Handling in handle_event() (LARGE METHOD)
-//! The `handle_event()` method (~400 lines) contains the main event dispatcher
-//! that handles:
-//! - Gesture events (swipes, taps, long-press)
-//! - Physical button events (home, navigation)
-//! - Menu callbacks and selections
-//! - Text selection and annotation interaction
-//!
-//!
-//! ### 4. Document Manipulation Pattern
-//! All document modifications follow a consistent pattern:
-//! ```ignore
-//! let mut doc = self._doc.lock().unwrap_or_else(|poisoned: std::sync::PoisonError<MutexGuard<Box<dyn Document>>>| poisoned.into_inner());
-//! doc.set_property(...);
-//! drop(doc);  // explicit unlock
-//! self.update(None, hub, rq, context);
-//! ```
-//!
-//! This ensures proper locking and refresh behavior. Alternative approaches
-//! (per-field locks, async mutations) would add significant complexity.
-//!
-//! ## Known Limitations & TODOs
-//!
-//! ### Type Duplication
-//! Note: `ViewPort` is imported from `reader_core.rs` - consolidation in progress.
-//! Other types like `Contrast`, `PageAnimation` are also in reader_core.rs.
-//!
-//! ### Missing Optimizations
-//! - Page rendering doesn't parallelize across CPU cores
-//! - Text extraction could be cached more aggressively
-//! - Gesture recognition is synchronous (could be improved)
-//!
-//! **Rationale**: Device constraints (limited RAM, low CPU) mean optimizations
-//! would likely add overhead. Optimize if profiling shows bottlenecks.
-//!
-//! ### Unimplemented Features
-//! These are documented as stub implementations in trait methods:
-//! - `set_monochrome()` - Not supported on Kobo e-readers (display API limitation)
-//! - `set_font_family()` for PDFs - MuPDF API limitation (stub provided)
-//!
-//! **Location**: Search for `Not supported` in methods to find these stubs.
-//!
-//! ## Testing Notes
-//!
-//! The Reader view is difficult to unit test because:
-//! 1. Heavy dependency on Context (device info, display settings)
-//! 2. Requires actual document files (EPUB, PDF)
-//! 3. No native library dependencies (pure Rust PDFPurr + font stack)
-//!
-//! **Current approach**: Integration tests in `tests/` directory with fixture documents.
-//! Unit tests for pure functions (text extraction, search) are in `reader_rendering.rs`.
-//!
-//! ## Performance Characteristics
-//!
-//! ### Memory Usage
-//! - Document cache: ~1-2 MB (depends on page complexity)
-//! - Text index: ~100 KB-1 MB (depends on book size)
-//! - Typical peak: 20-40 MB (manageable on Kobo)
-//!
-//! ### Rendering Performance
-//! - Simple pages: 100-300ms render time (target: <500ms)
-//! - Complex PDFs: 500-1500ms (acceptable for static content)
-//! - Eink refresh adds 200-500ms (dominates user-perceived latency)
-//!
-//! **Optimization focus**: Minimize eink refresh regions, not raw computation.
-//!
-//! ## Future Refactoring Roadmap
-//!
-//! **Phase 4** (Estimated: 20-30 hours):
-//! 1. Consolidate Reader fields into nested structs
-//! 2. Extract sub-handlers from handle_event()
-//! 3. Create GestureProcessor trait for extensibility
-//! 4. Move event queue to central Hub
-//!
-//! **Phase 5** (Estimated: 30-40 hours):
-//! 1. Async document I/O with tokio
-//! 2. Parallel page rendering (if profiling justifies)
-//! 3. Plugin architecture for custom document types
-//! 4. Advanced gesture recognition (multi-touch, etc.)
+//! - `reader.rs` - Main Reader struct and core methods
+//! - `reader_settings.rs` - Settings menus and configuration helpers
+//! - `reader_rendering.rs` - Text and selection rendering utilities
+//! - `reader_search.rs` - Search functionality
+//! - `reader_annotations.rs` - Annotation and bookmark helpers
+//! - `reader_dialogs.rs` - Dialog and input handling
+//! - `reader_gestures.rs` - Touch/gesture handling and input processing
+//! - `reader_core.rs` - Shared type definitions
+//! - `reader_animation.rs` - Page transition animation rendering
+//! - `reader_constructors.rs` - Reader constructor functions
 
 // ===========================================================================
 // Imports and Constants
@@ -132,31 +27,29 @@ use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{BoundedText, Document, TextLocation, TocEntry};
 use crate::font::Fonts;
-use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
+use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{Boundary, Point, Rectangle, Vec2};
 use crate::geom::{CycleDir, LinearDir};
 use crate::input::ButtonCode;
-use crate::log_error;
 use crate::metadata::{Annotation, Info, ZoomMode};
 use crate::metadata::{DEFAULT_CONTRAST_EXPONENT, DEFAULT_CONTRAST_GRAY};
-use crate::unit::scale_by_dpi;
-use anyhow::{Context as AnyhowContext, Error};
+use anyhow::Error;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{atomic, Arc, Mutex};
 
 use crate::view::{
-    Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER, SMALL_BAR_HEIGHT,
+    Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER,
 };
 
-use crate::view::reader::tool_bar::ToolBar;
-
 use super::reader_core::{
-    AnimState, Contrast, PageAnimKind, PageAnimation, RenderChunk, Resource, Search, Selection,
+    Contrast, PageAnimation, RenderChunk, Resource, Search, Selection,
     State, ViewPort,
 };
 use super::reader_rendering;
 use super::reader_toc::ReaderTocManager;
+use super::reader_animation;
+use super::reader_constructors;
 
 // ===========================================================================
 // Type Definitions
@@ -203,8 +96,8 @@ pub struct Reader {
 impl Reader {
     pub fn new(rect: Rectangle, info: Info, _hub: &Hub, context: &mut Context) -> Option<Reader> {
         let id = ID_FEEDER.next();
-        let (doc, pages_count, reflowable) = Self::open_document(&info)?;
-        let children = Self::create_toolbar(rect, reflowable, &info, context);
+        let (doc, pages_count, reflowable) = reader_constructors::open_document(&info)?;
+        let children = reader_constructors::create_toolbar(rect, reflowable, &info, context);
 
         Some(Self::create_reader(
             id,
@@ -215,45 +108,6 @@ impl Reader {
             reflowable,
             info,
         ))
-    }
-
-    #[allow(clippy::type_complexity)]
-    fn open_document(info: &Info) -> Option<(Arc<Mutex<Box<dyn Document>>>, usize, bool)> {
-        let doc = match crate::document::open(&info.file.path) {
-            Some(d) => d,
-            None => {
-                log_error!("Failed to open document: {}", info.file.path.display());
-                return None;
-            }
-        };
-        let doc = Arc::new(Mutex::new(doc));
-        let pages_count = (*doc.lock().expect("doc lock")).pages_count();
-        let reflowable = (*doc.lock().expect("doc lock")).is_reflowable();
-        Some((doc, pages_count, reflowable))
-    }
-
-    fn create_toolbar(
-        rect: Rectangle,
-        reflowable: bool,
-        info: &Info,
-        context: &mut Context,
-    ) -> Vec<Box<dyn View>> {
-        let dpi = crate::unit::get_device_dpi();
-        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-
-        let top_bar_rect = rect![
-            rect.min.x,
-            rect.min.y,
-            rect.max.x,
-            rect.min.y + small_height
-        ];
-        let tool_bar = ToolBar::new(
-            top_bar_rect,
-            reflowable,
-            info.reader.as_ref(),
-            &context.settings.reader,
-        );
-        vec![Box::new(tool_bar) as Box<dyn View>]
     }
 
     fn create_reader(
@@ -308,9 +162,9 @@ impl Reader {
         context: &mut Context,
     ) -> Result<Reader, Error> {
         let id = ID_FEEDER.next();
-        let (doc, pages_count, reflowable) = Self::open_html_document(html)?;
-        let children = Self::create_toolbar(rect, reflowable, &Info::default(), context);
-        let info = Self::create_html_info(html);
+        let (doc, pages_count, reflowable) = reader_constructors::open_html_document(html)?;
+        let children = reader_constructors::create_toolbar(rect, reflowable, &Info::default(), context);
+        let info = reader_constructors::create_html_info(html);
 
         Ok(Self::create_reader(
             id,
@@ -323,172 +177,16 @@ impl Reader {
         ))
     }
 
-    #[allow(clippy::type_complexity)]
-    fn open_html_document(
-        html: &str,
-    ) -> Result<(Arc<Mutex<Box<dyn Document>>>, usize, bool), Error> {
-        let doc = crate::document::open_html(html).context("Failed to open HTML document")?;
-        let doc = Arc::new(Mutex::new(doc));
-        let pages_count = (*doc.lock().expect("doc lock")).pages_count();
-        let reflowable = (*doc.lock().expect("doc lock")).is_reflowable();
-        Ok((doc, pages_count, reflowable))
-    }
-
-    fn create_html_info(html: &str) -> Info {
-        Info {
-            file: crate::metadata::FileInfo {
-                path: std::path::PathBuf::from("memory.html"),
-                kind: "html".to_string(),
-                size: html.len() as u64,
-            },
-            reader: None,
-            ..Default::default()
-        }
-    }
-
     /// Render page transition animation
     fn render_animation(&self, fb: &mut dyn Framebuffer, rect: Rectangle) {
-        if let Some(ref anim) = self.animation {
-            for chunk in &self.previous_chunks {
-                self.render_chunk_animation(fb, rect, chunk, anim);
-            }
-        }
-    }
-
-    /// Render a single chunk of page animation
-    fn render_chunk_animation(
-        &self,
-        fb: &mut dyn Framebuffer,
-        rect: Rectangle,
-        chunk: &RenderChunk,
-        anim: &PageAnimation,
-    ) {
-        if let Some(resource) = self.cache.get(&chunk.location) {
-            let chunk_rect = chunk.frame - chunk.frame.min + chunk.position;
-
-            if let Some(region_rect) = rect.intersection(&chunk_rect) {
-                let chunk_frame = region_rect - chunk.position + chunk.frame.min;
-                let chunk_position = region_rect.min;
-                let pixmap = &resource.pixmap;
-
-                self.render_animation_kind(fb, pixmap, &chunk_frame, chunk_position, anim, rect);
-            }
-        }
-    }
-
-    /// Dispatch to specific animation type
-    fn render_animation_kind(
-        &self,
-        fb: &mut dyn Framebuffer,
-        pixmap: &Pixmap,
-        chunk_frame: &Rectangle,
-        chunk_position: Point,
-        anim: &PageAnimation,
-        rect: Rectangle,
-    ) {
-        match anim {
-            PageAnimation::None => {}
-            PageAnimation::Slide(kind) => {
-                self.render_slide_animation(fb, pixmap, chunk_frame, chunk_position, kind, rect)
-            }
-            PageAnimation::Peel(state) => {
-                self.render_peel_animation(fb, pixmap, chunk_frame, chunk_position, state, rect)
-            }
-        }
-    }
-
-    /// Render slide animation effect
-    fn render_slide_animation(
-        &self,
-        fb: &mut dyn Framebuffer,
-        pixmap: &Pixmap,
-        chunk_frame: &Rectangle,
-        chunk_position: Point,
-        kind: &AnimState,
-        rect: Rectangle,
-    ) {
-        let offset = (kind.progress * rect.width() as f32) as i32;
-        let adjusted_position = if matches!(kind.direction, LinearDir::Forward) {
-            pt!(chunk_position.x - offset, chunk_position.y)
-        } else {
-            pt!(chunk_position.x + offset, chunk_position.y)
-        };
-        let alpha = (1.0 - kind.progress) as u8;
-        fb.draw_framed_pixmap_contrast_alpha(
-            pixmap,
-            chunk_frame,
-            adjusted_position,
+        reader_animation::render_animation(
+            &self.cache,
+            &self.previous_chunks,
+            &self.animation,
+            fb,
+            rect,
             self.contrast.exponent,
             self.contrast.gray,
-            alpha,
-        );
-    }
-
-    /// Render peel animation effect
-    fn render_peel_animation(
-        &self,
-        fb: &mut dyn Framebuffer,
-        pixmap: &Pixmap,
-        chunk_frame: &Rectangle,
-        chunk_position: Point,
-        state: &AnimState,
-        rect: Rectangle,
-    ) {
-        match state.kind {
-            PageAnimKind::Fade => {
-                self.render_fade_animation(fb, pixmap, chunk_frame, chunk_position, state)
-            }
-            PageAnimKind::Flip => {
-                self.render_flip_animation(fb, pixmap, chunk_frame, chunk_position, state, rect)
-            }
-            _ => {}
-        }
-    }
-
-    /// Render fade animation effect
-    fn render_fade_animation(
-        &self,
-        fb: &mut dyn Framebuffer,
-        pixmap: &Pixmap,
-        chunk_frame: &Rectangle,
-        chunk_position: Point,
-        state: &AnimState,
-    ) {
-        let alpha = ((1.0 - state.progress) * 255.0) as u8;
-        fb.draw_framed_pixmap_contrast_alpha(
-            pixmap,
-            chunk_frame,
-            chunk_position,
-            self.contrast.exponent,
-            self.contrast.gray,
-            alpha,
-        );
-    }
-
-    /// Render flip animation effect
-    fn render_flip_animation(
-        &self,
-        fb: &mut dyn Framebuffer,
-        pixmap: &Pixmap,
-        chunk_frame: &Rectangle,
-        chunk_position: Point,
-        state: &AnimState,
-        rect: Rectangle,
-    ) {
-        let offset = (state.progress * rect.width() as f32) as i32;
-        let adjusted_position = if matches!(state.direction, LinearDir::Forward) {
-            pt!(chunk_position.x - offset, chunk_position.y)
-        } else {
-            pt!(chunk_position.x + offset, chunk_position.y)
-        };
-        let alpha = ((1.0 - state.progress * 0.5) * 255.0) as u8;
-        fb.draw_framed_pixmap_contrast_alpha(
-            pixmap,
-            chunk_frame,
-            adjusted_position,
-            self.contrast.exponent,
-            self.contrast.gray,
-            alpha,
         );
     }
 

@@ -48,6 +48,8 @@ pub mod reader_toc;
 pub mod reader_ui;
 
 // Internal helper modules
+pub(crate) mod reader_animation;
+pub(crate) mod reader_constructors;
 pub(crate) mod reader_menus;
 pub(crate) mod reader_rendering_impl;
 pub(crate) mod reader_setters;
