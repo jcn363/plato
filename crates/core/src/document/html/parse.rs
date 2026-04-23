@@ -77,8 +77,9 @@ pub fn extract_links(html: &str) -> Vec<String> {
 
 /// Extract all images from HTML content
 pub fn extract_images(html: &str) -> Vec<String> {
-    let img_regex = Regex::new(r#"<img\s+[^>]*src="([^"]+)"#)
-        .unwrap_or_else(|_| Regex::new(r#"<img[^>]*src="([^"]+)""#).expect("Fallback image regex should be valid"));
+    let img_regex = Regex::new(r#"<img\s+[^>]*src="([^"]+)"#).unwrap_or_else(|_| {
+        Regex::new(r#"<img[^>]*src="([^"]+)""#).expect("Fallback image regex should be valid")
+    });
     img_regex
         .captures_iter(html)
         .map(|c| c[1].to_string())

@@ -104,10 +104,7 @@ fn is_position_stable(
 }
 
 /// Check if hold should be cancelled (multiple contacts or segments)
-fn should_cancel_hold(
-    contacts: &FxHashMap<i32, TouchState>,
-    segments: &[Vec<Point>],
-) -> bool {
+fn should_cancel_hold(contacts: &FxHashMap<i32, TouchState>, segments: &[Vec<Point>]) -> bool {
     contacts.len() > 1 || !segments.is_empty()
 }
 
@@ -123,7 +120,7 @@ fn spawn_finger_hold_detector(
     thread::spawn(move || {
         let hold_delay_short = std::time::Duration::from_millis(platform_hold_delay_ms());
         thread::sleep(hold_delay_short);
-        
+
         // Check for short hold
         {
             let ct = contacts.lock().expect("contacts lock poisoned");
@@ -139,7 +136,7 @@ fn spawn_finger_hold_detector(
                     .ok();
                     drop(ct);
                     drop(sg);
-                    
+
                     // Mark as held and check for long hold
                     let mut ct = contacts.lock().expect("contacts lock poisoned");
                     if let Some(ts) = ct.get_mut(&id) {
@@ -152,12 +149,12 @@ fn spawn_finger_hold_detector(
                 return;
             }
         }
-        
+
         let hold_delay_long = std::time::Duration::from_millis(
             crate::consts::gesture::HOLD_DELAY_LONG.as_millis() as u64,
         );
         thread::sleep(hold_delay_long - hold_delay_short);
-        
+
         // Check for long hold
         {
             let ct = contacts.lock().expect("contacts lock poisoned");

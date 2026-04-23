@@ -32,7 +32,14 @@ use std::path::Path;
 const USER_STYLESHEET: &str = "css/html-user.css";
 
 /// Check if a pixel is blank (above threshold)
-fn is_blank_pixel(data: &[u8], samples: usize, width: usize, x: usize, y: usize, threshold: u8) -> bool {
+fn is_blank_pixel(
+    data: &[u8],
+    samples: usize,
+    width: usize,
+    x: usize,
+    y: usize,
+    threshold: u8,
+) -> bool {
     let addr = samples * (y * width + x);
     if samples == 1 {
         data[addr] > threshold
@@ -42,7 +49,13 @@ fn is_blank_pixel(data: &[u8], samples: usize, width: usize, x: usize, y: usize,
 }
 
 /// Find the first non-blank row from the top
-fn find_top_margin(data: &[u8], samples: usize, width: usize, height: usize, threshold: u8) -> usize {
+fn find_top_margin(
+    data: &[u8],
+    samples: usize,
+    width: usize,
+    height: usize,
+    threshold: u8,
+) -> usize {
     for y in 0..height {
         for x in 0..width {
             if !is_blank_pixel(data, samples, width, x, y, threshold) {
@@ -54,7 +67,13 @@ fn find_top_margin(data: &[u8], samples: usize, width: usize, height: usize, thr
 }
 
 /// Find the first non-blank row from the bottom
-fn find_bottom_margin(data: &[u8], samples: usize, width: usize, height: usize, threshold: u8) -> usize {
+fn find_bottom_margin(
+    data: &[u8],
+    samples: usize,
+    width: usize,
+    height: usize,
+    threshold: u8,
+) -> usize {
     for y in (0..height).rev() {
         for x in 0..width {
             if !is_blank_pixel(data, samples, width, x, y, threshold) {
@@ -66,7 +85,14 @@ fn find_bottom_margin(data: &[u8], samples: usize, width: usize, height: usize, 
 }
 
 /// Find the first non-blank column from the left
-fn find_left_margin(data: &[u8], samples: usize, width: usize, top: usize, bottom: usize, threshold: u8) -> usize {
+fn find_left_margin(
+    data: &[u8],
+    samples: usize,
+    width: usize,
+    top: usize,
+    bottom: usize,
+    threshold: u8,
+) -> usize {
     for x in 0..width {
         for y in top..bottom {
             if !is_blank_pixel(data, samples, width, x, y, threshold) {
@@ -78,7 +104,14 @@ fn find_left_margin(data: &[u8], samples: usize, width: usize, top: usize, botto
 }
 
 /// Find the first non-blank column from the right
-fn find_right_margin(data: &[u8], samples: usize, width: usize, top: usize, bottom: usize, threshold: u8) -> usize {
+fn find_right_margin(
+    data: &[u8],
+    samples: usize,
+    width: usize,
+    top: usize,
+    bottom: usize,
+    threshold: u8,
+) -> usize {
     for x in (0..width).rev() {
         for y in top..bottom {
             if !is_blank_pixel(data, samples, width, x, y, threshold) {
