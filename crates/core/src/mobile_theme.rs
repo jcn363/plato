@@ -266,8 +266,9 @@ pub fn mobile_elevated_surface(elevation: u8) -> Color {
         Color::Rgb(0, 0, 0) // Black overlay for light theme shadows
     };
 
-    // Elevation 0-5 maps to alpha 0-30
-    let alpha = (elevation.min(5) as f32 * 6.0) / 255.0;
+    // Elevation 0-5 maps to alpha 0-30 (clamp to valid range)
+    let elevation = elevation.min(5);
+    let alpha = (elevation as f32 * 6.0) / 255.0;
     base.lerp(overlay, alpha)
 }
 
