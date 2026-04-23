@@ -28,6 +28,9 @@ impl LibraryLabel {
     }
 
     pub fn update(&mut self, name: &str, count: usize, filter: bool, rq: &mut RenderQueue) {
+        if name.is_empty() {
+            return;
+        }
         let mut render = false;
         if self.name != name {
             self.name = name.to_string();
