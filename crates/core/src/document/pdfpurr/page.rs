@@ -163,6 +163,9 @@ impl<'a> Page<'a> {
     }
 
     pub fn search(&self, needle: &str) -> Option<Vec<FzQuad>> {
+        if needle.is_empty() {
+            return None;
+        }
         // Basic search implementation using PDFPurr text extraction
         let text_runs = self.doc.extract_text_runs(self.index).ok()?;
         let text: String = text_runs.iter().map(|r| r.text.as_str()).collect();
