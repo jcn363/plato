@@ -42,6 +42,9 @@ impl FontOpener {
     }
 
     pub fn open_memory(&self, buf: &[u8]) -> Result<NewFont> {
+        if buf.is_empty() {
+            return Err(anyhow::format_err!("Font data cannot be empty"));
+        }
         let face = self.0.new_memory_face(buf, 0)?;
         Ok(NewFont::new(face))
     }
