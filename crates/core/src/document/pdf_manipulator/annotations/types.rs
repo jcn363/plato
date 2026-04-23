@@ -126,6 +126,22 @@ pub struct PdfAnnotation {
 impl PdfAnnotation {
     /// Create a new annotation with default metadata
     pub fn new(page: usize, subtype: AnnotationSubtype, contents: String) -> Self {
+        if contents.is_empty() {
+            let now = Utc::now();
+            return Self {
+                id: uuid::Uuid::new_v4().to_string(),
+                page,
+                subtype,
+                contents: String::new(),
+                rect: None,
+                color: None,
+                created_at: now,
+                modified_at: now,
+                author: None,
+                subject: None,
+                properties: FxHashMap::default(),
+            };
+        }
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
