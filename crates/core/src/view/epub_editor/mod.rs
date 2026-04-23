@@ -5,8 +5,10 @@
 //! encountered while reading EPUB books.
 
 mod state;
+mod helpers;
 
 pub use state::{EditorState, SearchReplaceState};
+use helpers::{show_chapter_list, show_metadata_edit_view, show_save_dialog, show_edit_view};
 
 use std::path::Path;
 
@@ -145,254 +147,11 @@ impl EpubEditor {
             .min(editor.core.chapters.len().saturating_sub(1));
 
         if chapter.is_some() && !editor.core.chapters.is_empty() {
-            editor.show_edit_view(start_chapter, hub, rq, context);
+            show_edit_view(&mut editor, start_chapter, hub, rq, context);
         } else {
-            editor.show_chapter_list(hub, rq, context);
+            show_chapter_list(&mut editor, hub, rq, context);
         }
         Ok(editor)
-    }
-
-    fn show_chapter_list(&mut self, _hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        self.state = EditorState::ChapterList;
-        self.children
-            .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
-
-        let entries: Vec<EntryKind> = self
-            .core
-            .chapters
-            .iter()
-            .enumerate()
-            .map(|(i, chapter)| {
-                let title = if self.modified_chapters.contains(&i) {
-                    format!("* {}", chapter.title)
-                } else {
-                    chapter.title.clone()
-                };
-                EntryKind::Command(title, EntryId::SelectChapter(i))
-            })
-            .collect();
-
-        let dpi = crate::unit::get_device_dpi();
-        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-        let rect = rect![
-            self.rect.min.x,
-            self.rect.min.y + small_height + 1,
-            self.rect.max.x,
-            self.rect.max.y
-        ];
-
-        let menu = Menu::new(
-            rect,
-            ViewId::BookMenu,
-            MenuKind::Contextual,
-            entries,
-            context,
-        );
-        rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
-        self.children.push(Box::new(menu) as Box<dyn View>);
-    }
-
-    fn show_metadata_edit_view(&mut self, _hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        self.children
-            .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
-
-        let dpi = crate::unit::get_device_dpi();
-        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-        let row_height = scale_by_dpi(40.0, dpi) as i32;
-        let padding = scale_by_dpi(10.0, dpi) as i32;
-        let label_width = scale_by_dpi(80.0, dpi) as i32;
-
-        let mut y = self.rect.min.y + small_height + 10;
-        let meta = &self.core.metadata;
-
-        let fields = vec![
-            ("Title", meta.title.clone(), ViewId::EditMetadataTitle),
-            ("Author", meta.author.clone(), ViewId::EditMetadataAuthor),
-            (
-                "Language",
-                meta.language.clone(),
-                ViewId::EditMetadataLanguage,
-            ),
-            (
-                "Identifier",
-                meta.identifier.clone(),
-                ViewId::EditMetadataIdentifier,
-            ),
-            (
-                "Publisher",
-                meta.publisher.clone().unwrap_or_default(),
-                ViewId::EditMetadataPublisher,
-            ),
-            (
-                "Date",
-                meta.date.clone().unwrap_or_default(),
-                ViewId::EditMetadataDate,
-            ),
-        ];
-
-        for (label, value, view_id) in fields {
-            let label_rect = rect![
-                self.rect.min.x + padding,
-                y,
-                self.rect.min.x + padding + label_width,
-                y + row_height
-            ];
-            let label_view = Label::new(label_rect, label.to_string(), Align::Left(0));
-            self.children.push(Box::new(label_view) as Box<dyn View>);
-
-            let input_rect = rect![
-                self.rect.min.x + padding + label_width,
-                y,
-                self.rect.max.x - padding,
-                y + row_height
-            ];
-            let input = InputField::new(input_rect, view_id)
-                .border(true)
-                .text(&value, context);
-            self.children.push(Box::new(input) as Box<dyn View>);
-
-            y += row_height + padding;
-        }
-
-        let save_rect = rect![
-            self.rect.min.x + padding,
-            y,
-            self.rect.min.x + padding + scale_by_dpi(100.0, dpi) as i32,
-            y + row_height
-        ];
-        let save_btn = Button::new(
-            save_rect,
-            Event::Select(EntryId::SaveMetadata),
-            "Save".to_string(),
-        );
-        self.children.push(Box::new(save_btn) as Box<dyn View>);
-
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-    }
-
-    fn show_save_dialog(&mut self, _hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        self.children
-            .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
-
-        let entries = vec![
-            EntryKind::Command("Save".to_string(), EntryId::Save),
-            EntryKind::Command("Discard".to_string(), EntryId::Discard),
-        ];
-
-        let dpi = crate::unit::get_device_dpi();
-        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-        let rect = rect![
-            self.rect.min.x,
-            self.rect.min.y + small_height + 10,
-            self.rect.max.x,
-            self.rect.min.y + small_height + 120
-        ];
-
-        let menu = Menu::new(
-            rect,
-            ViewId::BookMenu,
-            MenuKind::Contextual,
-            entries,
-            context,
-        );
-        rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
-        self.children.push(Box::new(menu) as Box<dyn View>);
-    }
-
-    fn show_edit_view(
-        &mut self,
-        index: usize,
-        hub: &Hub,
-        rq: &mut RenderQueue,
-        context: &mut Context,
-    ) {
-        if index >= self.core.chapters.len() {
-            return;
-        }
-
-        self.state = EditorState::EditingChapter { index };
-        self.children
-            .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
-
-        let dpi = crate::unit::get_device_dpi();
-        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-        let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
-        let (small_thickness, _) = halves(thickness);
-        let row_height = scale_by_dpi(32.0, dpi) as i32;
-
-        let chapter = &self.core.chapters[index];
-        let content = chapter.content.clone();
-
-        let title_label = Label::new(
-            rect![
-                self.rect.min.x + 10,
-                self.rect.min.y + small_height + 10,
-                self.rect.max.x - 10,
-                self.rect.min.y + small_height + 40
-            ],
-            format!("Editing: {}", chapter.title),
-            Align::Left(0),
-        );
-        self.children.push(Box::new(title_label) as Box<dyn View>);
-
-        let textarea_rect = rect![
-            self.rect.min.x + 10,
-            self.rect.min.y + small_height + 50,
-            self.rect.max.x - 10,
-            self.rect.max.y - small_height - 60
-        ];
-
-        let input_field =
-            InputField::new(textarea_rect, ViewId::EditNoteInput).text(&content, context);
-        self.children.push(Box::new(input_field) as Box<dyn View>);
-
-        let sep_rect = rect![
-            self.rect.min.x,
-            self.rect.max.y - small_height - small_thickness,
-            self.rect.max.x,
-            self.rect.max.y - small_height
-        ];
-        let separator = Filler::new(sep_rect, crate::color::foreground(theme::is_dark_mode()));
-        self.children.push(Box::new(separator) as Box<dyn View>);
-
-        let nav_btn_width = (self.rect.width() as i32) / 2;
-        let prev_btn = Button::new(
-            rect![
-                self.rect.min.x,
-                self.rect.max.y - small_height - small_thickness - row_height,
-                self.rect.min.x + nav_btn_width,
-                self.rect.max.y - small_height - small_thickness
-            ],
-            Event::Select(EntryId::PreviousChapter),
-            "Previous".to_string(),
-        );
-        self.children.push(Box::new(prev_btn) as Box<dyn View>);
-
-        let next_btn = Button::new(
-            rect![
-                self.rect.min.x + nav_btn_width,
-                self.rect.max.y - small_height - small_thickness - row_height,
-                self.rect.max.x,
-                self.rect.max.y - small_height - small_thickness
-            ],
-            Event::Select(EntryId::NextChapter),
-            "Next".to_string(),
-        );
-        self.children.push(Box::new(next_btn) as Box<dyn View>);
-
-        let kb_rect = rect![
-            self.rect.min.x,
-            self.rect.max.y - small_height,
-            self.rect.max.x,
-            self.rect.max.y
-        ];
-
-        let mut kb_rect_mut = kb_rect;
-        let keyboard = Keyboard::new(&mut kb_rect_mut, true, context);
-        self.children.push(Box::new(keyboard) as Box<dyn View>);
-
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
-        hub.send(Event::Focus(Some(ViewId::EditNoteInput))).ok();
     }
 
     fn update_chapter_content(
@@ -603,32 +362,32 @@ impl View for EpubEditor {
                 match self.state {
                     EditorState::EditingChapter { .. } => {
                         if self.modified {
-                            self.show_save_dialog(hub, rq, context);
+                            show_save_dialog(self, hub, rq, context);
                         } else {
-                            self.show_chapter_list(hub, rq, context);
+                            show_chapter_list(self, hub, rq, context);
                         }
                         return true;
                     }
                     EditorState::ChapterList => {
                         if self.modified {
-                            self.show_save_dialog(hub, rq, context);
+                            show_save_dialog(self, hub, rq, context);
                         }
                     }
                 }
                 false
             }
             Event::Select(EntryId::SelectChapter(i)) => {
-                self.show_edit_view(*i, hub, rq, context);
+                show_edit_view(self, *i, hub, rq, context);
                 true
             }
             Event::Select(EntryId::EditMetadata) => {
-                self.show_metadata_edit_view(hub, rq, context);
+                show_metadata_edit_view(self, hub, rq, context);
                 true
             }
             Event::Select(EntryId::PreviousChapter) => {
                 if let EditorState::EditingChapter { index } = self.state {
                     if index > 0 {
-                        self.show_edit_view(index - 1, hub, rq, context);
+                        show_edit_view(self, index - 1, hub, rq, context);
                     }
                 }
                 true
@@ -636,7 +395,7 @@ impl View for EpubEditor {
             Event::Select(EntryId::NextChapter) => {
                 if let EditorState::EditingChapter { index } = self.state {
                     if index + 1 < self.core.chapters.len() {
-                        self.show_edit_view(index + 1, hub, rq, context);
+                        show_edit_view(self, index + 1, hub, rq, context);
                     }
                 }
                 true
@@ -730,7 +489,7 @@ impl View for EpubEditor {
                 self.modified = true;
                 let notif = Notification::new("Metadata updated".to_string(), hub, rq, context);
                 self.children.push(Box::new(notif) as Box<dyn View>);
-                self.show_chapter_list(hub, rq, context);
+                show_chapter_list(self, hub, rq, context);
                 true
             }
             Event::Select(EntryId::Save) => {

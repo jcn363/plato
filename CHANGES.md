@@ -223,6 +223,9 @@ All 9 WIP module managers now integrated and active:
   - `constants.rs`: APP_NAME, DEFAULT_ROTATION, CLOCK_REFRESH_INTERVAL
   - `helpers.rs`: build_context, device_event, seconds functions
   - Reduced main.rs from 848 lines to 775 lines (73 lines reduction)
+- **epub_editor**: Extracted view helper functions to `helpers.rs` module
+  - show_chapter_list, show_metadata_edit_view, show_save_dialog, show_edit_view
+  - Reduced mod.rs from 1299 lines to 1057 lines (242 lines reduction)
 
 ## Verification
 
