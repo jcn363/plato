@@ -133,6 +133,7 @@ impl HtmlDocument {
     }
 
     pub fn set_font_size(&mut self, font_size: f32) {
+        let font_size = font_size.max(0.0);
         self.engine.set_font_size(font_size);
         self.pages.clear();
     }
