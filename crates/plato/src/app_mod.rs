@@ -1,7 +1,0 @@
-//! Application submodules for Plato.
-
-mod constants;
-mod task;
-
-pub use constants::{APP_NAME, FB_DEVICE, RTC_DEVICE, AUTO_SUSPEND_REFRESH_INTERVAL, BATTERY_REFRESH_INTERVAL, CLOCK_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY, SUSPEND_WAIT_DELAY, TOUCH_INPUTS, BUTTON_INPUTS, POWER_INPUTS};
-pub use task::{Task, TaskId, schedule_task, resume};

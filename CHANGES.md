@@ -207,7 +207,8 @@ All 9 WIP module managers now integrated and active:
 - **plato**: Extracted constants and task management from `app.rs` to separate modules
   - `constants.rs`: Device paths, refresh intervals, timing constants
   - `task.rs`: Task scheduling and resume logic (Task, TaskId, schedule_task, resume)
-  - Reduced app.rs from 1610 lines to 1571 lines
+  - `helpers.rs`: Helper functions (build_context, power_off, set_wifi, goto_view, HistoryItem)
+  - Reduced app.rs from 1610 lines to 1348 lines (262 lines total reduction)
 
 ## Verification
 
