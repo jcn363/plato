@@ -6,6 +6,7 @@
 mod app;
 mod constants;
 mod event;
+mod event_handlers;
 mod helpers;
 mod task;
 

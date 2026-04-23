@@ -1,31 +1,23 @@
 use crate::constants::{
     APP_NAME, AUTO_SUSPEND_REFRESH_INTERVAL, BATTERY_REFRESH_INTERVAL, BUTTON_INPUTS,
-    CLOCK_REFRESH_INTERVAL, FB_DEVICE, POWER_INPUTS, PREPARE_SUSPEND_WAIT_DELAY,
-    SUSPEND_WAIT_DELAY, TOUCH_INPUTS,
+    CLOCK_REFRESH_INTERVAL, FB_DEVICE, POWER_INPUTS, TOUCH_INPUTS,
 };
 use crate::event::{handle_device_event, handle_launch, EventContext};
-use crate::helpers::{build_context, goto_view, power_off, set_wifi, ExitStatus, HistoryItem};
+use crate::event_handlers::*;
+use crate::helpers::{build_context, goto_view, set_wifi, ExitStatus, HistoryItem};
 use crate::task::{schedule_task, Task, TaskId};
 
 use plato_core::anyhow::{Context as ResultExt, Error};
-use plato_core::chrono::Local;
 use plato_core::context::DeviceFlags;
 use plato_core::device::CURRENT_DEVICE;
 use plato_core::document::sys_info_as_html;
 use plato_core::framebuffer::{Framebuffer, KoboFramebuffer1, KoboFramebuffer2, UpdateMode};
-use plato_core::geom::{DiagDir, Rectangle, Region};
-use plato_core::gesture::{gesture_events, GestureEvent};
+use plato_core::gesture::gesture_events;
 use plato_core::helpers::save_toml;
-use plato_core::input::{
-    button_scheme_event, device_events, display_rotate_event, raw_events, usb_events,
-};
-use plato_core::input::{ButtonCode, VAL_PRESS, VAL_RELEASE};
+use plato_core::input::{device_events, display_rotate_event, raw_events, usb_events};
 use plato_core::log_error;
-use plato_core::settings::{ButtonScheme, IntermKind, ThemeMode, SETTINGS_PATH};
-use plato_core::theme;
-use plato_core::view::common::{
-    close_view, locate_by_id, toggle_input_history_menu, toggle_keyboard_layout_menu,
-};
+use plato_core::settings::{IntermKind, SETTINGS_PATH};
+use plato_core::view::common::locate_by_id;
 use plato_core::view::dialog::Dialog;
 use plato_core::view::frontlight::FrontlightWindow;
 use plato_core::view::home::Home;
@@ -42,7 +34,7 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::mpsc;
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 pub fn run() -> Result<(), Error> {
     let inactive_since = Instant::now();
@@ -256,138 +248,40 @@ pub fn run() -> Result<(), Error> {
                 }
             }
             Event::CheckBattery => {
-                schedule_task(
-                    TaskId::CheckBattery,
-                    Event::CheckBattery,
-                    BATTERY_REFRESH_INTERVAL,
+                handle_battery_event(
+                    &mut context,
+                    &mut event_ctx,
                     &tx,
-                    &mut event_ctx.tasks,
+                    &mut view,
+                    &mut history,
+                    &mut updating,
+                    &mut rq,
                 );
-                if event_ctx
-                    .tasks
-                    .iter()
-                    .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
-                {
-                    continue;
-                }
-                if let Ok(v) = context.battery.capacity().map(|v| v[0]) {
-                    if v < context.settings.battery.power_off {
-                        power_off(view.as_mut(), &mut history, &mut updating, &mut context);
-                        event_ctx.exit_status = ExitStatus::PowerOff;
-                        break;
-                    } else if v < context.settings.battery.warn {
-                        let notif = Notification::new(
-                            "The battery capacity is getting low.".to_string(),
-                            &tx,
-                            &mut rq,
-                            &mut context,
-                        );
-                        view.children_mut().push(Box::new(notif) as Box<dyn View>);
-                    }
-                }
-
-                if context.settings.theme_settings.mode == ThemeMode::Auto
-                    && CURRENT_DEVICE.has_lightsensor()
-                {
-                    if let Ok(level) = context.lightsensor.level() {
-                        theme::update_from_light_sensor(level);
-                        if theme::is_dark_mode() != context.settings.dark_mode {
-                            context.settings.dark_mode = theme::is_dark_mode();
-                        }
-                    }
-                }
-
-                if context.settings.theme_settings.mode == ThemeMode::Scheduled
-                    && context.settings.theme_settings.schedule.enabled
-                {
-                    let now = Local::now();
-                    theme::update_from_schedule(&context.settings.theme_settings.schedule, &now);
-                    if theme::is_dark_mode() != context.settings.dark_mode {
-                        context.settings.dark_mode = theme::is_dark_mode();
-                    }
+                if event_ctx.exit_status == ExitStatus::PowerOff {
+                    break;
                 }
             }
             Event::PrepareSuspend => {
-                event_ctx
-                    .tasks
-                    .retain(|task| task.id != TaskId::PrepareSuspend);
-                wait_for_all(&mut updating, &mut context);
-                let path = Path::new(SETTINGS_PATH);
-                save_toml(&context.settings, path)
-                    .map_err(|e| log_error!("Can't save settings: {:#}.", e))
-                    .ok();
-                context.library.flush();
-
-                if context.settings.frontlight {
-                    context.settings.frontlight_levels = context.frontlight.levels();
-                    context.frontlight.set_intensity(0.0);
-                    context.frontlight.set_warmth(0.0);
-                }
-                if context.settings.wifi {
-                    Command::new("scripts/wifi-disable.sh").status().ok();
-                    context.flags.remove(DeviceFlags::ONLINE);
-                }
-                // https://github.com/koreader/koreader/commit/71afe36
-                schedule_task(
-                    TaskId::Suspend,
-                    Event::Suspend,
-                    SUSPEND_WAIT_DELAY,
+                handle_suspend_event(
+                    &mut context,
+                    &mut event_ctx,
                     &tx,
-                    &mut event_ctx.tasks,
+                    &mut view,
+                    &mut updating,
+                    &mut rq,
                 );
             }
             Event::Suspend => {
-                if context.settings.auto_power_off > 0.0 {
-                    context.rtc.iter().for_each(|rtc| {
-                        rtc.set_alarm(context.settings.auto_power_off)
-                            .map_err(|e| log_error!("Can't set alarm: {:#}.", e))
-                            .ok();
-                    });
-                }
-                let before = Local::now();
-                println!(
-                    "{}",
-                    before.format("Went to sleep on %B %-d, %Y at %H:%M:%S.")
-                );
-                Command::new("scripts/suspend.sh").status().ok();
-                let after = Local::now();
-                println!("{}", after.format("Woke up on %B %-d, %Y at %H:%M:%S."));
-                Command::new("scripts/resume.sh").status().ok();
-                event_ctx.inactive_since = Instant::now();
-                // If the wake is legitimate, the task will be cancelled by `resume`.
-                schedule_task(
-                    TaskId::Suspend,
-                    Event::Suspend,
-                    SUSPEND_WAIT_DELAY,
+                handle_suspend_execute_event(
+                    &mut context,
+                    &mut event_ctx,
                     &tx,
-                    &mut event_ctx.tasks,
+                    &mut view,
+                    &mut history,
+                    &mut updating,
                 );
-                if context.settings.auto_power_off > 0.0 {
-                    let dur = plato_core::chrono::Duration::seconds(
-                        (86_400.0 * context.settings.auto_power_off) as i64,
-                    );
-                    if let Some(fired) = context.rtc.as_ref().and_then(|rtc| {
-                        rtc.alarm()
-                            .map_err(|e| log_error!("Can't get alarm: {:#}", e))
-                            .map(|rwa| {
-                                !rwa.enabled()
-                                    || (rwa.year() <= 1970
-                                        && ((after - before) - dur).num_seconds().abs() < 3)
-                            })
-                            .ok()
-                    }) {
-                        if fired {
-                            power_off(view.as_mut(), &mut history, &mut updating, &mut context);
-                            event_ctx.exit_status = ExitStatus::PowerOff;
-                            break;
-                        } else {
-                            context.rtc.iter().for_each(|rtc| {
-                                rtc.disable_alarm()
-                                    .map_err(|e| log_error!("Can't disable alarm: {:#}.", e))
-                                    .ok();
-                            });
-                        }
-                    }
+                if event_ctx.exit_status == ExitStatus::PowerOff {
+                    break;
                 }
             }
             Event::PrepareShare => {
@@ -451,150 +345,33 @@ pub fn run() -> Result<(), Error> {
                 context.flags.insert(DeviceFlags::SHARED);
                 Command::new("scripts/usb-enable.sh").status().ok();
             }
-            Event::Gesture(ge) => match ge {
-                GestureEvent::HoldButtonLong(ButtonCode::Power) => {
-                    power_off(view.as_mut(), &mut history, &mut updating, &mut context);
-                    event_ctx.exit_status = ExitStatus::PowerOff;
-                    break;
-                }
-                GestureEvent::MultiSwipe {
-                    dir: _,
-                    starts,
-                    ends: _,
-                } => {
-                    if context.settings.theme_settings.mode == ThemeMode::Auto
-                        || context.settings.theme_settings.mode == ThemeMode::Scheduled
-                    {
-                        let width = context.fb.dims().0 as i32;
-                        if starts[0].x < width / 4 {
-                            context.settings.theme_settings.mode = ThemeMode::Dark;
-                            theme::set_theme_mode(ThemeMode::Dark);
-                            theme::set_dark_mode(true);
-                            context.settings.dark_mode = true;
-                        } else if starts[0].x > (width * 3) / 4 {
-                            context.settings.theme_settings.mode = ThemeMode::Sepia;
-                            theme::set_theme_mode(ThemeMode::Sepia);
-                            theme::set_dark_mode(false);
-                            context.settings.dark_mode = false;
-                        }
-                    }
-                }
-                GestureEvent::MultiTap(mut points) => {
-                    if points[0].x > points[1].x {
-                        points.swap(0, 1);
-                    }
-                    let rect = context.fb.rect();
-                    let r1 = Region::from_point(
-                        points[0],
-                        rect,
-                        context.settings.reader.strip_width,
-                        context.settings.reader.corner_width,
-                    );
-                    let r2 = Region::from_point(
-                        points[1],
-                        rect,
-                        context.settings.reader.strip_width,
-                        context.settings.reader.corner_width,
-                    );
-                    match (r1, r2) {
-                        (
-                            Region::Corner(DiagDir::SouthWest),
-                            Region::Corner(DiagDir::NorthEast),
-                        ) => {
-                            rq.add(RenderData::new(
-                                view.id(),
-                                context.fb.rect(),
-                                UpdateMode::Full,
-                            ));
-                        }
-                        (
-                            Region::Corner(DiagDir::NorthWest),
-                            Region::Corner(DiagDir::SouthEast),
-                        ) => {
-                            tx.send(Event::Select(EntryId::TakeScreenshot)).ok();
-                        }
-                        _ => (),
-                    }
-                }
-                _ => {
-                    handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
-                }
-            },
-            Event::ToggleFrontlight => {
-                context.set_frontlight(!context.settings.frontlight);
-                view.handle_event(
-                    &Event::ToggleFrontlight,
+            Event::Gesture(ge) => {
+                if handle_gesture_event(
+                    ge,
+                    &mut context,
+                    &mut view,
                     &tx,
                     &mut bus,
                     &mut rq,
-                    &mut context,
-                );
+                    &mut event_ctx,
+                    &mut history,
+                    &mut updating,
+                ) {
+                    break;
+                }
+                handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
             }
             Event::Open(info) => {
-                let rotation = context.display.rotation;
-                let dithered = context.fb.dithered();
-                if let Some(reader_info) = info.reader.as_ref() {
-                    if let Some(n) = reader_info
-                        .rotation
-                        .map(|n| CURRENT_DEVICE.canonical_to_device(n))
-                    {
-                        if CURRENT_DEVICE.orientation(n) != CURRENT_DEVICE.orientation(rotation) {
-                            wait_for_all(&mut updating, &mut context);
-                            if let Ok(dims) = context.fb.set_rotation(n) {
-                                event_ctx.raw_sender.send(display_rotate_event(n)).ok();
-                                context.display.rotation = n;
-                                context.display.dims = dims;
-                            }
-                        }
-                    }
-                    context.fb.set_dithered(reader_info.dithered);
-                } else {
-                    context.fb.set_dithered(
-                        context
-                            .settings
-                            .reader
-                            .dithered_kinds
-                            .contains(&info.file.kind),
-                    );
-                }
-                let path = info.file.path.clone();
-                // Trigger book open plugins
-                if let Err(e) = context.plugin_system.on_book_open(&path) {
-                    log_error!("Failed to trigger book open plugins: {}", e);
-                }
-
-                if let Some(r) = Reader::new(context.fb.rect(), *info, &tx, &mut context) {
-                    goto_view(
-                        Box::new(r),
-                        &mut view,
-                        &mut history,
-                        rotation,
-                        context.fb.monochrome(),
-                        dithered,
-                        &mut rq,
-                        &mut context,
-                    );
-                } else {
-                    if context.display.rotation != rotation {
-                        if let Ok(dims) = context.fb.set_rotation(rotation) {
-                            event_ctx
-                                .raw_sender
-                                .send(display_rotate_event(rotation))
-                                .ok();
-                            context.display.rotation = rotation;
-                            context.display.dims = dims;
-                        }
-                    }
-                    context.fb.set_dithered(dithered);
-                    handle_event(
-                        view.as_mut(),
-                        &Event::Invalid(path),
-                        &tx,
-                        &mut bus,
-                        &mut rq,
-                        &mut context,
-                    );
-                }
+                handle_open_event(
+                    info,
+                    &mut context,
+                    &mut view,
+                    &tx,
+                    &mut bus,
+                    &mut rq,
+                    &mut event_ctx,
+                    &mut history,
+                );
             }
             Event::Select(EntryId::About) => {
                 let dialog = Dialog::new(
@@ -658,36 +435,22 @@ pub fn run() -> Result<(), Error> {
                 );
             }
             Event::Back => {
-                if let Some(item) = history.pop() {
-                    view = item.view;
-                    if item.monochrome != context.fb.monochrome() {
-                        context.fb.set_monochrome(item.monochrome);
-                    }
-                    if item.dithered != context.fb.dithered() {
-                        context.fb.set_dithered(item.dithered);
-                    }
-                    if CURRENT_DEVICE.orientation(item.rotation)
-                        != CURRENT_DEVICE.orientation(context.display.rotation)
-                    {
-                        wait_for_all(&mut updating, &mut context);
-                        if let Ok(dims) = context.fb.set_rotation(item.rotation) {
-                            event_ctx
-                                .raw_sender
-                                .send(display_rotate_event(item.rotation))
-                                .ok();
-                            context.display.rotation = item.rotation;
-                            context.display.dims = dims;
-                        }
-                    }
-                    view.handle_event(&Event::Reseed, &tx, &mut bus, &mut rq, &mut context);
-                } else if !view.is::<Home>() {
+                if handle_back_event(
+                    &mut view,
+                    &mut history,
+                    &mut context,
+                    &mut event_ctx,
+                    &tx,
+                    &mut bus,
+                    &mut rq,
+                ) {
                     break;
                 }
             }
             Event::TogglePresetMenu(rect, index) => {
-                if let Some(index) = locate_by_id(view.as_ref(), ViewId::PresetMenu) {
-                    let rect = *view.child(index).rect();
-                    view.children_mut().remove(index);
+                if let Some(idx) = locate_by_id(view.as_ref(), ViewId::PresetMenu) {
+                    let rect = *view.child(idx).rect();
+                    view.children_mut().remove(idx);
                     rq.add(RenderData::expose(rect, UpdateMode::Gui));
                 } else {
                     let preset_menu = Menu::new(
@@ -724,94 +487,14 @@ pub fn run() -> Result<(), Error> {
                 rq.add(RenderData::new(flw.id(), *flw.rect(), UpdateMode::Gui));
                 view.children_mut().push(Box::new(flw) as Box<dyn View>);
             }
-            Event::Select(EntryId::OpenSettingsEditor) => {
-                use plato_core::view::settings::SettingsEditor;
-                let se = SettingsEditor::new(&mut context);
-                rq.add(RenderData::new(se.id(), *se.rect(), UpdateMode::Gui));
-                view.children_mut().push(Box::new(se) as Box<dyn View>);
-            }
-            Event::ToggleInputHistoryMenu(id, rect) => {
-                toggle_input_history_menu(view.as_mut(), id, rect, None, &mut rq, &mut context);
-            }
-            Event::ToggleNear(ViewId::KeyboardLayoutMenu, rect) => {
-                toggle_keyboard_layout_menu(view.as_mut(), rect, None, &mut rq, &mut context);
-            }
-            Event::Close(id) => {
-                close_view(id, view.as_mut(), &mut rq);
-            }
-            Event::Select(EntryId::ToggleInverted) => {
-                context.fb.toggle_inverted();
-                context.settings.inverted = context.fb.inverted();
-                rq.add(RenderData::new(
-                    view.id(),
-                    context.fb.rect(),
-                    UpdateMode::Full,
-                ));
-            }
-            Event::Select(EntryId::ToggleDithered) => {
-                context.fb.toggle_dithered();
-                rq.add(RenderData::new(
-                    view.id(),
-                    context.fb.rect(),
-                    UpdateMode::Full,
-                ));
-            }
-            Event::Select(EntryId::Rotate(n))
-                if n != context.display.rotation && view.might_rotate() =>
-            {
-                wait_for_all(&mut updating, &mut context);
-                if let Ok(dims) = context.fb.set_rotation(n) {
-                    event_ctx.raw_sender.send(display_rotate_event(n)).ok();
-                    context.display.rotation = n;
-                    let fb_rect = Rectangle::from(dims);
-                    if context.display.dims != dims {
-                        context.display.dims = dims;
-                        view.resize(fb_rect, &tx, &mut rq, &mut context);
-                    } else {
-                        rq.add(RenderData::new(
-                            view.id(),
-                            context.fb.rect(),
-                            UpdateMode::Full,
-                        ));
-                    }
-                }
-            }
-            Event::Select(EntryId::SetRotationLock(rotation_lock)) => {
-                context.settings.rotation_lock = rotation_lock;
-            }
-            Event::Select(EntryId::SetButtonScheme(button_scheme)) => {
-                context.settings.button_scheme = button_scheme;
-
-                // Sending a pseudo event into the raw_events channel toggles the inversion in the device_events channel
-                match button_scheme {
-                    ButtonScheme::Natural => {
-                        event_ctx
-                            .raw_sender
-                            .send(button_scheme_event(VAL_RELEASE))
-                            .ok();
-                    }
-                    ButtonScheme::Inverted => {
-                        event_ctx
-                            .raw_sender
-                            .send(button_scheme_event(VAL_PRESS))
-                            .ok();
-                    }
-                }
-            }
             Event::SetWifi(enable) => {
-                set_wifi(enable, &mut context);
+                handle_wifi_event(enable, &mut context);
             }
             Event::Select(EntryId::ToggleWifi) => {
-                set_wifi(!context.settings.wifi, &mut context);
+                handle_wifi_event(!context.settings.wifi, &mut context);
             }
             Event::Select(EntryId::TakeScreenshot) => {
-                let name = Local::now().format("screenshot-%Y%m%d_%H%M%S.png");
-                let msg = match context.fb.save(&name.to_string()) {
-                    Err(e) => format!("{}", e),
-                    Ok(_) => format!("Saved {}.", name),
-                };
-                let notif = Notification::new(msg, &tx, &mut rq, &mut context);
-                view.children_mut().push(Box::new(notif) as Box<dyn View>);
+                handle_screenshot_event(&mut context, &mut view, &tx, &mut rq);
             }
             Event::CheckFetcher(..)
             | Event::FetcherAddDocument(..)
@@ -846,37 +529,15 @@ pub fn run() -> Result<(), Error> {
                 break;
             }
             Event::MightSuspend if context.settings.auto_suspend > 0.0 => {
-                if context.flags.contains(DeviceFlags::SHARED)
-                    || event_ctx
-                        .tasks
-                        .iter()
-                        .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
-                {
-                    event_ctx.inactive_since = Instant::now();
+                if handle_suspend_check_event(
+                    &mut context,
+                    &mut event_ctx,
+                    &mut view,
+                    &tx,
+                    &mut bus,
+                    &mut rq,
+                ) {
                     continue;
-                }
-                let seconds = 60.0 * context.settings.auto_suspend;
-                if event_ctx.inactive_since.elapsed() > Duration::from_secs_f32(seconds) {
-                    view.handle_event(&Event::Suspend, &tx, &mut bus, &mut rq, &mut context);
-                    let interm = Intermission::new(
-                        context.fb.rect(),
-                        IntermKind::Suspend,
-                        context.settings.sleep_cover_fill,
-                        &context,
-                    );
-                    rq.add(RenderData::new(
-                        interm.id(),
-                        *interm.rect(),
-                        UpdateMode::Full,
-                    ));
-                    schedule_task(
-                        TaskId::PrepareSuspend,
-                        Event::PrepareSuspend,
-                        PREPARE_SUSPEND_WAIT_DELAY,
-                        &tx,
-                        &mut event_ctx.tasks,
-                    );
-                    view.children_mut().push(Box::new(interm) as Box<dyn View>);
                 }
             }
             _ => {
