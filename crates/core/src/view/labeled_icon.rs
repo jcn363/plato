@@ -16,6 +16,14 @@ pub struct LabeledIcon {
 
 impl LabeledIcon {
     pub fn new(name: &str, rect: Rectangle, event: Event, text: String) -> LabeledIcon {
+        if name.is_empty() || text.is_empty() {
+            return LabeledIcon {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                event,
+            };
+        }
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
         let side = rect.height() as i32;
