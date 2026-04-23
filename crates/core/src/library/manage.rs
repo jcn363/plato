@@ -321,6 +321,9 @@ impl Library {
     }
 
     pub fn move_batch(&mut self, paths: &[PathBuf], other: &mut Library) -> Result<(), Error> {
+        if paths.is_empty() {
+            return Ok(());
+        }
         for path in paths {
             self.move_to(path, other)?;
         }
