@@ -93,6 +93,9 @@ impl NamedInput {
     }
 
     pub fn set_text(&mut self, text: &str, rq: &mut RenderQueue, context: &mut Context) {
+        if text.is_empty() {
+            return;
+        }
         if let Some(input_field) = self.children[1].downcast_mut::<InputField>() {
             input_field.set_text(text, true, rq, context);
         }
