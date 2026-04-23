@@ -17,6 +17,16 @@ pub struct LibraryLabel {
 
 impl LibraryLabel {
     pub fn new(rect: Rectangle, name: &str, count: usize, filter: bool) -> LibraryLabel {
+        if name.is_empty() {
+            return LibraryLabel {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                name: String::new(),
+                count,
+                filter,
+            };
+        }
         LibraryLabel {
             id: ID_FEEDER.next(),
             rect,
