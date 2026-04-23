@@ -86,7 +86,7 @@ impl Engine {
     }
 
     pub fn set_hyphen_penalty(&mut self, hyphen_penalty: i32) {
-        self.hyphen_penalty = hyphen_penalty;
+        self.hyphen_penalty = hyphen_penalty.max(0);
     }
 
     pub fn set_stretch_tolerance(&mut self, stretch_tolerance: f32) {
