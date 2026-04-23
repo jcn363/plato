@@ -16,6 +16,11 @@ pub struct SimpleHyphenator {
 
 impl SimpleHyphenator {
     pub fn new(language: String) -> Self {
+        if language.is_empty() {
+            return Self {
+                _language: String::new(),
+            };
+        }
         Self {
             _language: language,
         }
