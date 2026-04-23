@@ -121,7 +121,9 @@ impl ReaderInfo {
     }
 
     pub fn add_reading_time(&mut self, seconds: u64) {
-        self.reading_time_seconds += seconds;
+        // Cap at 24 hours per addition to prevent overflow issues
+        const MAX_SECONDS_PER_ADDITION: u64 = 86_400; // 24 hours
+        self.reading_time_seconds += seconds.min(MAX_SECONDS_PER_ADDITION);
     }
 }
 
