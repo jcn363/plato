@@ -19,12 +19,21 @@ pub struct ChapterLabel {
 
 impl ChapterLabel {
     pub fn new(rect: Rectangle, title: String, progress: f32) -> ChapterLabel {
+        if title.is_empty() {
+            return ChapterLabel {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                title: String::new(),
+                progress: progress.clamp(0.0, 1.0),
+            };
+        }
         ChapterLabel {
             id: ID_FEEDER.next(),
             rect,
             children: Vec::new(),
             title,
-            progress,
+            progress: progress.clamp(0.0, 1.0),
         }
     }
 
