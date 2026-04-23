@@ -1,5 +1,5 @@
 use crate::constants::{APP_NAME, FB_DEVICE, AUTO_SUSPEND_REFRESH_INTERVAL, BATTERY_REFRESH_INTERVAL, CLOCK_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY, SUSPEND_WAIT_DELAY, TOUCH_INPUTS, BUTTON_INPUTS, POWER_INPUTS};
-use crate::helpers::{build_context, goto_view, power_off, set_wifi, HistoryItem};
+use crate::helpers::{build_context, goto_view, power_off, set_wifi, HistoryItem, ExitStatus};
 use crate::task::{Task, TaskId, schedule_task, resume};
 
 use plato_core::anyhow::{Context as ResultExt, Error};
@@ -52,13 +52,6 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
-
-#[derive(PartialEq)]
-enum ExitStatus {
-    Quit,
-    Reboot,
-    PowerOff,
-}
 
 pub fn run() -> Result<(), Error> {
     let mut inactive_since = Instant::now();

@@ -29,6 +29,17 @@ use plato_core::{log_error, log_warn};
 
 use crate::constants::RTC_DEVICE;
 
+/// Application exit status.
+#[derive(PartialEq)]
+pub enum ExitStatus {
+    /// Normal quit.
+    Quit,
+    /// Reboot the device.
+    Reboot,
+    /// Power off the device.
+    PowerOff,
+}
+
 /// History item for view navigation.
 pub struct HistoryItem {
     /// The view that was active.
