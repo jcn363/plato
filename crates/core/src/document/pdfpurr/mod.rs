@@ -58,6 +58,9 @@ impl Document {
     }
 
     pub fn from_bytes(data: &[u8]) -> Result<Self> {
+        if data.is_empty() {
+            return Err(anyhow::format_err!("PDF data cannot be empty"));
+        }
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
         let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
@@ -69,6 +72,9 @@ impl Document {
     }
 
     pub fn from_bytes_with_cache(data: &[u8], cache: Arc<PdfCache>) -> Result<Self> {
+        if data.is_empty() {
+            return Err(anyhow::format_err!("PDF data cannot be empty"));
+        }
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
         let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
