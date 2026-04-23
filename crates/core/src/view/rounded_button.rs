@@ -21,6 +21,16 @@ pub struct RoundedButton {
 
 impl RoundedButton {
     pub fn new(name: &str, rect: Rectangle, event: Event) -> RoundedButton {
+        if name.is_empty() {
+            return RoundedButton {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                name: String::new(),
+                event,
+                active: false,
+            };
+        }
         RoundedButton {
             id: ID_FEEDER.next(),
             rect,
