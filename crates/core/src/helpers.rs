@@ -428,6 +428,9 @@ pub fn url_encode(s: &str) -> String {
 
 /// Decode a percent-encoded string
 pub fn url_decode(s: &str) -> Result<String, Error> {
+    if s.is_empty() {
+        return Ok(String::new());
+    }
     percent_decode(s.as_bytes())
         .decode_utf8()
         .map(|s| s.to_string())
