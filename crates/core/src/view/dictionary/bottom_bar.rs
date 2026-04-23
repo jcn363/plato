@@ -98,6 +98,9 @@ impl BottomBar {
     }
 
     pub fn update_name(&mut self, text: &str, rq: &mut RenderQueue) {
+        if text.is_empty() {
+            return;
+        }
         let Some(name_label) = self.child_mut(1).downcast_mut::<Label>() else {
             return;
         };
