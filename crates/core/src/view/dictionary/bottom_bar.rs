@@ -21,6 +21,15 @@ pub struct BottomBar {
 
 impl BottomBar {
     pub fn new(rect: Rectangle, name: &str, has_prev: bool, has_next: bool) -> BottomBar {
+        if name.is_empty() {
+            return BottomBar {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                has_prev,
+                has_next,
+            };
+        }
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
         let side = rect.height() as i32;
