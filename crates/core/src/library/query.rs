@@ -12,7 +12,14 @@ impl Library {
     /// Fuzzy search for books by title or author using Levenshtein distance
     /// Returns books with similarity score above threshold (default: 0.7)
     pub fn fuzzy_search(&self, query: &str, threshold: Option<f64>) -> Vec<(String, Info)> {
-        let threshold = threshold.unwrap_or(0.7);
+        if query.is_empty() {
+            return Vec::new();
+        }
+        let mut threshold = threshold.unwrap_or(0.7);
+        if !(0.0..=1.0).contains(&threshold) {
+            eprintln!("Fuzzy search threshold must be between 0.0 and 1.0, using default 0.7");
+            threshold = 0.7;
+        }
         let query_lower = query.to_lowercase();
         let mut results = Vec::new();
 
