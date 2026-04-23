@@ -650,6 +650,6 @@ impl HttpClient {
 
 impl Default for HttpClient {
     fn default() -> Self {
-        Self::new().unwrap()
+        Self::new().expect("Failed to create default HTTP client")
     }
 }

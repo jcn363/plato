@@ -164,6 +164,10 @@ impl CoverEditor {
     }
 }
 
+/// Extract the cover image from an EPUB file
+///
+/// Searches for cover images in the EPUB archive using common naming patterns
+/// and case-insensitive matching. Returns the first valid cover image found.
 pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicImage, Error> {
     let path = epub_path.as_ref();
     let file = std::fs::File::open(path)
@@ -238,6 +242,10 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
     Err(format_err!("No cover image found in EPUB"))
 }
 
+/// Set a new cover image in an EPUB file
+///
+/// Replaces the existing cover image in the EPUB archive with the provided image.
+/// The cover image is stored as a standard cover file in the EPUB.
 pub fn set_cover_in_epub<P: AsRef<Path>>(epub_path: P, cover_path: P) -> Result<(), Error> {
     let epub_path = epub_path.as_ref();
     let cover_path = cover_path.as_ref();

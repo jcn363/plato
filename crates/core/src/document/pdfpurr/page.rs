@@ -101,9 +101,11 @@ impl<'a> Page<'a> {
                         chunk[0], chunk[1], chunk[2], chunk[3],
                     )
                     .unwrap_or_else(|| {
+                        // Fallback to black (0, 0, 0, 255) - always valid
                         tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap()
                     })
                 } else {
+                    // Fallback to black (0, 0, 0, 255) - always valid
                     tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap()
                 }
             })
