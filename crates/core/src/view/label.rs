@@ -41,6 +41,9 @@ impl Label {
     }
 
     pub fn update(&mut self, text: &str, rq: &mut RenderQueue) {
+        if text.is_empty() {
+            return;
+        }
         if self.text != text {
             self.text = text.to_string();
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
