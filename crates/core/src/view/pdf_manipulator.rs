@@ -105,11 +105,6 @@ Max: 30MB, 500 pages. Keep battery charged."
         })
     }
 
-    fn show_message(&mut self, msg: String, rq: &mut RenderQueue, bus: &mut Bus) {
-        bus.push_back(Event::Render(msg));
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Full));
-    }
-
     pub fn for_file(
         rect: Rectangle,
         file_path: PathBuf,
