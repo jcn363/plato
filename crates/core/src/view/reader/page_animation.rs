@@ -33,6 +33,7 @@ impl PageAnimation {
 
     /// Advance animation with platform-appropriate speed
     pub fn advance(&mut self, delta: f32) -> bool {
+        let delta = delta.max(0.0); // Ensure delta is non-negative
         // Apply platform-specific animation speed multiplier
         let speed = if is_mobile_platform() {
             animation_config().duration_multiplier
