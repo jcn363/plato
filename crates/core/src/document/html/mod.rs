@@ -102,6 +102,19 @@ impl HtmlDocument {
     }
 
     pub fn new_from_memory(text: &str) -> HtmlDocument {
+        if text.is_empty() {
+            return HtmlDocument {
+                text: String::new(),
+                content: XmlTree::default(),
+                engine: Engine::new(),
+                pages: Vec::new(),
+                parent: PathBuf::default(),
+                size: 0,
+                viewer_stylesheet: PathBuf::from(VIEWER_STYLESHEET),
+                user_stylesheet: PathBuf::from(USER_STYLESHEET),
+                ignore_document_css: false,
+            };
+        }
         let size = text.len();
         let mut content = XmlParser::new(text).parse();
         content.wrap_lost_inlines();
