@@ -185,13 +185,12 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
                 .all(|(a, b)| a.eq_ignore_ascii_case(&b))
     }
 
-    // Helper for case-insensitive contains without allocation
+    // Helper for case-insensitive contains
     fn contains_case_insensitive(text: &str, pattern: &str) -> bool {
         if pattern.is_empty() {
             return true;
         }
-        let pattern_lower: String = pattern.to_lowercase();
-        text.to_lowercase().contains(&pattern_lower)
+        text.to_lowercase().contains(&pattern.to_lowercase())
     }
 
     // Helper for case-insensitive suffix check without allocation
