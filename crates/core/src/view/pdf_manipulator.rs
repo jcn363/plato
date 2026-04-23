@@ -18,28 +18,8 @@ use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
 
-const WARNING_FILE_SIZE: u64 = 30;
-const PADDING: i32 = 10;
-const BUTTON_HEIGHT: i32 = 60;
-const BUTTON_SPACING: i32 = 10;
-
-#[derive(Clone, PartialEq)]
-enum RedactionState {
-    None,
-    Selecting { start: (i32, i32), end: (i32, i32) },
-}
-
-enum ManipulationMode {
-    SelectFile,
-    SelectAction,
-    SelectRedactionPage,
-    DefiningRedaction {
-        file_path: PathBuf,
-        page_index: usize,
-        region: Option<RedactionRegion>,
-    },
-    Processing,
-}
+mod types;
+pub use types::{ManipulationMode, RedactionState, BUTTON_HEIGHT, BUTTON_SPACING, PADDING, WARNING_FILE_SIZE};
 
 pub struct PdfManipulatorView {
     id: Id,

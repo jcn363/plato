@@ -209,6 +209,11 @@ All 9 WIP module managers now integrated and active:
   - `task.rs`: Task scheduling and resume logic (Task, TaskId, schedule_task, resume)
   - `helpers.rs`: Helper functions (build_context, power_off, set_wifi, goto_view, HistoryItem, ExitStatus)
   - Reduced app.rs from 1610 lines to 1341 lines (269 lines total reduction)
+- **pdf_manipulator**: Extracted types and constants to `types.rs` module
+  - RedactionState enum (None, Selecting with coordinates)
+  - ManipulationMode enum (SelectFile, SelectAction, SelectRedactionPage, DefiningRedaction, Processing)
+  - Constants: WARNING_FILE_SIZE, PADDING, BUTTON_HEIGHT, BUTTON_SPACING
+  - Reduced pdf_manipulator.rs from 887 lines to 866 lines (21 lines reduction)
 
 ## Verification
 
