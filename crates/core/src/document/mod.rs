@@ -475,11 +475,18 @@ impl From<TocLocation> for Location {
     }
 }
 
+/// Generate HTML header with title and CSS link
+fn html_header(title: &str, css_file: &str) -> String {
+    format!(
+        "<html>\n\t<head>\n\t\t<title>{}</title>\n\t\t\
+         <link rel=\"stylesheet\" type=\"text/css\" href=\"{}\"/>\n\t\
+         </head>\n\t<body>\n",
+        title, css_file
+    )
+}
+
 pub fn toc_as_html(toc: &[TocEntry], chap_index: usize) -> String {
-    let mut buf = "<html>\n\t<head>\n\t\t<title>Table of Contents</title>\n\t\t\
-                   <link rel=\"stylesheet\" type=\"text/css\" href=\"css/toc.css\"/>\n\t\
-                   </head>\n\t<body>\n"
-        .to_string();
+    let mut buf = html_header("Table of Contents", "css/toc.css");
     toc_as_html_aux(toc, chap_index, 0, &mut buf);
     buf.push_str("\t</body>\n</html>");
     buf
@@ -514,10 +521,7 @@ pub fn annotations_as_html(
     annotations: &[Annotation],
     active_range: Option<(TextLocation, TextLocation)>,
 ) -> String {
-    let mut buf = "<html>\n\t<head>\n\t\t<title>Annotations</title>\n\t\t\
-                   <link rel=\"stylesheet\" type=\"text/css\" href=\"css/annotations.css\"/>\n\t\
-                   </head>\n\t<body>\n"
-        .to_string();
+    let mut buf = html_header("Annotations", "css/annotations.css");
     buf.push_str("\t\t<ul>\n");
     for annot in annotations {
         let mut note = annot.note.replace('<', "&lt;").replace('>', "&gt;");
@@ -553,10 +557,7 @@ pub fn annotations_as_html(
 }
 
 pub fn bookmarks_as_html(bookmarks: &BTreeSet<usize>, index: usize, synthetic: bool) -> String {
-    let mut buf = "<html>\n\t<head>\n\t\t<title>Bookmarks</title>\n\t\t\
-                   <link rel=\"stylesheet\" type=\"text/css\" href=\"css/bookmarks.css\"/>\n\t\
-                   </head>\n\t<body>\n"
-        .to_string();
+    let mut buf = html_header("Bookmarks", "css/bookmarks.css");
     buf.push_str("\t\t<ul>\n");
     for bkm in bookmarks {
         let mut text = if synthetic {
