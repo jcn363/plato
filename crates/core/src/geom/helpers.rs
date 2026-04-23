@@ -187,6 +187,9 @@ pub fn nearest_segment_point(p: Vec2, a: Vec2, b: Vec2) -> (Vec2, f32) {
 }
 
 pub fn elbow(sp: &[Point]) -> usize {
+    if sp.is_empty() {
+        return 0;
+    }
     let len = sp.len();
     let a: Vec2 = sp[0].into();
     let b: Vec2 = sp[len - 1].into();
