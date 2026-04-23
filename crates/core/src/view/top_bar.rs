@@ -134,6 +134,9 @@ impl TopBar {
     }
 
     pub fn update_root_icon(&mut self, name: &str, rq: &mut RenderQueue) {
+        if name.is_empty() {
+            return;
+        }
         let Some(icon) = self.child_mut(0).downcast_mut::<Icon>() else {
             return;
         };
@@ -144,6 +147,9 @@ impl TopBar {
     }
 
     pub fn update_title_label(&mut self, title: &str, rq: &mut RenderQueue) {
+        if title.is_empty() {
+            return;
+        }
         let Some(title_label) = self.children[1].as_mut().downcast_mut::<Label>() else {
             return;
         };
