@@ -257,6 +257,9 @@ impl OPDSCatalog {
     }
 
     pub fn search(&self, query: &str) -> Vec<&OPDSEntry> {
+        if query.is_empty() {
+            return Vec::new();
+        }
         let query_lower = query.to_lowercase();
         self.entries
             .iter()
