@@ -78,12 +78,14 @@ impl BottomBar {
     }
 
     pub fn update_font_size(&mut self, font_size: f32, rq: &mut RenderQueue) {
+        let font_size = font_size.max(0.0);
         if let Some(labeled_icon) = self.children[3].downcast_mut::<LabeledIcon>() {
             labeled_icon.update(&format!("{:.1} pt", font_size), rq);
         }
     }
 
     pub fn update_margin_width(&mut self, margin_width: i32, rq: &mut RenderQueue) {
+        let margin_width = margin_width.max(0);
         if let Some(labeled_icon) = self.children[1].downcast_mut::<LabeledIcon>() {
             labeled_icon.update(&format!("{} mm", margin_width), rq);
         }
