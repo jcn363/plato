@@ -82,7 +82,7 @@ impl Engine {
     }
 
     pub fn set_min_font_size(&mut self, min_font_size: f32) {
-        self.min_font_size = min_font_size;
+        self.min_font_size = min_font_size.max(0.0);
     }
 
     pub fn set_hyphen_penalty(&mut self, hyphen_penalty: i32) {
@@ -90,7 +90,7 @@ impl Engine {
     }
 
     pub fn set_stretch_tolerance(&mut self, stretch_tolerance: f32) {
-        self.stretch_tolerance = stretch_tolerance;
+        self.stretch_tolerance = stretch_tolerance.max(0.0);
     }
 
     pub fn set_margin(&mut self, margin: &Edge) {
@@ -98,12 +98,18 @@ impl Engine {
     }
 
     pub fn set_font_size(&mut self, font_size: f32) {
-        self.font_size = font_size;
+        self.font_size = font_size.max(0.0);
     }
 
     pub fn layout(&mut self, width: u32, height: u32, font_size: f32, dpi: u16) {
+        if width == 0 || height == 0 {
+            return;
+        }
+        if dpi == 0 {
+            return;
+        }
         self.dims = (width, height);
-        self.font_size = font_size;
+        self.font_size = font_size.max(0.0);
         self.dpi = dpi;
         self.margin = Edge::uniform(mm_to_px(DEFAULT_MARGIN_WIDTH as f32, self.dpi).round() as i32);
     }
