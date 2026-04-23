@@ -152,6 +152,9 @@ impl BottomBar {
     }
 
     pub fn update_chapter_label(&mut self, title: String, progress: f32, rq: &mut RenderQueue) {
+        if title.is_empty() {
+            return;
+        }
         let Some(chapter_label) = self.child_mut(1).downcast_mut::<ChapterLabel>() else {
             return;
         };
