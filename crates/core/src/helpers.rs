@@ -348,6 +348,9 @@ pub fn text_to_words(text: &str) -> String {
 /// Compress data using BZIP2 algorithm
 /// Returns compressed bytes
 pub fn compress_bzip2(data: &[u8]) -> Result<Vec<u8>, Error> {
+    if data.is_empty() {
+        return Err(Error::msg("Cannot compress empty data"));
+    }
     use bzip2::Compression;
     let mut encoder = BzEncoder::new(data, Compression::best()); // Maximum compression level
     let mut compressed = Vec::new();
@@ -360,6 +363,9 @@ pub fn compress_bzip2(data: &[u8]) -> Result<Vec<u8>, Error> {
 /// Decompress BZIP2 compressed data
 /// Returns decompressed bytes
 pub fn decompress_bzip2(data: &[u8]) -> Result<Vec<u8>, Error> {
+    if data.is_empty() {
+        return Err(Error::msg("Cannot decompress empty data"));
+    }
     let mut decoder = BzDecoder::new(data);
     let mut decompressed = Vec::new();
     decoder
