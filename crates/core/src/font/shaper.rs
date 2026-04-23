@@ -29,6 +29,9 @@ impl Shaper {
     }
 
     pub fn add_utf8(&mut self, text: &str, offset: usize, len: usize) {
+        if text.is_empty() {
+            return;
+        }
         self.0.add_utf8(text, offset, len);
     }
 
