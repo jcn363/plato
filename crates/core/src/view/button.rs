@@ -22,6 +22,17 @@ pub struct Button {
 
 impl Button {
     pub fn new(rect: Rectangle, event: Event, text: String) -> Button {
+        if text.is_empty() {
+            return Button {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                event,
+                text: String::new(),
+                active: false,
+                disabled: false,
+            };
+        }
         Button {
             id: ID_FEEDER.next(),
             rect,
