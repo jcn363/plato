@@ -129,6 +129,8 @@ const HALF_PIXEL_DIAGONAL: f32 = consts::SQRT_2 / 2.0;
 /// ```
 #[inline]
 pub fn surface_area(dist: f32, angle: f32) -> f32 {
+    // Clamp angle to valid range [0, 2*PI] to prevent invalid cosine values
+    let angle = angle.clamp(0.0, 2.0 * std::f32::consts::PI);
     // Clearly {in,out}side of the shape.
     if dist.abs() > HALF_PIXEL_DIAGONAL {
         if dist.is_sign_positive() {
