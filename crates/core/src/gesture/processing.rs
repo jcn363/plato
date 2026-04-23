@@ -267,6 +267,9 @@ pub fn process_gesture_pair(ge1: GestureEvent, ge2: GestureEvent, ty: &Sender<Ev
 }
 
 pub fn interpret_segment(sp: &[Point], tap_jitter: f32) -> GestureEvent {
+    if sp.is_empty() {
+        return GestureEvent::Tap(Point::new(0, 0));
+    }
     let a = sp[0];
     let b = sp[sp.len() - 1];
     let ab = b - a;
