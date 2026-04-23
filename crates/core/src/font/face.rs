@@ -105,6 +105,9 @@ impl Font {
     }
 
     pub fn set_variations(&mut self, specs: &[&str]) {
+        if specs.is_empty() {
+            return;
+        }
         if let Ok(mm_var) = self.face.get_mm_var() {
             let axes_count = mm_var.num_axis() as usize;
             let mut coords: Vec<i32> = Vec::with_capacity(axes_count);
