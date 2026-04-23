@@ -25,6 +25,12 @@ pub struct PremixedFrontlight {
 
 impl PremixedFrontlight {
     pub fn new(intensity: f32, warmth: f32) -> Result<PremixedFrontlight, Error> {
+        if !(0.0..=100.0).contains(&intensity) {
+            return Err(Error::msg("Frontlight intensity must be between 0.0 and 100.0"));
+        }
+        if !(0.0..=10.0).contains(&warmth) {
+            return Err(Error::msg("Frontlight warmth must be between 0.0 and 10.0"));
+        }
         let white = OpenOptions::new().write(true).open(FRONTLIGHT_WHITE)?;
         let orange_path = if Path::new(FRONTLIGHT_ORANGE_C).exists() {
             FRONTLIGHT_ORANGE_C

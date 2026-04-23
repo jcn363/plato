@@ -15,6 +15,9 @@ pub struct StandardFrontlight {
 
 impl StandardFrontlight {
     pub fn new(value: f32) -> Result<StandardFrontlight, Error> {
+        if !(0.0..=100.0).contains(&value) {
+            return Err(Error::msg("Frontlight value must be between 0.0 and 100.0"));
+        }
         let interface = OpenOptions::new().write(true).open(FRONTLIGHT_INTERFACE)?;
         Ok(StandardFrontlight { value, interface })
     }
