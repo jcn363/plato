@@ -143,6 +143,9 @@ impl Font {
     }
 
     pub fn set_variations_from_name(&mut self, _name: &str) -> bool {
+        if _name.is_empty() {
+            return false;
+        }
         false
     }
 
