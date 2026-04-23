@@ -54,6 +54,9 @@ impl Library {
     /// Advanced regex search for books by title, author, or other metadata
     /// Returns books matching the regex pattern
     pub fn regex_search(&self, pattern: &str) -> Result<Vec<(String, Info)>, regex::Error> {
+        if pattern.is_empty() {
+            return Ok(Vec::new());
+        }
         let regex = Regex::new(pattern)?;
         let mut results = Vec::new();
 
