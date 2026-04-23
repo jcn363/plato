@@ -192,6 +192,7 @@ impl MockBattery {
 
     /// Set battery state for next read
     pub fn set_state(&mut self, capacity: f32, status: Status) {
+        let capacity = capacity.clamp(0.0, 100.0);
         self.capacities = vec![capacity];
         self.statuses = vec![status];
     }
