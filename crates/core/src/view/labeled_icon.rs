@@ -44,6 +44,9 @@ impl LabeledIcon {
     }
 
     pub fn update(&mut self, text: &str, rq: &mut RenderQueue) {
+        if text.is_empty() {
+            return;
+        }
         if let Some(label) = self.children[1].downcast_mut::<Label>() {
             label.update(text, rq);
         }
