@@ -75,6 +75,15 @@ impl TextShaper {
 
     /// Shape text with the current configuration
     pub fn shape_text(&mut self, text: &str, font_name: &str) -> ShapedText {
+        if text.is_empty() || font_name.is_empty() {
+            return ShapedText {
+                glyphs: Vec::new(),
+                width: 0.0,
+                height: self.config.font_size,
+                x_bearing: 0.0,
+                y_bearing: self.config.font_size * 0.8,
+            };
+        }
         // Check cache first
         let cache_key = format!("{}:{}:{}", font_name, text, self.config.language);
         if let Some(glyphs) = self.font_cache.get(&cache_key) {
