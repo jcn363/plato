@@ -1,23 +1,20 @@
 //! Helper functions for EPUB editor view.
 
-use crate::color;
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
-use crate::geom::{halves, Rectangle};
+use crate::geom::halves;
 use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::button::Button;
 use crate::view::filler::Filler;
-use crate::view::icon::Icon;
 use crate::view::input_field::InputField;
 use crate::view::keyboard::Keyboard;
 use crate::view::label::Label;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::notification::Notification;
-use crate::view::top_bar::TopBar;
-use crate::view::{Align, EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
-use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use epub_edit::EpubEditorCore;
+use crate::view::search_replace::SearchReplaceView;
+use crate::view::{Align, EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use epub_edit::SearchOptions;
 use super::state::EditorState;
 
 /// Show the chapter list view.
@@ -189,7 +186,7 @@ pub fn show_save_dialog(
 pub fn show_edit_view(
     editor: &mut super::EpubEditor,
     index: usize,
-    hub: &Hub,
+    _hub: &Hub,
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
@@ -232,6 +229,13 @@ pub fn show_edit_view(
     let input_field =
         InputField::new(textarea_rect, ViewId::EditNoteInput).text(&content, context);
     editor.children.push(Box::new(input_field) as Box<dyn View>);
+
+    let _menu_rect = rect![
+        editor.rect.min.x,
+        editor.rect.max.y - small_height - small_thickness,
+        editor.rect.max.x,
+        editor.rect.max.y - small_height
+    ];
 
     let sep_rect = rect![
         editor.rect.min.x,
@@ -278,5 +282,167 @@ pub fn show_edit_view(
     let keyboard = Keyboard::new(&mut kb_rect_mut, true, context);
     editor.children.push(Box::new(keyboard) as Box<dyn View>);
 
+    rq.add(RenderData::new(editor.id, editor.rect, UpdateMode::Gui));
+}
+
+/// Show the search/replace dialog.
+pub fn show_search_replace(
+    editor: &mut super::EpubEditor,
+    _hub: &Hub,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
+    editor.children.retain(|c| !c.is::<SearchReplaceView>());
+
+    let dpi = crate::unit::get_device_dpi();
+    let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
+    let popup_height = 160;
+    let popup_rect = rect![
+        editor.rect.min.x + 20,
+        editor.rect.min.y + small_height + 10,
+        editor.rect.max.x - 20,
+        editor.rect.min.y + small_height + 10 + popup_height
+    ];
+
+    let (search_text, replace_text) = match &editor.search_replace {
+        Some(state) => (state.search_text.clone(), state.replace_text.clone()),
+        None => (String::with_capacity(32), String::with_capacity(32)),
+    };
+
+    let search_replace_view =
+        SearchReplaceView::new(popup_rect, &search_text, &replace_text, context);
+    rq.add(RenderData::new(
+        search_replace_view.id(),
+        popup_rect,
+        UpdateMode::Gui,
+    ));
+    editor.children
+        .push(Box::new(search_replace_view) as Box<dyn View>);
+}
+
+/// Perform search in the current chapter.
+pub fn do_search(editor: &mut super::EpubEditor, rq: &mut RenderQueue, _context: &mut Context) {
+    if let Some(state) = &editor.search_replace {
+        if state.search_text.is_empty() {
+            return;
+        }
+        if let EditorState::EditingChapter { index } = editor.state {
+            let options = editor
+                .children
+                .iter()
+                .find(|c| c.is::<SearchReplaceView>())
+                .and_then(|v| v.downcast_ref::<SearchReplaceView>())
+                .map(|sr| {
+                    let (use_regex, case_sensitive, whole_word) = sr.get_search_options();
+                    SearchOptions {
+                        use_regex,
+                        case_sensitive,
+                        whole_word,
+                    }
+                })
+                .unwrap_or_default();
+            let matches = editor
+                .core
+                .search_in_chapter(index, &state.search_text, options);
+            if let Some(view) = editor
+                .children
+                .iter_mut()
+                .find(|c| c.is::<SearchReplaceView>())
+            {
+                if let Some(sr_view) = view.downcast_mut::<SearchReplaceView>() {
+                    sr_view.update_matches(matches.len(), rq);
+                }
+            }
+        }
+    }
+}
+
+/// Perform replace in the current chapter.
+pub fn do_replace_in_chapter(
+    editor: &mut super::EpubEditor,
+    hub: &Hub,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
+    if let Some(state) = &editor.search_replace {
+        if state.search_text.is_empty() {
+            return;
+        }
+        let search_text = state.search_text.clone();
+        let options = editor
+            .children
+            .iter()
+            .find(|c| c.is::<SearchReplaceView>())
+            .and_then(|v| v.downcast_ref::<SearchReplaceView>())
+            .map(|sr| {
+                let (use_regex, case_sensitive, whole_word) = sr.get_search_options();
+                SearchOptions {
+                    use_regex,
+                    case_sensitive,
+                    whole_word,
+                }
+            })
+            .unwrap_or_default();
+        if let EditorState::EditingChapter { index } = editor.state {
+            match editor.core.replace_in_chapter(
+                index,
+                &search_text,
+                &state.replace_text,
+                options,
+            ) {
+                Ok(count) => {
+                    if count > 0 {
+                        editor.modified = true;
+                        update_input_field(editor, rq, context);
+                        let notif = Notification::new(
+                            format!("Replaced {} occurrence(s)", count),
+                            hub,
+                            rq,
+                            context,
+                        );
+                        editor.children.push(Box::new(notif) as Box<dyn View>);
+                        let matches = editor.core.search_in_chapter(index, &search_text, options);
+                        if let Some(view) = editor
+                            .children
+                            .iter_mut()
+                            .find(|c| c.is::<SearchReplaceView>())
+                        {
+                            if let Some(sr_view) = view.downcast_mut::<SearchReplaceView>() {
+                                sr_view.update_matches(matches.len(), rq);
+                            }
+                        }
+                    } else {
+                        let notif =
+                            Notification::new("No matches found".to_string(), hub, rq, context);
+                        editor.children.push(Box::new(notif) as Box<dyn View>);
+                    }
+                }
+                Err(e) => {
+                    let notif =
+                        Notification::new(format!("Error replacing: {}", e), hub, rq, context);
+                    editor.children.push(Box::new(notif) as Box<dyn View>);
+                }
+            }
+        }
+    }
+}
+
+/// Update the input field with current chapter content.
+pub fn update_input_field(editor: &mut super::EpubEditor, rq: &mut RenderQueue, context: &mut Context) {
+    if let EditorState::EditingChapter { index } = editor.state {
+        if index < editor.core.chapters.len() {
+            let content = editor.core.chapters[index].content.clone();
+            if let Some(view) = editor.children.iter_mut().find(|c| c.is::<InputField>()) {
+                if let Some(input) = view.downcast_mut::<InputField>() {
+                    input.set_text(&content, true, rq, context);
+                }
+            }
+        }
+    }
+}
+
+/// Close the search/replace dialog.
+pub fn close_search_replace(editor: &mut super::EpubEditor, rq: &mut RenderQueue) {
+    editor.children.retain(|c| !c.is::<SearchReplaceView>());
     rq.add(RenderData::new(editor.id, editor.rect, UpdateMode::Gui));
 }

@@ -13,7 +13,6 @@ use crate::log_info;
 use anyhow::{format_err, Error};
 use chrono::{DateTime, Utc};
 use lopdf::{Dictionary, Document, Object};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 

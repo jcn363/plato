@@ -8,33 +8,28 @@ mod state;
 mod helpers;
 
 pub use state::{EditorState, SearchReplaceState};
-use helpers::{show_chapter_list, show_metadata_edit_view, show_save_dialog, show_edit_view};
+use helpers::{show_chapter_list, show_metadata_edit_view, show_save_dialog, show_edit_view, show_search_replace, do_search, do_replace_in_chapter, update_input_field, close_search_replace};
 
 use std::path::Path;
 
 use crate::color;
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
-use crate::geom::{halves, Rectangle};
+use crate::geom::Rectangle;
 use crate::impl_view_boilerplate;
 use crate::log_error;
 use crate::theme;
 use crate::unit::scale_by_dpi;
-use crate::view::button::Button;
 use crate::view::common::toggle_main_menu;
 use crate::view::filler::Filler;
 use crate::view::icon::Icon;
 use crate::view::input_field::InputField;
-use crate::view::keyboard::Keyboard;
-use crate::view::label::Label;
-use crate::view::menu::{Menu, MenuKind};
 use crate::view::notification::Notification;
 use crate::view::search_replace::SearchReplaceView;
 use crate::view::top_bar::TopBar;
 use crate::view::SMALL_BAR_HEIGHT;
-use crate::view::THICKNESS_MEDIUM;
 use crate::view::{
-    Align, Bus, EntryId, EntryKind, Event, Hub, Id, RenderData, RenderQueue, View, ViewId,
+    Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, View, ViewId,
     ID_FEEDER,
 };
 use anyhow::Error;
@@ -191,156 +186,6 @@ impl EpubEditor {
             }
             _ => false,
         }
-    }
-
-    fn show_search_replace(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        self.children.retain(|c| !c.is::<SearchReplaceView>());
-
-        let dpi = crate::unit::get_device_dpi();
-        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
-        let popup_height = 160;
-        let popup_rect = rect![
-            self.rect.min.x + 20,
-            self.rect.min.y + small_height + 10,
-            self.rect.max.x - 20,
-            self.rect.min.y + small_height + 10 + popup_height
-        ];
-
-        let (search_text, replace_text) = match &self.search_replace {
-            Some(state) => (state.search_text.clone(), state.replace_text.clone()),
-            None => (String::with_capacity(32), String::with_capacity(32)),
-        };
-
-        let search_replace_view =
-            SearchReplaceView::new(popup_rect, &search_text, &replace_text, context);
-        rq.add(RenderData::new(
-            search_replace_view.id(),
-            popup_rect,
-            UpdateMode::Gui,
-        ));
-        self.children
-            .push(Box::new(search_replace_view) as Box<dyn View>);
-        hub.send(Event::Focus(Some(ViewId::EpubEditorSearchInput)))
-            .ok();
-    }
-
-    fn do_search(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
-        if let Some(state) = &self.search_replace {
-            if state.search_text.is_empty() {
-                return;
-            }
-            if let EditorState::EditingChapter { index } = self.state {
-                let options = self
-                    .children
-                    .iter()
-                    .find(|c| c.is::<SearchReplaceView>())
-                    .and_then(|v| v.downcast_ref::<SearchReplaceView>())
-                    .map(|sr| {
-                        let (use_regex, case_sensitive, whole_word) = sr.get_search_options();
-                        epub_edit::SearchOptions {
-                            use_regex,
-                            case_sensitive,
-                            whole_word,
-                        }
-                    })
-                    .unwrap_or_default();
-                let matches = self
-                    .core
-                    .search_in_chapter(index, &state.search_text, options);
-                if let Some(view) = self
-                    .children
-                    .iter_mut()
-                    .find(|c| c.is::<SearchReplaceView>())
-                {
-                    if let Some(sr_view) = view.downcast_mut::<SearchReplaceView>() {
-                        sr_view.update_matches(matches.len(), rq);
-                    }
-                }
-            }
-        }
-    }
-
-    fn do_replace_in_chapter(&mut self, hub: &Hub, rq: &mut RenderQueue, context: &mut Context) {
-        if let Some(state) = &self.search_replace {
-            if state.search_text.is_empty() {
-                return;
-            }
-            let search_text = state.search_text.clone();
-            let options = self
-                .children
-                .iter()
-                .find(|c| c.is::<SearchReplaceView>())
-                .and_then(|v| v.downcast_ref::<SearchReplaceView>())
-                .map(|sr| {
-                    let (use_regex, case_sensitive, whole_word) = sr.get_search_options();
-                    epub_edit::SearchOptions {
-                        use_regex,
-                        case_sensitive,
-                        whole_word,
-                    }
-                })
-                .unwrap_or_default();
-            if let EditorState::EditingChapter { index } = self.state {
-                let _old_content = self.core.chapters[index].content.clone();
-                match self.core.replace_in_chapter(
-                    index,
-                    &search_text,
-                    &state.replace_text,
-                    options,
-                ) {
-                    Ok(count) => {
-                        if count > 0 {
-                            self.modified = true;
-                            self.update_input_field(rq, context);
-                            let notif = Notification::new(
-                                format!("Replaced {} occurrence(s)", count),
-                                hub,
-                                rq,
-                                context,
-                            );
-                            self.children.push(Box::new(notif) as Box<dyn View>);
-                            let matches = self.core.search_in_chapter(index, &search_text, options);
-                            if let Some(view) = self
-                                .children
-                                .iter_mut()
-                                .find(|c| c.is::<SearchReplaceView>())
-                            {
-                                if let Some(sr_view) = view.downcast_mut::<SearchReplaceView>() {
-                                    sr_view.update_matches(matches.len(), rq);
-                                }
-                            }
-                        } else {
-                            let notif =
-                                Notification::new("No matches found".to_string(), hub, rq, context);
-                            self.children.push(Box::new(notif) as Box<dyn View>);
-                        }
-                    }
-                    Err(e) => {
-                        let notif =
-                            Notification::new(format!("Error replacing: {}", e), hub, rq, context);
-                        self.children.push(Box::new(notif) as Box<dyn View>);
-                    }
-                }
-            }
-        }
-    }
-
-    fn update_input_field(&mut self, rq: &mut RenderQueue, context: &mut Context) {
-        if let EditorState::EditingChapter { index } = self.state {
-            if index < self.core.chapters.len() {
-                let content = self.core.chapters[index].content.clone();
-                if let Some(view) = self.children.iter_mut().find(|c| c.is::<InputField>()) {
-                    if let Some(input) = view.downcast_mut::<InputField>() {
-                        input.set_text(&content, true, rq, context);
-                    }
-                }
-            }
-        }
-    }
-
-    fn close_search_replace(&mut self, rq: &mut RenderQueue) {
-        self.children.retain(|c| !c.is::<SearchReplaceView>());
-        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 }
 
@@ -553,7 +398,7 @@ impl View for EpubEditor {
                     search_text: String::with_capacity(32),
                     replace_text: String::with_capacity(32),
                 });
-                self.show_search_replace(hub, rq, context);
+                show_search_replace(self, hub, rq, context);
                 true
             }
             Event::SearchReplace => {
@@ -565,7 +410,7 @@ impl View for EpubEditor {
                         }
                     }
                 }
-                self.do_search(rq, context);
+                do_search(self, rq, context);
                 true
             }
             Event::Select(EntryId::ReplaceInChapter) => {
@@ -577,7 +422,7 @@ impl View for EpubEditor {
                         }
                     }
                 }
-                self.do_replace_in_chapter(hub, rq, context);
+                do_replace_in_chapter(self, hub, rq, context);
                 true
             }
             Event::Select(EntryId::ReplaceInDocument) => {
@@ -626,7 +471,7 @@ impl View for EpubEditor {
                                 );
                                 self.children.push(Box::new(notif) as Box<dyn View>);
                                 if let EditorState::EditingChapter { index: _ } = self.state {
-                                    self.update_input_field(rq, context);
+                                    update_input_field(self, rq, context);
                                 }
                             } else {
                                 let notif = Notification::new(
@@ -653,7 +498,7 @@ impl View for EpubEditor {
             }
             Event::Select(EntryId::CloseSearchReplace) => {
                 self.search_replace = None;
-                self.close_search_replace(rq);
+                close_search_replace(self, rq);
                 true
             }
             Event::Select(EntryId::ValidateContent) => {
@@ -1008,7 +853,7 @@ impl View for EpubEditor {
             Event::Close(ViewId::EpubEditor) => {
                 if self.search_replace.is_some() {
                     self.search_replace = None;
-                    self.close_search_replace(rq);
+                    close_search_replace(self, rq);
                     true
                 } else {
                     false
@@ -1018,7 +863,7 @@ impl View for EpubEditor {
                 if let Some(state) = self.search_replace.as_mut() {
                     state.search_text = text.clone();
                 }
-                self.do_search(rq, context);
+                do_search(self, rq, context);
                 true
             }
             Event::Submit(ViewId::EpubEditorReplaceInput, text) => {
