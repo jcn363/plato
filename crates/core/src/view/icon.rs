@@ -96,6 +96,19 @@ pub struct Icon {
 
 impl Icon {
     pub fn new(name: &str, rect: Rectangle, event: Event) -> Icon {
+        if name.is_empty() {
+            return Icon {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                name: String::new(),
+                background: background(theme::is_dark_mode()),
+                align: Align::Center,
+                corners: None,
+                event,
+                active: false,
+            };
+        }
         Icon {
             id: ID_FEEDER.next(),
             rect,
