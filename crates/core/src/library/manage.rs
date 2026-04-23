@@ -85,6 +85,9 @@ impl Library {
     }
 
     pub fn remove_batch(&mut self, paths: &[PathBuf]) -> Result<(), Error> {
+        if paths.is_empty() {
+            return Ok(());
+        }
         for path in paths {
             self.remove(path)?;
         }
