@@ -19,6 +19,14 @@ type DocumentHandle = Arc<Mutex<Box<dyn crate::document::Document>>>;
 /// Result type for document opening operations
 type DocumentResult = (DocumentHandle, usize, bool);
 
+/// Extract page count and reflowable status from a document handle
+fn extract_doc_metadata(doc: &DocumentHandle) -> (usize, bool) {
+    let doc_guard = doc.lock().expect("doc lock");
+    let pages_count = doc_guard.pages_count();
+    let reflowable = doc_guard.is_reflowable();
+    (pages_count, reflowable)
+}
+
 pub(crate) fn open_document(info: &Info) -> Option<DocumentResult> {
     let doc = match crate::document::open(&info.file.path) {
         Some(d) => d,
@@ -60,8 +68,7 @@ pub(crate) fn create_toolbar(
 pub(crate) fn open_html_document(html: &str) -> Result<DocumentResult, Error> {
     let doc = crate::document::open_html(html).context("Failed to open HTML document")?;
     let doc = Arc::new(Mutex::new(doc));
-    let pages_count = (*doc.lock().expect("doc lock")).pages_count();
-    let reflowable = (*doc.lock().expect("doc lock")).is_reflowable();
+    let (pages_count, reflowable) = extract_doc_metadata(&doc);
     Ok((doc, pages_count, reflowable))
 }
 
