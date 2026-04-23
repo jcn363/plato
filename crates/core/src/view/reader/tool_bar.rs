@@ -61,6 +61,9 @@ impl ToolBar {
 
     /// Toolbar update method for font family setting
     pub fn update_font_family(&mut self, font_family: String, rq: &mut RenderQueue) {
+        if font_family.is_empty() {
+            return;
+        }
         update_font_family(&mut self.children, font_family, rq);
     }
 
