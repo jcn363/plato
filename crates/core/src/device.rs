@@ -115,7 +115,7 @@ pub struct KoboDevice {
     pub dpi: u16,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum FrontlightKind {
     Standard,
