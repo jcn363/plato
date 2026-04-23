@@ -23,6 +23,9 @@ pub struct Face {
 impl Face {
     /// Load a font face from raw bytes.
     pub fn from_memory(data: Vec<u8>, index: u32) -> Result<Self> {
+        if data.is_empty() {
+            bail!("Font data cannot be empty");
+        }
         let data_arc = Arc::new(data);
         if data_arc.len() < 4 {
             bail!("Font data too small");
