@@ -8,10 +8,12 @@ use std::sync::mpsc;
 use plato_core::anyhow::{format_err, Context as ResultExt, Error};
 use plato_core::battery::{Battery, KoboBattery};
 use plato_core::context::Context;
-use plato_core::device::{CURRENT_DEVICE, FrontlightKind};
+use plato_core::device::{FrontlightKind, CURRENT_DEVICE};
 use plato_core::font::Fonts;
 use plato_core::framebuffer::Framebuffer;
-use plato_core::frontlight::{Frontlight, NaturalFrontlight, PremixedFrontlight, StandardFrontlight};
+use plato_core::frontlight::{
+    Frontlight, NaturalFrontlight, PremixedFrontlight, StandardFrontlight,
+};
 use plato_core::helpers::load_toml;
 use plato_core::lightsensor::{KoboLightSensor, LightSensor};
 use plato_core::plugin::PluginSystem;
@@ -23,14 +25,14 @@ use plato_core::view::common::transfer_notifications;
 use plato_core::view::intermission::Intermission;
 use plato_core::view::menu::Menu;
 use plato_core::view::reader::Reader;
-use plato_core::view::{Event, RenderQueue, UpdateData, View};
 use plato_core::view::wait_for_all;
+use plato_core::view::{Event, RenderQueue, UpdateData, View};
 use plato_core::{log_error, log_warn};
 
 use crate::constants::RTC_DEVICE;
 
 /// Application exit status.
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum ExitStatus {
     /// Normal quit.
     Quit,
@@ -165,7 +167,10 @@ pub fn power_off(
     );
     wait_for_all(updating, context);
     interm.render(context.fb.as_mut(), *interm.rect(), &mut context.fonts);
-    context.fb.update(interm.rect(), plato_core::framebuffer::UpdateMode::Full).ok();
+    context
+        .fb
+        .update(interm.rect(), plato_core::framebuffer::UpdateMode::Full)
+        .ok();
 }
 
 /// Enable or disable WiFi.
@@ -178,7 +183,9 @@ pub fn set_wifi(enable: bool, context: &mut Context) {
         Command::new("scripts/wifi-enable.sh").status().ok();
     } else {
         Command::new("scripts/wifi-disable.sh").status().ok();
-        context.flags.remove(plato_core::context::DeviceFlags::ONLINE);
+        context
+            .flags
+            .remove(plato_core::context::DeviceFlags::ONLINE);
     }
 }
 

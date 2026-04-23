@@ -3,12 +3,11 @@
 //! Tests the complete rendering pipeline:
 //! PDFPurr rendering -> RGBA output -> E-ink optimization -> Display
 
-use crate::document::pdfpurr::{FzPoint, FzRect, PdfPurrPixmap, PixmapFormat};
+use rustc_hash::FxHashSet;
 use crate::eink::{
     select_waveform, ContentType, DamageTracker, DitheringMode, FrameBuffer, GrayscaleConverter,
     UpdateType, WaveformMode,
 };
-use crate::geom::Rectangle;
 
 /// Simulates the complete rendering pipeline
 fn simulate_render_pipeline(width: u32, height: u32, content_type: ContentType) -> Vec<u8> {
@@ -59,7 +58,7 @@ fn test_text_document_pipeline() {
     assert_eq!(grayscale.len(), (width * height) as usize);
 
     // Verify we have a mix of values (not all same)
-    let unique_values: std::collections::HashSet<u8> = grayscale.iter().cloned().collect();
+    let unique_values: FxHashSet<u8> = grayscale.iter().cloned().collect();
     assert!(
         unique_values.len() > 1,
         "Grayscale should have variety from dithering"
@@ -86,7 +85,7 @@ fn test_image_document_pipeline() {
     for y in 0..height {
         for x in 0..width {
             let idx = ((y * width + x) * 4) as usize;
-            let gray = ((x * 255 / width) as u8).min(255);
+            let gray = (x * 255 / width) as u8;
             rgba_data[idx] = gray;
             rgba_data[idx + 1] = gray;
             rgba_data[idx + 2] = gray;
@@ -100,7 +99,7 @@ fn test_image_document_pipeline() {
     assert_eq!(grayscale.len(), (width * height) as usize);
 
     // Gradient should have many different values
-    let unique_values: std::collections::HashSet<u8> = grayscale.iter().cloned().collect();
+    let unique_values: FxHashSet<u8> = grayscale.iter().cloned().collect();
     assert!(
         unique_values.len() >= 8,
         "Gradient should have multiple gray levels"

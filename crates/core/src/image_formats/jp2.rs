@@ -12,14 +12,6 @@
 //! ## Dependencies
 //!
 //! - `openjp2` - Rust bindings for OpenJPEG library
-//!
-//! ## Usage
-//!
-//! ```rust
-//! use crate::image::jp2::load_jp2;
-//!
-//! let image = load_jp2(&path)?;
-//! ```
 
 use anyhow::{Context, Error};
 use std::path::Path;

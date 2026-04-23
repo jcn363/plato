@@ -4,12 +4,12 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::Duration;
 
-use plato_core::view::{Event, RenderQueue, View};
-use plato_core::view::intermission::Intermission;
 use plato_core::context::Context;
 use plato_core::framebuffer::UpdateMode;
 use plato_core::view::common::locate;
+use plato_core::view::intermission::Intermission;
 use plato_core::view::RenderData;
+use plato_core::view::{Event, RenderQueue, View};
 
 /// A background task with a completion channel.
 pub struct Task {
@@ -67,7 +67,9 @@ pub fn resume(
             context.frontlight.set_intensity(levels.intensity);
         }
         if context.settings.wifi {
-            std::process::Command::new("scripts/wifi-enable.sh").status().ok();
+            std::process::Command::new("scripts/wifi-enable.sh")
+                .status()
+                .ok();
         }
     }
     if id == TaskId::Suspend || id == TaskId::PrepareSuspend {

@@ -1,5 +1,6 @@
 //! Helper functions for EPUB editor view.
 
+use super::state::EditorState;
 use crate::context::Context;
 use crate::framebuffer::UpdateMode;
 use crate::geom::halves;
@@ -13,9 +14,11 @@ use crate::view::label::Label;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::notification::Notification;
 use crate::view::search_replace::SearchReplaceView;
-use crate::view::{Align, EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId, SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
+use crate::view::{
+    Align, EntryId, EntryKind, Event, Hub, RenderData, RenderQueue, View, ViewId, SMALL_BAR_HEIGHT,
+    THICKNESS_MEDIUM,
+};
 use epub_edit::SearchOptions;
-use super::state::EditorState;
 
 /// Show the chapter list view.
 pub fn show_chapter_list(
@@ -25,7 +28,8 @@ pub fn show_chapter_list(
     context: &mut Context,
 ) {
     editor.state = EditorState::ChapterList;
-    editor.children
+    editor
+        .children
         .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
 
     let entries: Vec<EntryKind> = editor
@@ -70,7 +74,8 @@ pub fn show_metadata_edit_view(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
-    editor.children
+    editor
+        .children
         .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
 
     let dpi = crate::unit::get_device_dpi();
@@ -154,7 +159,8 @@ pub fn show_save_dialog(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
-    editor.children
+    editor
+        .children
         .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
 
     let entries = vec![
@@ -195,7 +201,8 @@ pub fn show_edit_view(
     }
 
     editor.state = EditorState::EditingChapter { index };
-    editor.children
+    editor
+        .children
         .retain(|c| !c.is::<Menu>() && !c.is::<Notification>());
 
     let dpi = crate::unit::get_device_dpi();
@@ -226,8 +233,7 @@ pub fn show_edit_view(
         editor.rect.max.y - small_height - 60
     ];
 
-    let input_field =
-        InputField::new(textarea_rect, ViewId::EditNoteInput).text(&content, context);
+    let input_field = InputField::new(textarea_rect, ViewId::EditNoteInput).text(&content, context);
     editor.children.push(Box::new(input_field) as Box<dyn View>);
 
     let _menu_rect = rect![
@@ -316,7 +322,8 @@ pub fn show_search_replace(
         popup_rect,
         UpdateMode::Gui,
     ));
-    editor.children
+    editor
+        .children
         .push(Box::new(search_replace_view) as Box<dyn View>);
 }
 
@@ -384,12 +391,10 @@ pub fn do_replace_in_chapter(
             })
             .unwrap_or_default();
         if let EditorState::EditingChapter { index } = editor.state {
-            match editor.core.replace_in_chapter(
-                index,
-                &search_text,
-                &state.replace_text,
-                options,
-            ) {
+            match editor
+                .core
+                .replace_in_chapter(index, &search_text, &state.replace_text, options)
+            {
                 Ok(count) => {
                     if count > 0 {
                         editor.modified = true;
@@ -428,7 +433,11 @@ pub fn do_replace_in_chapter(
 }
 
 /// Update the input field with current chapter content.
-pub fn update_input_field(editor: &mut super::EpubEditor, rq: &mut RenderQueue, context: &mut Context) {
+pub fn update_input_field(
+    editor: &mut super::EpubEditor,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
     if let EditorState::EditingChapter { index } = editor.state {
         if index < editor.core.chapters.len() {
             let content = editor.core.chapters[index].content.clone();

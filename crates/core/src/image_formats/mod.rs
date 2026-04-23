@@ -14,16 +14,6 @@
 //! - **jbig2**: JBIG2 format support using hayro-jbig2
 //!   - JBIG2 decoding for PDF image compression
 //!   - Support for bi-level image decompression
-//!
-//! ## Usage
-//!
-//! ```rust
-//! use crate::image::jp2::load_jp2;
-//! use crate::image::jbig2::decode_jbig2;
-//!
-//! let jp2_image = load_jp2(&path)?;
-//! let jbig2_image = decode_jbig2(&data)?;
-//! ```
 
 pub mod jbig2;
 pub mod jp2;

@@ -1,3 +1,5 @@
+//! Plato - A document reader for Kobo e-readers.
+
 #![allow(clippy::all)]
 #![warn(missing_docs)]
 

@@ -216,20 +216,18 @@ fn test_escape_xml() {
 #[test]
 fn test_annotation_manager_sorting() {
     // Note: This test requires a valid PDF file, so we'll test the sorting logic separately
-    let mut annotations = vec![
-        PdfAnnotation::new(2, AnnotationSubtype::Text, "Page 2".to_string()),
+    let mut annotations = [PdfAnnotation::new(2, AnnotationSubtype::Text, "Page 2".to_string()),
         PdfAnnotation::new(0, AnnotationSubtype::Highlight, "Page 0".to_string()),
-        PdfAnnotation::new(1, AnnotationSubtype::Underline, "Page 1".to_string()),
-    ];
+        PdfAnnotation::new(1, AnnotationSubtype::Underline, "Page 1".to_string())];
 
     // Sort by page ascending
-    annotations.sort_by(|a, b| a.page.cmp(&b.page));
+    annotations.sort_by_key(|a| a.page);
     assert_eq!(annotations[0].page, 0);
     assert_eq!(annotations[1].page, 1);
     assert_eq!(annotations[2].page, 2);
 
     // Sort by page descending
-    annotations.sort_by(|a, b| b.page.cmp(&a.page));
+    annotations.sort_by_key(|b| std::cmp::Reverse(b.page));
     assert_eq!(annotations[0].page, 2);
     assert_eq!(annotations[1].page, 1);
     assert_eq!(annotations[2].page, 0);

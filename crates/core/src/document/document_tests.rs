@@ -3,7 +3,6 @@
 //! This file contains tests for the input validation added to document public APIs.
 
 use super::*;
-use std::path::Path;
 
 #[test]
 fn test_guess_kind_empty_path() {

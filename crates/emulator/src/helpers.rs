@@ -1,21 +1,21 @@
 //! Helper functions for the Plato emulator.
 
 use plato_core::anyhow::Error;
-use plato_core::framebuffer::Framebuffer;
-use plato_core::context::Context;
 use plato_core::battery::{Battery, FakeBattery};
-use plato_core::frontlight::{Frontlight, LightLevels};
-use plato_core::lightsensor::LightSensor;
+use plato_core::context::Context;
 use plato_core::font::Fonts;
-use plato_core::library::Library;
-use plato_core::settings::Settings;
-use plato_core::plugin::PluginSystem;
-use plato_core::sync::BackgroundSync;
-use plato_core::helpers::{load_toml};
-use plato_core::settings::SETTINGS_PATH;
-use plato_core::pt;
-use sdl2::event::Event as SdlEvent;
+use plato_core::framebuffer::Framebuffer;
+use plato_core::frontlight::{Frontlight, LightLevels};
+use plato_core::helpers::load_toml;
 use plato_core::input::{DeviceEvent, FingerStatus};
+use plato_core::library::Library;
+use plato_core::lightsensor::LightSensor;
+use plato_core::plugin::PluginSystem;
+use plato_core::pt;
+use plato_core::settings::Settings;
+use plato_core::settings::SETTINGS_PATH;
+use plato_core::sync::BackgroundSync;
+use sdl2::event::Event as SdlEvent;
 
 /// Build the application context for the emulator.
 pub fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {

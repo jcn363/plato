@@ -186,7 +186,8 @@ impl RedactionEditor {
 
         // Remove redaction annotations from all pages
         for page_id in page_ids {
-            let page_dict = doc.get_object_mut(*page_id)
+            let page_dict = doc
+                .get_object_mut(*page_id)
                 .map_err(|e| format_err!("Failed to get page object: {}", e))?
                 .as_dict_mut()
                 .map_err(|e| format_err!("Page object is not a dictionary: {}", e))?;

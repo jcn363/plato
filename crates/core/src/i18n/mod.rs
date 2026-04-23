@@ -1,6 +1,6 @@
 use anyhow::{Context, Error};
+use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::sync::{LazyLock, RwLock};
@@ -104,7 +104,7 @@ pub struct PluralForms {
 pub struct TranslationData {
     pub language: String,
     pub region: Option<String>,
-    pub translations: HashMap<String, TranslationEntry>,
+    pub translations: FxHashMap<String, TranslationEntry>,
     pub metadata: TranslationMetadata,
 }
 
@@ -116,13 +116,13 @@ pub struct TranslationMetadata {
     pub completeness: f64,
 }
 
-pub type TranslationMap = HashMap<String, TranslationEntry>;
+pub type TranslationMap = FxHashMap<String, TranslationEntry>;
 
 pub static CURRENT_LANGUAGE: LazyLock<RwLock<Language>> =
     LazyLock::new(|| RwLock::new(Language::English));
 
-pub static TRANSLATIONS: LazyLock<RwLock<HashMap<String, TranslationData>>> =
-    LazyLock::new(|| RwLock::new(HashMap::new()));
+pub static TRANSLATIONS: LazyLock<RwLock<FxHashMap<String, TranslationData>>> =
+    LazyLock::new(|| RwLock::new(FxHashMap::default()));
 
 pub fn set_language(lang: Language) {
     *CURRENT_LANGUAGE

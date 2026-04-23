@@ -13,14 +13,6 @@
 //! ## Dependencies
 //!
 //! - `hayro-jbig2` - Rust bindings for the JBIG2 decoder
-//!
-//! ## Usage
-//!
-//! ```rust
-//! use crate::image::jbig2::decode_jbig2;
-//!
-//! let image = decode_jbig2(&data)?;
-//! ```
 
 use anyhow::Error;
 

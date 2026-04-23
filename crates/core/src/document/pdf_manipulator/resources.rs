@@ -84,8 +84,11 @@ impl ResourceExtractor {
             return Ok(Vec::new());
         }
 
-        let page_id = page_ids.get(page_index).expect("page index out of bounds after check");
-        let page_dict = doc.get_object(**page_id)
+        let page_id = page_ids
+            .get(page_index)
+            .expect("page index out of bounds after check");
+        let page_dict = doc
+            .get_object(**page_id)
             .expect("page object not found")
             .as_dict()
             .expect("page object is not a dictionary");
@@ -103,7 +106,8 @@ impl ResourceExtractor {
                             if let Ok(dict) = obj_ref.as_dict() {
                                 // Check if it's an image
                                 if dict.get(b"Subtype").is_ok() {
-                                    let subtype = dict.get(b"Subtype").expect("subtype missing after check");
+                                    let subtype =
+                                        dict.get(b"Subtype").expect("subtype missing after check");
                                     if let Ok(name_bytes) = subtype.as_name() {
                                         if name_bytes == b"Image" {
                                             // Extract image dimensions if available
@@ -179,8 +183,11 @@ impl ResourceExtractor {
             return Ok(0);
         }
 
-        let page_id = page_ids.get(page_index).expect("page index out of bounds after check");
-        let page_dict = doc.get_object(**page_id)
+        let page_id = page_ids
+            .get(page_index)
+            .expect("page index out of bounds after check");
+        let page_dict = doc
+            .get_object(**page_id)
             .expect("page object not found")
             .as_dict()
             .expect("page object is not a dictionary");
@@ -321,7 +328,8 @@ impl ResourceExtractor {
 
         // Iterate through all pages
         for (page_num, page_id) in pages_map {
-            let page_dict = doc.get_object(page_id)
+            let page_dict = doc
+                .get_object(page_id)
                 .expect("page object not found")
                 .as_dict()
                 .expect("page object is not a dictionary");

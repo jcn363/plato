@@ -1,48 +1,40 @@
-use crate::constants::{APP_NAME, FB_DEVICE, AUTO_SUSPEND_REFRESH_INTERVAL, BATTERY_REFRESH_INTERVAL, CLOCK_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY, SUSPEND_WAIT_DELAY, TOUCH_INPUTS, BUTTON_INPUTS, POWER_INPUTS};
-use crate::event::{EventContext, handle_device_event, handle_launch};
-use crate::helpers::{build_context, goto_view, power_off, set_wifi, HistoryItem, ExitStatus};
-use crate::task::{Task, TaskId, schedule_task, resume};
+use crate::constants::{
+    APP_NAME, AUTO_SUSPEND_REFRESH_INTERVAL, BATTERY_REFRESH_INTERVAL, BUTTON_INPUTS,
+    CLOCK_REFRESH_INTERVAL, FB_DEVICE, POWER_INPUTS, PREPARE_SUSPEND_WAIT_DELAY,
+    SUSPEND_WAIT_DELAY, TOUCH_INPUTS,
+};
+use crate::event::{handle_device_event, handle_launch, EventContext};
+use crate::helpers::{build_context, goto_view, power_off, set_wifi, ExitStatus, HistoryItem};
+use crate::task::{schedule_task, Task, TaskId};
 
 use plato_core::anyhow::{Context as ResultExt, Error};
 use plato_core::chrono::Local;
 use plato_core::context::DeviceFlags;
-use plato_core::device::{Orientation, CURRENT_DEVICE};
+use plato_core::device::CURRENT_DEVICE;
 use plato_core::document::sys_info_as_html;
 use plato_core::framebuffer::{Framebuffer, KoboFramebuffer1, KoboFramebuffer2, UpdateMode};
 use plato_core::geom::{DiagDir, Rectangle, Region};
 use plato_core::gesture::{gesture_events, GestureEvent};
-use plato_core::helpers::{load_toml, save_toml};
-use plato_core::input::{button_scheme_event, device_events, display_rotate_event, raw_events, usb_events, InputEvent};
+use plato_core::helpers::save_toml;
 use plato_core::input::{
-    ButtonCode, ButtonStatus, DeviceEvent, PowerSource, VAL_PRESS, VAL_RELEASE,
+    button_scheme_event, device_events, display_rotate_event, raw_events, usb_events,
 };
-use plato_core::settings::{
-    ButtonScheme, IntermKind, RotationLock, Settings, ThemeMode, SETTINGS_PATH,
-};
+use plato_core::input::{ButtonCode, VAL_PRESS, VAL_RELEASE};
+use plato_core::log_error;
+use plato_core::settings::{ButtonScheme, IntermKind, ThemeMode, SETTINGS_PATH};
 use plato_core::theme;
-use plato_core::view::calculator::Calculator;
-use plato_core::view::common::{close_view, locate, locate_by_id};
-use plato_core::view::common::{toggle_input_history_menu, toggle_keyboard_layout_menu};
-use plato_core::view::cover_editor::CoverEditorView;
+use plato_core::view::common::{
+    close_view, locate_by_id, toggle_input_history_menu, toggle_keyboard_layout_menu,
+};
 use plato_core::view::dialog::Dialog;
-use plato_core::view::dictionary::Dictionary;
-use plato_core::view::epub_editor::EpubEditor;
 use plato_core::view::frontlight::FrontlightWindow;
 use plato_core::view::home::Home;
 use plato_core::view::intermission::Intermission;
 use plato_core::view::menu::{Menu, MenuKind};
 use plato_core::view::notification::Notification;
-use plato_core::view::pdf_manipulator::PdfManipulatorView;
 use plato_core::view::reader::Reader;
-use plato_core::view::rotation_values::RotationValues;
-use plato_core::view::sketch::Sketch;
-use plato_core::view::statistics::StatisticsView;
-use plato_core::view::touch_events::TouchEvents;
 use plato_core::view::{handle_event, process_render_queue, wait_for_all};
-use plato_core::view::{
-    AppCmd, EntryId, EntryKind, Event, RenderData, RenderQueue, View, ViewId,
-};
-use plato_core::log_error;
+use plato_core::view::{EntryId, EntryKind, Event, RenderData, RenderQueue, View, ViewId};
 use std::collections::VecDeque;
 use std::env;
 use std::fs::File;
@@ -53,8 +45,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 pub fn run() -> Result<(), Error> {
-    let mut inactive_since = Instant::now();
-    let mut exit_status = ExitStatus::Quit;
+    let inactive_since = Instant::now();
+    let exit_status = ExitStatus::Quit;
 
     let mut fb: Box<dyn Framebuffer> = if CURRENT_DEVICE.mark() != 8 {
         Box::new(KoboFramebuffer1::new(FB_DEVICE).context("can't create framebuffer")?)
@@ -205,15 +197,8 @@ pub fn run() -> Result<(), Error> {
         log_error!("Failed to trigger startup plugins: {}", e);
     }
 
-    let mut event_ctx = EventContext::new(
-        history,
-        tasks,
-        updating,
-        inactive_since,
-        exit_status,
-        raw_sender,
-        current_dir,
-    );
+    let mut event_ctx =
+        EventContext::new(tasks, inactive_since, exit_status, raw_sender, current_dir);
 
     while let Ok(evt) = rx.recv() {
         match evt {
@@ -226,6 +211,8 @@ pub fn run() -> Result<(), Error> {
                     &mut rq,
                     &mut context,
                     &mut event_ctx,
+                    &mut history,
+                    &mut updating,
                     &evt,
                 ) {
                     continue;
@@ -276,7 +263,8 @@ pub fn run() -> Result<(), Error> {
                     &tx,
                     &mut event_ctx.tasks,
                 );
-                if event_ctx.tasks
+                if event_ctx
+                    .tasks
                     .iter()
                     .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
                 {
@@ -284,7 +272,7 @@ pub fn run() -> Result<(), Error> {
                 }
                 if let Ok(v) = context.battery.capacity().map(|v| v[0]) {
                     if v < context.settings.battery.power_off {
-                        power_off(view.as_mut(), &mut event_ctx.history, &mut event_ctx.updating, &mut context);
+                        power_off(view.as_mut(), &mut history, &mut updating, &mut context);
                         event_ctx.exit_status = ExitStatus::PowerOff;
                         break;
                     } else if v < context.settings.battery.warn {
@@ -320,8 +308,10 @@ pub fn run() -> Result<(), Error> {
                 }
             }
             Event::PrepareSuspend => {
-                event_ctx.tasks.retain(|task| task.id != TaskId::PrepareSuspend);
-                wait_for_all(&mut event_ctx.updating, &mut context);
+                event_ctx
+                    .tasks
+                    .retain(|task| task.id != TaskId::PrepareSuspend);
+                wait_for_all(&mut updating, &mut context);
                 let path = Path::new(SETTINGS_PATH);
                 save_toml(&context.settings, path)
                     .map_err(|e| log_error!("Can't save settings: {:#}.", e))
@@ -387,7 +377,7 @@ pub fn run() -> Result<(), Error> {
                             .ok()
                     }) {
                         if fired {
-                            power_off(view.as_mut(), &mut event_ctx.history, &mut event_ctx.updating, &mut context);
+                            power_off(view.as_mut(), &mut history, &mut updating, &mut context);
                             event_ctx.exit_status = ExitStatus::PowerOff;
                             break;
                         } else {
@@ -407,13 +397,16 @@ pub fn run() -> Result<(), Error> {
 
                 event_ctx.tasks.clear();
                 view.handle_event(&Event::Back, &tx, &mut bus, &mut rq, &mut context);
-                while let Some(mut item) = event_ctx.history.pop() {
+                while let Some(mut item) = history.pop() {
                     item.view
                         .handle_event(&Event::Back, &tx, &mut bus, &mut rq, &mut context);
                     if item.rotation != context.display.rotation {
-                        wait_for_all(&mut event_ctx.updating, &mut context);
+                        wait_for_all(&mut updating, &mut context);
                         if let Ok(dims) = context.fb.set_rotation(item.rotation) {
-                            event_ctx.raw_sender.send(display_rotate_event(item.rotation)).ok();
+                            event_ctx
+                                .raw_sender
+                                .send(display_rotate_event(item.rotation))
+                                .ok();
                             context.display.rotation = item.rotation;
                             context.display.dims = dims;
                         }
@@ -461,7 +454,7 @@ pub fn run() -> Result<(), Error> {
             Event::Gesture(ge) => match ge {
                 GestureEvent::HoldButtonLong(ButtonCode::Power) => {
                     power_off(view.as_mut(), &mut history, &mut updating, &mut context);
-                    exit_status = ExitStatus::PowerOff;
+                    event_ctx.exit_status = ExitStatus::PowerOff;
                     break;
                 }
                 GestureEvent::MultiSwipe {
@@ -546,7 +539,7 @@ pub fn run() -> Result<(), Error> {
                         .map(|n| CURRENT_DEVICE.canonical_to_device(n))
                     {
                         if CURRENT_DEVICE.orientation(n) != CURRENT_DEVICE.orientation(rotation) {
-                            wait_for_all(&mut event_ctx.updating, &mut context);
+                            wait_for_all(&mut updating, &mut context);
                             if let Ok(dims) = context.fb.set_rotation(n) {
                                 event_ctx.raw_sender.send(display_rotate_event(n)).ok();
                                 context.display.rotation = n;
@@ -574,7 +567,7 @@ pub fn run() -> Result<(), Error> {
                     goto_view(
                         Box::new(r),
                         &mut view,
-                        &mut event_ctx.history,
+                        &mut history,
                         rotation,
                         context.fb.monochrome(),
                         dithered,
@@ -584,7 +577,10 @@ pub fn run() -> Result<(), Error> {
                 } else {
                     if context.display.rotation != rotation {
                         if let Ok(dims) = context.fb.set_rotation(rotation) {
-                            event_ctx.raw_sender.send(display_rotate_event(rotation)).ok();
+                            event_ctx
+                                .raw_sender
+                                .send(display_rotate_event(rotation))
+                                .ok();
                             context.display.rotation = rotation;
                             context.display.dims = dims;
                         }
@@ -621,7 +617,7 @@ pub fn run() -> Result<(), Error> {
                     goto_view(
                         Box::new(r),
                         &mut view,
-                        &mut event_ctx.history,
+                        &mut history,
                         context.display.rotation,
                         context.fb.monochrome(),
                         context.fb.dithered(),
@@ -641,7 +637,7 @@ pub fn run() -> Result<(), Error> {
                     goto_view(
                         Box::new(r),
                         &mut view,
-                        &mut event_ctx.history,
+                        &mut history,
                         context.display.rotation,
                         context.fb.monochrome(),
                         context.fb.dithered(),
@@ -651,10 +647,18 @@ pub fn run() -> Result<(), Error> {
                 }
             }
             Event::Select(EntryId::Launch(app_cmd)) => {
-                handle_launch(app_cmd, &mut view, &tx, &mut rq, &mut context, &mut event_ctx);
+                handle_launch(
+                    app_cmd,
+                    &mut view,
+                    &tx,
+                    &mut rq,
+                    &mut context,
+                    &mut event_ctx,
+                    &mut history,
+                );
             }
             Event::Back => {
-                if let Some(item) = event_ctx.history.pop() {
+                if let Some(item) = history.pop() {
                     view = item.view;
                     if item.monochrome != context.fb.monochrome() {
                         context.fb.set_monochrome(item.monochrome);
@@ -665,9 +669,12 @@ pub fn run() -> Result<(), Error> {
                     if CURRENT_DEVICE.orientation(item.rotation)
                         != CURRENT_DEVICE.orientation(context.display.rotation)
                     {
-                        wait_for_all(&mut event_ctx.updating, &mut context);
+                        wait_for_all(&mut updating, &mut context);
                         if let Ok(dims) = context.fb.set_rotation(item.rotation) {
-                            event_ctx.raw_sender.send(display_rotate_event(item.rotation)).ok();
+                            event_ctx
+                                .raw_sender
+                                .send(display_rotate_event(item.rotation))
+                                .ok();
                             context.display.rotation = item.rotation;
                             context.display.dims = dims;
                         }
@@ -778,10 +785,16 @@ pub fn run() -> Result<(), Error> {
                 // Sending a pseudo event into the raw_events channel toggles the inversion in the device_events channel
                 match button_scheme {
                     ButtonScheme::Natural => {
-                        event_ctx.raw_sender.send(button_scheme_event(VAL_RELEASE)).ok();
+                        event_ctx
+                            .raw_sender
+                            .send(button_scheme_event(VAL_RELEASE))
+                            .ok();
                     }
                     ButtonScheme::Inverted => {
-                        event_ctx.raw_sender.send(button_scheme_event(VAL_PRESS)).ok();
+                        event_ctx
+                            .raw_sender
+                            .send(button_scheme_event(VAL_PRESS))
+                            .ok();
                     }
                 }
             }
@@ -806,7 +819,7 @@ pub fn run() -> Result<(), Error> {
             | Event::FetcherSearch { .. }
                 if !view.is::<Home>() =>
             {
-                if let Some(entry) = event_ctx.history.get_mut(0).filter(|entry| entry.view.is::<Home>()) {
+                if let Some(entry) = history.get_mut(0).filter(|entry| entry.view.is::<Home>()) {
                     let (tx, _rx) = mpsc::channel();
                     entry.view.handle_event(
                         &evt,
@@ -822,7 +835,7 @@ pub fn run() -> Result<(), Error> {
                 view.children_mut().push(Box::new(notif) as Box<dyn View>);
             }
             Event::Select(EntryId::Reboot) => {
-                exit_status = ExitStatus::Reboot;
+                event_ctx.exit_status = ExitStatus::Reboot;
                 break;
             }
             Event::Select(EntryId::Quit) => {
@@ -834,7 +847,8 @@ pub fn run() -> Result<(), Error> {
             }
             Event::MightSuspend if context.settings.auto_suspend > 0.0 => {
                 if context.flags.contains(DeviceFlags::SHARED)
-                    || event_ctx.tasks
+                    || event_ctx
+                        .tasks
                         .iter()
                         .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
                 {
@@ -870,7 +884,7 @@ pub fn run() -> Result<(), Error> {
             }
         }
 
-        process_render_queue(view.as_ref(), &mut rq, &mut context, &mut event_ctx.updating);
+        process_render_queue(view.as_ref(), &mut rq, &mut context, &mut updating);
 
         while let Some(ce) = bus.pop_front() {
             tx.send(ce).ok();
@@ -884,7 +898,11 @@ pub fn run() -> Result<(), Error> {
         context.fb.set_rotation(initial_rotation).ok();
     }
 
-    if event_ctx.tasks.iter().all(|task| task.id != TaskId::Suspend) {
+    if event_ctx
+        .tasks
+        .iter()
+        .all(|task| task.id != TaskId::Suspend)
+    {
         if context.settings.frontlight {
             context.settings.frontlight_levels = context.frontlight.levels();
         }

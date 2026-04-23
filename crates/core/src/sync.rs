@@ -1,8 +1,8 @@
 use crate::log_info;
 use crate::settings::BackgroundSyncSettings;
 use anyhow::{format_err, Context, Error};
+use rustc_hash::FxHashSet;
 use rustc_hash::FxBuildHasher;
-use std::collections::HashSet;
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -424,7 +424,7 @@ fn merge_json(local: &str, remote: &str) -> String {
 
     // Pre-allocate merged vector with estimated capacity to reduce reallocations
     let mut merged = Vec::with_capacity(32);
-    let mut seen = HashSet::with_hasher(FxBuildHasher);
+    let mut seen = FxHashSet::with_hasher(FxBuildHasher);
 
     let empty = Vec::new();
     let local_items = local_val.as_array().unwrap_or(&empty);

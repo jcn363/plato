@@ -1,13 +1,28 @@
+//! EPUB editing library for Plato e-reader.
+//!
+//! This library provides functionality for editing EPUB files, including:
+//! - Metadata editing (title, author, language, etc.)
+//! - Chapter content modification
+//! - Search and replace operations
+//! - Bookmark management
+//! - Table of contents generation
+//! - Content validation
+//! - Chapter statistics
+//! - Image and CSS listing
+//!
+//! The main entry point is the [`EpubEditorCore`] struct, which loads an EPUB
+//! file and provides methods for editing its contents.
+
 #![warn(missing_docs)]
 
-mod types;
 mod parser;
+mod types;
 
+use parser::{extract_epub, parse_content, parse_metadata, parse_opf_content, parse_opf_metadata};
 pub use types::{
-    Bookmark, ChapterStatistics, CSSInfo, EpubChapter, EpubMetadata, ImageInfo, SearchOptions,
+    Bookmark, CSSInfo, ChapterStatistics, EpubChapter, EpubMetadata, ImageInfo, SearchOptions,
     SpellCheckResult, SpellError, UndoAction, ValidationIssue, ValidationResult,
 };
-use parser::{extract_epub, parse_metadata, parse_content, parse_opf_metadata, parse_opf_content};
 
 use anyhow::{bail, format_err, Context, Result};
 use regex::Regex;
@@ -19,13 +34,25 @@ use zip::{CompressionMethod, ZipWriter};
 
 const MAX_HISTORY_SIZE: usize = 50;
 
+/// Core editor for EPUB file manipulation.
+///
+/// This struct provides the main interface for editing EPUB files, including
+/// metadata modification, chapter content editing, search/replace operations,
+/// and undo/redo functionality.
 pub struct EpubEditorCore {
+    /// Path to the EPUB file being edited
     pub epub_path: PathBuf,
+    /// EPUB metadata (title, author, language, etc.)
     pub metadata: EpubMetadata,
+    /// List of chapters in the EPUB
     pub chapters: Vec<EpubChapter>,
+    /// Temporary directory for extracted EPUB contents
     pub temp_dir: PathBuf,
+    /// Stack of undo actions for reverting changes
     pub undo_stack: Vec<UndoAction>,
+    /// Stack of redo actions for reapplying undone changes
     pub redo_stack: Vec<UndoAction>,
+    /// List of bookmarks within the EPUB
     pub bookmarks: Vec<Bookmark>,
 }
 
@@ -105,6 +132,7 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Returns a clone of the EPUB metadata in Plato-compatible format.
     #[must_use]
     pub fn to_plato_metadata(&self) -> EpubMetadata {
         self.metadata.clone()
@@ -126,6 +154,10 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Sets the EPUB metadata.
+    ///
+    /// This updates the title, author, language, and other metadata fields.
+    /// The change is added to the undo stack for potential reversal.
     pub fn set_metadata(&mut self, metadata: EpubMetadata) {
         self.undo_stack
             .push(UndoAction::Metadata(self.metadata.clone()));
@@ -251,11 +283,19 @@ impl EpubEditorCore {
         }
     }
 
+    /// Clears the undo and redo history.
     pub fn clear_history(&mut self) {
         self.undo_stack.clear();
         self.redo_stack.clear();
     }
 
+    /// Adds a bookmark at the specified chapter and position.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The chapter index to bookmark
+    /// * `position` - The character position within the chapter
+    /// * `note` - An optional note to attach to the bookmark
     pub fn add_bookmark(&mut self, index: usize, position: usize, note: Option<String>) {
         if index < self.chapters.len() {
             let bookmark = Bookmark {
@@ -268,17 +308,38 @@ impl EpubEditorCore {
         }
     }
 
+    /// Removes a bookmark at the specified index.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The bookmark index to remove
     pub fn remove_bookmark(&mut self, index: usize) {
         if index < self.bookmarks.len() {
             self.bookmarks.remove(index);
         }
     }
 
+    /// Returns a list of all bookmarks.
     #[must_use]
     pub fn list_bookmarks(&self) -> Vec<Bookmark> {
         self.bookmarks.clone()
     }
 
+    /// Replaces all occurrences of a query string in all chapters.
+    ///
+    /// # Arguments
+    ///
+    /// * `query` - The search string to replace
+    /// * `replacement` - The replacement string
+    /// * `options` - Search options (case sensitivity, regex, whole word)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if writing any chapter content to file fails.
+    ///
+    /// # Returns
+    ///
+    /// The total number of replacements made across all chapters.
     pub fn replace_all_in_all_chapters(
         &mut self,
         query: &str,
@@ -295,6 +356,17 @@ impl EpubEditorCore {
         Ok(total_replacements)
     }
 
+    /// Searches for a query string within a specific chapter.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The chapter index to search
+    /// * `query` - The search string
+    /// * `options` - Search options (case sensitivity, regex, whole word)
+    ///
+    /// # Returns
+    ///
+    /// A vector of (start, end) byte positions for each match.
     #[must_use]
     pub fn search_in_chapter(
         &self,
@@ -349,6 +421,22 @@ impl EpubEditorCore {
         matches
     }
 
+    /// Replaces occurrences of a search string in a specific chapter.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The chapter index to modify
+    /// * `search` - The search string to replace
+    /// * `replace` - The replacement string
+    /// * `options` - Search options (case sensitivity, regex, whole word)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if writing the updated chapter content to file fails.
+    ///
+    /// # Returns
+    ///
+    /// The number of replacements made.
     pub fn replace_in_chapter(
         &mut self,
         index: usize,
@@ -443,6 +531,16 @@ impl EpubEditorCore {
         Ok(total)
     }
 
+    /// Searches for a query string across all chapters.
+    ///
+    /// # Arguments
+    ///
+    /// * `query` - The search string
+    /// * `options` - Search options (case sensitivity, regex, whole word)
+    ///
+    /// # Returns
+    ///
+    /// A vector of (chapter_index, matches) tuples for chapters containing matches.
     #[must_use]
     pub fn search_all_chapters(
         &self,
@@ -462,6 +560,13 @@ impl EpubEditorCore {
         results
     }
 
+    /// Validates the EPUB content for common issues.
+    ///
+    /// Checks for HTML structure problems, broken links, and external image references.
+    ///
+    /// # Returns
+    ///
+    /// A validation result containing all found issues and statistics.
     #[must_use]
     pub fn validate_content(&self) -> ValidationResult {
         let mut issues = Vec::new();
@@ -480,6 +585,14 @@ impl EpubEditorCore {
         }
     }
 
+    /// Performs a basic spell check on all chapters.
+    ///
+    /// Strips HTML tags and identifies potential misspellings by filtering out common words.
+    /// This is a simple heuristic check, not a full dictionary-based spell checker.
+    ///
+    /// # Returns
+    ///
+    /// A spell check result containing potential errors and statistics.
     #[must_use]
     pub fn spell_check(&self) -> SpellCheckResult {
         let mut errors = Vec::new();
@@ -510,6 +623,16 @@ impl EpubEditorCore {
         }
     }
 
+    /// Returns statistics for a specific chapter.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The chapter index
+    ///
+    /// # Returns
+    ///
+    /// Chapter statistics including word count, character count, and paragraph count,
+    /// or None if the index is out of bounds.
     #[must_use]
     pub fn get_chapter_statistics(&self, index: usize) -> Option<ChapterStatistics> {
         if index >= self.chapters.len() {
@@ -529,6 +652,11 @@ impl EpubEditorCore {
         })
     }
 
+    /// Returns statistics for all chapters.
+    ///
+    /// # Returns
+    ///
+    /// A vector of chapter statistics for all chapters.
     #[must_use]
     pub fn get_all_chapters_statistics(&self) -> Vec<ChapterStatistics> {
         self.chapters
@@ -538,6 +666,11 @@ impl EpubEditorCore {
             .collect()
     }
 
+    /// Generates a table of contents in EPUB navigation format.
+    ///
+    /// # Returns
+    ///
+    /// A string containing the table of contents in XHTML navigation format.
     pub fn generate_table_of_contents(&self) -> String {
         let mut toc = String::new();
         toc.push_str("<nav epub:type=\"toc\">\n");
@@ -555,6 +688,11 @@ impl EpubEditorCore {
         toc
     }
 
+    /// Updates the table of contents file in the EPUB.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if writing the table of contents file fails.
     pub fn update_table_of_contents(&mut self) -> Result<()> {
         let toc_content = self.generate_table_of_contents();
         let toc_path = self.temp_dir.join("toc.xhtml");
@@ -567,6 +705,11 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Lists all images found in the EPUB chapters.
+    ///
+    /// # Returns
+    ///
+    /// A vector of image information including source, alt text, and chapter location.
     #[must_use]
     pub fn list_images(&self) -> Vec<ImageInfo> {
         let mut images = Vec::new();
@@ -595,6 +738,11 @@ impl EpubEditorCore {
         images
     }
 
+    /// Lists all CSS files and inline styles in the EPUB chapters.
+    ///
+    /// # Returns
+    ///
+    /// A vector of CSS information including href, media type, and chapter location.
     #[must_use]
     pub fn list_css(&self) -> Vec<CSSInfo> {
         let mut css_files = Vec::new();
@@ -679,6 +827,16 @@ impl EpubEditorCore {
         false
     }
 
+    /// Renames a chapter at the specified index.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The chapter index to rename
+    /// * `new_title` - The new title for the chapter
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the index is out of bounds or writing the file fails.
     pub fn rename_chapter(&mut self, index: usize, new_title: &str) -> Result<()> {
         if index >= self.chapters.len() {
             bail!("Chapter index out of bounds");
@@ -695,6 +853,15 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Deletes a chapter at the specified index.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The chapter index to delete
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the index is out of bounds or removing the file fails.
     pub fn delete_chapter(&mut self, index: usize) -> Result<()> {
         if index >= self.chapters.len() {
             bail!("Chapter index out of bounds");
@@ -708,6 +875,16 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Reorders chapters by moving a chapter from one index to another.
+    ///
+    /// # Arguments
+    ///
+    /// * `from_index` - The source chapter index
+    /// * `to_index` - The destination chapter index
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if either index is out of bounds.
     pub fn reorder_chapters(&mut self, from_index: usize, to_index: usize) -> Result<()> {
         if from_index >= self.chapters.len() || to_index >= self.chapters.len() {
             bail!("Chapter index out of bounds");
@@ -723,6 +900,16 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Exports a chapter to a text file with HTML tags stripped.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The chapter index to export
+    /// * `path` - The destination file path
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the index is out of bounds or writing the file fails.
     pub fn export_chapter(&self, index: usize, path: &Path) -> Result<()> {
         if index >= self.chapters.len() {
             bail!("Chapter index out of bounds");
@@ -734,6 +921,17 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Imports chapter content from a text file.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The chapter index to import into
+    /// * `path` - The source file path
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the index is out of bounds, reading the file fails,
+    /// or writing the chapter content fails.
     pub fn import_chapter(&mut self, index: usize, path: &Path) -> Result<()> {
         if index >= self.chapters.len() {
             bail!("Chapter index out of bounds");

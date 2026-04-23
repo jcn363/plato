@@ -3,7 +3,7 @@
 //! Phase 5 Testing: Validates all Phase 1 components work together correctly.
 
 use crate::eink::*;
-use crate::geom::{Point, Rectangle};
+use crate::geom::Rectangle;
 
 // ============================================================================
 // Integration Tests: Full pipeline scenarios
@@ -242,7 +242,7 @@ fn test_floyd_steinberg_dithering() {
     let avg = sum / grayscale.len() as u32;
 
     // Average should be around mid-range (7-8 in 0-15 scale)
-    assert!(avg >= 5 && avg <= 10);
+    assert!((5..=10).contains(&avg));
 }
 
 #[test]
@@ -255,7 +255,7 @@ fn test_ordered_dithering() {
     let grayscale = converter.convert(&rgba, 16, 16).unwrap();
 
     // Ordered dithering should produce a pattern
-    // Values shouldn't all be the same
+    // Values shouldn'tFx
     let unique_values: std::collections::HashSet<u8> = grayscale.iter().cloned().collect();
     assert!(
         unique_values.len() > 1,

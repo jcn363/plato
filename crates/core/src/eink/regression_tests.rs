@@ -3,7 +3,7 @@
 //! Tests edge cases and specific bug scenarios discovered during development.
 
 use crate::eink::*;
-use crate::geom::{Point, Rectangle};
+use crate::geom::Rectangle;
 
 // ============================================================================
 // Damage Tracker Edge Cases
@@ -315,7 +315,7 @@ fn test_partial_refresh_small_damage_filtered() {
     }
 
     manager.track_frame(&fb1); // First frame = full screen
-    let regions = manager.track_frame(&fb2); // Second frame with small damage
+    let _regions = manager.track_frame(&fb2); // Second frame with small damage
 
     // Small region should be filtered out, resulting in empty or minimal regions
     // The exact behavior depends on damage tracker implementation

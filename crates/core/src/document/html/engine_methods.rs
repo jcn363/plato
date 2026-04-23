@@ -3,6 +3,7 @@
 //! This module contains the remaining large methods from engine.rs
 //! to reduce the main file size and improve organization.
 
+use rustc_hash::FxHashMap;
 use super::dom::{ElementData, NodeData, NodeRef, TextData, WRAPPER_TAG_NAME};
 use super::layout::{
     collapse_margins, ChildArtifact, DrawCommand, DrawState, Fonts, ImageCommand, LoopContext,
@@ -72,7 +73,7 @@ pub trait EngineMethods {
         inlines: &mut Vec<InlineMaterial>,
         strings: &mut Vec<String>,
         urls: &mut Vec<String>,
-        font_cache: &mut std::collections::HashMap<(String, i32, i32, i32), Option<(u32, u32)>>,
+        font_cache: &mut FxHashMap<(String, i32, i32, i32), Option<(u32, u32)>>,
     );
 
     /// Create paragraph items from inline material
@@ -84,7 +85,7 @@ pub trait EngineMethods {
         resource_fetcher: &mut dyn super::ResourceFetcher,
         strings: &[String],
         urls: &[String],
-        font_cache: &mut std::collections::HashMap<(String, i32, i32, i32), Option<(u32, u32)>>,
+        font_cache: &mut FxHashMap<(String, i32, i32, i32), Option<(u32, u32)>>,
     ) -> (Vec<ParagraphItem<ParagraphElement>>, Vec<InlineMaterial>);
 
     /// Place paragraphs with line breaking
@@ -213,7 +214,7 @@ impl EngineMethods for super::Engine {
         inlines: &mut Vec<InlineMaterial>,
         strings: &mut Vec<String>,
         urls: &mut Vec<String>,
-        font_cache: &mut std::collections::HashMap<(String, i32, i32, i32), Option<(u32, u32)>>,
+        font_cache: &mut FxHashMap<(String, i32, i32, i32), Option<(u32, u32)>>,
     ) {
         match &*node.data {
             NodeData::Text(ref text_data) => {
@@ -307,7 +308,7 @@ impl EngineMethods for super::Engine {
         resource_fetcher: &mut dyn super::ResourceFetcher,
         strings: &[String],
         urls: &[String],
-        font_cache: &mut std::collections::HashMap<(String, i32, i32, i32), Option<(u32, u32)>>,
+        font_cache: &mut FxHashMap<(String, i32, i32, i32), Option<(u32, u32)>>,
     ) -> (Vec<ParagraphItem<ParagraphElement>>, Vec<InlineMaterial>) {
         let mut items = Vec::new();
         let mut floats = Vec::new();

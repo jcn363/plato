@@ -246,16 +246,3 @@ pub fn extract_title(html: &str) -> Option<String> {
     }
     None
 }
-
-/// Sanitizes a filename by replacing invalid characters.
-#[must_use]
-pub fn sanitize_filename(name: &str) -> String {
-    name.chars()
-        .map(|c| match c {
-            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => ' ',
-            _ => c,
-        })
-        .collect::<String>()
-        .trim()
-        .to_string()
-}

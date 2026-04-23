@@ -13,16 +13,6 @@
 //! ## Dependencies
 //!
 //! - `djvu-rs` - Rust bindings for the DjVuLibre library
-//!
-//! ## Usage
-//!
-//! ```rust
-//! use crate::document::DjvuDocument;
-//!
-//! let doc = DjvuDocument::new(&path)?;
-//! let page_count = doc.pages_count();
-//! let dims = doc.dims(0)?;
-//! ```
 
 use crate::document::{Boundary, BoundedText, CycleDir, Location, TocEntry};
 use crate::framebuffer::Pixmap;

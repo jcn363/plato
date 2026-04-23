@@ -2,8 +2,8 @@
 
 use anyhow::{format_err, Error};
 use chrono::{DateTime, Utc};
+use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// Annotation subtypes supported by Plato
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -120,7 +120,7 @@ pub struct PdfAnnotation {
     /// Subject/title
     pub subject: Option<String>,
     /// Additional custom properties
-    pub properties: HashMap<String, String>,
+    pub properties: FxHashMap<String, String>,
 }
 
 impl PdfAnnotation {
@@ -138,7 +138,7 @@ impl PdfAnnotation {
             modified_at: now,
             author: None,
             subject: None,
-            properties: HashMap::new(),
+            properties: FxHashMap::default(),
         }
     }
 

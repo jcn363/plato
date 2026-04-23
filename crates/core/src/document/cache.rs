@@ -72,7 +72,11 @@ impl PdfCache {
 
     /// Get cached rendered page
     pub fn get_rendered_page(&self, key: &PageCacheKey) -> Option<CachedPage> {
-        self.rendered_pages.lock().expect("rendered pages cache lock poisoned").get(key).cloned()
+        self.rendered_pages
+            .lock()
+            .expect("rendered pages cache lock poisoned")
+            .get(key)
+            .cloned()
     }
 
     /// Cache rendered page
@@ -90,7 +94,11 @@ impl PdfCache {
 
     /// Get cached text
     pub fn get_extracted_text(&self, key: &PageCacheKey) -> Option<CachedText> {
-        self.extracted_text.lock().expect("extracted text cache lock poisoned").get(key).cloned()
+        self.extracted_text
+            .lock()
+            .expect("extracted text cache lock poisoned")
+            .get(key)
+            .cloned()
     }
 
     /// Cache extracted text
@@ -108,7 +116,11 @@ impl PdfCache {
 
     /// Get cached metadata
     pub fn get_metadata(&self, key: &PageCacheKey) -> Option<CachedMetadata> {
-        self.metadata.lock().expect("metadata cache lock poisoned").get(key).cloned()
+        self.metadata
+            .lock()
+            .expect("metadata cache lock poisoned")
+            .get(key)
+            .cloned()
     }
 
     /// Cache metadata
@@ -136,16 +148,31 @@ impl PdfCache {
 
     /// Clear all caches
     pub fn clear(&self) {
-        self.rendered_pages.lock().expect("rendered pages cache lock poisoned").clear();
-        self.extracted_text.lock().expect("extracted text cache lock poisoned").clear();
-        self.metadata.lock().expect("metadata cache lock poisoned").clear();
+        self.rendered_pages
+            .lock()
+            .expect("rendered pages cache lock poisoned")
+            .clear();
+        self.extracted_text
+            .lock()
+            .expect("extracted text cache lock poisoned")
+            .clear();
+        self.metadata
+            .lock()
+            .expect("metadata cache lock poisoned")
+            .clear();
         self.outlines.clear();
     }
 
     /// Clear cache for a specific document
     pub fn clear_document(&self, doc_id: &str) {
-        let mut rendered = self.rendered_pages.lock().expect("rendered pages cache lock poisoned");
-        let mut text = self.extracted_text.lock().expect("extracted text cache lock poisoned");
+        let mut rendered = self
+            .rendered_pages
+            .lock()
+            .expect("rendered pages cache lock poisoned");
+        let mut text = self
+            .extracted_text
+            .lock()
+            .expect("extracted text cache lock poisoned");
         let mut meta = self.metadata.lock().expect("metadata cache lock poisoned");
 
         // LruCache doesn't have retain, so we collect keys to remove
@@ -176,9 +203,21 @@ impl PdfCache {
     /// Get cache statistics
     pub fn stats(&self) -> CacheStats {
         CacheStats {
-            rendered_pages: self.rendered_pages.lock().expect("rendered pages cache lock poisoned").len(),
-            extracted_text: self.extracted_text.lock().expect("extracted text cache lock poisoned").len(),
-            metadata: self.metadata.lock().expect("metadata cache lock poisoned").len(),
+            rendered_pages: self
+                .rendered_pages
+                .lock()
+                .expect("rendered pages cache lock poisoned")
+                .len(),
+            extracted_text: self
+                .extracted_text
+                .lock()
+                .expect("extracted text cache lock poisoned")
+                .len(),
+            metadata: self
+                .metadata
+                .lock()
+                .expect("metadata cache lock poisoned")
+                .len(),
             outlines: self.outlines.len(),
         }
     }
@@ -212,7 +251,10 @@ mod tests {
         cache.put_metadata(key.clone(), (600.0, 800.0));
         let cached = cache.get_metadata(&key);
         assert!(cached.is_some());
-        assert_eq!(cached.expect("cached metadata missing").dims, (600.0, 800.0));
+        assert_eq!(
+            cached.expect("cached metadata missing").dims,
+            (600.0, 800.0)
+        );
     }
 
     #[test]

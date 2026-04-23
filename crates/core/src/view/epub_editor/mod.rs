@@ -4,11 +4,15 @@
 //! chapter content directly on their device. It's designed to fix errors
 //! encountered while reading EPUB books.
 
-mod state;
 mod helpers;
+mod state;
 
+use rustc_hash::FxHashSet;
+use helpers::{
+    close_search_replace, do_replace_in_chapter, do_search, show_chapter_list, show_edit_view,
+    show_metadata_edit_view, show_save_dialog, show_search_replace, update_input_field,
+};
 pub use state::{EditorState, SearchReplaceState};
-use helpers::{show_chapter_list, show_metadata_edit_view, show_save_dialog, show_edit_view, show_search_replace, do_search, do_replace_in_chapter, update_input_field, close_search_replace};
 
 use std::path::Path;
 
@@ -28,10 +32,7 @@ use crate::view::notification::Notification;
 use crate::view::search_replace::SearchReplaceView;
 use crate::view::top_bar::TopBar;
 use crate::view::SMALL_BAR_HEIGHT;
-use crate::view::{
-    Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, View, ViewId,
-    ID_FEEDER,
-};
+use crate::view::{Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 use anyhow::Error;
 use epub_edit::EpubEditorCore;
 
@@ -641,7 +642,7 @@ impl View for EpubEditor {
                                 .errors
                                 .iter()
                                 .map(|e| e.chapter_index)
-                                .collect::<std::collections::HashSet<_>>()
+                                .collect::<FxHashSet<_>>()
                                 .len()
                         ),
                         hub,

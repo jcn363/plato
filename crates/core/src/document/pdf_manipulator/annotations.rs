@@ -13,11 +13,11 @@ use crate::log_info;
 use anyhow::{format_err, Error};
 use chrono::{DateTime, Utc};
 use lopdf::{Dictionary, Document, Object};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::path::{Path, PathBuf};
 
 mod types;
-pub use types::{AnnotationSubtype, PdfAnnotation, AnnotationQuery};
+pub use types::{AnnotationQuery, AnnotationSubtype, PdfAnnotation};
 
 /// PDF annotation manager
 ///
@@ -51,7 +51,8 @@ impl PdfAnnotationManager {
         let pages_map = doc.get_pages();
 
         for (page_num, page_id) in pages_map {
-            let page_dict = doc.get_object(page_id)
+            let page_dict = doc
+                .get_object(page_id)
                 .expect("page object not found")
                 .as_dict()
                 .expect("page object is not a dictionary");
@@ -166,7 +167,7 @@ impl PdfAnnotationManager {
             modified_at: now,
             author,
             subject,
-            properties: HashMap::new(),
+            properties: FxHashMap::default(),
         })
     }
 
@@ -203,8 +204,8 @@ impl PdfAnnotationManager {
     }
 
     /// Get annotation count by subtype
-    pub fn count_by_subtype(&self) -> HashMap<AnnotationSubtype, usize> {
-        let mut counts = HashMap::new();
+    pub fn count_by_subtype(&self) -> FxHashMap<AnnotationSubtype, usize> {
+        let mut counts = FxHashMap::default();
         for annot in &self.annotations {
             *counts.entry(annot.subtype.clone()).or_insert(0) += 1;
         }
@@ -278,7 +279,9 @@ impl PdfAnnotationExporter {
                 annot.page + 1
             ));
         }
-        let page_id = page_ids.get(page_index).expect("page index out of bounds after check");
+        let page_id = page_ids
+            .get(page_index)
+            .expect("page index out of bounds after check");
 
         // Create annotation dictionary
         let mut annot_dict = Dictionary::new();
@@ -384,7 +387,8 @@ impl PdfAnnotationExporter {
         }
 
         if let Some(page_id) = page_ids.get(page_index) {
-            let page_dict = doc.get_object(**page_id)
+            let page_dict = doc
+                .get_object(**page_id)
                 .expect("page object not found")
                 .as_dict()
                 .expect("page object is not a dictionary");
@@ -406,12 +410,16 @@ impl PdfAnnotationExporter {
                     let output_page_ids: Vec<_> = output_pages_map.values().collect();
 
                     if page_index < output_page_ids.len() {
-                        let output_page_id = output_page_ids.get(page_index).expect("output page index out of bounds");
+                        let output_page_id = output_page_ids
+                            .get(page_index)
+                            .expect("output page index out of bounds");
                         let output_page_dict = output_doc
                             .get_object_mut(**output_page_id)
                             .map_err(|e| format_err!("Failed to get output page object: {}", e))?
                             .as_dict_mut()
-                            .map_err(|e| format_err!("Output page object is not a dictionary: {}", e))?;
+                            .map_err(|e| {
+                                format_err!("Output page object is not a dictionary: {}", e)
+                            })?;
 
                         // Add annotations to output page
                         output_page_dict.set("Annots", annot_ref.clone());

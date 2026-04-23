@@ -19,7 +19,9 @@ use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
 
 mod types;
-pub use types::{ManipulationMode, RedactionState, BUTTON_HEIGHT, BUTTON_SPACING, PADDING, WARNING_FILE_SIZE};
+pub use types::{
+    ManipulationMode, RedactionState, BUTTON_HEIGHT, BUTTON_SPACING, PADDING, WARNING_FILE_SIZE,
+};
 
 pub struct PdfManipulatorView {
     id: Id,

@@ -1,17 +1,16 @@
 //! Event handling for the main application loop.
 
-use crate::constants::{BATTERY_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY, SETTINGS_PATH};
-use crate::helpers::{goto_view, HistoryItem, ExitStatus};
-use crate::task::{Task, TaskId, schedule_task, resume};
+use crate::constants::{BATTERY_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY};
+use crate::helpers::{goto_view, ExitStatus, HistoryItem};
+use crate::task::{resume, schedule_task, Task, TaskId};
 
-use plato_core::anyhow::{Context as ResultExt, Error};
-use plato_core::chrono::Local;
 use plato_core::context::DeviceFlags;
 use plato_core::device::{Orientation, CURRENT_DEVICE};
 use plato_core::framebuffer::UpdateMode;
 use plato_core::helpers::load_toml;
 use plato_core::input::{ButtonCode, ButtonStatus, DeviceEvent, InputEvent, PowerSource};
-use plato_core::settings::{IntermKind, RotationLock, Settings};
+use plato_core::log_error;
+use plato_core::settings::{IntermKind, RotationLock, Settings, SETTINGS_PATH};
 use plato_core::theme;
 use plato_core::view::calculator::Calculator;
 use plato_core::view::common::locate;
@@ -26,8 +25,9 @@ use plato_core::view::rotation_values::RotationValues;
 use plato_core::view::sketch::Sketch;
 use plato_core::view::statistics::StatisticsView;
 use plato_core::view::touch_events::TouchEvents;
-use plato_core::view::{AppCmd, EntryId, Event, RenderData, RenderQueue, UpdateData, View, ViewId, handle_event};
-use plato_core::log_error;
+use plato_core::view::{
+    handle_event, AppCmd, EntryId, Event, RenderData, RenderQueue, UpdateData, View, ViewId,
+};
 use std::collections::VecDeque;
 use std::env;
 use std::path::{Path, PathBuf};
@@ -37,9 +37,7 @@ use std::time::Instant;
 
 /// Shared context for event handlers.
 pub struct EventContext {
-    pub history: Vec<HistoryItem>,
     pub tasks: Vec<Task>,
-    pub updating: Vec<UpdateData>,
     pub inactive_since: Instant,
     pub exit_status: ExitStatus,
     pub raw_sender: mpsc::Sender<InputEvent>,
@@ -48,18 +46,14 @@ pub struct EventContext {
 
 impl EventContext {
     pub fn new(
-        history: Vec<HistoryItem>,
         tasks: Vec<Task>,
-        updating: Vec<UpdateData>,
         inactive_since: Instant,
         exit_status: ExitStatus,
         raw_sender: mpsc::Sender<InputEvent>,
         current_dir: PathBuf,
     ) -> Self {
         Self {
-            history,
             tasks,
-            updating,
             inactive_since,
             exit_status,
             raw_sender,
@@ -77,6 +71,8 @@ pub fn handle_device_event(
     rq: &mut RenderQueue,
     context: &mut plato_core::context::Context,
     ctx: &mut EventContext,
+    history: &mut Vec<HistoryItem>,
+    _updating: &mut Vec<UpdateData>,
     evt: &Event,
 ) -> bool {
     match de {
@@ -91,7 +87,11 @@ pub fn handle_device_event(
                 return true; // continue
             }
 
-            if ctx.tasks.iter().any(|task| task.id == TaskId::PrepareSuspend) {
+            if ctx
+                .tasks
+                .iter()
+                .any(|task| task.id == TaskId::PrepareSuspend)
+            {
                 resume(
                     TaskId::PrepareSuspend,
                     &mut ctx.tasks,
@@ -101,14 +101,7 @@ pub fn handle_device_event(
                     context,
                 );
             } else if ctx.tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                resume(
-                    TaskId::Suspend,
-                    &mut ctx.tasks,
-                    view,
-                    tx,
-                    rq,
-                    context,
-                );
+                resume(TaskId::Suspend, &mut ctx.tasks, view, tx, rq, context);
             } else {
                 view.handle_event(&Event::Suspend, tx, bus, rq, context);
                 let interm = Intermission::new(
@@ -155,9 +148,10 @@ pub fn handle_device_event(
 
             if !context.settings.sleep_cover
                 || context.flags.contains(DeviceFlags::SHARED)
-                || ctx.tasks.iter().any(|task| {
-                    task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend
-                })
+                || ctx
+                    .tasks
+                    .iter()
+                    .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
             {
                 return true; // continue
             }
@@ -190,12 +184,15 @@ pub fn handle_device_event(
 
             context.flags.remove(DeviceFlags::COVERED);
 
-            if context.flags.contains(DeviceFlags::SHARED) || !context.settings.sleep_cover
-            {
+            if context.flags.contains(DeviceFlags::SHARED) || !context.settings.sleep_cover {
                 return true; // continue
             }
 
-            if ctx.tasks.iter().any(|task| task.id == TaskId::PrepareSuspend) {
+            if ctx
+                .tasks
+                .iter()
+                .any(|task| task.id == TaskId::PrepareSuspend)
+            {
                 resume(
                     TaskId::PrepareSuspend,
                     &mut ctx.tasks,
@@ -205,18 +202,12 @@ pub fn handle_device_event(
                     context,
                 );
             } else if ctx.tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                resume(
-                    TaskId::Suspend,
-                    &mut ctx.tasks,
-                    view,
-                    tx,
-                    rq,
-                    context,
-                );
+                resume(TaskId::Suspend, &mut ctx.tasks, view, tx, rq, context);
             }
         }
         DeviceEvent::NetUp => {
-            if ctx.tasks
+            if ctx
+                .tasks
                 .iter()
                 .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
             {
@@ -240,8 +231,9 @@ pub fn handle_device_event(
             view.children_mut().push(Box::new(notif) as Box<dyn View>);
             if view.is::<plato_core::view::home::Home>() {
                 view.handle_event(evt, tx, bus, rq, context);
-            } else if let Some(entry) =
-                ctx.history.get_mut(0).filter(|entry| entry.view.is::<plato_core::view::home::Home>())
+            } else if let Some(entry) = history
+                .get_mut(0)
+                .filter(|entry| entry.view.is::<plato_core::view::home::Home>())
             {
                 let (tx, _rx) = mpsc::channel();
                 entry.view.handle_event(
@@ -273,7 +265,11 @@ pub fn handle_device_event(
                     }
                 }
                 PowerSource::Host => {
-                    if ctx.tasks.iter().any(|task| task.id == TaskId::PrepareSuspend) {
+                    if ctx
+                        .tasks
+                        .iter()
+                        .any(|task| task.id == TaskId::PrepareSuspend)
+                    {
                         resume(
                             TaskId::PrepareSuspend,
                             &mut ctx.tasks,
@@ -283,14 +279,7 @@ pub fn handle_device_event(
                             context,
                         );
                     } else if ctx.tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                        resume(
-                            TaskId::Suspend,
-                            &mut ctx.tasks,
-                            view,
-                            tx,
-                            rq,
-                            context,
-                        );
+                        resume(TaskId::Suspend, &mut ctx.tasks, view, tx, rq, context);
                     }
 
                     if context.settings.auto_share {
@@ -340,9 +329,7 @@ pub fn handle_device_event(
                     let dark_mode = settings.dark_mode;
                     context.settings = settings;
                     theme::set_theme_mode(context.settings.theme_settings.mode);
-                    theme::set_auto_threshold(
-                        context.settings.theme_settings.auto_threshold,
-                    );
+                    theme::set_auto_threshold(context.settings.theme_settings.auto_threshold);
                     theme::set_dark_mode(dark_mode);
                 }
                 if context.settings.wifi {
@@ -384,14 +371,7 @@ pub fn handle_device_event(
                 );
                 if ctx.tasks.iter().any(|task| task.id == TaskId::Suspend) {
                     if !context.flags.contains(DeviceFlags::COVERED) {
-                        resume(
-                            TaskId::Suspend,
-                            &mut ctx.tasks,
-                            view,
-                            tx,
-                            rq,
-                            context,
-                        );
+                        resume(TaskId::Suspend, &mut ctx.tasks, view, tx, rq, context);
                     }
                 } else {
                     tx.send(Event::BatteryTick).ok();
@@ -400,9 +380,10 @@ pub fn handle_device_event(
         }
         DeviceEvent::RotateScreen(n) => {
             if context.flags.contains(DeviceFlags::SHARED)
-                || ctx.tasks.iter().any(|task| {
-                    task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend
-                })
+                || ctx
+                    .tasks
+                    .iter()
+                    .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
             {
                 return true; // continue
             }
@@ -442,7 +423,8 @@ pub fn handle_launch(
     tx: &mpsc::Sender<Event>,
     rq: &mut RenderQueue,
     context: &mut plato_core::context::Context,
-    ctx: &mut EventContext,
+    _ctx: &mut EventContext,
+    history: &mut Vec<HistoryItem>,
 ) -> bool {
     let rotation = context.display.rotation;
     let monochrome = context.fb.monochrome();
@@ -455,34 +437,20 @@ pub fn handle_launch(
                 .map(|v| Box::new(v) as Box<dyn View>)
                 .ok()
         }
-        AppCmd::Calculator => {
-            Calculator::new(context.fb.rect(), tx, rq, context)
-                .map(|v| Box::new(v) as Box<dyn View>)
-                .ok()
-        }
+        AppCmd::Calculator => Calculator::new(context.fb.rect(), tx, rq, context)
+            .map(|v| Box::new(v) as Box<dyn View>)
+            .ok(),
         AppCmd::Dictionary {
             ref query,
             ref language,
-        } => Dictionary::new(
-            context.fb.rect(),
-            query,
-            language,
-            tx,
-            rq,
-            context,
-        )
-        .map(|v| Some(Box::new(v) as Box<dyn View>))
-        .unwrap_or(None),
-        AppCmd::EpubEditor { ref path, chapter } => EpubEditor::new(
-            context.fb.rect(),
-            path.clone(),
-            chapter,
-            tx,
-            rq,
-            context,
-        )
-        .map(|v| Box::new(v) as Box<dyn View>)
-        .ok(),
+        } => Dictionary::new(context.fb.rect(), query, language, tx, rq, context)
+            .map(|v| Some(Box::new(v) as Box<dyn View>))
+            .unwrap_or(None),
+        AppCmd::EpubEditor { ref path, chapter } => {
+            EpubEditor::new(context.fb.rect(), path.clone(), chapter, tx, rq, context)
+                .map(|v| Box::new(v) as Box<dyn View>)
+                .ok()
+        }
         AppCmd::CoverEditor => Some(Box::new(CoverEditorView::new(
             context.fb.rect(),
             rq,
@@ -493,22 +461,15 @@ pub fn handle_launch(
             rq,
             context,
         ))),
-        AppCmd::PdfManipulator => {
-            match PdfManipulatorView::new(context.fb.rect(), rq, context) {
-                Ok(view) => Some(Box::new(view) as Box<dyn View>),
-                Err(e) => {
-                    log_error!("Failed to open PDF Tools: {}", e);
-                    None
-                }
+        AppCmd::PdfManipulator => match PdfManipulatorView::new(context.fb.rect(), rq, context) {
+            Ok(view) => Some(Box::new(view) as Box<dyn View>),
+            Err(e) => {
+                log_error!("Failed to open PDF Tools: {}", e);
+                None
             }
-        }
+        },
         AppCmd::OpenPdfManipulator(ref path) => {
-            match PdfManipulatorView::for_file(
-                context.fb.rect(),
-                path.clone(),
-                rq,
-                context,
-            ) {
+            match PdfManipulatorView::for_file(context.fb.rect(), path.clone(), rq, context) {
                 Ok(view) => Some(Box::new(view) as Box<dyn View>),
                 Err(e) => {
                     log_error!("Failed to open PDF Tools for file: {}", e);
@@ -516,23 +477,14 @@ pub fn handle_launch(
                 }
             }
         }
-        AppCmd::TouchEvents => Some(Box::new(TouchEvents::new(
-            context.fb.rect(),
-            rq,
-            context,
-        ))),
+        AppCmd::TouchEvents => Some(Box::new(TouchEvents::new(context.fb.rect(), rq, context))),
         AppCmd::RotationValues => Some(Box::new(RotationValues::new(
             context.fb.rect(),
             rq,
             context,
         ))),
         AppCmd::OpenCoverEditor(ref path) => {
-            match CoverEditorView::for_book(
-                context.fb.rect(),
-                path.clone(),
-                rq,
-                context,
-            ) {
+            match CoverEditorView::for_book(context.fb.rect(), path.clone(), rq, context) {
                 Ok(view) => Some(Box::new(view) as Box<dyn View>),
                 Err(e) => {
                     log_error!("Failed to open Cover Editor: {}", e);
@@ -544,14 +496,7 @@ pub fn handle_launch(
 
     if let Some(next_view) = next_view {
         goto_view(
-            next_view,
-            view,
-            &mut ctx.history,
-            rotation,
-            monochrome,
-            dithered,
-            rq,
-            context,
+            next_view, view, history, rotation, monochrome, dithered, rq, context,
         );
         true
     } else {

@@ -61,10 +61,10 @@ mod crop_selection_tests {
         let small_rect = Rectangle::new(pt!(0, 0), pt!(5, 5));
         let valid_rect = Rectangle::new(pt!(0, 0), pt!(15, 15));
 
-        assert!((small_rect.width() as u32) < MIN_CROP_SIZE);
-        assert!((small_rect.height() as u32) < MIN_CROP_SIZE);
-        assert!((valid_rect.width() as u32) >= MIN_CROP_SIZE);
-        assert!((valid_rect.height() as u32) >= MIN_CROP_SIZE);
+        assert!(small_rect.width() < MIN_CROP_SIZE);
+        assert!(small_rect.height() < MIN_CROP_SIZE);
+        assert!(valid_rect.width() >= MIN_CROP_SIZE);
+        assert!(valid_rect.height() >= MIN_CROP_SIZE);
     }
 
     #[test]

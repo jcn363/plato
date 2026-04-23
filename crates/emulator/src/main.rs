@@ -1,5 +1,4 @@
 #![allow(clippy::all)]
-#![warn(missing_docs)]
 
 mod constants;
 mod helpers;
@@ -16,6 +15,7 @@ use plato_core::geom::{Axis, Rectangle};
 use plato_core::gesture::{gesture_events, GestureEvent};
 use plato_core::helpers::save_toml;
 use plato_core::input::{ButtonCode, ButtonStatus, DeviceEvent};
+use plato_core::pt;
 use plato_core::settings::{IntermKind, SETTINGS_PATH};
 use plato_core::view::calculator::Calculator;
 use plato_core::view::common::{

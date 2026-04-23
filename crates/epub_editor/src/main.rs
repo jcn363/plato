@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 use epub_edit::{EpubEditorCore, EpubMetadata};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};

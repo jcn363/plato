@@ -4,6 +4,9 @@
 
 use anyhow::Result;
 
+#[cfg(test)]
+use rustc_hash::FxHashSet;
+
 /// Dithering algorithms for grayscale conversion
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DitheringMode {
@@ -204,7 +207,7 @@ mod tests {
 
         // Ordered dithering should produce a pattern
         // Values shouldn't all be the same
-        let unique_values: std::collections::HashSet<u8> = grayscale.iter().cloned().collect();
+        let unique_values: FxHashSet<u8> = grayscale.iter().cloned().collect();
         assert!(
             unique_values.len() > 1,
             "Ordered dithering should produce variety"

@@ -1,3 +1,4 @@
+use rustc_hash::FxHashMap;
 use super::engine::{Engine, ResourceFetcher};
 use super::layout::{InlineMaterial, StyleData};
 use super::parse::{
@@ -100,7 +101,7 @@ impl Engine {
     fn parse_element_styles(
         &self,
         style: &mut StyleData,
-        props: &std::collections::HashMap<String, String>,
+        props: &FxHashMap<String, String>,
         parent_style: &StyleData,
     ) {
         style.font_size = props
@@ -195,8 +196,8 @@ impl Engine {
     fn handle_element_specifics(
         &self,
         name: &str,
-        attributes: &std::collections::HashMap<String, String>,
-        props: &std::collections::HashMap<String, String>,
+        attributes: &FxHashMap<String, String>,
+        props: &FxHashMap<String, String>,
         style: &mut StyleData,
         parent_style: &StyleData,
         spine_dir: &PathBuf,
@@ -230,8 +231,8 @@ impl Engine {
     fn handle_image_element(
         &self,
         name: &str,
-        attributes: &std::collections::HashMap<String, String>,
-        props: &std::collections::HashMap<String, String>,
+        attributes: &FxHashMap<String, String>,
+        props: &FxHashMap<String, String>,
         style: &mut StyleData,
         parent_style: &StyleData,
         spine_dir: &PathBuf,
@@ -286,7 +287,7 @@ impl Engine {
 
     fn handle_link_element(
         &self,
-        attributes: &std::collections::HashMap<String, String>,
+        attributes: &FxHashMap<String, String>,
         style: &mut StyleData,
     ) {
         if let Some(uri) = attributes.get("href") {
@@ -300,7 +301,7 @@ impl Engine {
 
     fn process_before_insert(
         &self,
-        props: &std::collections::HashMap<String, String>,
+        props: &FxHashMap<String, String>,
         style: &StyleData,
         inlines: &mut Vec<InlineMaterial>,
     ) {
@@ -314,7 +315,7 @@ impl Engine {
 
     fn process_after_insert(
         &self,
-        props: &std::collections::HashMap<String, String>,
+        props: &FxHashMap<String, String>,
         style: &StyleData,
         inlines: &mut Vec<InlineMaterial>,
     ) {
