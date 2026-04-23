@@ -21,6 +21,13 @@ pub struct InputBar {
 
 impl InputBar {
     pub fn new(rect: Rectangle, placeholder: &str, text: &str, context: &mut Context) -> InputBar {
+        if placeholder.is_empty() || text.is_empty() {
+            return InputBar {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+            };
+        }
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
         let dpi = crate::unit::get_device_dpi();
