@@ -12,6 +12,12 @@ pub struct OPDSCatalog {
 
 impl OPDSCatalog {
     pub fn new(url: &str) -> Result<Self, Error> {
+        if url.is_empty() {
+            return Err(Error::msg("URL cannot be empty"));
+        }
+        if !url.starts_with("http://") && !url.starts_with("https://") {
+            return Err(Error::msg("URL must start with http:// or https://"));
+        }
         let client = Client::new();
         let response = client
             .get(url)
