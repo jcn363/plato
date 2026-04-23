@@ -141,7 +141,7 @@ impl Engine {
     }
 
     pub fn set_line_height(&mut self, line_height: f32) {
-        self.line_height = line_height;
+        self.line_height = line_height.max(0.0);
     }
 
     pub fn rect(&self) -> Rectangle {
