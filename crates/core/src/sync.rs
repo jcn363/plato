@@ -1,8 +1,8 @@
 use crate::log_info;
 use crate::settings::BackgroundSyncSettings;
 use anyhow::{format_err, Context, Error};
-use rustc_hash::FxHashSet;
 use rustc_hash::FxBuildHasher;
+use rustc_hash::FxHashSet;
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;

@@ -360,7 +360,10 @@ mod tests {
 
     #[test]
     fn test_manager_new_disabled() {
-        let config = ThumbnailConfig { enabled: false, ..Default::default() };
+        let config = ThumbnailConfig {
+            enabled: false,
+            ..Default::default()
+        };
         let manager = ThumbnailManager::new(config);
         assert!(manager.is_err());
     }

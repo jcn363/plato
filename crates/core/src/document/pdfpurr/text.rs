@@ -1,7 +1,7 @@
 //! Text extraction structures for PDFPurr
 
-use pdfpurr::content::analysis::TextRun;
 use super::types::{FzPoint, FzQuad, FzRect};
+use pdfpurr::content::analysis::TextRun;
 
 /// Text page wrapper for PDFPurr text runs
 pub struct TextPage {

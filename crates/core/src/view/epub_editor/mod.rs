@@ -4,8 +4,12 @@
 //! chapter content directly on their device. It's designed to fix errors
 //! encountered while reading EPUB books.
 
+mod chapter;
 mod event_handlers;
 mod helpers;
+mod metadata;
+mod navigation;
+mod search_replace;
 mod state;
 
 use event_handlers::handle_event;

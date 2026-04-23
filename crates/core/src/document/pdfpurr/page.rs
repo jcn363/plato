@@ -5,10 +5,10 @@ use pdfpurr::rendering::{RenderOptions, Renderer};
 use pdfpurr::Document as PdfPurrDoc;
 use std::sync::Arc;
 
-use crate::document::cache::{PageCacheKey, PdfCache};
-use super::types::{FzPoint, FzQuad, FzRect, PdfPurrPixmap, PixmapFormat};
-use super::text::TextPage;
 use super::outline::Link;
+use super::text::TextPage;
+use super::types::{FzPoint, FzQuad, FzRect, PdfPurrPixmap, PixmapFormat};
+use crate::document::cache::{PageCacheKey, PdfCache};
 
 /// Wrapper around PDFPurr page
 pub struct Page<'a> {

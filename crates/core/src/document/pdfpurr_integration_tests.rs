@@ -3,11 +3,11 @@
 //! Tests the complete rendering pipeline:
 //! PDFPurr rendering -> RGBA output -> E-ink optimization -> Display
 
-use rustc_hash::FxHashSet;
 use crate::eink::{
     select_waveform, ContentType, DamageTracker, DitheringMode, FrameBuffer, GrayscaleConverter,
     UpdateType, WaveformMode,
 };
+use rustc_hash::FxHashSet;
 
 /// Simulates the complete rendering pipeline
 fn simulate_render_pipeline(width: u32, height: u32, content_type: ContentType) -> Vec<u8> {

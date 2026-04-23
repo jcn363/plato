@@ -1,7 +1,7 @@
 //! Outline and link structures for PDFPurr
 
-use pdfpurr::structure::{Annotation, Outline as PdfPurrOutline};
 use super::types::{FzLocation, FzRect};
+use pdfpurr::structure::{Annotation, Outline as PdfPurrOutline};
 
 /// Link wrapper for PDFPurr annotations
 pub struct Link {

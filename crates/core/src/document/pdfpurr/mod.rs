@@ -3,19 +3,19 @@
 //! This module provides a wrapper around PDFPurr (pure Rust PDF library)
 //! to replace the MuPDF C library dependency.
 
-mod types;
+mod outline;
 mod page;
 mod text;
-mod outline;
+mod types;
 
 pub use types::{
     rect_from_quad, scale, union_rect, FzLocation, FzPoint, FzQuad, FzRect, PdfPurrPixmap,
     PixmapFormat, FZ_PAGE_BLOCK_IMAGE,
 };
 
-pub use page::Page;
-pub use text::{TextPage, TextBlock, TextLine, TextChar};
 pub use outline::{Link, Outline};
+pub use page::Page;
+pub use text::{TextBlock, TextChar, TextLine, TextPage};
 
 use anyhow::{bail, Result};
 use pdfpurr::Document as PdfPurrDoc;
