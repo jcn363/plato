@@ -35,6 +35,12 @@ impl GrayscaleConverter {
     }
 
     pub fn convert(&self, rgba: &[u8], width: u32, height: u32) -> Result<Vec<u8>> {
+        if rgba.is_empty() {
+            anyhow::bail!("RGBA buffer cannot be empty");
+        }
+        if width == 0 || height == 0 {
+            anyhow::bail!("Width and height must be greater than 0");
+        }
         if rgba.len() != (width * height * 4) as usize {
             anyhow::bail!(
                 "RGBA buffer length {} does not match expected {} for {}x{}",
