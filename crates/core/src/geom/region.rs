@@ -13,6 +13,8 @@ impl Region {
     // pt ∈ rect
     // 0.0 < {corner,strip}_width < 1.0
     pub fn from_point(pt: Point, rect: Rectangle, strip_width: f32, corner_width: f32) -> Region {
+        let strip_width = strip_width.clamp(0.0, 1.0);
+        let corner_width = corner_width.clamp(0.0, 1.0);
         let w = rect.width() as i32;
         let h = rect.height() as i32;
         let m = w.min(h) as f32 / 2.0;
