@@ -276,6 +276,9 @@ impl PluginSystem {
     }
 
     pub fn enable_plugin(&mut self, name: &str) -> Result<(), Error> {
+        if name.is_empty() {
+            bail!("Plugin name cannot be empty");
+        }
         if let Some(plugin) = self.plugins.get_mut(name) {
             plugin.enabled = true;
             Ok(())
@@ -285,6 +288,9 @@ impl PluginSystem {
     }
 
     pub fn disable_plugin(&mut self, name: &str) -> Result<(), Error> {
+        if name.is_empty() {
+            bail!("Plugin name cannot be empty");
+        }
         if let Some(plugin) = self.plugins.get_mut(name) {
             plugin.enabled = false;
             Ok(())
