@@ -4,6 +4,7 @@ use std::env;
 use std::fmt;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum Model {
     LibraColour,
     ClaraColour,
@@ -36,6 +37,7 @@ pub enum Model {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum Orientation {
     Portrait,
     Landscape,
@@ -114,6 +116,7 @@ pub struct KoboDevice {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum FrontlightKind {
     Standard,
     Natural,

@@ -116,6 +116,10 @@ pub fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
                 log_warn!("Warning: Premixed frontlight unavailable, using no-op fallback");
                 Box::new(levels) as Box<dyn Frontlight>
             }),
+        _ => {
+            log_warn!("Warning: Unknown frontlight kind, using no-op fallback");
+            Box::new(levels) as Box<dyn Frontlight>
+        }
     };
 
     let plugin_system = PluginSystem::new(&settings.plugin_settings);
