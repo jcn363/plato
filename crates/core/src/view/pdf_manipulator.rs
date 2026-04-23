@@ -18,8 +18,8 @@ use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
 
-mod types;
 mod manipulation_handlers;
+mod types;
 pub use types::{
     ManipulationMode, RedactionState, BUTTON_HEIGHT, BUTTON_SPACING, PADDING, WARNING_FILE_SIZE,
 };
@@ -319,7 +319,7 @@ Max: 30MB, 500 pages. Keep battery charged."
                 .map_err(|_| format_err!("Invalid page number"))?;
             return self.process_redaction(file_path, page).map(|_| ());
         }
-        
+
         manipulation_handlers::process_manipulation(
             &mut self.manipulator,
             file_path,

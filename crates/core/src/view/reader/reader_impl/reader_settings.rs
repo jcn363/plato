@@ -7,10 +7,10 @@
 //! - `context_menus` - Annotation, selection, and title context menus
 //! - `helpers` - Helper functions for updating settings
 
-mod menu_toggles;
 mod context_menus;
 mod helpers;
+mod menu_toggles;
 
-pub(crate) use menu_toggles::*;
 pub(crate) use context_menus::*;
 pub(crate) use helpers::*;
+pub(crate) use menu_toggles::*;

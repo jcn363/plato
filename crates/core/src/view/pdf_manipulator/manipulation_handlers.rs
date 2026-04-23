@@ -1,23 +1,23 @@
 use crate::document::pdf_manipulator::PdfManipulator;
 use crate::view::{Bus, Event};
 use anyhow::{format_err, Error};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::types::ManipulationMode;
 
 pub fn process_manipulation(
     manipulator: &mut PdfManipulator,
-    file_path: &PathBuf,
+    file_path: &Path,
     action: &str,
     bus: &mut Bus,
     mode: &mut ManipulationMode,
 ) -> Result<(), Error> {
     *mode = ManipulationMode::Processing;
 
-    let result = match action {
+    let result: Result<PathBuf, Error> = match action {
         "delete" | "rotate90" | "rotate180" | "rotate270" => {
             bus.push_back(Event::Render("Select pages first".to_string()));
-            Ok(file_path.clone())
+            Ok(file_path.to_path_buf())
         }
         "delete_all" => {
             let pages: Vec<_> = (0..10).collect();
@@ -84,8 +84,7 @@ pub fn process_manipulation(
             ));
         }
         Err(e) => {
-            let error_msg = if e.to_string().contains("memory")
-                || e.to_string().contains("Memory")
+            let error_msg = if e.to_string().contains("memory") || e.to_string().contains("Memory")
             {
                 "❌ Memory error. Try smaller PDF or close apps.".to_string()
             } else if e.to_string().contains("too large") || e.to_string().contains("exceeds") {
@@ -102,7 +101,7 @@ pub fn process_manipulation(
     Ok(())
 }
 
-fn handle_extract_resources(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Error> {
+fn handle_extract_resources(file_path: &Path, bus: &mut Bus) -> Result<(), Error> {
     use crate::document::pdf_manipulator::ResourceExtractor;
     let extractor = ResourceExtractor::new(file_path)?;
     match extractor.list_resources() {
@@ -130,7 +129,7 @@ fn handle_extract_resources(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Er
     Ok(())
 }
 
-fn handle_export_annotations(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Error> {
+fn handle_export_annotations(file_path: &Path, bus: &mut Bus) -> Result<(), Error> {
     use crate::document::pdf_manipulator::PdfAnnotationExporter;
     let output = file_path.with_extension("annotated.pdf");
 
@@ -154,15 +153,13 @@ fn handle_export_annotations(file_path: &PathBuf, bus: &mut Bus) -> Result<(), E
     Ok(())
 }
 
-fn handle_read_annotations(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Error> {
+fn handle_read_annotations(file_path: &Path, bus: &mut Bus) -> Result<(), Error> {
     use crate::document::pdf_manipulator::ResourceExtractor;
     let extractor = ResourceExtractor::new(file_path)?;
     match extractor.read_annotations() {
         Ok(annotations) => {
             if annotations.is_empty() {
-                bus.push_back(Event::Render(
-                    "📋 No annotations found in PDF".to_string(),
-                ));
+                bus.push_back(Event::Render("📋 No annotations found in PDF".to_string()));
             } else {
                 let msg = format!("📋 Found {} annotations in PDF", annotations.len());
                 bus.push_back(Event::Render(msg));
@@ -175,7 +172,7 @@ fn handle_read_annotations(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Err
     Ok(())
 }
 
-fn handle_search_annotations(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Error> {
+fn handle_search_annotations(file_path: &Path, bus: &mut Bus) -> Result<(), Error> {
     use crate::document::pdf_manipulator::{
         AnnotationQuery, AnnotationSubtype, PdfAnnotationManager,
     };
@@ -186,9 +183,7 @@ fn handle_search_annotations(file_path: &PathBuf, bus: &mut Bus) -> Result<(), E
             let query = AnnotationQuery::new().with_subtype(AnnotationSubtype::Highlight);
             let results = manager.search(&query);
             if results.is_empty() {
-                bus.push_back(Event::Render(
-                    "🔍 No highlights found in PDF".to_string(),
-                ));
+                bus.push_back(Event::Render("🔍 No highlights found in PDF".to_string()));
             } else {
                 let msg = format!("🔍 Found {} highlights in PDF", results.len());
                 bus.push_back(Event::Render(msg));
@@ -201,7 +196,7 @@ fn handle_search_annotations(file_path: &PathBuf, bus: &mut Bus) -> Result<(), E
     Ok(())
 }
 
-fn handle_export_xfdf(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Error> {
+fn handle_export_xfdf(file_path: &Path, bus: &mut Bus) -> Result<(), Error> {
     use crate::document::pdf_manipulator::{PdfAnnotationManager, XfdfHandler};
     let mut manager = PdfAnnotationManager::new(file_path)?;
 
@@ -228,7 +223,7 @@ fn handle_export_xfdf(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Error> {
     Ok(())
 }
 
-fn handle_import_xfdf(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Error> {
+fn handle_import_xfdf(file_path: &Path, bus: &mut Bus) -> Result<(), Error> {
     use crate::document::pdf_manipulator::XfdfHandler;
     let xfdf_path = file_path.with_extension("xfdf");
 
@@ -247,10 +242,7 @@ fn handle_import_xfdf(file_path: &PathBuf, bus: &mut Bus) -> Result<(), Error> {
                     "📥 No annotations found in XFDF file".to_string(),
                 ));
             } else {
-                let msg = format!(
-                    "📥 Imported {} annotations from XFDF",
-                    annotations.len()
-                );
+                let msg = format!("📥 Imported {} annotations from XFDF", annotations.len());
                 bus.push_back(Event::Render(msg));
             }
         }

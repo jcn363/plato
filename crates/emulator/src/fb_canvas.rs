@@ -2,12 +2,12 @@
 //!
 //! Implements the Framebuffer trait using SDL2's WindowCanvas for the desktop emulator.
 
+use crate::constants::DEFAULT_ROTATION;
 use plato_core::anyhow::{Context as ResultExt, Error};
 use plato_core::chrono::Local;
 use plato_core::color::Color;
 use plato_core::framebuffer::{Framebuffer, UpdateMode};
 use plato_core::geom::Rectangle;
-use crate::constants::DEFAULT_ROTATION;
 use sdl2::pixels::{Color as SdlColor, PixelFormatEnum};
 use sdl2::rect::Point as SdlPoint;
 use sdl2::rect::Rect as SdlRect;

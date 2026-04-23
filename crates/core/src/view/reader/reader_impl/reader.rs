@@ -38,18 +38,15 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{atomic, Arc, Mutex};
 
-use crate::view::{
-    Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER,
-};
+use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 
+use super::reader_animation;
+use super::reader_constructors;
 use super::reader_core::{
-    Contrast, PageAnimation, RenderChunk, Resource, Search, Selection,
-    State, ViewPort,
+    Contrast, PageAnimation, RenderChunk, Resource, Search, Selection, State, ViewPort,
 };
 use super::reader_rendering;
 use super::reader_toc::ReaderTocManager;
-use super::reader_animation;
-use super::reader_constructors;
 
 // ===========================================================================
 // Type Definitions
@@ -163,7 +160,8 @@ impl Reader {
     ) -> Result<Reader, Error> {
         let id = ID_FEEDER.next();
         let (doc, pages_count, reflowable) = reader_constructors::open_html_document(html)?;
-        let children = reader_constructors::create_toolbar(rect, reflowable, &Info::default(), context);
+        let children =
+            reader_constructors::create_toolbar(rect, reflowable, &Info::default(), context);
         let info = reader_constructors::create_html_info(html);
 
         Ok(Self::create_reader(

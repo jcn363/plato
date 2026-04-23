@@ -116,8 +116,10 @@ fn spawn_finger_hold_detector(
                     && (tp[tp.len() / 2] - position).length() < hold_jitter
                 {
                     held = true;
-                    ty.send(Event::Gesture(super::types::GestureEvent::HoldFingerShort(position, id)))
-                        .ok();
+                    ty.send(Event::Gesture(super::types::GestureEvent::HoldFingerShort(
+                        position, id,
+                    )))
+                    .ok();
                 }
             }
             if held {
@@ -144,8 +146,10 @@ fn spawn_finger_hold_detector(
                     && (tp[tp.len() - 1] - position).length() < hold_jitter
                     && (tp[tp.len() / 2] - position).length() < hold_jitter
                 {
-                    ty.send(Event::Gesture(super::types::GestureEvent::HoldFingerLong(position, id)))
-                        .ok();
+                    ty.send(Event::Gesture(super::types::GestureEvent::HoldFingerLong(
+                        position, id,
+                    )))
+                    .ok();
                 }
             }
         }
@@ -168,8 +172,10 @@ fn spawn_button_hold_detector(
             let bt = buttons.lock().expect("buttons lock poisoned");
             if let Some(&initial_time) = bt.get(&code) {
                 if initial_time == time {
-                    ty.send(Event::Gesture(super::types::GestureEvent::HoldButtonShort(code)))
-                        .ok();
+                    ty.send(Event::Gesture(super::types::GestureEvent::HoldButtonShort(
+                        code,
+                    )))
+                    .ok();
                 }
             }
         }
@@ -178,8 +184,10 @@ fn spawn_button_hold_detector(
             let bt = buttons.lock().expect("buttons lock poisoned");
             if let Some(&initial_time) = bt.get(&code) {
                 if (initial_time - time).abs() < f64::EPSILON {
-                    ty.send(Event::Gesture(super::types::GestureEvent::HoldButtonLong(code)))
-                        .ok();
+                    ty.send(Event::Gesture(super::types::GestureEvent::HoldButtonLong(
+                        code,
+                    )))
+                    .ok();
                 }
             }
         }

@@ -63,9 +63,7 @@ pub(crate) fn handle_battery_event(
         }
     }
 
-    if context.settings.theme_settings.mode == ThemeMode::Auto
-        && CURRENT_DEVICE.has_lightsensor()
-    {
+    if context.settings.theme_settings.mode == ThemeMode::Auto && CURRENT_DEVICE.has_lightsensor() {
         if let Ok(level) = context.lightsensor.level() {
             theme::update_from_light_sensor(level);
             if theme::is_dark_mode() != context.settings.dark_mode {
@@ -162,8 +160,7 @@ pub(crate) fn handle_suspend_execute_event(
                 .map_err(|e| log_error!("Can't get alarm: {:#}", e))
                 .map(|rwa| {
                     !rwa.enabled()
-                        || (rwa.year() <= 1970
-                            && ((after - before) - dur).num_seconds().abs() < 3)
+                        || (rwa.year() <= 1970 && ((after - before) - dur).num_seconds().abs() < 3)
                 })
                 .ok()
         }) {
@@ -239,20 +236,14 @@ pub(crate) fn handle_gesture_event(
                 context.settings.reader.corner_width,
             );
             match (r1, r2) {
-                (
-                    Region::Corner(DiagDir::SouthWest),
-                    Region::Corner(DiagDir::NorthEast),
-                ) => {
+                (Region::Corner(DiagDir::SouthWest), Region::Corner(DiagDir::NorthEast)) => {
                     rq.add(RenderData::new(
                         view.id(),
                         context.fb.rect(),
                         UpdateMode::Full,
                     ));
                 }
-                (
-                    Region::Corner(DiagDir::NorthWest),
-                    Region::Corner(DiagDir::SouthEast),
-                ) => {
+                (Region::Corner(DiagDir::NorthWest), Region::Corner(DiagDir::SouthEast)) => {
                     tx.send(Event::Select(EntryId::TakeScreenshot)).ok();
                 }
                 _ => (),
@@ -327,14 +318,7 @@ pub(crate) fn handle_open_event(
             }
         }
         context.fb.set_dithered(dithered);
-        handle_event(
-            view.as_mut(),
-            &Event::Invalid(path),
-            tx,
-            bus,
-            rq,
-            context,
-        );
+        handle_event(view.as_mut(), &Event::Invalid(path), tx, bus, rq, context);
     }
 }
 
@@ -377,10 +361,7 @@ pub(crate) fn handle_back_event(
     }
 }
 
-pub(crate) fn handle_wifi_event(
-    enable: bool,
-    context: &mut plato_core::context::Context,
-) {
+pub(crate) fn handle_wifi_event(enable: bool, context: &mut plato_core::context::Context) {
     set_wifi(enable, context);
 }
 

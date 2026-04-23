@@ -2,9 +2,9 @@
 //!
 //! Functions for interpreting touch segments and processing gesture pairs.
 
-use crate::geom::{Axis, Dir, Point, Vec2};
 use crate::geom::elbow;
 use crate::geom::nearest_segment_point;
+use crate::geom::{Axis, Dir, Point, Vec2};
 use crate::view::Event;
 use std::sync::mpsc::Sender;
 

@@ -1,12 +1,12 @@
 #![allow(clippy::all)]
 
 mod constants;
-mod helpers;
 mod fb_canvas;
+mod helpers;
 
 use constants::{APP_NAME, CLOCK_REFRESH_INTERVAL, DEFAULT_ROTATION};
-use helpers::{build_context, device_event, seconds};
 use fb_canvas::FBCanvas;
+use helpers::{build_context, device_event, seconds};
 
 use plato_core::anyhow::{Context as ResultExt, Error};
 use plato_core::chrono::Local;

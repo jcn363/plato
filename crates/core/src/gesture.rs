@@ -26,13 +26,13 @@
 //! - `nearest_segment_point()` uses pure vector math
 //! - State machine processes events in O(1) per input event
 
-mod types;
-mod platform;
 mod handlers;
+mod platform;
 mod processing;
+mod types;
 
-pub use types::{GestureEvent, TouchState};
 pub use platform::{platform_hold_delay_ms, platform_tap_jitter_mm};
+pub use types::{GestureEvent, TouchState};
 
 use crate::geom::Point;
 use crate::input::DeviceEvent;
@@ -63,7 +63,7 @@ pub fn parse_gesture_events(rx: &Receiver<DeviceEvent>, ty: &Sender<Event>) {
     use crate::device::CURRENT_DEVICE;
     use crate::input::{ButtonCode, ButtonStatus, FingerStatus};
     use crate::unit::mm_to_px;
-    
+
     let contacts: Arc<Mutex<FxHashMap<i32, TouchState>>> =
         Arc::new(Mutex::new(FxHashMap::default()));
     let buttons: Arc<Mutex<FxHashMap<ButtonCode, f64>>> =
@@ -105,7 +105,14 @@ pub fn parse_gesture_events(rx: &Receiver<DeviceEvent>, ty: &Sender<Event>) {
                 id,
                 ..
             } => {
-                handlers::handle_finger_up(&contacts, &segments, ty.clone(), id, position, tap_jitter);
+                handlers::handle_finger_up(
+                    &contacts,
+                    &segments,
+                    ty.clone(),
+                    id,
+                    position,
+                    tap_jitter,
+                );
             }
             DeviceEvent::Button {
                 status: ButtonStatus::Pressed,
