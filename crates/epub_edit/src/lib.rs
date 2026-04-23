@@ -1,41 +1,21 @@
 #![warn(missing_docs)]
 
 mod types;
+mod parser;
 
 pub use types::{
     Bookmark, ChapterStatistics, CSSInfo, EpubChapter, EpubMetadata, ImageInfo, SearchOptions,
     SpellCheckResult, SpellError, UndoAction, ValidationIssue, ValidationResult,
 };
+use parser::{extract_epub, parse_metadata, parse_content, parse_opf_metadata, parse_opf_content};
 
 use anyhow::{bail, format_err, Context, Result};
 use regex::Regex;
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
 use zip::write::FileOptions;
 use zip::{CompressionMethod, ZipArchive, ZipWriter};
-
-static TITLE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:title[^>]*>([^<]+)</dc:title>"#).unwrap());
-static AUTHOR_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:creator[^>]*>([^<]+)</dc:creator>"#).unwrap());
-static LANGUAGE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:language[^>]*>([^<]+)</dc:language>"#).unwrap());
-static IDENTIFIER_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:identifier[^>]*>([^<]+)</dc:identifier>"#).unwrap());
-static PUBLISHER_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:publisher[^>]*>([^<]+)</dc:publisher>"#).unwrap());
-static DATE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:date[^>]*>([^<]+)</dc:date>"#).unwrap());
-static DESCRIPTION_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:description[^>]*>([^<]+)</dc:description>"#).unwrap());
-static ROOTFILE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).unwrap());
-static ITEM_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<item[^>]+href="([^"]+)"[^>]+id="([^"]+)"[^>]*>"#).unwrap());
-static SPINE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<itemref[^>]+idref="([^"]+)"[^>]*>"#).unwrap());
 
 const MAX_HISTORY_SIZE: usize = 50;
 
@@ -106,33 +86,7 @@ impl EpubEditorCore {
     /// * Creating directories for extracted files fails
     /// * Writing extracted files fails
     fn extract(&self) -> Result<()> {
-        let file = File::open(&self.epub_path).context("Failed to open EPUB file")?;
-        let mut archive = ZipArchive::new(file).context("Failed to read ZIP archive")?;
-
-        for i in 0..archive.len() {
-            let mut file = archive.by_index(i)?;
-
-            // Prevent zip slip: reject entries containing path traversal components
-            let name = file.name();
-            if name.contains("..") || name.starts_with('/') || name.starts_with('\\') {
-                return Err(format_err!("Zip entry contains path traversal: {}", name));
-            }
-
-            let outpath = self.temp_dir.join(name);
-
-            if name.ends_with('/') {
-                fs::create_dir_all(&outpath)?;
-            } else {
-                if let Some(p) = outpath.parent() {
-                    if !p.exists() {
-                        fs::create_dir_all(p)?;
-                    }
-                }
-                let mut outfile = File::create(&outpath)?;
-                io::copy(&mut file, &mut outfile)?;
-            }
-        }
-        Ok(())
+        extract_epub(&self.epub_path, &self.temp_dir)
     }
 
     /// Parses metadata from the EPUB's OPF file.
@@ -146,66 +100,9 @@ impl EpubEditorCore {
     /// * The OPF file is missing at the specified path
     /// * Reading the OPF file fails
     fn parse_metadata(&mut self) -> Result<()> {
-        let container_path = self.temp_dir.join("META-INF/container.xml");
-        if !container_path.exists() {
-            return Err(format_err!("META-INF/container.xml not found"));
-        }
-
-        let container_content = fs::read_to_string(&container_path)?;
-
-        if let Some(caps) = ROOTFILE_RE.captures(&container_content) {
-            let opf_path = caps
-                .get(1)
-                .map(|m| m.as_str())
-                .unwrap_or("OEBPS/content.opf");
-            let opf_full_path = self.temp_dir.join(opf_path);
-
-            if opf_full_path.exists() {
-                let opf_content = fs::read_to_string(&opf_full_path)?;
-                self.parse_opf_metadata(&opf_content);
-            } else {
-                return Err(format_err!("OPF file not found at {}", opf_path));
-            }
-        } else {
-            return Err(format_err!("Could not find rootfile in container.xml"));
-        }
+        let (_opf_path, opf_content) = parse_metadata(&self.temp_dir)?;
+        self.metadata = parse_opf_metadata(&opf_content);
         Ok(())
-    }
-
-    fn parse_opf_metadata(&mut self, opf_content: &str) {
-        if let Some(caps) = TITLE_RE.captures(opf_content) {
-            self.metadata.title = caps
-                .get(1)
-                .map(|m| m.as_str().to_string())
-                .unwrap_or_default();
-        }
-        if let Some(caps) = AUTHOR_RE.captures(opf_content) {
-            self.metadata.author = caps
-                .get(1)
-                .map(|m| m.as_str().to_string())
-                .unwrap_or_default();
-        }
-        if let Some(caps) = LANGUAGE_RE.captures(opf_content) {
-            self.metadata.language = caps
-                .get(1)
-                .map(|m| m.as_str().to_string())
-                .unwrap_or_else(|| "en".to_string());
-        }
-        if let Some(caps) = IDENTIFIER_RE.captures(opf_content) {
-            self.metadata.identifier = caps
-                .get(1)
-                .map(|m| m.as_str().to_string())
-                .unwrap_or_default();
-        }
-        if let Some(caps) = PUBLISHER_RE.captures(opf_content) {
-            self.metadata.publisher = caps.get(1).map(|m| m.as_str().to_string());
-        }
-        if let Some(caps) = DATE_RE.captures(opf_content) {
-            self.metadata.date = caps.get(1).map(|m| m.as_str().to_string());
-        }
-        if let Some(caps) = DESCRIPTION_RE.captures(opf_content) {
-            self.metadata.description = caps.get(1).map(|m| m.as_str().to_string());
-        }
     }
 
     #[must_use]
@@ -224,98 +121,9 @@ impl EpubEditorCore {
     /// * The OPF file is missing at the specified path
     /// * Reading the OPF file fails
     fn parse_content(&mut self) -> Result<()> {
-        let container_path = self.temp_dir.join("META-INF/container.xml");
-        let container_content = fs::read_to_string(&container_path)?;
-
-        if let Some(caps) = ROOTFILE_RE.captures(&container_content) {
-            let opf_path = caps
-                .get(1)
-                .map(|m| m.as_str())
-                .unwrap_or("OEBPS/content.opf");
-            let opf_full_path = self.temp_dir.join(opf_path);
-
-            if opf_full_path.exists() {
-                let opf_content = fs::read_to_string(&opf_full_path)?;
-                self.parse_opf_content(&opf_content, opf_path);
-            }
-        }
+        let (opf_path, opf_content) = parse_content(&self.temp_dir)?;
+        self.chapters = parse_opf_content(&opf_content, &opf_path, &self.temp_dir);
         Ok(())
-    }
-
-    fn parse_opf_content(&mut self, opf_content: &str, opf_dir: &str) {
-        let mut item_map: std::collections::HashMap<String, String> =
-            std::collections::HashMap::new();
-        for caps in ITEM_RE.captures_iter(opf_content) {
-            let href = caps
-                .get(1)
-                .map(|m| m.as_str().to_string())
-                .unwrap_or_default();
-            let id = caps
-                .get(2)
-                .map(|m| m.as_str().to_string())
-                .unwrap_or_default();
-            item_map.insert(id, href);
-        }
-
-        let mut order: Vec<String> = Vec::new();
-        for caps in SPINE_RE.captures_iter(opf_content) {
-            let idref = caps
-                .get(1)
-                .map(|m| m.as_str().to_string())
-                .unwrap_or_default();
-            order.push(idref);
-        }
-
-        let opf_parent = Path::new(opf_dir).parent().unwrap_or(Path::new(""));
-        for idref in order {
-            if let Some(href) = item_map.get(&idref) {
-                let full_path = self.temp_dir.join(opf_parent).join(href);
-                if full_path.exists() {
-                    if let Ok(content) = fs::read_to_string(&full_path) {
-                        self.chapters.push(EpubChapter {
-                            id: idref.clone(),
-                            href: href.clone(),
-                            title: Self::extract_title(&content).unwrap_or_else(|| href.clone()),
-                            content,
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    #[must_use]
-    pub fn extract_title(html: &str) -> Option<String> {
-        let title_regex = Regex::new(r"(?i)<title[^>]*>([^<]+)</title>").ok()?;
-        let h1_regex = Regex::new(r"(?i)<h1[^>]*>([^<]+)</h1>").ok()?;
-
-        if let Some(caps) = title_regex.captures(html) {
-            return Some(
-                caps.get(1)
-                    .map(|m| m.as_str().to_string())
-                    .unwrap_or_default(),
-            );
-        }
-        if let Some(caps) = h1_regex.captures(html) {
-            return Some(
-                caps.get(1)
-                    .map(|m| m.as_str().to_string())
-                    .unwrap_or_default(),
-            );
-        }
-        None
-    }
-
-    #[must_use]
-    pub fn sanitize_filename(name: &str) -> String {
-        name.chars()
-            .map(|c| match c {
-                '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => ' ',
-                _ => c,
-            })
-            .collect::<String>()
-            .trim()
-            .to_string()
     }
 
     pub fn set_metadata(&mut self, metadata: EpubMetadata) {

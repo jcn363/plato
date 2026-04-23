@@ -226,6 +226,10 @@ All 9 WIP module managers now integrated and active:
 - **epub_editor**: Extracted view helper functions to `helpers.rs` module
   - show_chapter_list, show_metadata_edit_view, show_save_dialog, show_edit_view
   - Reduced mod.rs from 1299 lines to 1057 lines (242 lines reduction)
+- **epub_edit**: Extracted parser functions to `parser.rs` module
+  - extract_epub, parse_metadata, parse_content, parse_opf_metadata, parse_opf_content
+  - extract_title, sanitize_filename
+  - Reduced lib.rs from 1179 lines to 986 lines (193 lines reduction)
 
 ## Verification
 
