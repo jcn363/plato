@@ -39,6 +39,9 @@ impl Button {
     }
 
     pub fn update(&mut self, text: String, rq: &mut RenderQueue) {
+        if text.is_empty() {
+            return;
+        }
         if self.text != text {
             self.text = text;
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
