@@ -16,6 +16,13 @@ pub struct FrameBuffer {
 
 impl FrameBuffer {
     pub fn new(width: u32, height: u32) -> Self {
+        if width == 0 || height == 0 {
+            return Self {
+                width: 1,
+                height: 1,
+                data: vec![0; 4],
+            };
+        }
         let data = vec![0; (width * height * 4) as usize];
         Self {
             width,
@@ -25,6 +32,12 @@ impl FrameBuffer {
     }
 
     pub fn from_data(width: u32, height: u32, data: Vec<u8>) -> Result<Self> {
+        if width == 0 || height == 0 {
+            anyhow::bail!("Width and height must be greater than 0");
+        }
+        if data.is_empty() {
+            anyhow::bail!("Data cannot be empty");
+        }
         let expected_len = (width * height * 4) as usize;
         if data.len() != expected_len {
             anyhow::bail!(
