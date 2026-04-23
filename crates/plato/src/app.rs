@@ -1,4 +1,5 @@
 use crate::constants::{APP_NAME, FB_DEVICE, AUTO_SUSPEND_REFRESH_INTERVAL, BATTERY_REFRESH_INTERVAL, CLOCK_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY, SUSPEND_WAIT_DELAY, TOUCH_INPUTS, BUTTON_INPUTS, POWER_INPUTS};
+use crate::event::{EventContext, handle_device_event};
 use crate::helpers::{build_context, goto_view, power_off, set_wifi, HistoryItem, ExitStatus};
 use crate::task::{Task, TaskId, schedule_task, resume};
 
@@ -11,9 +12,7 @@ use plato_core::framebuffer::{Framebuffer, KoboFramebuffer1, KoboFramebuffer2, U
 use plato_core::geom::{DiagDir, Rectangle, Region};
 use plato_core::gesture::{gesture_events, GestureEvent};
 use plato_core::helpers::{load_toml, save_toml};
-use plato_core::input::{
-    button_scheme_event, device_events, display_rotate_event, raw_events, usb_events,
-};
+use plato_core::input::{button_scheme_event, device_events, display_rotate_event, raw_events, usb_events, InputEvent};
 use plato_core::input::{
     ButtonCode, ButtonStatus, DeviceEvent, PowerSource, VAL_PRESS, VAL_RELEASE,
 };
@@ -206,354 +205,32 @@ pub fn run() -> Result<(), Error> {
         log_error!("Failed to trigger startup plugins: {}", e);
     }
 
+    let mut event_ctx = EventContext::new(
+        history,
+        tasks,
+        updating,
+        inactive_since,
+        exit_status,
+        raw_sender,
+        current_dir,
+    );
+
     while let Ok(evt) = rx.recv() {
         match evt {
-            Event::Device(de) => match de {
-                DeviceEvent::Button {
-                    code: ButtonCode::Power,
-                    status: ButtonStatus::Released,
-                    ..
-                } => {
-                    if context.flags.contains(DeviceFlags::SHARED)
-                        || context.flags.contains(DeviceFlags::COVERED)
-                    {
-                        continue;
-                    }
-
-                    if tasks.iter().any(|task| task.id == TaskId::PrepareSuspend) {
-                        resume(
-                            TaskId::PrepareSuspend,
-                            &mut tasks,
-                            view.as_mut(),
-                            &tx,
-                            &mut rq,
-                            &mut context,
-                        );
-                    } else if tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                        resume(
-                            TaskId::Suspend,
-                            &mut tasks,
-                            view.as_mut(),
-                            &tx,
-                            &mut rq,
-                            &mut context,
-                        );
-                    } else {
-                        view.handle_event(&Event::Suspend, &tx, &mut bus, &mut rq, &mut context);
-                        let interm = Intermission::new(
-                            context.fb.rect(),
-                            IntermKind::Suspend,
-                            context.settings.sleep_cover_fill,
-                            &context,
-                        );
-                        rq.add(RenderData::new(
-                            interm.id(),
-                            *interm.rect(),
-                            UpdateMode::Full,
-                        ));
-                        schedule_task(
-                            TaskId::PrepareSuspend,
-                            Event::PrepareSuspend,
-                            PREPARE_SUSPEND_WAIT_DELAY,
-                            &tx,
-                            &mut tasks,
-                        );
-                        view.children_mut().push(Box::new(interm) as Box<dyn View>);
-                    }
+            Event::Device(de) => {
+                if handle_device_event(
+                    de,
+                    view.as_mut(),
+                    &tx,
+                    &mut bus,
+                    &mut rq,
+                    &mut context,
+                    &mut event_ctx,
+                    &evt,
+                ) {
+                    continue;
                 }
-                DeviceEvent::Button {
-                    code: ButtonCode::Light,
-                    status: ButtonStatus::Pressed,
-                    ..
-                } => {
-                    tx.send(Event::ToggleFrontlight).ok();
-                }
-                DeviceEvent::CoverOn => {
-                    if context.flags.contains(DeviceFlags::COVERED) {
-                        continue;
-                    }
-
-                    context.flags.insert(DeviceFlags::COVERED);
-
-                    if !context.settings.sleep_cover
-                        || context.flags.contains(DeviceFlags::SHARED)
-                        || tasks.iter().any(|task| {
-                            task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend
-                        })
-                    {
-                        continue;
-                    }
-
-                    view.handle_event(&Event::Suspend, &tx, &mut bus, &mut rq, &mut context);
-                    let interm = Intermission::new(
-                        context.fb.rect(),
-                        IntermKind::Suspend,
-                        context.settings.sleep_cover_fill,
-                        &context,
-                    );
-                    rq.add(RenderData::new(
-                        interm.id(),
-                        *interm.rect(),
-                        UpdateMode::Full,
-                    ));
-                    schedule_task(
-                        TaskId::PrepareSuspend,
-                        Event::PrepareSuspend,
-                        PREPARE_SUSPEND_WAIT_DELAY,
-                        &tx,
-                        &mut tasks,
-                    );
-                    view.children_mut().push(Box::new(interm) as Box<dyn View>);
-                }
-                DeviceEvent::CoverOff => {
-                    if !context.flags.contains(DeviceFlags::COVERED) {
-                        continue;
-                    }
-
-                    context.flags.remove(DeviceFlags::COVERED);
-
-                    if context.flags.contains(DeviceFlags::SHARED) || !context.settings.sleep_cover
-                    {
-                        continue;
-                    }
-
-                    if tasks.iter().any(|task| task.id == TaskId::PrepareSuspend) {
-                        resume(
-                            TaskId::PrepareSuspend,
-                            &mut tasks,
-                            view.as_mut(),
-                            &tx,
-                            &mut rq,
-                            &mut context,
-                        );
-                    } else if tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                        resume(
-                            TaskId::Suspend,
-                            &mut tasks,
-                            view.as_mut(),
-                            &tx,
-                            &mut rq,
-                            &mut context,
-                        );
-                    }
-                }
-                DeviceEvent::NetUp => {
-                    if tasks
-                        .iter()
-                        .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
-                    {
-                        continue;
-                    }
-                    let ip = Command::new("scripts/ip.sh")
-                        .output()
-                        .map(|o| String::from_utf8_lossy(&o.stdout).trim_end().to_string())
-                        .unwrap_or_default();
-                    let essid = Command::new("scripts/essid.sh")
-                        .output()
-                        .map(|o| String::from_utf8_lossy(&o.stdout).trim_end().to_string())
-                        .unwrap_or_default();
-                    let notif = Notification::new(
-                        format!("Network is up ({}, {}).", ip, essid),
-                        &tx,
-                        &mut rq,
-                        &mut context,
-                    );
-                    context.flags.insert(DeviceFlags::ONLINE);
-                    view.children_mut().push(Box::new(notif) as Box<dyn View>);
-                    if view.is::<Home>() {
-                        view.handle_event(&evt, &tx, &mut bus, &mut rq, &mut context);
-                    } else if let Some(entry) =
-                        history.get_mut(0).filter(|entry| entry.view.is::<Home>())
-                    {
-                        let (tx, _rx) = mpsc::channel();
-                        entry.view.handle_event(
-                            &evt,
-                            &tx,
-                            &mut VecDeque::new(),
-                            &mut RenderQueue::new(),
-                            &mut context,
-                        );
-                    }
-                }
-                DeviceEvent::Plug(power_source) => {
-                    if context.flags.contains(DeviceFlags::PLUGGED) {
-                        continue;
-                    }
-
-                    context.flags.insert(DeviceFlags::PLUGGED);
-
-                    tasks.retain(|task| task.id != TaskId::CheckBattery);
-
-                    if context.flags.contains(DeviceFlags::COVERED) {
-                        continue;
-                    }
-
-                    match power_source {
-                        PowerSource::Wall => {
-                            if tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                                continue;
-                            }
-                        }
-                        PowerSource::Host => {
-                            if tasks.iter().any(|task| task.id == TaskId::PrepareSuspend) {
-                                resume(
-                                    TaskId::PrepareSuspend,
-                                    &mut tasks,
-                                    view.as_mut(),
-                                    &tx,
-                                    &mut rq,
-                                    &mut context,
-                                );
-                            } else if tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                                resume(
-                                    TaskId::Suspend,
-                                    &mut tasks,
-                                    view.as_mut(),
-                                    &tx,
-                                    &mut rq,
-                                    &mut context,
-                                );
-                            }
-
-                            if context.settings.auto_share {
-                                tx.send(Event::PrepareShare).ok();
-                            } else {
-                                let dialog = Dialog::new(
-                                    ViewId::ShareDialog,
-                                    Some(Event::PrepareShare),
-                                    "Share storage via USB?".to_string(),
-                                    &mut context,
-                                );
-                                rq.add(RenderData::new(
-                                    dialog.id(),
-                                    *dialog.rect(),
-                                    UpdateMode::Gui,
-                                ));
-                                view.children_mut().push(Box::new(dialog) as Box<dyn View>);
-                            }
-
-                            inactive_since = Instant::now();
-                        }
-                    }
-
-                    tx.send(Event::BatteryTick).ok();
-                }
-                DeviceEvent::Unplug(..) => {
-                    if !context.flags.contains(DeviceFlags::PLUGGED) {
-                        continue;
-                    }
-
-                    if context.flags.contains(DeviceFlags::SHARED) {
-                        context.flags.remove(DeviceFlags::SHARED);
-                        Command::new("scripts/usb-disable.sh").status().ok();
-                        env::set_current_dir(&current_dir)
-                            .map_err(|e| {
-                                log_error!(
-                                    "Can't set current directory to {}: {:#}.",
-                                    current_dir.display(),
-                                    e
-                                )
-                            })
-                            .ok();
-                        let path = Path::new(SETTINGS_PATH);
-                        if let Ok(settings) = load_toml::<Settings, _>(path)
-                            .map_err(|e| log_error!("Can't load settings: {:#}.", e))
-                        {
-                            let dark_mode = settings.dark_mode;
-                            context.settings = settings;
-                            theme::set_theme_mode(context.settings.theme_settings.mode);
-                            theme::set_auto_threshold(
-                                context.settings.theme_settings.auto_threshold,
-                            );
-                            theme::set_dark_mode(dark_mode);
-                        }
-                        if context.settings.wifi {
-                            Command::new("scripts/wifi-enable.sh").status().ok();
-                        }
-                        if context.settings.frontlight {
-                            let levels = context.settings.frontlight_levels;
-                            context.frontlight.set_warmth(levels.warmth);
-                            context.frontlight.set_intensity(levels.intensity);
-                        }
-                        if let Some(index) = locate::<Intermission>(view.as_ref()) {
-                            let rect = *view.child(index).rect();
-                            view.children_mut().remove(index);
-                            rq.add(RenderData::expose(rect, UpdateMode::Full));
-                        }
-                        if Path::new(KOBO_UPDATE_BUNDLE).exists() {
-                            tx.send(Event::Select(EntryId::Reboot)).ok();
-                        }
-                        context.library.reload();
-                        if context.settings.import.unshare_trigger {
-                            context.batch_import();
-                            // Trigger book import plugins
-                            if let Err(e) = context
-                                .plugin_system
-                                .on_book_import(&Path::new("/mnt/onboard"))
-                            {
-                                log_error!("Failed to trigger book import plugins: {}", e);
-                            }
-                        }
-                        view.handle_event(&Event::Reseed, &tx, &mut bus, &mut rq, &mut context);
-                    } else {
-                        context.flags.remove(DeviceFlags::PLUGGED);
-                        schedule_task(
-                            TaskId::CheckBattery,
-                            Event::CheckBattery,
-                            BATTERY_REFRESH_INTERVAL,
-                            &tx,
-                            &mut tasks,
-                        );
-                        if tasks.iter().any(|task| task.id == TaskId::Suspend) {
-                            if !context.flags.contains(DeviceFlags::COVERED) {
-                                resume(
-                                    TaskId::Suspend,
-                                    &mut tasks,
-                                    view.as_mut(),
-                                    &tx,
-                                    &mut rq,
-                                    &mut context,
-                                );
-                            }
-                        } else {
-                            tx.send(Event::BatteryTick).ok();
-                        }
-                    }
-                }
-                DeviceEvent::RotateScreen(n) => {
-                    if context.flags.contains(DeviceFlags::SHARED)
-                        || tasks.iter().any(|task| {
-                            task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend
-                        })
-                    {
-                        continue;
-                    }
-
-                    if view.is::<RotationValues>() {
-                        println!("Gyro rotation: {}", n);
-                    }
-
-                    if let Some(rotation_lock) = context.settings.rotation_lock {
-                        let orientation = CURRENT_DEVICE.orientation(n);
-                        if rotation_lock == RotationLock::Current
-                            || (rotation_lock == RotationLock::Portrait
-                                && orientation == Orientation::Landscape)
-                            || (rotation_lock == RotationLock::Landscape
-                                && orientation == Orientation::Portrait)
-                        {
-                            continue;
-                        }
-                    }
-
-                    tx.send(Event::Select(EntryId::Rotate(n))).ok();
-                }
-                DeviceEvent::UserActivity if context.settings.auto_suspend > 0.0 => {
-                    inactive_since = Instant::now();
-                }
-                _ => {
-                    handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
-                }
-            },
+            }
             Event::BatteryTick => {
                 // Check if background sync is needed
                 if context.background_sync.sync_needed() {
@@ -597,9 +274,9 @@ pub fn run() -> Result<(), Error> {
                     Event::CheckBattery,
                     BATTERY_REFRESH_INTERVAL,
                     &tx,
-                    &mut tasks,
+                    &mut event_ctx.tasks,
                 );
-                if tasks
+                if event_ctx.tasks
                     .iter()
                     .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
                 {
@@ -607,8 +284,8 @@ pub fn run() -> Result<(), Error> {
                 }
                 if let Ok(v) = context.battery.capacity().map(|v| v[0]) {
                     if v < context.settings.battery.power_off {
-                        power_off(view.as_mut(), &mut history, &mut updating, &mut context);
-                        exit_status = ExitStatus::PowerOff;
+                        power_off(view.as_mut(), &mut event_ctx.history, &mut event_ctx.updating, &mut context);
+                        event_ctx.exit_status = ExitStatus::PowerOff;
                         break;
                     } else if v < context.settings.battery.warn {
                         let notif = Notification::new(
@@ -643,8 +320,8 @@ pub fn run() -> Result<(), Error> {
                 }
             }
             Event::PrepareSuspend => {
-                tasks.retain(|task| task.id != TaskId::PrepareSuspend);
-                wait_for_all(&mut updating, &mut context);
+                event_ctx.tasks.retain(|task| task.id != TaskId::PrepareSuspend);
+                wait_for_all(&mut event_ctx.updating, &mut context);
                 let path = Path::new(SETTINGS_PATH);
                 save_toml(&context.settings, path)
                     .map_err(|e| log_error!("Can't save settings: {:#}.", e))
@@ -666,7 +343,7 @@ pub fn run() -> Result<(), Error> {
                     Event::Suspend,
                     SUSPEND_WAIT_DELAY,
                     &tx,
-                    &mut tasks,
+                    &mut event_ctx.tasks,
                 );
             }
             Event::Suspend => {
@@ -686,14 +363,14 @@ pub fn run() -> Result<(), Error> {
                 let after = Local::now();
                 println!("{}", after.format("Woke up on %B %-d, %Y at %H:%M:%S."));
                 Command::new("scripts/resume.sh").status().ok();
-                inactive_since = Instant::now();
+                event_ctx.inactive_since = Instant::now();
                 // If the wake is legitimate, the task will be cancelled by `resume`.
                 schedule_task(
                     TaskId::Suspend,
                     Event::Suspend,
                     SUSPEND_WAIT_DELAY,
                     &tx,
-                    &mut tasks,
+                    &mut event_ctx.tasks,
                 );
                 if context.settings.auto_power_off > 0.0 {
                     let dur = plato_core::chrono::Duration::seconds(
@@ -710,8 +387,8 @@ pub fn run() -> Result<(), Error> {
                             .ok()
                     }) {
                         if fired {
-                            power_off(view.as_mut(), &mut history, &mut updating, &mut context);
-                            exit_status = ExitStatus::PowerOff;
+                            power_off(view.as_mut(), &mut event_ctx.history, &mut event_ctx.updating, &mut context);
+                            event_ctx.exit_status = ExitStatus::PowerOff;
                             break;
                         } else {
                             context.rtc.iter().for_each(|rtc| {
@@ -728,15 +405,15 @@ pub fn run() -> Result<(), Error> {
                     continue;
                 }
 
-                tasks.clear();
+                event_ctx.tasks.clear();
                 view.handle_event(&Event::Back, &tx, &mut bus, &mut rq, &mut context);
-                while let Some(mut item) = history.pop() {
+                while let Some(mut item) = event_ctx.history.pop() {
                     item.view
                         .handle_event(&Event::Back, &tx, &mut bus, &mut rq, &mut context);
                     if item.rotation != context.display.rotation {
-                        wait_for_all(&mut updating, &mut context);
+                        wait_for_all(&mut event_ctx.updating, &mut context);
                         if let Ok(dims) = context.fb.set_rotation(item.rotation) {
-                            raw_sender.send(display_rotate_event(item.rotation)).ok();
+                            event_ctx.raw_sender.send(display_rotate_event(item.rotation)).ok();
                             context.display.rotation = item.rotation;
                             context.display.dims = dims;
                         }
@@ -869,9 +546,9 @@ pub fn run() -> Result<(), Error> {
                         .map(|n| CURRENT_DEVICE.canonical_to_device(n))
                     {
                         if CURRENT_DEVICE.orientation(n) != CURRENT_DEVICE.orientation(rotation) {
-                            wait_for_all(&mut updating, &mut context);
+                            wait_for_all(&mut event_ctx.updating, &mut context);
                             if let Ok(dims) = context.fb.set_rotation(n) {
-                                raw_sender.send(display_rotate_event(n)).ok();
+                                event_ctx.raw_sender.send(display_rotate_event(n)).ok();
                                 context.display.rotation = n;
                                 context.display.dims = dims;
                             }
@@ -897,7 +574,7 @@ pub fn run() -> Result<(), Error> {
                     goto_view(
                         Box::new(r),
                         &mut view,
-                        &mut history,
+                        &mut event_ctx.history,
                         rotation,
                         context.fb.monochrome(),
                         dithered,
@@ -907,7 +584,7 @@ pub fn run() -> Result<(), Error> {
                 } else {
                     if context.display.rotation != rotation {
                         if let Ok(dims) = context.fb.set_rotation(rotation) {
-                            raw_sender.send(display_rotate_event(rotation)).ok();
+                            event_ctx.raw_sender.send(display_rotate_event(rotation)).ok();
                             context.display.rotation = rotation;
                             context.display.dims = dims;
                         }
@@ -944,7 +621,7 @@ pub fn run() -> Result<(), Error> {
                     goto_view(
                         Box::new(r),
                         &mut view,
-                        &mut history,
+                        &mut event_ctx.history,
                         context.display.rotation,
                         context.fb.monochrome(),
                         context.fb.dithered(),
@@ -964,7 +641,7 @@ pub fn run() -> Result<(), Error> {
                     goto_view(
                         Box::new(r),
                         &mut view,
-                        &mut history,
+                        &mut event_ctx.history,
                         context.display.rotation,
                         context.fb.monochrome(),
                         context.fb.dithered(),
@@ -1076,7 +753,7 @@ pub fn run() -> Result<(), Error> {
                     goto_view(
                         next_view,
                         &mut view,
-                        &mut history,
+                        &mut event_ctx.history,
                         rotation,
                         monochrome,
                         dithered,
@@ -1086,7 +763,7 @@ pub fn run() -> Result<(), Error> {
                 }
             }
             Event::Back => {
-                if let Some(item) = history.pop() {
+                if let Some(item) = event_ctx.history.pop() {
                     view = item.view;
                     if item.monochrome != context.fb.monochrome() {
                         context.fb.set_monochrome(item.monochrome);
@@ -1097,9 +774,9 @@ pub fn run() -> Result<(), Error> {
                     if CURRENT_DEVICE.orientation(item.rotation)
                         != CURRENT_DEVICE.orientation(context.display.rotation)
                     {
-                        wait_for_all(&mut updating, &mut context);
+                        wait_for_all(&mut event_ctx.updating, &mut context);
                         if let Ok(dims) = context.fb.set_rotation(item.rotation) {
-                            raw_sender.send(display_rotate_event(item.rotation)).ok();
+                            event_ctx.raw_sender.send(display_rotate_event(item.rotation)).ok();
                             context.display.rotation = item.rotation;
                             context.display.dims = dims;
                         }
@@ -1186,7 +863,7 @@ pub fn run() -> Result<(), Error> {
             {
                 wait_for_all(&mut updating, &mut context);
                 if let Ok(dims) = context.fb.set_rotation(n) {
-                    raw_sender.send(display_rotate_event(n)).ok();
+                    event_ctx.raw_sender.send(display_rotate_event(n)).ok();
                     context.display.rotation = n;
                     let fb_rect = Rectangle::from(dims);
                     if context.display.dims != dims {
@@ -1210,10 +887,10 @@ pub fn run() -> Result<(), Error> {
                 // Sending a pseudo event into the raw_events channel toggles the inversion in the device_events channel
                 match button_scheme {
                     ButtonScheme::Natural => {
-                        raw_sender.send(button_scheme_event(VAL_RELEASE)).ok();
+                        event_ctx.raw_sender.send(button_scheme_event(VAL_RELEASE)).ok();
                     }
                     ButtonScheme::Inverted => {
-                        raw_sender.send(button_scheme_event(VAL_PRESS)).ok();
+                        event_ctx.raw_sender.send(button_scheme_event(VAL_PRESS)).ok();
                     }
                 }
             }
@@ -1238,7 +915,7 @@ pub fn run() -> Result<(), Error> {
             | Event::FetcherSearch { .. }
                 if !view.is::<Home>() =>
             {
-                if let Some(entry) = history.get_mut(0).filter(|entry| entry.view.is::<Home>()) {
+                if let Some(entry) = event_ctx.history.get_mut(0).filter(|entry| entry.view.is::<Home>()) {
                     let (tx, _rx) = mpsc::channel();
                     entry.view.handle_event(
                         &evt,
@@ -1266,15 +943,15 @@ pub fn run() -> Result<(), Error> {
             }
             Event::MightSuspend if context.settings.auto_suspend > 0.0 => {
                 if context.flags.contains(DeviceFlags::SHARED)
-                    || tasks
+                    || event_ctx.tasks
                         .iter()
                         .any(|task| task.id == TaskId::PrepareSuspend || task.id == TaskId::Suspend)
                 {
-                    inactive_since = Instant::now();
+                    event_ctx.inactive_since = Instant::now();
                     continue;
                 }
                 let seconds = 60.0 * context.settings.auto_suspend;
-                if inactive_since.elapsed() > Duration::from_secs_f32(seconds) {
+                if event_ctx.inactive_since.elapsed() > Duration::from_secs_f32(seconds) {
                     view.handle_event(&Event::Suspend, &tx, &mut bus, &mut rq, &mut context);
                     let interm = Intermission::new(
                         context.fb.rect(),
@@ -1292,7 +969,7 @@ pub fn run() -> Result<(), Error> {
                         Event::PrepareSuspend,
                         PREPARE_SUSPEND_WAIT_DELAY,
                         &tx,
-                        &mut tasks,
+                        &mut event_ctx.tasks,
                     );
                     view.children_mut().push(Box::new(interm) as Box<dyn View>);
                 }
@@ -1302,21 +979,21 @@ pub fn run() -> Result<(), Error> {
             }
         }
 
-        process_render_queue(view.as_ref(), &mut rq, &mut context, &mut updating);
+        process_render_queue(view.as_ref(), &mut rq, &mut context, &mut event_ctx.updating);
 
         while let Some(ce) = bus.pop_front() {
             tx.send(ce).ok();
         }
     }
 
-    if exit_status == ExitStatus::Quit
+    if event_ctx.exit_status == ExitStatus::Quit
         && !CURRENT_DEVICE.has_gyroscope()
         && context.display.rotation != initial_rotation
     {
         context.fb.set_rotation(initial_rotation).ok();
     }
 
-    if tasks.iter().all(|task| task.id != TaskId::Suspend) {
+    if event_ctx.tasks.iter().all(|task| task.id != TaskId::Suspend) {
         if context.settings.frontlight {
             context.settings.frontlight_levels = context.frontlight.levels();
         }

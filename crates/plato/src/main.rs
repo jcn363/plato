@@ -3,6 +3,7 @@
 
 mod app;
 mod constants;
+mod event;
 mod helpers;
 mod task;
 
