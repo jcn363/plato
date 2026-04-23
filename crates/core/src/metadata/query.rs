@@ -52,6 +52,9 @@ pub fn make_query(text: &str) -> Option<Regex> {
 
 impl BookQuery {
     pub fn new(text: &str) -> Option<BookQuery> {
+        if text.is_empty() {
+            return None;
+        }
         let mut buf = Vec::new();
         let mut query = BookQuery::default();
         for word in text.rsplit(' ') {
