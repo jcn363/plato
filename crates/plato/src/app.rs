@@ -1,5 +1,5 @@
 use crate::constants::{APP_NAME, FB_DEVICE, AUTO_SUSPEND_REFRESH_INTERVAL, BATTERY_REFRESH_INTERVAL, CLOCK_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY, SUSPEND_WAIT_DELAY, TOUCH_INPUTS, BUTTON_INPUTS, POWER_INPUTS};
-use crate::event::{EventContext, handle_device_event};
+use crate::event::{EventContext, handle_device_event, handle_launch};
 use crate::helpers::{build_context, goto_view, power_off, set_wifi, HistoryItem, ExitStatus};
 use crate::task::{Task, TaskId, schedule_task, resume};
 
@@ -651,116 +651,7 @@ pub fn run() -> Result<(), Error> {
                 }
             }
             Event::Select(EntryId::Launch(app_cmd)) => {
-                let rotation = context.display.rotation;
-                let monochrome = context.fb.monochrome();
-                let dithered = context.fb.dithered();
-
-                let next_view: Option<Box<dyn View>> = match app_cmd {
-                    AppCmd::Sketch => {
-                        context.fb.set_monochrome(true);
-                        Sketch::new(context.fb.rect(), &mut rq, &mut context)
-                            .map(|v| Box::new(v) as Box<dyn View>)
-                            .ok()
-                    }
-                    AppCmd::Calculator => {
-                        Calculator::new(context.fb.rect(), &tx, &mut rq, &mut context)
-                            .map(|v| Box::new(v) as Box<dyn View>)
-                            .ok()
-                    }
-                    AppCmd::Dictionary {
-                        ref query,
-                        ref language,
-                    } => Dictionary::new(
-                        context.fb.rect(),
-                        query,
-                        language,
-                        &tx,
-                        &mut rq,
-                        &mut context,
-                    )
-                    .map(|v| Some(Box::new(v) as Box<dyn View>))
-                    .unwrap_or(None),
-                    AppCmd::EpubEditor { ref path, chapter } => EpubEditor::new(
-                        context.fb.rect(),
-                        path.clone(),
-                        chapter,
-                        &tx,
-                        &mut rq,
-                        &mut context,
-                    )
-                    .map(|v| Box::new(v) as Box<dyn View>)
-                    .ok(),
-                    AppCmd::CoverEditor => Some(Box::new(CoverEditorView::new(
-                        context.fb.rect(),
-                        &mut rq,
-                        &mut context,
-                    ))),
-                    AppCmd::Statistics => Some(Box::new(StatisticsView::new(
-                        context.fb.rect(),
-                        &mut rq,
-                        &mut context,
-                    ))),
-                    AppCmd::PdfManipulator => {
-                        match PdfManipulatorView::new(context.fb.rect(), &mut rq, &mut context) {
-                            Ok(view) => Some(Box::new(view) as Box<dyn View>),
-                            Err(e) => {
-                                log_error!("Failed to open PDF Tools: {}", e);
-                                None
-                            }
-                        }
-                    }
-                    AppCmd::OpenPdfManipulator(ref path) => {
-                        match PdfManipulatorView::for_file(
-                            context.fb.rect(),
-                            path.clone(),
-                            &mut rq,
-                            &mut context,
-                        ) {
-                            Ok(view) => Some(Box::new(view) as Box<dyn View>),
-                            Err(e) => {
-                                log_error!("Failed to open PDF Tools for file: {}", e);
-                                None
-                            }
-                        }
-                    }
-                    AppCmd::TouchEvents => Some(Box::new(TouchEvents::new(
-                        context.fb.rect(),
-                        &mut rq,
-                        &mut context,
-                    ))),
-                    AppCmd::RotationValues => Some(Box::new(RotationValues::new(
-                        context.fb.rect(),
-                        &mut rq,
-                        &mut context,
-                    ))),
-                    AppCmd::OpenCoverEditor(ref path) => {
-                        match CoverEditorView::for_book(
-                            context.fb.rect(),
-                            path.clone(),
-                            &mut rq,
-                            &mut context,
-                        ) {
-                            Ok(view) => Some(Box::new(view) as Box<dyn View>),
-                            Err(e) => {
-                                log_error!("Failed to open Cover Editor: {}", e);
-                                None
-                            }
-                        }
-                    }
-                };
-
-                if let Some(next_view) = next_view {
-                    goto_view(
-                        next_view,
-                        &mut view,
-                        &mut event_ctx.history,
-                        rotation,
-                        monochrome,
-                        dithered,
-                        &mut rq,
-                        &mut context,
-                    );
-                }
+                handle_launch(app_cmd, &mut view, &tx, &mut rq, &mut context, &mut event_ctx);
             }
             Event::Back => {
                 if let Some(item) = event_ctx.history.pop() {

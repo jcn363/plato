@@ -1,7 +1,7 @@
 //! Event handling for the main application loop.
 
 use crate::constants::{BATTERY_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY, SETTINGS_PATH};
-use crate::helpers::{HistoryItem, ExitStatus};
+use crate::helpers::{goto_view, HistoryItem, ExitStatus};
 use crate::task::{Task, TaskId, schedule_task, resume};
 
 use plato_core::anyhow::{Context as ResultExt, Error};
@@ -13,12 +13,20 @@ use plato_core::helpers::load_toml;
 use plato_core::input::{ButtonCode, ButtonStatus, DeviceEvent, InputEvent, PowerSource};
 use plato_core::settings::{IntermKind, RotationLock, Settings};
 use plato_core::theme;
+use plato_core::view::calculator::Calculator;
 use plato_core::view::common::locate;
+use plato_core::view::cover_editor::CoverEditorView;
 use plato_core::view::dialog::Dialog;
+use plato_core::view::dictionary::Dictionary;
+use plato_core::view::epub_editor::EpubEditor;
 use plato_core::view::intermission::Intermission;
 use plato_core::view::notification::Notification;
+use plato_core::view::pdf_manipulator::PdfManipulatorView;
 use plato_core::view::rotation_values::RotationValues;
-use plato_core::view::{handle_event, Event, RenderData, RenderQueue, View};
+use plato_core::view::sketch::Sketch;
+use plato_core::view::statistics::StatisticsView;
+use plato_core::view::touch_events::TouchEvents;
+use plato_core::view::{AppCmd, EntryId, Event, RenderData, RenderQueue, UpdateData, View, ViewId, handle_event};
 use plato_core::log_error;
 use std::collections::VecDeque;
 use std::env;
@@ -127,6 +135,13 @@ pub fn handle_device_event(
         DeviceEvent::Button {
             code: ButtonCode::Light,
             status: ButtonStatus::Pressed,
+            ..
+        } => {
+            tx.send(Event::ToggleFrontlight).ok();
+        }
+        DeviceEvent::Button {
+            code: ButtonCode::Light,
+            status: ButtonStatus::Released,
             ..
         } => {
             tx.send(Event::ToggleFrontlight).ok();
@@ -418,4 +433,128 @@ pub fn handle_device_event(
         }
     }
     false
+}
+
+/// Handle launch events for different applications.
+pub fn handle_launch(
+    app_cmd: AppCmd,
+    view: &mut Box<dyn View>,
+    tx: &mpsc::Sender<Event>,
+    rq: &mut RenderQueue,
+    context: &mut plato_core::context::Context,
+    ctx: &mut EventContext,
+) -> bool {
+    let rotation = context.display.rotation;
+    let monochrome = context.fb.monochrome();
+    let dithered = context.fb.dithered();
+
+    let next_view: Option<Box<dyn View>> = match app_cmd {
+        AppCmd::Sketch => {
+            context.fb.set_monochrome(true);
+            Sketch::new(context.fb.rect(), rq, context)
+                .map(|v| Box::new(v) as Box<dyn View>)
+                .ok()
+        }
+        AppCmd::Calculator => {
+            Calculator::new(context.fb.rect(), tx, rq, context)
+                .map(|v| Box::new(v) as Box<dyn View>)
+                .ok()
+        }
+        AppCmd::Dictionary {
+            ref query,
+            ref language,
+        } => Dictionary::new(
+            context.fb.rect(),
+            query,
+            language,
+            tx,
+            rq,
+            context,
+        )
+        .map(|v| Some(Box::new(v) as Box<dyn View>))
+        .unwrap_or(None),
+        AppCmd::EpubEditor { ref path, chapter } => EpubEditor::new(
+            context.fb.rect(),
+            path.clone(),
+            chapter,
+            tx,
+            rq,
+            context,
+        )
+        .map(|v| Box::new(v) as Box<dyn View>)
+        .ok(),
+        AppCmd::CoverEditor => Some(Box::new(CoverEditorView::new(
+            context.fb.rect(),
+            rq,
+            context,
+        ))),
+        AppCmd::Statistics => Some(Box::new(StatisticsView::new(
+            context.fb.rect(),
+            rq,
+            context,
+        ))),
+        AppCmd::PdfManipulator => {
+            match PdfManipulatorView::new(context.fb.rect(), rq, context) {
+                Ok(view) => Some(Box::new(view) as Box<dyn View>),
+                Err(e) => {
+                    log_error!("Failed to open PDF Tools: {}", e);
+                    None
+                }
+            }
+        }
+        AppCmd::OpenPdfManipulator(ref path) => {
+            match PdfManipulatorView::for_file(
+                context.fb.rect(),
+                path.clone(),
+                rq,
+                context,
+            ) {
+                Ok(view) => Some(Box::new(view) as Box<dyn View>),
+                Err(e) => {
+                    log_error!("Failed to open PDF Tools for file: {}", e);
+                    None
+                }
+            }
+        }
+        AppCmd::TouchEvents => Some(Box::new(TouchEvents::new(
+            context.fb.rect(),
+            rq,
+            context,
+        ))),
+        AppCmd::RotationValues => Some(Box::new(RotationValues::new(
+            context.fb.rect(),
+            rq,
+            context,
+        ))),
+        AppCmd::OpenCoverEditor(ref path) => {
+            match CoverEditorView::for_book(
+                context.fb.rect(),
+                path.clone(),
+                rq,
+                context,
+            ) {
+                Ok(view) => Some(Box::new(view) as Box<dyn View>),
+                Err(e) => {
+                    log_error!("Failed to open Cover Editor: {}", e);
+                    None
+                }
+            }
+        }
+    };
+
+    if let Some(next_view) = next_view {
+        goto_view(
+            next_view,
+            view,
+            &mut ctx.history,
+            rotation,
+            monochrome,
+            dithered,
+            rq,
+            context,
+        );
+        true
+    } else {
+        false
+    }
 }
