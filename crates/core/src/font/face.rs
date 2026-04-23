@@ -75,6 +75,9 @@ impl Font {
     }
 
     pub fn set_var_design_coordinates(&mut self, coords: &[i32]) -> Result<()> {
+        if coords.is_empty() {
+            return Ok(());
+        }
         self.face.set_var_design_coordinates(coords)
     }
 
