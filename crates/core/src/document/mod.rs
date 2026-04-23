@@ -187,6 +187,18 @@ pub struct TocEntry {
 
 impl TocEntry {
     pub fn new(title: String, location: Location, index: usize, children: Vec<TocEntry>) -> Self {
+        if title.is_empty() {
+            let page = location.as_page();
+            let level = 0;
+            return Self {
+                title: String::new(),
+                location,
+                index,
+                children,
+                page,
+                level,
+            };
+        }
         let page = location.as_page();
         let level = 0;
         Self {
