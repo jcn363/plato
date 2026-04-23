@@ -19,6 +19,7 @@ use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::{format_err, Error};
 
 mod types;
+mod manipulation_handlers;
 pub use types::{
     ManipulationMode, RedactionState, BUTTON_HEIGHT, BUTTON_SPACING, PADDING, WARNING_FILE_SIZE,
 };
@@ -304,269 +305,33 @@ Max: 30MB, 500 pages. Keep battery charged."
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> Result<(), Error> {
-        self.mode = ManipulationMode::Processing;
-
-        let result = match action {
-            "delete" | "rotate90" | "rotate180" | "rotate270" => {
-                bus.push_back(Event::Render("Select pages first".to_string()));
-                Ok(file_path.clone())
-            }
-            "delete_all" => {
-                let pages: Vec<_> = (0..10).collect();
-                let output = file_path.with_extension("modified.pdf");
-                self.manipulator.delete_pages(file_path, &output, &pages)
-            }
-            "rotate90_all" => {
-                let pages: Vec<usize> = (1..=10).collect();
-                let output = file_path.with_extension("rotated.pdf");
-                self.manipulator
-                    .rotate_pages(file_path, &output, &pages, 90)
-            }
-            "rotate180_all" => {
-                let pages: Vec<usize> = (1..=10).collect();
-                let output = file_path.with_extension("rotated.pdf");
-                self.manipulator
-                    .rotate_pages(file_path, &output, &pages, 180)
-            }
-            "rotate270_all" => {
-                let pages: Vec<usize> = (1..=10).collect();
-                let output = file_path.with_extension("rotated.pdf");
-                self.manipulator
-                    .rotate_pages(file_path, &output, &pages, 270)
-            }
-            "extract" => {
-                bus.push_back(Event::Render("Select pages first".to_string()));
-                return Ok(());
-            }
-            "extract_all" => {
-                let pages: Vec<_> = vec![0];
-                let output = file_path.with_extension("extracted.pdf");
-                self.manipulator.extract_pages(file_path, &output, &pages)
-            }
-            "merge" => {
-                self.show_file_picker_for_merge(file_path.clone(), rq, context);
-                return Ok(());
-            }
-            "redact_page" => {
-                use crate::document::pdf_manipulator::RedactionEditor;
-                let editor = RedactionEditor::new(file_path)?;
-                self.selected_file = Some(file_path.clone());
-                self.show_redaction_menu(file_path, editor.page_count(), rq, context)?;
-                return Ok(());
-            }
-            action if action.starts_with("redact_apply:") => {
-                let page: usize = action
-                    .trim_start_matches("redact_apply:")
-                    .parse()
-                    .map_err(|_| format_err!("Invalid page number"))?;
-                return self.process_redaction(file_path, page).map(|_| ());
-            }
-            "extract_resources" => {
-                use crate::document::pdf_manipulator::ResourceExtractor;
-                let extractor = ResourceExtractor::new(file_path)?;
-                match extractor.list_resources() {
-                    Ok(summary) => {
-                        let msg = if summary.is_pdf_a {
-                            format!(
-                                "📄 Pages: {} | 🖼️ Images: {} | 🔤 Fonts: {} | 📋 PDF/A: {}",
-                                summary.total_pages,
-                                summary.total_images,
-                                summary.total_fonts,
-                                summary.pdf_a_version
-                            )
-                        } else {
-                            format!(
-                                "📄 Pages: {} | 🖼️ Images: {} | 🔤 Fonts: {}",
-                                summary.total_pages, summary.total_images, summary.total_fonts
-                            )
-                        };
-                        self.show_message(msg, rq, bus);
-                    }
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error: {}", e)));
-                    }
-                }
-                return Ok(());
-            }
-            "export_annotations" => {
-                use crate::document::pdf_manipulator::PdfAnnotationExporter;
-                let output = file_path.with_extension("annotated.pdf");
-
-                match PdfAnnotationExporter::new(file_path, &output) {
-                    Ok(exporter) => match exporter.save() {
-                        Ok(path) => {
-                            let msg = format!(
-                                "✅ Exported to: {}",
-                                path.file_name().unwrap_or_default().to_string_lossy()
-                            );
-                            bus.push_back(Event::Render(msg));
-                        }
-                        Err(e) => {
-                            bus.push_back(Event::Render(format!("Export failed: {}", e)));
-                        }
-                    },
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error: {}", e)));
-                    }
-                }
-                return Ok(());
-            }
-            "read_annotations" => {
-                use crate::document::pdf_manipulator::ResourceExtractor;
-                let extractor = match ResourceExtractor::new(file_path) {
-                    Ok(e) => e,
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error: {}", e)));
-                        return Ok(());
-                    }
-                };
-                match extractor.read_annotations() {
-                    Ok(annotations) => {
-                        if annotations.is_empty() {
-                            bus.push_back(Event::Render(
-                                "📋 No annotations found in PDF".to_string(),
-                            ));
-                        } else {
-                            let msg = format!("📋 Found {} annotations in PDF", annotations.len());
-                            bus.push_back(Event::Render(msg));
-                        }
-                    }
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error reading annotations: {}", e)));
-                    }
-                }
-                return Ok(());
-            }
-            "search_annotations" => {
-                use crate::document::pdf_manipulator::{
-                    AnnotationQuery, AnnotationSubtype, PdfAnnotationManager,
-                };
-                let mut manager = match PdfAnnotationManager::new(file_path) {
-                    Ok(m) => m,
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error: {}", e)));
-                        return Ok(());
-                    }
-                };
-
-                match manager.import_annotations() {
-                    Ok(_) => {
-                        // Search for all highlights
-                        let query =
-                            AnnotationQuery::new().with_subtype(AnnotationSubtype::Highlight);
-
-                        let results = manager.search(&query);
-                        if results.is_empty() {
-                            bus.push_back(Event::Render(
-                                "🔍 No highlights found in PDF".to_string(),
-                            ));
-                        } else {
-                            let msg = format!("🔍 Found {} highlights in PDF", results.len());
-                            bus.push_back(Event::Render(msg));
-                        }
-                    }
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error importing annotations: {}", e)));
-                    }
-                }
-                return Ok(());
-            }
-            "export_xfdf" => {
-                use crate::document::pdf_manipulator::{PdfAnnotationManager, XfdfHandler};
-                let mut manager = match PdfAnnotationManager::new(file_path) {
-                    Ok(m) => m,
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error: {}", e)));
-                        return Ok(());
-                    }
-                };
-
-                match manager.import_annotations() {
-                    Ok(annotations) => {
-                        let xfdf_path = file_path.with_extension("xfdf");
-                        match XfdfHandler::export_to_xfdf(&annotations, &xfdf_path) {
-                            Ok(_) => {
-                                let msg = format!(
-                                    "✅ Exported to: {}",
-                                    xfdf_path.file_name().unwrap_or_default().to_string_lossy()
-                                );
-                                bus.push_back(Event::Render(msg));
-                            }
-                            Err(e) => {
-                                bus.push_back(Event::Render(format!("XFDF export failed: {}", e)));
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error importing annotations: {}", e)));
-                    }
-                }
-                return Ok(());
-            }
-            "import_xfdf" => {
-                use crate::document::pdf_manipulator::XfdfHandler;
-                let xfdf_path = file_path.with_extension("xfdf");
-
-                if !xfdf_path.exists() {
-                    bus.push_back(Event::Render(
-                        "❌ No XFDF file found. Export annotations first.".to_string(),
-                    ));
-                    return Ok(());
-                }
-
-                match std::fs::read_to_string(&xfdf_path) {
-                    Ok(xfdf_content) => match XfdfHandler::import_from_xfdf(&xfdf_content) {
-                        Ok(annotations) => {
-                            if annotations.is_empty() {
-                                bus.push_back(Event::Render(
-                                    "📥 No annotations found in XFDF file".to_string(),
-                                ));
-                            } else {
-                                let msg = format!(
-                                    "📥 Imported {} annotations from XFDF",
-                                    annotations.len()
-                                );
-                                bus.push_back(Event::Render(msg));
-                            }
-                        }
-                        Err(e) => {
-                            bus.push_back(Event::Render(format!("XFDF import failed: {}", e)));
-                        }
-                    },
-                    Err(e) => {
-                        bus.push_back(Event::Render(format!("Error reading XFDF file: {}", e)));
-                    }
-                }
-                return Ok(());
-            }
-            _ => Err(format_err!("Unknown action")),
-        };
-
-        self.mode = ManipulationMode::SelectFile;
-
-        match result {
-            Ok(_) => {
-                bus.push_back(Event::Render(
-                    "✅ Operation complete! Backup created.".to_string(),
-                ));
-            }
-            Err(e) => {
-                let error_msg = if e.to_string().contains("memory")
-                    || e.to_string().contains("Memory")
-                {
-                    "❌ Memory error. Try smaller PDF or close apps.".to_string()
-                } else if e.to_string().contains("too large") || e.to_string().contains("exceeds") {
-                    "❌ File too large. Max 30MB, 500 pages.".to_string()
-                } else if e.to_string().contains("Insufficient memory") {
-                    "❌ Low memory. Close other apps and retry.".to_string()
-                } else {
-                    format!("❌ Error: {}", e)
-                };
-                bus.push_back(Event::Render(error_msg));
-            }
+        // Handle special cases that need self methods
+        if action == "merge" {
+            self.show_file_picker_for_merge(file_path.clone(), rq, context);
+            return Ok(());
         }
-
-        Ok(())
+        if action == "redact_page" {
+            use crate::document::pdf_manipulator::RedactionEditor;
+            let editor = RedactionEditor::new(file_path)?;
+            self.selected_file = Some(file_path.clone());
+            self.show_redaction_menu(file_path, editor.page_count(), rq, context)?;
+            return Ok(());
+        }
+        if action.starts_with("redact_apply:") {
+            let page: usize = action
+                .trim_start_matches("redact_apply:")
+                .parse()
+                .map_err(|_| format_err!("Invalid page number"))?;
+            return self.process_redaction(file_path, page).map(|_| ());
+        }
+        
+        manipulation_handlers::process_manipulation(
+            &mut self.manipulator,
+            file_path,
+            action,
+            bus,
+            &mut self.mode,
+        )
     }
 
     fn show_file_picker_for_merge(
