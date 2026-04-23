@@ -120,6 +120,9 @@ impl HtmlDocument {
     }
 
     pub fn update(&mut self, text: &str) {
+        if text.is_empty() {
+            return;
+        }
         self.size = text.len();
         self.content = XmlParser::new(text).parse();
         self.content.wrap_lost_inlines();
