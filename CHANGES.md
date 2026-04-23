@@ -204,6 +204,10 @@ All 9 WIP module managers now integrated and active:
 - **epub_editor**: Extracted UI state types to `state.rs` module
   - EditorState enum (ChapterList, EditingChapter)
   - SearchReplaceState struct (search_text, replace_text)
+- **plato**: Extracted constants and task management from `app.rs` to separate modules
+  - `constants.rs`: Device paths, refresh intervals, timing constants
+  - `task.rs`: Task scheduling and resume logic (Task, TaskId, schedule_task, resume)
+  - Reduced app.rs from 1610 lines to 1571 lines
 
 ## Verification
 

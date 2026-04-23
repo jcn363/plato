@@ -1,3 +1,6 @@
+use crate::constants::{APP_NAME, FB_DEVICE, RTC_DEVICE, AUTO_SUSPEND_REFRESH_INTERVAL, BATTERY_REFRESH_INTERVAL, CLOCK_REFRESH_INTERVAL, KOBO_UPDATE_BUNDLE, PREPARE_SUSPEND_WAIT_DELAY, SUSPEND_WAIT_DELAY, TOUCH_INPUTS, BUTTON_INPUTS, POWER_INPUTS};
+use crate::task::{Task, TaskId, schedule_task, resume};
+
 use plato_core::anyhow::{format_err, Context as ResultExt, Error};
 use plato_core::battery::{Battery, KoboBattery};
 use plato_core::chrono::Local;
@@ -55,51 +58,9 @@ use std::env;
 use std::fs::File;
 use std::path::Path;
 use std::process::Command;
-use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
-
-pub const APP_NAME: &str = "Plato";
-const FB_DEVICE: &str = "/dev/fb0";
-const RTC_DEVICE: &str = "/dev/rtc0";
-const TOUCH_INPUTS: [&str; 5] = [
-    "/dev/input/by-path/platform-2-0010-event",
-    "/dev/input/by-path/platform-1-0038-event",
-    "/dev/input/by-path/platform-1-0010-event",
-    "/dev/input/by-path/platform-0-0010-event",
-    "/dev/input/event1",
-];
-const BUTTON_INPUTS: [&str; 4] = [
-    "/dev/input/by-path/platform-gpio-keys-event",
-    "/dev/input/by-path/platform-ntx_event0-event",
-    "/dev/input/by-path/platform-mxckpd-event",
-    "/dev/input/event0",
-];
-const POWER_INPUTS: [&str; 3] = [
-    "/dev/input/by-path/platform-bd71828-pwrkey.6.auto-event",
-    "/dev/input/by-path/platform-bd71828-pwrkey.4.auto-event",
-    "/dev/input/by-path/platform-bd71828-pwrkey-event",
-];
-
-const KOBO_UPDATE_BUNDLE: &str = "/mnt/onboard/.kobo/KoboRoot.tgz";
-
-const CLOCK_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
-const BATTERY_REFRESH_INTERVAL: Duration = Duration::from_secs(299);
-const AUTO_SUSPEND_REFRESH_INTERVAL: Duration = Duration::from_secs(60);
-const SUSPEND_WAIT_DELAY: Duration = Duration::from_secs(15);
-const PREPARE_SUSPEND_WAIT_DELAY: Duration = Duration::from_secs(3);
-
-struct Task {
-    id: TaskId,
-    _chan: Receiver<()>,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-enum TaskId {
-    CheckBattery,
-    PrepareSuspend,
-    Suspend,
-}
 
 struct HistoryItem {
     view: Box<dyn View>,
@@ -186,56 +147,6 @@ fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
         plugin_system,
         background_sync,
     ))
-}
-
-fn schedule_task(
-    id: TaskId,
-    event: Event,
-    delay: Duration,
-    hub: &Sender<Event>,
-    tasks: &mut Vec<Task>,
-) {
-    let (ty, ry) = mpsc::channel();
-    let hub2 = hub.clone();
-    tasks.retain(|task| task.id != id);
-    tasks.push(Task { id, _chan: ry });
-    thread::spawn(move || {
-        thread::sleep(delay);
-        if ty.send(()).is_ok() {
-            hub2.send(event).ok();
-        }
-    });
-}
-
-fn resume(
-    id: TaskId,
-    tasks: &mut Vec<Task>,
-    view: &mut dyn View,
-    hub: &Sender<Event>,
-    rq: &mut RenderQueue,
-    context: &mut Context,
-) {
-    if id == TaskId::Suspend {
-        tasks.retain(|task| task.id != TaskId::Suspend);
-        if context.settings.frontlight {
-            let levels = context.settings.frontlight_levels;
-            context.frontlight.set_warmth(levels.warmth);
-            context.frontlight.set_intensity(levels.intensity);
-        }
-        if context.settings.wifi {
-            Command::new("scripts/wifi-enable.sh").status().ok();
-        }
-    }
-    if id == TaskId::Suspend || id == TaskId::PrepareSuspend {
-        tasks.retain(|task| task.id != TaskId::PrepareSuspend);
-        if let Some(index) = locate::<Intermission>(view) {
-            let rect = *view.child(index).rect();
-            view.children_mut().remove(index);
-            rq.add(RenderData::expose(rect, UpdateMode::Full));
-        }
-        hub.send(Event::ClockTick).ok();
-        hub.send(Event::BatteryTick).ok();
-    }
 }
 
 fn power_off(
