@@ -52,6 +52,12 @@ impl Font {
     }
 
     pub fn set_char_size(&mut self, width: u32, height: u32, hdpi: u32, vdpi: u32) -> Result<()> {
+        if width == 0 || height == 0 {
+            anyhow::bail!("Font size must be greater than 0");
+        }
+        if hdpi == 0 || vdpi == 0 {
+            anyhow::bail!("DPI must be greater than 0");
+        }
         self.face
             .set_char_size(width as i32, height as i32, hdpi, vdpi)
     }
