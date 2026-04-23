@@ -29,6 +29,7 @@ impl ChapterLabel {
     }
 
     pub fn update(&mut self, title: String, progress: f32, rq: &mut RenderQueue) {
+        let progress = progress.clamp(0.0, 1.0); // Clamp progress to valid range
         let mut render = false;
         if self.title != title {
             self.title = title;
