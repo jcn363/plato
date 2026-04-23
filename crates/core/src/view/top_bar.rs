@@ -30,6 +30,14 @@ impl std::fmt::Debug for TopBar {
 
 impl TopBar {
     pub fn new(rect: Rectangle, root_event: Event, title: String, context: &mut Context) -> TopBar {
+        if title.is_empty() {
+            return TopBar {
+                id: ID_FEEDER.next(),
+                rect,
+                children: Vec::new(),
+                theme_indicator: Icon::new("circle", rect![0, 0, 0, 0], Event::Validate),
+            };
+        }
         let id = ID_FEEDER.next();
         let side = rect.height() as i32;
         let mut children = Vec::new();
