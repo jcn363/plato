@@ -75,6 +75,9 @@ impl Rtc {
     }
 
     pub fn set_alarm(&self, days: f32) -> Result<i32, Error> {
+        if days <= 0.0 {
+            return Err(Error::msg("Alarm days must be positive"));
+        }
         let wt = Utc::now() + Duration::seconds((86_400.0 * days) as i64);
         let rwa = RtcWkalrm {
             enabled: 1,
