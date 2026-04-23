@@ -27,6 +27,9 @@ impl Color {
 
     #[inline]
     pub fn from_rgb(rgb: &[u8]) -> Color {
+        if rgb.len() < 3 {
+            panic!("RGB slice must have at least 3 elements");
+        }
         Color::Rgb(rgb[0], rgb[1], rgb[2])
     }
 

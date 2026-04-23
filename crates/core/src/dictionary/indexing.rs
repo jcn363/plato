@@ -24,7 +24,7 @@ use std::path::Path;
 use levenshtein::levenshtein;
 
 use super::errors::DictError;
-use super::errors::DictError::*;
+use super::errors::DictError::{InvalidCharacter, MissingColumnInIndex};
 use super::Metadata;
 
 /// The index is partially loaded if `state` isn't `None`.

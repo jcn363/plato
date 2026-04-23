@@ -16,7 +16,7 @@ use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
 
 use super::errors::DictError;
-use byteorder::*;
+use byteorder::{ByteOrder, LittleEndian, ReadBytesExt};
 
 /// Limit size of a word buffer, so that malicious index files cannot request too much memory for a
 /// translation.

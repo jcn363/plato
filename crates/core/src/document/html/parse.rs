@@ -68,7 +68,7 @@ fn extract_meta_regex(html: &str, name: &str) -> Option<String> {
 /// Extract all links from HTML content
 pub fn extract_links(html: &str) -> Vec<String> {
     let link_regex = Regex::new(r#"<a\s+[^>]*href="([^"]+)"#)
-        .unwrap_or_else(|_| Regex::new(r#"<a[^>]*href="([^"]+)""#).unwrap());
+        .unwrap_or_else(|_| Regex::new(r#"<a[^>]*href="([^"]+)""#).expect("Invalid regex pattern"));
     link_regex
         .captures_iter(html)
         .map(|c| c[1].to_string())

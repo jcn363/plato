@@ -1,8 +1,9 @@
 use std::env;
 
 fn main() {
-    let _target = env::var("TARGET").unwrap();
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let _target = env::var("TARGET").expect("TARGET environment variable not set");
+    let target_os =
+        env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS environment variable not set");
 
     // PDFPurr is a pure Rust library, so no native library linking is needed
     // This build script is now minimal - it only handles platform-specific

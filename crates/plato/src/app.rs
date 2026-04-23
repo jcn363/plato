@@ -3,7 +3,11 @@ use crate::constants::{
     CLOCK_REFRESH_INTERVAL, FB_DEVICE, POWER_INPUTS, TOUCH_INPUTS,
 };
 use crate::event::{handle_device_event, handle_launch, EventContext};
-use crate::event_handlers::*;
+use crate::event_handlers::{
+    handle_back_event, handle_battery_event, handle_gesture_event, handle_open_event,
+    handle_screenshot_event, handle_suspend_check_event, handle_suspend_event,
+    handle_suspend_execute_event, handle_wifi_event,
+};
 use crate::helpers::{build_context, goto_view, set_wifi, ExitStatus, HistoryItem};
 use crate::task::{schedule_task, Task, TaskId};
 
