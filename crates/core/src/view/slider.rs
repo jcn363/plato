@@ -61,6 +61,7 @@ impl Slider {
     }
 
     pub fn update(&mut self, value: f32, rq: &mut RenderQueue) {
+        let value = value.clamp(self.min_value, self.max_value);
         if (self.value - value).abs() >= f32::EPSILON {
             self.value = value;
             rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
