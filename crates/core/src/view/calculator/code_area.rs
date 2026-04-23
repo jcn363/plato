@@ -63,8 +63,8 @@ impl CodeArea {
     }
 
     pub fn update(&mut self, font_size: f32, margin_width: i32) {
-        self.font_size = font_size;
-        self.margin_width = margin_width;
+        self.font_size = font_size.max(0.0);
+        self.margin_width = margin_width.max(0);
     }
 }
 
