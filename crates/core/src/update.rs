@@ -8,6 +8,11 @@ pub struct UpdateChecker {
 
 impl UpdateChecker {
     pub fn new(check_url: &str) -> Self {
+        if check_url.is_empty() {
+            return UpdateChecker {
+                check_url: String::new(),
+            };
+        }
         UpdateChecker {
             check_url: check_url.to_string(),
         }
