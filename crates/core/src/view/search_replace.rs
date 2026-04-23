@@ -426,10 +426,11 @@ impl SearchReplaceView {
     }
 
     pub fn set_search_text(&mut self, text: &str, rq: &mut RenderQueue, context: &mut Context) {
-        self.search_text = text.to_string();
-        if !text.is_empty() {
-            self.add_to_search_history(text);
+        if text.is_empty() {
+            return;
         }
+        self.search_text = text.to_string();
+        self.add_to_search_history(text);
         if let Some(input) = self.children[2].downcast_mut::<InputField>() {
             input.set_text(text, true, rq, context);
         }
