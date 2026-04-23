@@ -19,6 +19,12 @@ pub struct Pixmap {
 impl Pixmap {
     #[inline]
     pub fn new(width: u32, height: u32, samples: usize) -> Result<Pixmap, Error> {
+        if width == 0 || height == 0 {
+            return Err(format_err!("Width and height must be greater than 0"));
+        }
+        if samples == 0 {
+            return Err(format_err!("Samples must be greater than 0"));
+        }
         let len = samples * (width * height) as usize;
         let mut data = Vec::new();
         data.try_reserve_exact(len).map_err(|_| {
@@ -41,6 +47,9 @@ impl Pixmap {
     }
 
     pub fn empty(width: u32, height: u32, samples: usize) -> Pixmap {
+        let width = width.max(1);
+        let height = height.max(1);
+        let samples = samples.max(1);
         Pixmap {
             width,
             height,
