@@ -123,6 +123,9 @@ impl Engine {
     /// Updates the engine's font configuration. The font family
     /// will be resolved from the search path during layout.
     pub fn set_font_family(&mut self, family_name: &str, _search_path: &str) {
+        if family_name.is_empty() {
+            return;
+        }
         // Store font family preference (actual loading happens during layout)
         let _family_lower = family_name.to_lowercase();
 
