@@ -34,6 +34,7 @@ impl RenderPlan {
     }
 
     pub fn space_out(&mut self, letter_spacing: i32) {
+        let letter_spacing = letter_spacing.max(0);
         if letter_spacing == 0 {
             return;
         }

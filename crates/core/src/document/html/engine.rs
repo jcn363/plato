@@ -137,6 +137,7 @@ impl Engine {
     }
 
     pub fn set_margin_width(&mut self, width: i32) {
+        let width = width.max(0);
         self.margin = Edge::uniform(width);
     }
 
