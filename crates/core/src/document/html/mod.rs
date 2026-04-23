@@ -72,7 +72,9 @@ impl ResourceFetcher for PathBuf {
     }
 }
 
+// SAFETY: HtmlDocument contains only Send types (DOM is wrapped in Arc<Mutex<>>)
 unsafe impl Send for HtmlDocument {}
+// SAFETY: HtmlDocument contains only Sync types (DOM is wrapped in Arc<Mutex<>>)
 unsafe impl Sync for HtmlDocument {}
 
 impl HtmlDocument {

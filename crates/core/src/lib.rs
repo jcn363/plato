@@ -1,4 +1,4 @@
-#![warn(clippy::all)]
+#![warn(clippy::all, missing_docs)]
 
 #[macro_use]
 pub mod geom;

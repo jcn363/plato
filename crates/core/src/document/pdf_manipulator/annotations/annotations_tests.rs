@@ -2,7 +2,7 @@
 //!
 //! Tests for annotation import, export, search, filtering, and XFDF handling.
 
-use super::annotations::*;
+use super::*;
 use chrono::{Duration, Utc};
 use std::path::PathBuf;
 
@@ -87,25 +87,25 @@ fn test_annotation_matching() {
 #[test]
 fn test_annotation_subtype_from_str() {
     assert_eq!(
-        AnnotationSubtype::from_str("text").unwrap(),
+        AnnotationSubtype::from_str("text").expect("invalid subtype"),
         AnnotationSubtype::Text
     );
     assert_eq!(
-        AnnotationSubtype::from_str("highlight").unwrap(),
+        AnnotationSubtype::from_str("highlight").expect("invalid subtype"),
         AnnotationSubtype::Highlight
     );
     assert_eq!(
-        AnnotationSubtype::from_str("underline").unwrap(),
+        AnnotationSubtype::from_str("underline").expect("invalid subtype"),
         AnnotationSubtype::Underline
     );
     assert_eq!(
-        AnnotationSubtype::from_str("strikeout").unwrap(),
+        AnnotationSubtype::from_str("strikeout").expect("invalid subtype"),
         AnnotationSubtype::StrikeOut
     );
 
     // Case insensitive
     assert_eq!(
-        AnnotationSubtype::from_str("HIGHLIGHT").unwrap(),
+        AnnotationSubtype::from_str("HIGHLIGHT").expect("invalid subtype"),
         AnnotationSubtype::Highlight
     );
 
@@ -134,7 +134,7 @@ fn test_xfdf_export() {
     let annotations = vec![annot1, annot2];
     let pdf_path = PathBuf::from("/test/document.pdf");
 
-    let xfdf = XfdfHandler::export_to_xfdf(&annotations, &pdf_path).unwrap();
+    let xfdf = XfdfHandler::export_to_xfdf(&annotations, &pdf_path).expect("xfdf export failed");
 
     assert!(xfdf.contains("<?xml version=\"1.0\""));
     assert!(xfdf.contains("<xfdf"));
@@ -163,7 +163,7 @@ fn test_xfdf_import() {
   </annotate>
 </xfdf>"#;
 
-    let annotations = XfdfHandler::import_from_xfdf(xfdf_content).unwrap();
+    let annotations = XfdfHandler::import_from_xfdf(xfdf_content).expect("xfdf import failed");
 
     assert_eq!(annotations.len(), 1);
     assert_eq!(annotations[0].subtype, AnnotationSubtype::Highlight);
@@ -190,8 +190,8 @@ fn test_xfdf_roundtrip() {
     let annotations = vec![original.clone()];
     let pdf_path = PathBuf::from("/test/doc.pdf");
 
-    let xfdf = XfdfHandler::export_to_xfdf(&annotations, &pdf_path).unwrap();
-    let imported = XfdfHandler::import_from_xfdf(&xfdf).unwrap();
+    let xfdf = XfdfHandler::export_to_xfdf(&annotations, &pdf_path).expect("xfdf export failed");
+    let imported = XfdfHandler::import_from_xfdf(&xfdf).expect("xfdf import failed");
 
     assert_eq!(imported.len(), 1);
     assert_eq!(imported[0].subtype, original.subtype);

@@ -194,9 +194,9 @@ impl PdfManipulator {
                 if let Some(page_id) = page_ids.get(page_index) {
                     let page_dict = doc
                         .get_object_mut(**page_id)
-                        .unwrap()
+                        .map_err(|e| format_err!("Failed to get page object: {}", e))?
                         .as_dict_mut()
-                        .unwrap();
+                        .map_err(|e| format_err!("Page object is not a dictionary: {}", e))?;
 
                     // Get current rotation or default to 0
                     let current_rotation = page_dict
@@ -258,7 +258,8 @@ impl PdfManipulator {
         for page_num in pages_to_extract {
             if page_num < page_ids.len() {
                 if let Some(page_id) = page_ids.get(page_num) {
-                    let page_object = doc.get_object(**page_id).unwrap();
+                    let page_object = doc.get_object(**page_id)
+                        .map_err(|e| format_err!("Failed to get page object: {}", e))?;
                     new_doc.add_object(page_object.clone());
                 }
             }
@@ -311,7 +312,8 @@ impl PdfManipulator {
             let from_index = from - 1; // Convert to 0-indexed
             if from_index < page_ids.len() {
                 if let Some(page_id) = page_ids.get(from_index) {
-                    let page_object = doc.get_object(**page_id).unwrap();
+                    let page_object = doc.get_object(**page_id)
+                        .map_err(|e| format_err!("Failed to get page object: {}", e))?;
                     pages_in_order.push(page_object.clone());
                 }
             }
@@ -366,7 +368,8 @@ impl PdfManipulator {
 
             // Copy all pages from the input document to the merged document
             for page_id in page_ids {
-                let page_object = doc.get_object(*page_id).unwrap();
+                let page_object = doc.get_object(*page_id)
+                    .map_err(|e| format_err!("Failed to get page object: {}", e))?;
                 merged_doc.add_object(page_object.clone());
             }
         }

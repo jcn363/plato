@@ -283,7 +283,10 @@ impl PdfAnnotationManager {
         let pages_map = doc.get_pages();
 
         for (page_num, page_id) in pages_map {
-            let page_dict = doc.get_object(page_id).unwrap().as_dict().unwrap();
+            let page_dict = doc.get_object(page_id)
+                .expect("page object not found")
+                .as_dict()
+                .expect("page object is not a dictionary");
             if let Ok(annot_ref) = page_dict.get(b"Annots") {
                 if let Ok(annot_array) = annot_ref.as_array() {
                     for annot_obj in annot_array {
@@ -507,7 +510,7 @@ impl PdfAnnotationExporter {
                 annot.page + 1
             ));
         }
-        let page_id = page_ids.get(page_index).unwrap();
+        let page_id = page_ids.get(page_index).expect("page index out of bounds after check");
 
         // Create annotation dictionary
         let mut annot_dict = Dictionary::new();
@@ -579,9 +582,9 @@ impl PdfAnnotationExporter {
 
         let page_dict = doc
             .get_object_mut(**page_id)
-            .unwrap()
+            .map_err(|e| format_err!("Failed to get page object: {}", e))?
             .as_dict_mut()
-            .unwrap();
+            .map_err(|e| format_err!("Page object is not a dictionary: {}", e))?;
         page_dict.set("Annots", Object::Array(vec![Object::Reference(annot_id)]));
 
         // Save the modified document
@@ -613,7 +616,10 @@ impl PdfAnnotationExporter {
         }
 
         if let Some(page_id) = page_ids.get(page_index) {
-            let page_dict = doc.get_object(**page_id).unwrap().as_dict().unwrap();
+            let page_dict = doc.get_object(**page_id)
+                .expect("page object not found")
+                .as_dict()
+                .expect("page object is not a dictionary");
 
             // Check if annotations exist and copy them
             if let Ok(annot_ref) = page_dict.get(b"Annots") {
@@ -632,12 +638,12 @@ impl PdfAnnotationExporter {
                     let output_page_ids: Vec<_> = output_pages_map.values().collect();
 
                     if page_index < output_page_ids.len() {
-                        let output_page_id = output_page_ids.get(page_index).unwrap();
+                        let output_page_id = output_page_ids.get(page_index).expect("output page index out of bounds");
                         let output_page_dict = output_doc
                             .get_object_mut(**output_page_id)
-                            .unwrap()
+                            .map_err(|e| format_err!("Failed to get output page object: {}", e))?
                             .as_dict_mut()
-                            .unwrap();
+                            .map_err(|e| format_err!("Output page object is not a dictionary: {}", e))?;
 
                         // Add annotations to output page
                         output_page_dict.set("Annots", annot_ref.clone());

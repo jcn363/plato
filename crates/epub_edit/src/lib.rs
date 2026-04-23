@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 use anyhow::{bail, format_err, Context, Result};
 use regex::Regex;
 use serde::{Deserialize, Serialize};

@@ -259,6 +259,9 @@ pub type PluginLoaderFn = extern "C" fn() -> *mut dyn DocumentPlugin;
 pub unsafe fn load_plugin_from_library(
     library: &libloading::Library,
 ) -> Result<Box<dyn DocumentPlugin>, Error> {
+    // SAFETY: The library must contain a symbol named "plato_plugin_entry" that is a valid
+    // function pointer matching the EntryFn type. The caller must ensure the library is
+    // loaded from a trusted source.
     #[allow(improper_ctypes_definitions)]
     type EntryFn = extern "C" fn() -> *mut dyn DocumentPlugin;
 

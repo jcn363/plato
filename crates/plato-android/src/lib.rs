@@ -1,4 +1,5 @@
 #![cfg_attr(not(target_os = "android"), allow(dead_code, unused_imports))]
+#![warn(missing_docs)]
 
 use android_activity::{AndroidApp, MainEvent, PollEvent};
 

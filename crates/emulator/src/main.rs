@@ -1,4 +1,5 @@
 #![allow(clippy::all)]
+#![warn(missing_docs)]
 
 use plato_core::anyhow::{Context as ResultExt, Error};
 use plato_core::battery::{Battery, FakeBattery};

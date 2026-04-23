@@ -1,4 +1,5 @@
 #![allow(clippy::all)]
+#![warn(missing_docs)]
 
 use plato_core::anyhow::{format_err, Context, Error};
 use plato_core::chrono::{DateTime, Duration, Local, Utc};

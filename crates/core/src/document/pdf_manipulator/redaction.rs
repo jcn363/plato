@@ -148,9 +148,9 @@ impl RedactionEditor {
                 if !annot_array.is_empty() {
                     let page_dict = doc
                         .get_object_mut(**page_id)
-                        .unwrap()
+                        .map_err(|e| format_err!("Failed to get page object: {}", e))?
                         .as_dict_mut()
-                        .unwrap();
+                        .map_err(|e| format_err!("Page object is not a dictionary: {}", e))?;
                     page_dict.set("Annots", Object::Array(annot_array));
                 }
             }
@@ -186,7 +186,10 @@ impl RedactionEditor {
 
         // Remove redaction annotations from all pages
         for page_id in page_ids {
-            let page_dict = doc.get_object_mut(*page_id).unwrap().as_dict_mut().unwrap();
+            let page_dict = doc.get_object_mut(*page_id)
+                .map_err(|e| format_err!("Failed to get page object: {}", e))?
+                .as_dict_mut()
+                .map_err(|e| format_err!("Page object is not a dictionary: {}", e))?;
 
             // Remove Annots key if it exists
             if page_dict.get(b"Annots").is_ok() {

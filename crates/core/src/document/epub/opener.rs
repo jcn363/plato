@@ -27,7 +27,9 @@ pub struct EpubDocument {
     pub ignore_document_css: bool,
 }
 
+// SAFETY: EpubDocument contains only Send types (ZipArchive is wrapped in Arc<Mutex<>>)
 unsafe impl Send for EpubDocument {}
+// SAFETY: EpubDocument contains only Sync types (ZipArchive is wrapped in Arc<Mutex<>>)
 unsafe impl Sync for EpubDocument {}
 
 impl ResourceFetcher for ZipArchive<File> {

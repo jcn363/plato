@@ -33,6 +33,7 @@ impl Home {
     ) {
         self.background_fetchers.retain(|id, fetcher| {
             if fetcher.full_path == path {
+                // SAFETY: Process ID is valid. Signal is a valid POSIX signal.
                 unsafe { libc::kill(*id as libc::pid_t, libc::SIGTERM) };
                 fetcher.process.wait().ok();
                 if update {

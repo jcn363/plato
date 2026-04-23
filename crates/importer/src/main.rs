@@ -1,4 +1,5 @@
 #![allow(clippy::all)]
+#![warn(missing_docs)]
 
 use getopts::Options;
 use plato_core::anyhow::{format_err, Context, Error};

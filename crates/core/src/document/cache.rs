@@ -60,7 +60,7 @@ pub struct PdfCache {
 impl PdfCache {
     /// Create a new PDF cache with specified capacity
     pub fn new(capacity: usize) -> Self {
-        let capacity = NonZeroUsize::new(capacity.max(1)).unwrap();
+        let capacity = NonZeroUsize::new(capacity.max(1)).expect("cache capacity must be non-zero");
 
         Self {
             rendered_pages: Arc::new(Mutex::new(LruCache::new(capacity))),
@@ -72,55 +72,55 @@ impl PdfCache {
 
     /// Get cached rendered page
     pub fn get_rendered_page(&self, key: &PageCacheKey) -> Option<CachedPage> {
-        self.rendered_pages.lock().unwrap().get(key).cloned()
+        self.rendered_pages.lock().expect("rendered pages cache lock poisoned").get(key).cloned()
     }
 
     /// Cache rendered page
     pub fn put_rendered_page(&self, key: PageCacheKey, pixmap: PdfPurrPixmap) {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("system time before UNIX epoch")
             .as_secs();
 
         self.rendered_pages
             .lock()
-            .unwrap()
+            .expect("rendered pages cache lock poisoned")
             .put(key, CachedPage { pixmap, timestamp });
     }
 
     /// Get cached text
     pub fn get_extracted_text(&self, key: &PageCacheKey) -> Option<CachedText> {
-        self.extracted_text.lock().unwrap().get(key).cloned()
+        self.extracted_text.lock().expect("extracted text cache lock poisoned").get(key).cloned()
     }
 
     /// Cache extracted text
     pub fn put_extracted_text(&self, key: PageCacheKey, text: String) {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("system time before UNIX epoch")
             .as_secs();
 
         self.extracted_text
             .lock()
-            .unwrap()
+            .expect("extracted text cache lock poisoned")
             .put(key, CachedText { text, timestamp });
     }
 
     /// Get cached metadata
     pub fn get_metadata(&self, key: &PageCacheKey) -> Option<CachedMetadata> {
-        self.metadata.lock().unwrap().get(key).cloned()
+        self.metadata.lock().expect("metadata cache lock poisoned").get(key).cloned()
     }
 
     /// Cache metadata
     pub fn put_metadata(&self, key: PageCacheKey, dims: (f32, f32)) {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .expect("system time before UNIX epoch")
             .as_secs();
 
         self.metadata
             .lock()
-            .unwrap()
+            .expect("metadata cache lock poisoned")
             .put(key, CachedMetadata { dims, timestamp });
     }
 
@@ -136,17 +136,17 @@ impl PdfCache {
 
     /// Clear all caches
     pub fn clear(&self) {
-        self.rendered_pages.lock().unwrap().clear();
-        self.extracted_text.lock().unwrap().clear();
-        self.metadata.lock().unwrap().clear();
+        self.rendered_pages.lock().expect("rendered pages cache lock poisoned").clear();
+        self.extracted_text.lock().expect("extracted text cache lock poisoned").clear();
+        self.metadata.lock().expect("metadata cache lock poisoned").clear();
         self.outlines.clear();
     }
 
     /// Clear cache for a specific document
     pub fn clear_document(&self, doc_id: &str) {
-        let mut rendered = self.rendered_pages.lock().unwrap();
-        let mut text = self.extracted_text.lock().unwrap();
-        let mut meta = self.metadata.lock().unwrap();
+        let mut rendered = self.rendered_pages.lock().expect("rendered pages cache lock poisoned");
+        let mut text = self.extracted_text.lock().expect("extracted text cache lock poisoned");
+        let mut meta = self.metadata.lock().expect("metadata cache lock poisoned");
 
         // LruCache doesn't have retain, so we collect keys to remove
         let rendered_keys: Vec<_> = rendered.iter().map(|(k, _)| k.clone()).collect();
@@ -176,9 +176,9 @@ impl PdfCache {
     /// Get cache statistics
     pub fn stats(&self) -> CacheStats {
         CacheStats {
-            rendered_pages: self.rendered_pages.lock().unwrap().len(),
-            extracted_text: self.extracted_text.lock().unwrap().len(),
-            metadata: self.metadata.lock().unwrap().len(),
+            rendered_pages: self.rendered_pages.lock().expect("rendered pages cache lock poisoned").len(),
+            extracted_text: self.extracted_text.lock().expect("extracted text cache lock poisoned").len(),
+            metadata: self.metadata.lock().expect("metadata cache lock poisoned").len(),
             outlines: self.outlines.len(),
         }
     }
@@ -212,7 +212,7 @@ mod tests {
         cache.put_metadata(key.clone(), (600.0, 800.0));
         let cached = cache.get_metadata(&key);
         assert!(cached.is_some());
-        assert_eq!(cached.unwrap().dims, (600.0, 800.0));
+        assert_eq!(cached.expect("cached metadata missing").dims, (600.0, 800.0));
     }
 
     #[test]

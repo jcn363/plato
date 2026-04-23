@@ -155,7 +155,9 @@ impl PdfOpener {
     }
 }
 
+// SAFETY: PdfDocument contains only Send types (MuPDF document is wrapped in Arc<Mutex<>>)
 unsafe impl Send for PdfDocument {}
+// SAFETY: PdfDocument contains only Sync types (MuPDF document is wrapped in Arc<Mutex<>>)
 unsafe impl Sync for PdfDocument {}
 
 impl PdfDocument {

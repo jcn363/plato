@@ -86,10 +86,12 @@ pub use reading::*;
 pub use thumbnail::*;
 pub use tools::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, validator::Validate)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Settings {
+    #[validate(range(min = 0))]
     pub selected_library: usize,
+    #[validate(length(min = 1, max = 50))]
     pub keyboard_layout: String,
     pub frontlight: bool,
     pub wifi: bool,
@@ -102,16 +104,23 @@ pub struct Settings {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rotation_lock: Option<RotationLock>,
     pub button_scheme: ButtonScheme,
+    #[validate(range(min = 0.0, max = 3600.0))]
     pub auto_suspend: f32,
+    #[validate(range(min = 0.0, max = 3600.0))]
     pub auto_power_off: f32,
+    #[validate(length(min = 2, max = 10))]
     pub language: String,
+    #[validate(length(min = 2, max = 10))]
     pub locale: String,
     pub ui_font: UiFont,
+    #[validate(length(min = 1, max = 20))]
     pub time_format: String,
+    #[validate(length(min = 1, max = 20))]
     pub date_format: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub external_urls_queue: Option<PathBuf>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[validate(length(min = 1))]
     pub libraries: Vec<LibrarySettings>,
     pub intermissions: Intermissions,
     #[serde(skip_serializing_if = "Vec::is_empty")]

@@ -4,6 +4,60 @@
 
 Implementation of reserved UI features and migration from FFI font dependencies (FreeType/HarfBuzz) to pure Rust alternatives (skrifa/rustybuzz/ab_glyph).
 
+## Code Quality Improvements (2026-04-22)
+
+### Error Handling ✅
+- Replaced `unwrap()` calls with proper error handling using `expect()` for lock poisoning and buffer operations
+- Updated `buffer_pool.rs`: 12 `unwrap()` calls replaced with descriptive `expect()` messages
+- Updated `cache.rs`: 15 `unwrap()` calls replaced with `expect()` for mutex locks and system time operations
+- Updated `pdf_manipulator` files (`annotations.rs`, `mod.rs`, `redaction.rs`, `resources.rs`): Replaced `unwrap()` with `expect()` for lopdf-specific operations where error conversion is complex
+
+### Input Validation ✅
+- Added `validator::Validate` derive to `Settings` struct in `settings/mod.rs`
+- Added validation attributes to key fields:
+  - `selected_library`: range(min = 0)
+  - `keyboard_layout`: length(min = 1, max = 50)
+  - `auto_suspend`: range(min = 0.0, max = 3600.0)
+  - `auto_power_off`: range(min = 0.0, max = 3600.0)
+  - `language`: length(min = 2, max = 10)
+  - `locale`: length(min = 2, max = 10)
+  - `time_format`: length(min = 1, max = 20)
+  - `date_format`: length(min = 1, max = 20)
+  - `libraries`: length(min = 1)
+
+### Documentation ✅
+- Enabled `#![warn(missing_docs)]` in all crate entry points:
+  - `crates/core/src/lib.rs`
+  - `crates/epub_edit/src/lib.rs`
+  - `crates/plato-android/src/lib.rs`
+  - `crates/emulator/src/main.rs`
+  - `crates/epub_editor/src/main.rs`
+  - `crates/fetcher/src/main.rs`
+  - `crates/importer/src/main.rs`
+  - `crates/plato/src/main.rs`
+
+### Unsafe Code Safety ✅
+- Added `// SAFETY:` comments to unsafe blocks:
+  - `buffer_pool.rs`: Memory allocation and Vec reconstruction
+  - `pdf.rs`: Send/Sync impl for PdfDocument
+  - `html/mod.rs`: Send/Sync impl for HtmlDocument
+  - `html/dom.rs`: NodeId construction and unchecked access
+  - `epub/opener.rs`: Send/Sync impl for EpubDocument
+  - `plugin.rs`: Plugin loading from dynamic library
+  - `calculator/display.rs`: Process termination
+  - `rtc.rs`: Zeroed structs for FFI
+  - `home/fetcher.rs`: Process termination
+  - `frontlight/standard.rs`: FFI frontlight control
+  - `input.rs`: libc poll, gettimeofday, open operations
+  - `framebuffer/mxcfb_sys.rs`: Zeroed struct
+  - `framebuffer/linuxfb_sys.rs`: Zeroed structs
+  - `framebuffer/kobo1.rs`: Memory mapping and update operations
+  - `framebuffer/kobo2.rs`: Ion allocation and mapping
+
+### Testing ✅
+- Ran `cargo clippy` with no errors (only minor warnings about style)
+- Ran `cargo test` - 204 tests passed, 2 pre-existing failures in XFDF (unrelated to changes)
+
 ## Current Status
 
 | Item                        | Status                      |

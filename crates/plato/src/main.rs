@@ -1,4 +1,5 @@
 #![allow(clippy::all)]
+#![warn(missing_docs)]
 
 mod app;
 

@@ -28,10 +28,14 @@ impl PixelBuffer {
     /// Create a new SIMD-aligned buffer for specific size
     pub fn new_aligned(size: usize) -> Self {
         let layout = Layout::from_size_align(size, 32).expect("Invalid alignment layout");
+        // SAFETY: We use the global allocator with a valid layout. If allocation fails, ptr is null
+        // and we handle that case by falling back to a Vec allocation.
         let ptr = unsafe { std::alloc::alloc(layout) };
         let vec = if ptr.is_null() {
             Vec::with_capacity(size)
         } else {
+            // SAFETY: ptr is non-null and was allocated with the given layout, so we can safely
+            // reconstruct a Vec from the raw parts. The capacity and size are both `size`.
             unsafe {
                 let mut vec = Vec::from_raw_parts(ptr, size, size);
                 vec.set_len(size);
@@ -94,7 +98,7 @@ impl BufferPool {
     /// Acquire a buffer from the pool
     pub fn acquire(&self, min_size: usize) -> Result<BufferGuard> {
         let size = min_size.max(self.min_buffer_size);
-        let mut pool = self.pool.lock().unwrap();
+        let mut pool = self.pool.lock().expect("buffer pool lock poisoned");
 
         // Try to find a buffer with sufficient capacity
         let buffer = if let Some(mut buf) = pool.pop_front() {
@@ -112,7 +116,7 @@ impl BufferPool {
 
     /// Get pool statistics
     pub fn stats(&self) -> PoolStats {
-        let pool = self.pool.lock().unwrap();
+        let pool = self.pool.lock().expect("buffer pool lock poisoned");
         PoolStats {
             available: pool.len(),
             min_buffer_size: self.min_buffer_size,
@@ -122,7 +126,7 @@ impl BufferPool {
 
     /// Clear the pool
     pub fn clear(&self) {
-        self.pool.lock().unwrap().clear();
+        self.pool.lock().expect("buffer pool lock poisoned").clear();
     }
 }
 
@@ -141,19 +145,19 @@ pub struct BufferGuard {
 impl BufferGuard {
     /// Get the buffer
     pub fn buffer(&mut self) -> &mut PixelBuffer {
-        self.buffer.as_mut().unwrap()
+        self.buffer.as_mut().expect("buffer guard has no buffer")
     }
 
     /// Consume the guard and return the buffer without returning to pool
     pub fn into_inner(mut self) -> PixelBuffer {
-        self.buffer.take().unwrap()
+        self.buffer.take().expect("buffer guard has no buffer")
     }
 }
 
 impl Drop for BufferGuard {
     fn drop(&mut self) {
         if let Some(buffer) = self.buffer.take() {
-            let mut pool = self.pool.lock().unwrap();
+            let mut pool = self.pool.lock().expect("buffer pool lock poisoned");
             if pool.len() < pool.capacity() {
                 pool.push_back(buffer);
             }
@@ -178,7 +182,7 @@ mod tests {
         let pool = BufferPool::new(1024, 4);
 
         {
-            let mut guard = pool.acquire(2048).unwrap();
+            let mut guard = pool.acquire(2048).expect("failed to acquire buffer");
             let buffer = guard.buffer();
             assert!(buffer.capacity() >= 2048);
         }
@@ -192,9 +196,9 @@ mod tests {
     fn test_buffer_pool_capacity_limit() {
         let pool = BufferPool::new(1024, 2);
 
-        let _guard1 = pool.acquire(1024).unwrap();
-        let _guard2 = pool.acquire(1024).unwrap();
-        let _guard3 = pool.acquire(1024).unwrap(); // Should allocate new
+        let _guard1 = pool.acquire(1024).expect("failed to acquire buffer");
+        let _guard2 = pool.acquire(1024).expect("failed to acquire buffer");
+        let _guard3 = pool.acquire(1024).expect("failed to acquire buffer"); // Should allocate new
 
         let stats = pool.stats();
         assert_eq!(stats.available, 0); // None returned yet
@@ -204,7 +208,7 @@ mod tests {
     fn test_buffer_clear() {
         let pool = BufferPool::new(1024, 4);
 
-        let mut guard = pool.acquire(1024).unwrap();
+        let mut guard = pool.acquire(1024).expect("failed to acquire buffer");
         let buffer = guard.buffer();
         buffer.data_mut().extend_from_slice(&[1, 2, 3, 4]);
         buffer.clear();
