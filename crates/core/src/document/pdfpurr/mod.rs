@@ -115,6 +115,8 @@ impl Document {
 
     pub fn layout(&mut self, _width: f32, _height: f32) {
         // PDFPurr doesn't support reflow
+        let _width = _width.max(0.0);
+        let _height = _height.max(0.0);
     }
 
     pub fn title(&self) -> Option<String> {
