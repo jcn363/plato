@@ -22,6 +22,9 @@ impl FontLibrary {
     }
 
     pub fn new_memory_face(&self, data: &[u8], index: i32) -> Result<skrifa_wrapper::Face> {
+        if data.is_empty() {
+            return Err(anyhow::format_err!("Font data cannot be empty"));
+        }
         skrifa_wrapper::Face::from_memory(data.to_vec(), index as u32)
     }
 }
