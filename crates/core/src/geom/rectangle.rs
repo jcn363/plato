@@ -209,7 +209,11 @@ impl Rectangle {
     #[inline]
     #[must_use]
     pub fn ratio(&self) -> f32 {
-        self.width() as f32 / self.height() as f32
+        let height = self.height();
+        if height == 0 {
+            return 0.0;
+        }
+        self.width() as f32 / height as f32
     }
 
     #[inline]
