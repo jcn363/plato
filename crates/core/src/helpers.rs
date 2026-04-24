@@ -680,7 +680,7 @@ pub mod xdg {
     pub fn config_dir() -> PathBuf {
         env::var_os("XDG_CONFIG_HOME")
             .map(PathBuf::from)
-            .unwrap_or_else(|| dirs::home_dir().unwrap_or_default().join(".config"))
+            .unwrap_or_else(|| dirs_next::home_dir().unwrap_or_default().join(".config"))
             .join("plato")
     }
 
@@ -688,7 +688,7 @@ pub mod xdg {
     pub fn data_dir() -> PathBuf {
         env::var_os("XDG_DATA_HOME")
             .map(PathBuf::from)
-            .unwrap_or_else(|| dirs::home_dir().unwrap_or_default().join(".local/share"))
+            .unwrap_or_else(|| dirs_next::home_dir().unwrap_or_default().join(".local/share"))
             .join("plato")
     }
 
