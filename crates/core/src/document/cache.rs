@@ -149,6 +149,9 @@ impl PdfCache {
 
     /// Cache outlines
     pub fn put_outlines(&self, doc_id: String, outlines: Vec<String>) {
+        if doc_id.is_empty() {
+            return;
+        }
         self.outlines.insert(doc_id, outlines);
     }
 
