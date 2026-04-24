@@ -566,6 +566,8 @@ impl HttpClient {
 
     /// Create a new HTTP client with custom settings
     pub fn with_settings(max_retries: u32, timeout_seconds: u64) -> Result<Self, Error> {
+        let max_retries = max_retries.clamp(1, 10);
+        let timeout_seconds = timeout_seconds.clamp(1, 300);
         let timeout = std::time::Duration::from_secs(timeout_seconds);
         let client = reqwest::blocking::Client::builder()
             .timeout(timeout)
