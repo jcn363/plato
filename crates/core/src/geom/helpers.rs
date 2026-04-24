@@ -233,7 +233,7 @@ pub fn small_half(n: i32) -> i32 {
 /// let big = big_half(11);  // 6
 /// ```
 pub fn big_half(n: i32) -> i32 {
-    n - small_half(n)
+    (n - small_half(n)).max(0)
 }
 
 /// Divides `n` into `p` roughly equal parts.
