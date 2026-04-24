@@ -90,16 +90,16 @@ impl Sub for Vec2 {
     type Output = Vec2;
     fn sub(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
+            x: (self.x - rhs.x).clamp(-10000.0, 10000.0),
+            y: (self.y - rhs.y).clamp(-10000.0, 10000.0),
         }
     }
 }
 
 impl SubAssign for Vec2 {
     fn sub_assign(&mut self, rhs: Vec2) {
-        self.x -= rhs.x;
-        self.y -= rhs.y;
+        self.x = (self.x - rhs.x).clamp(-10000.0, 10000.0);
+        self.y = (self.y - rhs.y).clamp(-10000.0, 10000.0);
     }
 }
 
@@ -107,16 +107,16 @@ impl Mul<Vec2> for Vec2 {
     type Output = Vec2;
     fn mul(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self.x * rhs.x,
-            y: self.y * rhs.y,
+            x: (self.x * rhs.x).clamp(-10000.0, 10000.0),
+            y: (self.y * rhs.y).clamp(-10000.0, 10000.0),
         }
     }
 }
 
 impl MulAssign<Vec2> for Vec2 {
     fn mul_assign(&mut self, rhs: Vec2) {
-        self.x *= rhs.x;
-        self.y *= rhs.y;
+        self.x = (self.x * rhs.x).clamp(-10000.0, 10000.0);
+        self.y = (self.y * rhs.y).clamp(-10000.0, 10000.0);
     }
 }
 
