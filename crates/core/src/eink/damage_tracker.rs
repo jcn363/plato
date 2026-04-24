@@ -16,6 +16,8 @@ pub struct FrameBuffer {
 
 impl FrameBuffer {
     pub fn new(width: u32, height: u32) -> Self {
+        let width = width.clamp(1, 100_000);
+        let height = height.clamp(1, 100_000);
         if width == 0 || height == 0 {
             return Self {
                 width: 1,
