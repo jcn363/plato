@@ -15,10 +15,12 @@ pub struct GhostingReducer {
 
 impl GhostingReducer {
     pub fn new(max_partial_updates: u32, full_refresh_interval_sec: u32) -> Self {
+        let max_partial_updates = max_partial_updates.max(1);
+        let full_refresh_interval = full_refresh_interval_sec.max(1);
         Self {
             partial_update_count: 0,
             max_partial_updates,
-            full_refresh_interval: full_refresh_interval_sec,
+            full_refresh_interval,
             last_full_refresh: std::time::Instant::now(),
         }
     }
