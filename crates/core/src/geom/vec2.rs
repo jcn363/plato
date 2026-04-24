@@ -124,16 +124,16 @@ impl Div<Vec2> for Vec2 {
     type Output = Vec2;
     fn div(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self.x / rhs.x,
-            y: self.y / rhs.y,
+            x: if rhs.x.abs() < f32::EPSILON { 0.0 } else { (self.x / rhs.x).clamp(-10000.0, 10000.0) },
+            y: if rhs.y.abs() < f32::EPSILON { 0.0 } else { (self.y / rhs.y).clamp(-10000.0, 10000.0) },
         }
     }
 }
 
 impl DivAssign<Vec2> for Vec2 {
     fn div_assign(&mut self, rhs: Vec2) {
-        self.x /= rhs.x;
-        self.y /= rhs.y;
+        self.x = if rhs.x.abs() < f32::EPSILON { 0.0 } else { (self.x / rhs.x).clamp(-10000.0, 10000.0) };
+        self.y = if rhs.y.abs() < f32::EPSILON { 0.0 } else { (self.y / rhs.y).clamp(-10000.0, 10000.0) };
     }
 }
 
@@ -141,8 +141,8 @@ impl Add<f32> for Vec2 {
     type Output = Vec2;
     fn add(self, rhs: f32) -> Vec2 {
         Vec2 {
-            x: self.x + rhs,
-            y: self.y + rhs,
+            x: (self.x + rhs).clamp(-10000.0, 10000.0),
+            y: (self.y + rhs).clamp(-10000.0, 10000.0),
         }
     }
 }
