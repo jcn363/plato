@@ -46,6 +46,7 @@ pub struct ReaderSettings {
     pub external_storage_path: Option<String>,
     pub page_turn_animation: PageTurnAnimation,
     pub fast_page_turn: bool,
+    pub use_system_fonts: bool,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -267,6 +268,7 @@ impl Default for ReaderSettings {
             refresh_rate: RefreshRateSettings::default(),
             page_turn_animation: PageTurnAnimation::None,
             fast_page_turn: false,
+            use_system_fonts: false,
         }
     }
 }

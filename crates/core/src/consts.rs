@@ -317,6 +317,14 @@ pub mod settings {
     /// Default font path
     pub const DEFAULT_FONT_PATH: &str = "/mnt/onboard/fonts";
 
+    /// System font paths to search when use_system_fonts is enabled
+    pub const SYSTEM_FONT_PATHS: &[&str] = &[
+        "/usr/share/fonts",
+        "/usr/local/share/fonts",
+        "~/.fonts",
+        "~/.local/share/fonts",
+    ];
+
     /// Internal storage root path
     pub const INTERNAL_CARD_ROOT: &str = "/mnt/onboard";
 

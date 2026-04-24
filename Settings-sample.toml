@@ -112,6 +112,9 @@ corner-width = 0.4
 # The path for the user's custom font directory.
 # Note: this does not exist by default.
 font-path = "/mnt/onboard/fonts"
+# Also search system font directories (/usr/share/fonts, ~/.fonts, etc.).
+# Note: Only effective on Linux desktop; ignored on Kobo devices.
+use-system-fonts = false
 # The default serif font.
 font-family = "Libertinus Serif"
 # The default, minimum and maximum font sizes, in points.

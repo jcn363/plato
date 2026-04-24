@@ -10,6 +10,7 @@ use crate::settings::DEFAULT_FONT_FAMILY;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::menu_helpers::toggle_menu_vec;
 use crate::view::{EntryId, EntryKind, RenderQueue, ViewId};
+use crate::consts::settings::SYSTEM_FONT_PATHS;
 
 pub(crate) fn toggle_font_family_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,
@@ -25,6 +26,23 @@ pub(crate) fn toggle_font_family_menu(
             let mut families = family_names(&ctx.settings.reader.font_path)
                 .map_err(|e| log_error!("Can't get family names: {:#}.", e))
                 .unwrap_or_default();
+
+            // Add system fonts if enabled
+            if ctx.settings.reader.use_system_fonts {
+                for path in SYSTEM_FONT_PATHS.iter() {
+                    let expanded_path = if path.starts_with("~/") {
+                        dirs_next::home_dir()
+                            .map(|home| home.join(&path[2..]))
+                            .unwrap_or_else(|| path.into())
+                    } else {
+                        path.into()
+                    };
+                    if let Ok(sys_families) = family_names(&expanded_path) {
+                        families.extend(sys_families);
+                    }
+                }
+            }
+
             families.insert(DEFAULT_FONT_FAMILY.to_string());
             let entries: Vec<_> = families
                 .iter()
