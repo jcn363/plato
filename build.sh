@@ -119,7 +119,7 @@ get_cargo_profile() {
 # This is the canonical target-to-directory mapping and the single source of truth for it in shell scripts:
 # - arm (arm-unknown-linux-gnueabihf) → libs/ (ARM 32-bit for original Kobo devices)
 # - arm64 (aarch64-unknown-linux-gnu) → libs64/ (ARM 64-bit for newer Kobo devices)
-# - host (x86_64-unknown-linux-gnu) → libs_host/ (host/x86_64 for development/emulator)
+# - host (x86_64-unknown-linux-gnu) → libs_host/ (host/x86_64 for development)
 get_lib_dir() {
     case "$1" in
         arm) echo "libs" ;;
@@ -158,7 +158,7 @@ if [ "$SKIP_CLIPPY" -eq 0 ]; then
     echo "Running cargo clippy..."
     CARGO_TARGET_FLAGS=$(get_cargo_target_flags "$TARGET")
     if [ -n "$CARGO_TARGET_FLAGS" ]; then
-        cargo clippy $CARGO_TARGET_FLAGS --workspace --exclude emulator -- -D warnings
+        cargo clippy $CARGO_TARGET_FLAGS --workspace -- -D warnings
     else
         cargo clippy --workspace -- -D warnings
     fi
@@ -230,14 +230,11 @@ if [ "$TARGET" = "host" ]; then
     echo "Building all crates for host..."
     cargo build $CARGO_PROFILE --workspace
 else
-    echo "Building crates for $TARGET (excluding emulator)..."
-    # Filter out emulator for ARM targets
-    # We can't use --exclude easily with cargo build when we want to be explicit about what's built
-    # but since we're in a workspace, we can just build the workspace and exclude it.
+    echo "Building crates for $TARGET..."
     if [ -n "$CARGO_TARGET_FLAGS" ]; then
-        cargo build $CARGO_TARGET_FLAGS $CARGO_PROFILE --workspace --exclude emulator
+        cargo build $CARGO_TARGET_FLAGS $CARGO_PROFILE --workspace
     else
-        cargo build $CARGO_PROFILE --workspace --exclude emulator
+        cargo build $CARGO_PROFILE --workspace
     fi
 fi
 

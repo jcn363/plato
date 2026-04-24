@@ -15,6 +15,7 @@
 /.fat32-epoch
 /.thumbnail-previews
 /.trash
+/.vscode
 /actions-runner
 /css/*-user.css
 /hyphenation-patterns
@@ -22,6 +23,7 @@
 /dist
 /bundle
 /plato-*.zip
+/target-arm
 /thirdparty/*/*
 !/thirdparty/*/*kobo*
 !/thirdparty/*/build-ios.sh

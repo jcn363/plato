@@ -39,7 +39,6 @@ Plato is a document reader for Kobo e-readers, written in Rust. It's a Cargo wor
 
 - **crates/core** (`plato-core`) — Core library with document handling, rendering, UI views, device interaction
 - **crates/plato** — Main binary for Kobo devices
-- **crates/emulator** — SDL2-based desktop emulator for development
 - **crates/importer** — Document importer tool
 - **crates/fetcher** — Article fetcher from online sources
 - **crates/epub_edit** — EPUB editing library
@@ -68,9 +67,6 @@ cargo build --target x86_64-unknown-linux-gnu
 
 # Create distribution bundle
 ./dist.sh
-
-# Run the desktop emulator (requires SDL2)
-./run-emulator.sh
 ```
 
 ## Testing
@@ -332,7 +328,7 @@ where
 - Use `cargo test` to verify changes compile and pass tests — run it proactively, not just when asked
 - Prefer `cargo check` over `cargo build` during development for faster feedback
 - When modifying multiple files, batch changes and run a single validation pass at the end
-- For this project, the emulator requires native libs — use `./run-emulator.sh` which sets `RUSTFLAGS` correctly
+- For this project, native libs may require `RUSTFLAGS` to be set correctly
 - Cross-compilation targets ARM by default (see `.cargo/config.toml`) — use `--target x86_64-unknown-linux-gnu` for host builds
 
 ## Error Handling Process
@@ -472,7 +468,7 @@ Plato uses a target-to-library directory convention to separate native shared li
 
 - **`libs/`** → ARM 32-bit (`arm-unknown-linux-gnueabihf`) for original Kobo devices
 - **`libs64/`** → ARM 64-bit (`aarch64-unknown-linux-gnu`) for newer Kobo devices (Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
-- **`libs_host/`** → Host/x86_64 (`x86_64-unknown-linux-gnu`) for development and emulator
+- **`libs_host/`** → Host/x86_64 (`x86_64-unknown-linux-gnu`) for development
 
 The `get_lib_dir()` function in `build.sh` is the canonical source of truth for this mapping and is used by build and packaging scripts to resolve the correct library directory for each target.
 

@@ -1,311 +1,530 @@
 # Contributing to Plato
 
-Thank you for your interest in contributing to Plato! This document outlines the guidelines and best practices for contributing to this project.
+Thank you for your interest in contributing to Plato! This guide will help you get started quickly and follow our project standards.
 
-See also:
+## 📚 Quick Start
 
-- [README.md](README.md) for project overview and supported targets
-- [doc/BUILD.md](doc/BUILD.md) for setup and build details
-- [AGENTS.md](AGENTS.md) for repository-specific coding guidance
+**New contributors? Start here:**
 
-## Development Setup
+1. **Clone & Setup**
 
-### Workspace Layout
-- `crates/core` contains the shared engine and most source code
-- `crates/plato` is the device binary
-- `crates/emulator` is the SDL2 desktop emulator
-- `crates/importer` is the `plato-import` binary
-- `crates/fetcher` is the `article_fetcher` binary
-- `crates/epub_edit` is the EPUB editing library used by the UI
-- `epub_editor/` is a separate standalone CLI tool and is excluded from the Cargo workspace
+   ```bash
+   git clone https://github.com/bgamari/plato.git
+   cd plato
+   ./build.sh  # Downloads dependencies and builds for host
+   ```
+
+2. **Make Your First Change**
+
+   ```bash
+   # Edit code, then validate
+   cargo fmt
+   cargo clippy
+   cargo test --target x86_64-unknown-linux-gnu
+   ```
+
+3. **Submit Your Work**
+
+   ```bash
+   git add .
+   git commit -m "feat: add your feature"
+   git push origin your-branch-name
+   ```
+
+## 📖 Essential Resources
+
+- [README.md](README.md) - Project overview and supported devices
+- [doc/BUILD.md](doc/BUILD.md) - Detailed setup and build instructions
+- [AGENTS.md](AGENTS.md) - Repository-specific coding guidance
+- [Cargo.toml](Cargo.toml) - Project structure and dependencies
+
+## 🏗️ Development Setup
+
+### Project Structure
+
+```text
+plato/
+├── crates/
+│   ├── core/           # Shared engine and main source code
+│   ├── plato/          # Device binary (main application)
+│   ├── importer/       # plato-import binary
+│   ├── fetcher/        # article_fetcher binary
+│   └── epub_edit/       # EPUB editing library
+├── epub_editor/        # Standalone CLI tool (separate from workspace)
+├── doc/               # Documentation
+├── fonts/             # Font files
+└── css/               # Stylesheets
+```
 
 ### Prerequisites
+
+**Required:**
+
 - Rust toolchain (stable)
 - Git
-- `wget`, `curl`, `pkg-config`, `unzip`, `jq`, `patchelf`
-- For ARM builds: Cross-compilation toolchain
-- For emulator: SDL2 development libraries
+- Basic build tools: `wget`, `curl`, `pkg-config`, `unzip`, `jq`, `patchelf`
 
-### Building
+**For cross-compilation:**
+
+- ARM toolchain (for Kobo device builds)
+
+### Build Commands
+
+**Development (Host):**
+
 ```bash
-# Build for 32-bit ARM (original Kobo devices) - DEFAULT
-cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
-
-# Build for 64-bit ARM (newer Kobo devices: Libra 2, Sage, Clara 2E, etc.)
-cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
-
-# Build for host (development/testing)
+# Quick build for testing
 cargo build --target x86_64-unknown-linux-gnu -p plato
 
-# Full build with native dependencies (downloads libs + MuPDF)
+# Build with optimizations
+cargo build --release --target x86_64-unknown-linux-gnu -p plato
+```
+
+**Production (ARM Devices):**
+
+```bash
+# 32-bit ARM (original Kobo devices) - DEFAULT
+cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
+
+# 64-bit ARM (newer Kobo: Libra 2, Sage, Clara 2E)
+cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
+```
+
+**Full Build System:**
+
+```bash
+# Complete build with all dependencies
 ./build.sh
 
-# Full build with options (e.g., skip clean, use specific target/method)
+# Build with options (skip clean, specific target)
 ./build.sh --no-clean arm skip
 
-# Create distribution bundle
+# Create distribution package
 ./dist.sh
-
-# Run the desktop emulator (requires SDL2)
-./run-emulator.sh
 ```
 
 ### Testing
-Since the default target is ARM, all test commands on the host require `--target x86_64-unknown-linux-gnu`:
+
+**Important:** Default target is ARM, so host testing requires `--target x86_64-unknown-linux-gnu`.
+
+**Common Test Commands:**
 
 ```bash
 # Run all tests
 cargo test --target x86_64-unknown-linux-gnu
 
-# Run tests for a specific crate
+# Test specific crate
 cargo test -p plato-core --target x86_64-unknown-linux-gnu
 
-# Run a single test by name
+# Run single test
 cargo test -p plato-core test_device_canonical_rotation --target x86_64-unknown-linux-gnu
 
-# Run tests in a specific module
+# Test module
 cargo test -p plato-core geom::tests --target x86_64-unknown-linux-gnu
 
-# Run tests matching a pattern
-cargo test overlaping --target x86_64-unknown-linux-gnu
+# Pattern matching
+cargo test overlapping --target x86_64-unknown-linux-gnu
 ```
 
-## Code Style Guidelines
+**Development Workflow:**
 
-### Formatting
-- Run `cargo fmt` before committing
-- Run `cargo clippy` to catch common issues
-- The project uses `rustfmt.toml` for consistent formatting
+```bash
+# During development - faster checks
+cargo check --target x86_64-unknown-linux-gnu
+cargo clippy --target x86_64-unknown-linux-gnu
 
-### Imports
-- Group imports: std library first, then external crates, then local `crate::` imports
-- Use explicit imports rather than glob (`use std::fmt` not `use std::fmt::*`)
-- Re-export commonly used types from `lib.rs`
+# Before committing - full validation
+cargo fmt
+cargo test --target x86_64-unknown-linux-gnu
+```
 
-### Naming
-- **snake_case**: functions, methods, variables, modules, constants
-- **PascalCase**: types, structs, enums, traits
-- **SCREAMING_SNAKE_CASE**: true constants (`const DEFAULT_FONT_SIZE`)
-- Prefix unused parameters or dead code markers with `_`
+## 🎨 Code Style & Standards
 
-### Types & Structs
-- Derive common traits: `#[derive(Debug, Clone)]` for structs, add `Copy, Eq, PartialEq` when appropriate
-- Use `#[serde(rename_all = "camelCase")]` or `kebab-case` for serialization
-- Use `#[serde(skip_serializing_if = "...")]` to omit empty/default fields
-- Prefer `pub` fields on structs over getters for internal types
-- Use the builder pattern for complex configurations
-- Ensure proper resource cleanup in error cases — implement `Drop` for types that own resources
-- Monitor memory usage on resource-constrained devices — use `Box` for large data structures
+### Formatting & Quality
 
-### Input Validation
-**Mandatory:** Validate all inputs, especially at public API boundaries.
-- Validate early and fail fast — reject invalid inputs before any side effects occur
-- Provide clear, actionable error messages
-- Use the `validator` crate for complex validation scenarios
-- Validate configuration values, user input, file contents, and network responses
+**Before every commit:**
+
+```bash
+cargo fmt      # Format code
+cargo clippy  # Check for issues
+cargo test    # Run tests
+```
+
+### Code Organization
+
+**Import Structure:**
+
+```rust
+// Standard library first
+use std::collections::HashMap;
+use std::path::Path;
+
+// External crates
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
+
+// Local modules
+use crate::document::Document;
+use crate::view::View;
+```
+
+**Naming Conventions:**
+
+- `snake_case` - functions, methods, variables, modules
+- `PascalCase` - types, structs, enums, traits  
+- `SCREAMING_SNAKE_CASE` - true constants
+- Prefix unused items with `_`
+
+**Struct Best Practices:**
+
+```rust
+#[derive(Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub id: String,           // Prefer pub fields for internal types
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub title: String,
+    content: Box<str>,        // Use Box for large data on constrained devices
+}
+```
 
 ### Error Handling
-**Mandatory:** Standardize on a single error handling approach.
-- Use `anyhow::Error` as the primary error type throughout
-- Use `bail!` for early returns with errors
-- Use `format_err!` to create ad-hoc errors
-- Use `.with_context(|| "...")` to add context to errors
-- Use `thiserror` for defining custom error types in libraries
-- Avoid `unwrap()` — prefer `?`, `unwrap_or`, `unwrap_or_default`, or explicit `match`
-- For lock poisoning, use `.expect("lock_name lock poisoned")` instead of `.unwrap()`
 
-### Performance
-- Use `#[inline]` on hot-path small functions (pixel operations, geometry math, device checks)
-- Prefer `FxHashMap`/`FxHashSet` from `rustc_hash`, which is what the workspace currently uses
-- Pre-allocate buffers with `String::with_capacity` when size is known
-- Prefer `Cow<str>` for conditional string ownership
+**Standard approach - use anyhow:**
 
-### DRY (Don't Repeat Yourself)
-**Mandatory:** Never duplicate code.
-- Extract common logic into helper functions, traits, or modules
-- Create shared factory functions for repeated initialization patterns
-- Refactor repeated match/if patterns into methods on relevant types
-- Use generics, traits, or macros to eliminate structural duplication
-- Constants repeated across files belong in a shared `consts` module
+```rust
+use anyhow::{bail, Context, Result};
 
-### Modular Design
-**Mandatory:** Keep files and functions focused and reasonably sized.
-- No source file should exceed **1000 lines** — split into submodules when approaching this limit
-- No function should exceed **50 lines** — extract inner logic into helpers when approaching this limit
-- Each module should have a single clear responsibility
-- Split large modules into smaller, more focused ones when handling multiple distinct concerns
-- Separate data structures, business logic, and I/O into distinct modules
-- Use `pub(crate)` visibility to share helpers within a crate without exposing them publicly
+pub fn load_document(path: &Path) -> Result<Document> {
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read file: {}", path.display()))?;
+    
+    if content.is_empty() {
+        bail!("Document cannot be empty");
+    }
+    
+    parse_document(&content)
+}
+```
 
-### Module Hierarchy
-**Mandatory:** Structure modules logically, avoid circular dependencies, and document purposes.
-- Group related functionality by domain (e.g., `document/pdf`, `document/epub`, `view/reader`)
-- Avoid circular dependencies between modules
-- Document each module's purpose at the top of its `mod.rs` file
+### Performance Guidelines
 
-### Single Source of Truth
-**Mandatory:** Every piece of knowledge or logic must have one authoritative location.
-- Define values that can change once and reference them everywhere
-- Store mappings in one place and derive the rest
-- Export constants from the module that owns the concept
-- Avoid shadowing or overriding the same data in multiple layers
+**Hot path optimizations:**
 
-### Configuration Management
-**Mandatory:** Centralize configuration management and validate all configuration values.
-- Group related configuration in dedicated structs or modules
-- Add validation for configuration values at load time
-- Use typed configuration over raw strings or magic numbers
-- Document all configuration options, their valid ranges, and default values
-- Validate configuration values against constraints before use
+```rust
+#[inline]
+pub fn pixel_to_device(px: f32) -> i32 {
+    (px * DEVICE_SCALE).round() as i32
+}
 
-### Test Segregation
-**Mandatory:** Strictly separate test code from production code.
-- **Unit tests**: Same directory as production code using sibling test files (`{module}_tests.rs`)
-- **Integration tests**: `tests/` directory at workspace or crate root
-- Test-only helpers must live in test files or separate test-only crates
-- Never gate production behavior on `cfg(test)`
-- Each test file should be named `{module}_tests.rs`
-- Group related tests using modules
-- Add integration tests that exercise multiple components together
+// Use pre-allocated buffers
+let mut buffer = String::with_capacity(estimated_size);
 
-### General Patterns
-- Follow the surrounding module for statics: the codebase currently uses both `lazy_static!` and `std::sync::LazyLock`
-- Use `bitflags!` for flag enums
-- Prefer `BTreeMap`/`BTreeSet` for ordered collections; `IndexMap` for insertion-ordered maps
-- Keep `mod` declarations alphabetical; use `pub mod` for public API, plain `mod` for internal
+// Prefer efficient collections
+use rustc_hash::FxHashMap;  // Instead of std::HashMap
+use std::collections::BTreeMap;  // For ordered data
+```
 
-## Dependency Management
-**Mandatory:** Regularly audit dependencies for security and maintainability.
-- Use `cargo-audit` to check for known vulnerabilities
-- Audit and update dependencies regularly
-- Use workspace inheritance for shared dependency versions
-- Pin major versions and avoid wildcard dependencies
+### Architecture Principles
 
-## Async Patterns
-- Document `Send` and `Sync` bounds for async code
-- Add deadlock detection for code using multiple locks
-- Use `tracing` for better async debugging
-- Prefer `tokio` or `async-std` runtime primitives
+**DRY - Don't Repeat Yourself:**
 
-## API Documentation
-- Add examples for all public APIs in rustdoc comments
-- Document safety requirements for `unsafe` functions
-- Use `///` for public API documentation and `//` for internal notes
-- Keep examples minimal but complete
+- Extract common logic into helper functions and modules
+- Use shared factory functions for repeated patterns
+- Eliminate structural duplication with generics and traits
 
-## Automation
-**Mandatory:** Use scripts for building, testing, linting, formatting, and deployment.
-- Always run `cargo fmt` and `cargo clippy` before considering a task complete
-- Use `cargo test` to verify changes
-- Prefer `cargo check` over `cargo build` during development
-- Batch changes and run single validation pass
-- Cross-compilation targets ARM by default — use `--target x86_64-unknown-linux-gnu` for host builds
+**Modular Design:**
 
-## Error Handling Process
-**Mandatory:** Address errors in small increments, commit frequently, and review for accuracy.
-- Fix one category of error at a time
-- Run `cargo check` or `cargo test` after each small batch
-- Commit working changes frequently with clear messages
-- Review changes for grammatical, factual, and logical correctness
-- Never leave the codebase in a broken state
+- **File limit:** 1000 lines max - split into submodules
+- **Function limit:** 50 lines max - extract helpers
+- **Single responsibility:** Each module has one clear purpose
+- **Visibility:** Use `pub(crate)` for internal sharing
 
-### Error Resolution Sequence
-When facing multiple compilation errors:
-1. Dependency issues — fix version conflicts
-2. Import resolution — validate module imports
-3. Type mismatches — harmonize type definitions
-4. Missing implementations — add missing methods/traits/types
-5. Validate compilation and testing
+**Module Organization:**
 
-## Task Discipline
-**Mandatory:** Stay focused, validate incrementally, and prefer composition.
-- One task at a time — avoid concurrent operations
-- Decompose incrementally — break complex tasks into manageable steps
-- Prefer composition over inheritance — build flexible systems through traits
+```text
+crates/
+├── core/
+│   ├── document/     # Document handling (pdf, epub, etc.)
+│   ├── view/         # UI views and interaction
+│   ├── device/       # Device-specific code
+│   └── geom/         # Geometry and math
+└── plato/            # Main application
+```
 
-## Build Verification
-**Mandatory:** Achieve zero warnings and zero errors on every build target.
+**Testing Standards:**
 
-### Systematic Build Process
-1. Incremental verification — compile for primary target after each change
-2. Zero-tolerance policy — treat warnings as errors
-3. Full build verification — clean build for all targets before considering task complete
-4. Clippy validation — run clippy on host target after significant changes
+```rust
+// Unit tests - same directory
+#[cfg(test)]
+mod document_tests {
+    use super::*;
+    
+    #[test]
+    fn test_document_loading() { /* ... */ }
+}
 
-### Task Decomposition
-- One concern per change — isolate refactoring from functional changes
-- Smallest viable diff — prefer several focused commits
-- Verify before proceeding — compile successfully after each atomic change
+// Integration tests - tests/ directory
+// tests/document_integration.rs
+```
 
-### Code Quality Principles
-- Rewrite over patch — rewrite files with significant technical debt
-- Rust idioms only — follow current Rust best practices
-- Root cause analysis — fix root causes, not surface-level workarounds
-- Eliminate dead code — remove unused code immediately
-- No backward compatibility — don't support old APIs unless explicitly required
-- Project containment — all files must be inside project root
+### Configuration & Validation
 
-## Documentation Requirements
+**Typed Configuration:**
+
+```rust
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    #[serde(default = "default_font_size")]
+    pub font_size: u8,
+    
+    #[validate(range(min = 1, max = 100))]
+    pub max_pages: usize,
+}
+
+impl Default for Config {
+    fn default() -> Self { /* ... */ }
+}
+```
+
+## 🔄 Development Workflow
+
+### Pre-Commit Checklist
+
+**Always run before committing:**
+
+```bash
+cargo fmt                    # Format code
+cargo clippy -- -D warnings  # Treat warnings as errors
+cargo test --target x86_64-unknown-linux-gnu  # Run tests
+cargo audit                  # Check for security issues
+```
+
+### Incremental Development
+
+**Work in small, verifiable steps:**
+
+1. Make one focused change
+2. `cargo check` to verify compilation
+3. `cargo test` to verify behavior
+4. Commit with clear message
+5. Repeat
+
+**Error Resolution Order:**
+
+1. Fix dependency conflicts
+2. Resolve import issues
+3. Fix type mismatches
+4. Add missing implementations
+5. Validate full build
+
+### Build Standards
+
+**Zero-tolerance policy:**
+
+- No warnings allowed (`cargo clippy -- -D warnings`)
+- All tests must pass
+- All targets must compile
+- Code must be formatted
+
+**Build targets:**
+
+```bash
+# Primary development target
+cargo build --target x86_64-unknown-linux-gnu
+
+# Production targets (before PR)
+cargo build --target arm-unknown-linux-gnueabihf
+cargo build --target aarch64-unknown-linux-gnu
+```
+
+## 🐛 Troubleshooting
+
+### Common Build Issues
+
+**Cross-compilation errors:**
+
+```bash
+# Install ARM target
+rustup target add arm-unknown-linux-gnueabihf
+rustup target add aarch64-unknown-linux-gnu
+
+# Check toolchain
+rustup show
+```
+
+**Dependency issues:**
+
+```bash
+# Clean and rebuild
+cargo clean
+cargo update
+./build.sh --clean
+```
+
+**Test failures on host:**
+
+```bash
+# Always specify host target for testing
+cargo test --target x86_64-unknown-linux-gnu
+
+# Run specific failing test with output
+cargo test --target x86_64-unknown-linux-gnu -- --nocapture test_name
+```
+
+### Performance Issues
+
+**Slow compilation:**
+
+- Use `cargo check` during development
+- Consider `cargo build` only when needed
+- Check for unnecessary dependencies in `Cargo.toml`
+
+**Memory issues on device:**
+
+- Use `Box<T>` for large data structures
+- Avoid deep clones in hot paths
+- Monitor memory usage with profiling tools
+
+### Getting Help
+
+**Resources:**
+
+- Check [doc/BUILD.md](doc/BUILD.md) for detailed setup
+- Review [AGENTS.md](AGENTS.md) for coding standards
+- Search existing GitHub issues
+- Ask questions in GitHub discussions
+
+**Debug information:**
+
+```bash
+# Enable debug logging
+RUST_LOG=debug cargo run --target x86_64-unknown-linux-gnu
+
+# Build with debug info
+cargo build --target x86_64-unknown-linux-gnu --features debug
+```
+
+## 📝 Documentation Standards
 
 ### Module Documentation
-Each module should have a purpose statement at the top of its `mod.rs` file:
+
+**Every `mod.rs` should start with:**
+
 ```rust
-//! This module handles [specific responsibility].
+//! Document handling for Plato.
 //! 
-//! It provides [key features] and interacts with [related modules].
+//! This module provides parsing and rendering support for various document formats
+//! including PDF, EPUB, and text files. It coordinates with the view system to
+//! display content on Kobo e-ink displays.
 //! 
 //! # Examples
 //! 
 //! ```
-//! use plato_core::module::Function;
-//! let result = Function::new();
+//! use plato_core::document::Document;
+//! let doc = Document::open("book.epub")?;
+//! let page = doc.page(0)?;
 //! ```
 //!
 //! # Safety
-//!
-//! This module [safety considerations if applicable].
+//! 
+//! This module uses FFI bindings to MuPDF and must ensure proper memory management.
 ```
 
 ### API Documentation
-All public APIs must have rustdoc comments with:
-- Clear description of what the function does
-- Parameters and return values explained
-- `# Examples` section with runnable code
-- `# Errors` section if the function can return `Result`
-- `# Panics` section if the function can panic
-- `# Safety` section for `unsafe` functions
 
-### Architectural Documentation
-Significant architectural decisions should be documented in:
-- `docs/architecture/` directory
-- Referenced from relevant module documentation
-- Including rationale, trade-offs, and alternatives considered
+**Public APIs require complete docs:**
 
-## Commit Guidelines
+```rust
+/// Loads a document from the given path.
+/// 
+/// # Arguments
+/// 
+/// * `path` - Path to the document file
+/// 
+/// # Returns
+/// 
+/// A `Result` containing the loaded `Document` or an error
+/// 
+/// # Errors
+/// 
+/// Returns an error if:
+/// - The file doesn't exist
+/// - The file format is unsupported
+/// - The file is corrupted
+/// 
+/// # Examples
+/// 
+/// ```
+/// let doc = Document::open("book.pdf")?;
+/// println!("Loaded {} pages", doc.page_count());
+/// ```
+pub fn open<P: AsRef<Path>>(path: P) -> Result<Document>
+```
+
+## 🚀 Submitting Changes
 
 ### Commit Messages
-- Use clear, descriptive messages
-- Format: `<type>: <description>` (e.g., `feat: add login functionality`)
-- Types: `feat` (feature), `fix` (bug fix), `docs` (documentation), `style` (formatting), `refactor`, `test`, `chore`
-- Keep subject line under 50 characters
-- Provide detailed explanation in body when needed
-- Reference related issues: `Fixes #123` or `Related to #456`
 
-### Pull Requests
-- Keep PRs focused on a single concern
-- Update documentation when changing functionality
-- Ensure all tests pass
-- Run `cargo fmt` and `cargo clippy` before submitting
-- Keep PR size reasonable for review
-- Respond to reviewer feedback promptly
+**Format:** `<type>: <description>`
 
-## Reporting Issues
-When reporting bugs or suggesting features:
-- Check if issue already exists
-- Provide clear, reproducible steps for bugs
-- Include relevant logs, screenshots, or error messages
-- For feature requests, explain the use case and benefits
-- Follow the issue template if provided
+**Types:**
 
-## License
-By contributing to Plato, you agree that your contributions will be licensed under the project's license.
+- `feat` - New feature
+- `fix` - Bug fix  
+- `docs` - Documentation
+- `style` - Formatting (no code change)
+- `refactor` - Code refactoring
+- `test` - Adding/updating tests
+- `chore` - Maintenance tasks
+
+**Examples:**
+
+```bash
+feat: add EPUB font size configuration
+fix: resolve PDF rendering crash on large documents
+docs: update build instructions for ARM64
+```
+
+### Pull Request Guidelines
+
+**Before submitting:**
+
+- [ ] All tests pass: `cargo test --target x86_64-unknown-linux-gnu`
+- [ ] No clippy warnings: `cargo clippy -- -D warnings`
+- [ ] Code is formatted: `cargo fmt`
+- [ ] Documentation is updated
+- [ ] PR description explains the change
+- [ ] Tests cover new functionality
+
+**PR best practices:**
+
+- Keep changes focused and reviewable
+- Link to relevant issues: `Fixes #123`
+- Use draft PRs for work-in-progress
+- Respond to feedback promptly
+
+### Issue Reporting
+
+**Bug reports should include:**
+
+- Device model and firmware version
+- Steps to reproduce
+- Expected vs actual behavior
+- Relevant logs or screenshots
+
+**Feature requests should include:**
+
+- Use case and motivation
+- Proposed implementation approach
+- Potential alternatives considered
+
+## 📄 License
+
+By contributing to Plato, you agree that your contributions will be licensed under the same [AGPL-3.0](LICENSE-AGPLv3) license as the project.
+
+---
+
+**Thank you for contributing to Plato! 🎉**
+
+If you need help, don't hesitate to ask in GitHub discussions or issues.

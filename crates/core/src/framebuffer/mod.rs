@@ -2,7 +2,7 @@
 //!
 //! This module provides hardware abstraction for display output via the
 //! [`Framebuffer`] trait. This allows the application to work with any display
-//! hardware (Kobo e-ink, SDL emulator, etc.) through a common interface.
+//! hardware (Kobo e-ink devices) through a common interface.
 //!
 //! ## Architecture
 //!
@@ -17,7 +17,7 @@
 //! The [`Framebuffer`] trait enables:
 //! - **Hardware independence**: Application code doesn't depend on specific hardware
 //! - **Testability**: Mock implementations allow headless testing
-//! - **Multiple backends**: Support for Kobo devices, emulator, and test mocks
+//! - **Multiple backends**: Support for Kobo devices and test mocks
 //!
 //! ## Usage
 //!

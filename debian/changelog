@@ -1,7 +1,7 @@
 plato (0.9.45-1) unstable; urgency=medium
 
-  * Initial Debian packaging for desktop Linux
+  * Initial Debian packaging for Linux
   * Built using pure Rust dependencies (pdfpurr instead of mupdf)
-  * SDL2-based desktop emulator packaged as system binary
+  * Uses Linux framebuffer for display
 
  -- Plato Team <plato@example.com>  Thu, 24 Apr 2026 11:00:00 +0200

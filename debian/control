@@ -4,8 +4,7 @@ Priority: optional
 Maintainer: Plato Team <plato@example.com>
 Build-Depends: debhelper (>= 12),
                cargo,
-               rustc (>= 1.87),
-               libsdl2-dev,
+               rustc (>= 1.95),
                libfreetype6-dev,
                libharfbuzz-dev,
                pkg-config
@@ -16,11 +15,9 @@ Package: plato
 Architecture: amd64
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         libsdl2-2.0-0,
          libfreetype6,
          libharfbuzz0b
-Description: Document reader for Linux desktop
+Description: Document reader for Linux
  Plato is a document reader supporting PDF, EPUB, CBZ, and DJVU formats.
- This package provides the desktop Linux version built with SDL2 for
- standard displays. It shares the same core functionality as the e-ink
- device version but is adapted for desktop use with mouse/keyboard input.
+ This package provides the Linux version using the Linux framebuffer.
+ It shares the same core functionality as the e-ink device version.

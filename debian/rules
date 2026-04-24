@@ -2,7 +2,7 @@
 
 export DH_VERBOSE = 1
 export CARGO_HOME = $(CURDIR)/debian/cargo
-export RUSTFLAGS = -C opt-level=3 -C lto=thin
+export RUSTFLAGS = -C opt-level=3 -C lto=thin --cap-lints allow
 
 DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
@@ -20,10 +20,11 @@ override_dh_auto_clean:
 
 override_dh_auto_build:
 	mkdir -p $(CARGO_HOME)
-	cargo build --release --package emulator $(CARGO_TARGET)
+	cargo build --release --package emulator --target x86_64-unknown-linux-gnu
+	cp target/x86_64-unknown-linux-gnu/release/emulator target/x86_64-unknown-linux-gnu/release/plato
 
 override_dh_auto_install:
-	install -D -m 755 target/release/plato-emulator debian/plato/usr/bin/plato
+	install -D -m 755 target/x86_64-unknown-linux-gnu/release/plato debian/plato/usr/bin/plato
 	install -D -m 644 debian/plato.desktop debian/plato/usr/share/applications/plato.desktop
 	install -D -m 644 icons/plato.svg debian/plato/usr/share/icons/hicolor/scalable/apps/plato.svg
 	cp -r fonts debian/plato/usr/share/plato/

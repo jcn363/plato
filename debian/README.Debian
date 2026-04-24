@@ -1,9 +1,8 @@
-Plato Document Reader for Linux Desktop
-========================================
+Plato Document Reader for Linux
+===============================
 
-This package provides Plato, a document reader for Linux desktop systems.
-It is built with SDL2 for standard displays and supports mouse and keyboard
-input for navigation.
+This package provides Plato, a document reader for Linux systems.
+It uses the Linux framebuffer for display and supports keyboard input.
 
 XDG Base Directories
 --------------------
