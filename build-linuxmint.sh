@@ -83,6 +83,8 @@ else
     # Build the debian package
     echo "Building Debian package..."
     # Use -d flag to skip build dependency checks since we build with cargo
+    # Clean debian helper cache to avoid stale file references
+    rm -rf debian/.debhelper
     if dpkg-buildpackage -us -uc -b -d; then
         # Create dist directory and move .deb files there
         mkdir -p dist

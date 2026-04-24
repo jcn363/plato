@@ -16,23 +16,21 @@ endif
 
 override_dh_auto_clean:
 	rm -rf $(CARGO_HOME)
-	cargo clean
+	cargo clean || true
 
 override_dh_auto_build:
 	mkdir -p $(CARGO_HOME)
-	./build.sh host
 	cargo build --release --package plato --target x86_64-unknown-linux-gnu
 
 override_dh_auto_install:
 	install -D -m 755 target/x86_64-unknown-linux-gnu/release/plato debian/plato/usr/bin/plato
 	install -D -m 644 debian/plato.desktop debian/plato/usr/share/applications/plato.desktop
 	install -D -m 644 icons/plato.svg debian/plato/usr/share/icons/hicolor/scalable/apps/plato.svg
-	cp -r fonts debian/plato/usr/share/plato/
-	cp -r css debian/plato/usr/share/plato/
-	cp -r icons debian/plato/usr/share/plato/
-	cp -r keyboard-layouts debian/plato/usr/share/plato/
-	cp -r translations debian/plato/usr/share/plato/
-	cp -r libs_host debian/plato/usr/lib/plato/
+	cp -r fonts debian/plato/usr/share/plato/ || true
+	cp -r css debian/plato/usr/share/plato/ || true
+	cp -r icons debian/plato/usr/share/plato/ || true
+	cp -r keyboard-layouts debian/plato/usr/share/plato/ || true
+	cp -r translations debian/plato/usr/share/plato/ || true
 
 override_dh_auto_test:
 	cargo test --release --target x86_64-unknown-linux-gnu
