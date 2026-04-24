@@ -271,6 +271,9 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
 // Returns the clockwise and anti-clockwise modulo p distance from a to b.
 #[inline]
 pub fn circular_distances(a: u16, mut b: u16, p: u16) -> (u16, u16) {
+    if p == 0 {
+        return (0, 0);
+    }
     if b < a {
         b += p;
     }
