@@ -17,6 +17,7 @@
 //!
 //! The sum makes up the index.
 
+use std::borrow::Cow;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
@@ -50,26 +51,30 @@ fn normalize(entries: &[Entry], metadata: &Metadata) -> Vec<Entry> {
     let mut result: Vec<Entry> = Vec::with_capacity(entries.len());
 
     for entry in entries.iter() {
-        let mut headword = entry.headword.clone();
+        let headword: Cow<str> = if !metadata.all_chars {
+            Cow::Owned(
+                entry.headword
+                    .chars()
+                    .filter(|c| c.is_alphanumeric() || c.is_whitespace())
+                    .collect(),
+            )
+        } else {
+            Cow::Borrowed(&entry.headword)
+        };
 
-        if !metadata.all_chars {
-            headword = headword
-                .chars()
-                .filter(|c| c.is_alphanumeric() || c.is_whitespace())
-                .collect();
-        }
-
-        if !metadata.case_sensitive {
-            headword = headword.to_lowercase();
-        }
+        let headword: Cow<str> = if !metadata.case_sensitive {
+            Cow::Owned(headword.to_lowercase())
+        } else {
+            headword
+        };
 
         let mut i = result.len();
 
-        while i > 0 && headword < result[i - 1].headword {
+        while i > 0 && headword.as_ref() < &result[i - 1].headword {
             i -= 1;
         }
 
-        let original = if headword != entry.headword {
+        let original = if headword.as_ref() != &entry.headword {
             Some(entry.headword.clone())
         } else {
             None
@@ -78,7 +83,7 @@ fn normalize(entries: &[Entry], metadata: &Metadata) -> Vec<Entry> {
         result.insert(
             i,
             Entry {
-                headword,
+                headword: headword.into_owned(),
                 offset: entry.offset,
                 size: entry.size,
                 original,

@@ -10,12 +10,11 @@ The current source tree is a Cargo workspace with these crates:
 
 - `crates/core` (`plato-core`) for document handling, rendering, UI, device support, sync, and settings
 - `crates/plato` for the Kobo device binary
-- `crates/emulator` for the desktop SDL2 emulator
 - `crates/importer` for the `plato-import` tool
 - `crates/fetcher` for the `article_fetcher` binary
 - `crates/epub_edit` for EPUB editing support used by the in-app editor
 - `crates/epub_editor` for the `epub_editor` CLI tool (maintenance mode - for power users and development only)
-- `crates/plato-android` for Android support
+- `crates/plato-android` for Android support (experimental, excluded from workspace)
 
 Documentation:
 

@@ -174,8 +174,6 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
         .with_context(|| format!("can't open EPUB file {}", path.display()))?;
     let mut archive = zip::ZipArchive::new(file)?;
 
-    let names: Vec<String> = archive.file_names().map(|n: &str| n.to_string()).collect();
-
     // Helper for case-insensitive prefix check without allocation
     fn starts_with_case_insensitive(text: &str, prefix: &str) -> bool {
         text.len() >= prefix.len()
@@ -203,7 +201,7 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
                 .all(|(a, b)| a.eq_ignore_ascii_case(&b))
     }
 
-    for name in &names {
+    for name in archive.file_names() {
         if starts_with_case_insensitive(name, "cover.") {
             if let Ok(mut file) = archive.by_name(name) {
                 let mut buffer = Vec::new();
@@ -214,7 +212,7 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
         }
     }
 
-    for entry in &names {
+    for entry in archive.file_names() {
         if (contains_case_insensitive(entry, "cover") || contains_case_insensitive(entry, "image"))
             && (ends_with_case_insensitive(entry, ".jpg")
                 || ends_with_case_insensitive(entry, ".jpeg")

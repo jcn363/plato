@@ -159,7 +159,7 @@ impl PdfCache {
 
     /// Get cached outlines
     pub fn get_outlines(&self, doc_id: &str) -> Option<Vec<String>> {
-        self.outlines.get(doc_id).map(|v| v.clone())
+        self.outlines.get(doc_id).map(|v| v.value().clone())
     }
 
     /// Cache outlines
@@ -203,25 +203,32 @@ impl PdfCache {
         let mut meta = self.metadata.lock().expect("metadata cache lock poisoned");
 
         // LruCache doesn't have retain, so we collect keys to remove
-        let rendered_keys: Vec<_> = rendered.iter().map(|(k, _)| k.clone()).collect();
-        for key in rendered_keys {
-            if key.doc_id == doc_id {
-                rendered.pop(&key);
-            }
+        // Use references to avoid cloning until necessary
+        let keys_to_remove: Vec<_> = rendered
+            .iter()
+            .filter(|(k, _)| k.doc_id == doc_id)
+            .map(|(k, _)| k.clone())
+            .collect();
+        for key in keys_to_remove {
+            rendered.pop(&key);
         }
 
-        let text_keys: Vec<_> = text.iter().map(|(k, _)| k.clone()).collect();
-        for key in text_keys {
-            if key.doc_id == doc_id {
-                text.pop(&key);
-            }
+        let keys_to_remove: Vec<_> = text
+            .iter()
+            .filter(|(k, _)| k.doc_id == doc_id)
+            .map(|(k, _)| k.clone())
+            .collect();
+        for key in keys_to_remove {
+            text.pop(&key);
         }
 
-        let meta_keys: Vec<_> = meta.iter().map(|(k, _)| k.clone()).collect();
-        for key in meta_keys {
-            if key.doc_id == doc_id {
-                meta.pop(&key);
-            }
+        let keys_to_remove: Vec<_> = meta
+            .iter()
+            .filter(|(k, _)| k.doc_id == doc_id)
+            .map(|(k, _)| k.clone())
+            .collect();
+        for key in keys_to_remove {
+            meta.pop(&key);
         }
 
         self.outlines.remove(doc_id);
