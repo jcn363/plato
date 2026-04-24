@@ -11,7 +11,10 @@ pub struct XmlParser<'a> {
 impl<'a> XmlParser<'a> {
     pub fn new(input: &str) -> XmlParser<'_> {
         if input.is_empty() {
-            return XmlParser { input: "", offset: 0 };
+            return XmlParser {
+                input: "",
+                offset: 0,
+            };
         }
         XmlParser { input, offset: 0 }
     }

@@ -57,10 +57,14 @@ pub struct NaturalFrontlight {
 impl NaturalFrontlight {
     pub fn new(intensity: f32, warmth: f32) -> Result<NaturalFrontlight, Error> {
         if !(0.0..=100.0).contains(&intensity) {
-            return Err(Error::msg("Frontlight intensity must be between 0.0 and 100.0"));
+            return Err(Error::msg(
+                "Frontlight intensity must be between 0.0 and 100.0",
+            ));
         }
         if !(0.0..=100.0).contains(&warmth) {
-            return Err(Error::msg("Frontlight warmth must be between 0.0 and 100.0"));
+            return Err(Error::msg(
+                "Frontlight warmth must be between 0.0 and 100.0",
+            ));
         }
         let mut maxima = FxHashMap::default();
         let mut values = FxHashMap::default();

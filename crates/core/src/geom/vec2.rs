@@ -11,7 +11,10 @@ pub struct Vec2 {
 impl Vec2 {
     #[inline]
     pub fn new(x: f32, y: f32) -> Vec2 {
-        Vec2 { x: x.clamp(-10000.0, 10000.0), y: y.clamp(-10000.0, 10000.0) }
+        Vec2 {
+            x: x.clamp(-10000.0, 10000.0),
+            y: y.clamp(-10000.0, 10000.0),
+        }
     }
 
     #[inline]
@@ -124,16 +127,32 @@ impl Div<Vec2> for Vec2 {
     type Output = Vec2;
     fn div(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: if rhs.x.abs() < f32::EPSILON { 0.0 } else { (self.x / rhs.x).clamp(-10000.0, 10000.0) },
-            y: if rhs.y.abs() < f32::EPSILON { 0.0 } else { (self.y / rhs.y).clamp(-10000.0, 10000.0) },
+            x: if rhs.x.abs() < f32::EPSILON {
+                0.0
+            } else {
+                (self.x / rhs.x).clamp(-10000.0, 10000.0)
+            },
+            y: if rhs.y.abs() < f32::EPSILON {
+                0.0
+            } else {
+                (self.y / rhs.y).clamp(-10000.0, 10000.0)
+            },
         }
     }
 }
 
 impl DivAssign<Vec2> for Vec2 {
     fn div_assign(&mut self, rhs: Vec2) {
-        self.x = if rhs.x.abs() < f32::EPSILON { 0.0 } else { (self.x / rhs.x).clamp(-10000.0, 10000.0) };
-        self.y = if rhs.y.abs() < f32::EPSILON { 0.0 } else { (self.y / rhs.y).clamp(-10000.0, 10000.0) };
+        self.x = if rhs.x.abs() < f32::EPSILON {
+            0.0
+        } else {
+            (self.x / rhs.x).clamp(-10000.0, 10000.0)
+        };
+        self.y = if rhs.y.abs() < f32::EPSILON {
+            0.0
+        } else {
+            (self.y / rhs.y).clamp(-10000.0, 10000.0)
+        };
     }
 }
 
@@ -222,8 +241,16 @@ impl Div<f32> for Vec2 {
     type Output = Vec2;
     fn div(self, rhs: f32) -> Vec2 {
         Vec2 {
-            x: if rhs.abs() < f32::EPSILON { 0.0 } else { (self.x / rhs).clamp(-10000.0, 10000.0) },
-            y: if rhs.abs() < f32::EPSILON { 0.0 } else { (self.y / rhs).clamp(-10000.0, 10000.0) },
+            x: if rhs.abs() < f32::EPSILON {
+                0.0
+            } else {
+                (self.x / rhs).clamp(-10000.0, 10000.0)
+            },
+            y: if rhs.abs() < f32::EPSILON {
+                0.0
+            } else {
+                (self.y / rhs).clamp(-10000.0, 10000.0)
+            },
         }
     }
 }
@@ -232,15 +259,31 @@ impl Div<Vec2> for f32 {
     type Output = Vec2;
     fn div(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: if rhs.x.abs() < f32::EPSILON { 0.0 } else { (self / rhs.x).clamp(-10000.0, 10000.0) },
-            y: if rhs.y.abs() < f32::EPSILON { 0.0 } else { (self / rhs.y).clamp(-10000.0, 10000.0) },
+            x: if rhs.x.abs() < f32::EPSILON {
+                0.0
+            } else {
+                (self / rhs.x).clamp(-10000.0, 10000.0)
+            },
+            y: if rhs.y.abs() < f32::EPSILON {
+                0.0
+            } else {
+                (self / rhs.y).clamp(-10000.0, 10000.0)
+            },
         }
     }
 }
 
 impl DivAssign<f32> for Vec2 {
     fn div_assign(&mut self, rhs: f32) {
-        self.x = if rhs.abs() < f32::EPSILON { 0.0 } else { (self.x / rhs).clamp(-10000.0, 10000.0) };
-        self.y = if rhs.abs() < f32::EPSILON { 0.0 } else { (self.y / rhs).clamp(-10000.0, 10000.0) };
+        self.x = if rhs.abs() < f32::EPSILON {
+            0.0
+        } else {
+            (self.x / rhs).clamp(-10000.0, 10000.0)
+        };
+        self.y = if rhs.abs() < f32::EPSILON {
+            0.0
+        } else {
+            (self.y / rhs).clamp(-10000.0, 10000.0)
+        };
     }
 }

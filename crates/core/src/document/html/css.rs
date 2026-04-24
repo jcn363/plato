@@ -117,7 +117,10 @@ pub struct CssParser<'a> {
 impl<'a> CssParser<'a> {
     pub fn new(input: &str) -> CssParser<'_> {
         if input.is_empty() {
-            return CssParser { input: "", offset: 0 };
+            return CssParser {
+                input: "",
+                offset: 0,
+            };
         }
         CssParser { input, offset: 0 }
     }

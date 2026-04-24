@@ -251,7 +251,10 @@ impl Default for Rectangle {
 
 impl From<(u32, u32)> for Rectangle {
     fn from(dims: (u32, u32)) -> Rectangle {
-        Rectangle::new(Point::new(0, 0), Point::new(dims.0.min(10000) as i32, dims.1.min(10000) as i32))
+        Rectangle::new(
+            Point::new(0, 0),
+            Point::new(dims.0.min(10000) as i32, dims.1.min(10000) as i32),
+        )
     }
 }
 

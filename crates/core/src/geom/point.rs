@@ -23,7 +23,10 @@ impl Point {
     #[inline]
     #[must_use]
     pub fn new(x: i32, y: i32) -> Point {
-        Point { x: x.clamp(-10000, 10000), y: y.clamp(-10000, 10000) }
+        Point {
+            x: x.clamp(-10000, 10000),
+            y: y.clamp(-10000, 10000),
+        }
     }
 
     #[inline]
