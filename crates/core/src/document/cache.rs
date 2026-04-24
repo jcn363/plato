@@ -137,6 +137,9 @@ impl PdfCache {
 
     /// Cache metadata
     pub fn put_metadata(&self, key: PageCacheKey, dims: (f32, f32)) {
+        if key.doc_id.is_empty() {
+            return;
+        }
         let (width, height) = dims;
         if width <= 0.0 || height <= 0.0 {
             return;
