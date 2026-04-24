@@ -24,6 +24,7 @@ pub struct PageCacheKey {
 
 impl PageCacheKey {
     pub fn new(doc_id: String, page_index: i32) -> Self {
+        let page_index = page_index.max(0);
         if doc_id.is_empty() {
             return Self {
                 doc_id: String::new(),
