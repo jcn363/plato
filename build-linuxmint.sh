@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Build script for LinuxMint (desktop Linux with 8-16GB RAM)
 #
@@ -74,7 +74,7 @@ echo "Step 5: Creating Debian package..."
 echo ""
 
 # Check if dpkg-buildpackage is available
-if ! command -v dpkg-buildpackage &> /dev/null; then
+if ! which dpkg-buildpackage > /dev/null 2>&1; then
     echo "Warning: dpkg-buildpackage not found. Skipping .deb package creation."
     echo "To build .deb packages, install dpkg-dev:"
     echo "  sudo apt-get install dpkg-dev debhelper"
@@ -82,14 +82,17 @@ if ! command -v dpkg-buildpackage &> /dev/null; then
 else
     # Build the debian package
     echo "Building Debian package..."
-    dpkg-buildpackage -us -uc -b
+    # Use -d flag to skip build dependency checks since we build with cargo
+    if dpkg-buildpackage -us -uc -b -d; then
+        # Create dist directory and move .deb files there
+        mkdir -p dist
+        mv ../plato_*.deb dist/ 2>/dev/null || true
+        mv ../plato-dbgsym_*.ddeb dist/ 2>/dev/null || true
 
-    # Create dist directory and move .deb files there
-    mkdir -p dist
-    mv ../plato_*.deb dist/ 2>/dev/null || true
-    mv ../plato-dbgsym_*.ddeb dist/ 2>/dev/null || true
-
-    echo "Debian package created in dist/"
+        echo "Debian package created in dist/"
+    else
+        echo "Warning: Debian package build failed. Binary is still available."
+    fi
 fi
 
 echo ""
