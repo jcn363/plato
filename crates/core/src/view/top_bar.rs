@@ -124,6 +124,7 @@ impl TopBar {
             ThemeMode::Sepia => "theme-sepia",
             ThemeMode::Auto => "theme-auto",
             ThemeMode::Scheduled => "theme-scheduled",
+            ThemeMode::System => "theme-system",
         };
         Icon::new(
             theme_icon_name,
@@ -184,6 +185,7 @@ impl TopBar {
             ThemeMode::Sepia => "theme-sepia",
             ThemeMode::Auto => "theme-auto",
             ThemeMode::Scheduled => "theme-scheduled",
+            ThemeMode::System => "theme-system",
         };
         self.theme_indicator.name = icon_name.to_string();
         rq.add(RenderData::new(

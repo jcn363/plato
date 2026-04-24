@@ -185,12 +185,65 @@ pub fn is_mobile_dark_mode() -> bool {
         MobileThemeMode::Dark => true,
         MobileThemeMode::Light => false,
         MobileThemeMode::System => {
-            // Check system dark mode via environment or fallback to time-based
-            std::env::var("SYSTEM_DARK_MODE")
-                .map(|v| v == "1" || v == "true")
-                .unwrap_or(false)
+            // Check system dark mode via environment or platform-specific detection
+            detect_mobile_system_dark_mode()
         }
     }
+}
+
+/// Detect system dark mode for mobile platforms
+#[inline]
+fn detect_mobile_system_dark_mode() -> bool {
+    // First check explicit environment variable
+    if let Ok(value) = std::env::var("SYSTEM_DARK_MODE") {
+        return value == "1" || value == "true";
+    }
+
+    // Android-specific detection
+    #[cfg(target_os = "android")]
+    {
+        detect_android_dark_mode()
+    }
+    
+    // iOS-specific detection  
+    #[cfg(target_os = "ios")]
+    {
+        detect_ios_dark_mode()
+    }
+    
+    // Fallback to time-based detection for other cases
+    false
+}
+
+/// Detect dark mode on Android systems
+#[cfg(target_os = "android")]
+fn detect_android_dark_mode() -> bool {
+    // Try to read Android system settings via shell commands
+    if let Ok(output) = std::process::Command::new("settings")
+        .args(&["get", "global", "night_mode"])
+        .output()
+    {
+        let night_mode = String::from_utf8_lossy(&output.stdout);
+        night_mode.trim() == "1" || night_mode.trim() == "2"
+    } else if let Ok(output) = std::process::Command::new("settings")
+        .args(&["get", "secure", "ui_night_mode"])
+        .output()
+    {
+        let ui_mode = String::from_utf8_lossy(&output.stdout);
+        ui_mode.trim() == "2" // 2 = dark mode on Android
+    } else {
+        false
+    }
+}
+
+/// Detect dark mode on iOS systems
+#[cfg(target_os = "ios")]
+fn detect_ios_dark_mode() -> bool {
+    // iOS detection would typically require Objective-C/Swift integration
+    // For now, fall back to environment variable
+    std::env::var("SYSTEM_DARK_MODE")
+        .map(|v| v == "1" || v == "true")
+        .unwrap_or(false)
 }
 
 // ============================================================================

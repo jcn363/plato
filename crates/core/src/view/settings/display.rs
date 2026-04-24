@@ -215,6 +215,7 @@ pub fn build_rows(
             ThemeMode::Sepia => "Sepia".to_string(),
             ThemeMode::Auto => "Auto".to_string(),
             ThemeMode::Scheduled => "Schedule".to_string(),
+            ThemeMode::System => "System".to_string(),
         },
     );
     children.push(Box::new(toggle) as Box<dyn View>);
@@ -418,7 +419,8 @@ pub fn handle_event(
                 ThemeMode::Dark => ThemeMode::Sepia,
                 ThemeMode::Sepia => ThemeMode::Auto,
                 ThemeMode::Auto => ThemeMode::Scheduled,
-                ThemeMode::Scheduled => ThemeMode::Light,
+                ThemeMode::Scheduled => ThemeMode::System,
+                ThemeMode::System => ThemeMode::Light,
             };
             context.settings.theme_settings.mode = new_mode;
             theme::set_theme_mode(new_mode);
@@ -431,6 +433,11 @@ pub fn handle_event(
                 ThemeMode::Dark => {
                     context.settings.dark_mode = true;
                     theme::set_dark_mode(true);
+                }
+                ThemeMode::System => {
+                    // System mode will automatically detect and set dark mode
+                    theme::set_theme_mode(ThemeMode::System);
+                    context.settings.dark_mode = theme::is_dark_mode();
                 }
                 ThemeMode::Auto => {
                     let dark = if crate::device::CURRENT_DEVICE.has_lightsensor() {
@@ -457,6 +464,7 @@ pub fn handle_event(
                         ThemeMode::Sepia => "Sepia".to_string(),
                         ThemeMode::Auto => "Auto".to_string(),
                         ThemeMode::Scheduled => "Schedule".to_string(),
+                        ThemeMode::System => "System".to_string(),
                     },
                     rq,
                 );

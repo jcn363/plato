@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "kebab-case")]
 pub enum ThemeMode {
     #[default]
+    System,
     Light,
     Dark,
     Sepia,
@@ -64,7 +65,7 @@ pub struct ThemeSettings {
 impl Default for ThemeSettings {
     fn default() -> Self {
         Self {
-            mode: ThemeMode::Light,
+            mode: ThemeMode::System,
             auto_threshold: 100,
             schedule: ThemeSchedule::default(),
         }
