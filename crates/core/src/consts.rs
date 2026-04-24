@@ -311,7 +311,7 @@ pub mod mobile {
 
 /// Settings and configuration constants
 pub mod settings {
-    /// Settings file path
+    /// Settings file path (relative for Kobo, XDG config for desktop)
     pub const SETTINGS_PATH: &str = "Settings.toml";
 
     /// Default font path
@@ -328,6 +328,21 @@ pub mod settings {
 
     /// Special path prefix for cover
     pub const COVER_SPECIAL_PATH: &str = "cover:";
+}
+
+/// Desktop Linux (XDG Base Directory) paths
+pub mod desktop {
+    /// System data directory for installed resources
+    pub const SYSTEM_DATA_DIR: &str = "/usr/share/plato";
+
+    /// XDG config directory name
+    pub const XDG_CONFIG_DIRNAME: &str = "plato";
+
+    /// XDG data directory name
+    pub const XDG_DATA_DIRNAME: &str = "plato";
+
+    /// Desktop settings file path (within XDG config)
+    pub const DESKTOP_SETTINGS_FILENAME: &str = "Settings.toml";
 }
 
 /// HTML and document rendering constants

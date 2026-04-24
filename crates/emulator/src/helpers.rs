@@ -7,21 +7,39 @@ use plato_core::font::Fonts;
 use plato_core::framebuffer::Framebuffer;
 use plato_core::frontlight::{Frontlight, LightLevels};
 use plato_core::helpers::load_toml;
+use plato_core::helpers::xdg::{self, ensure_xdg_dirs};
 use plato_core::input::{DeviceEvent, FingerStatus};
 use plato_core::library::Library;
 use plato_core::lightsensor::LightSensor;
 use plato_core::plugin::PluginSystem;
 use plato_core::pt;
 use plato_core::settings::Settings;
-use plato_core::settings::SETTINGS_PATH;
 use plato_core::sync::BackgroundSync;
 use sdl2::event::Event as SdlEvent;
 
 /// Build the application context for the emulator.
 pub fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
-    let settings = load_toml::<Settings, _>(SETTINGS_PATH)?;
+    // Ensure XDG directories exist for installed desktop version
+    ensure_xdg_dirs().ok();
+
+    let settings_path = xdg::settings_path();
+    let settings = if settings_path.exists() {
+        load_toml::<Settings, _>(&settings_path)?
+    } else {
+        // Create default settings
+        let default_settings = Settings::default();
+        // Save to XDG config path
+        plato_core::helpers::save_toml(&default_settings, &settings_path)?;
+        default_settings
+    };
+
     let library_settings = &settings.libraries[settings.selected_library];
-    let library = Library::new(&library_settings.path, library_settings.mode)?;
+    let library_path = if std::path::Path::new(&library_settings.path).is_absolute() {
+        library_settings.path.clone()
+    } else {
+        xdg::library_path().join(&library_settings.path)
+    };
+    let library = Library::new(&library_path, library_settings.mode)?;
 
     let battery = Box::new(FakeBattery::new()) as Box<dyn Battery>;
     let frontlight = Box::new(LightLevels::default()) as Box<dyn Frontlight>;

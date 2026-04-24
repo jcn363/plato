@@ -5,7 +5,7 @@ use crate::font::Fonts;
 use crate::framebuffer::{Display, Framebuffer};
 use crate::frontlight::Frontlight;
 use crate::geom::Rectangle;
-use crate::helpers::{load_json, walkdir_visible};
+use crate::helpers::{load_json, walkdir_visible, xdg};
 use crate::library::Library;
 use crate::lightsensor::LightSensor;
 use crate::log_error;
@@ -24,10 +24,16 @@ use rand_core::SeedableRng;
 use rand_xoshiro::Xoroshiro128Plus;
 use rustc_hash::FxHashMap;
 use std::collections::{BTreeMap, VecDeque};
-use std::path::Path;
 
-const KEYBOARD_LAYOUTS_DIRNAME: &str = "keyboard-layouts";
-const DICTIONARIES_DIRNAME: &str = "dictionaries";
+/// Get the keyboard layouts directory path (XDG-aware)
+fn keyboard_layouts_dir() -> std::path::PathBuf {
+    xdg::resolve_resource_path("keyboard-layouts")
+}
+
+/// Get the dictionaries directory path (XDG-aware)
+fn dictionaries_dir() -> std::path::PathBuf {
+    xdg::resolve_resource_path("dictionaries")
+}
 
 // Use canonical input history size constant from consts::input
 use crate::consts::input::INPUT_HISTORY_SIZE;
@@ -172,16 +178,20 @@ impl Context {
         }
     }
 
-    /// Loads keyboard layouts from the KEYBOARD_LAYOUTS_DIRNAME directory.
+    /// Loads keyboard layouts from the keyboard-layouts directory.
     ///
     /// # Errors
     /// Logs errors for individual layout file failures but continues processing.
     pub fn load_keyboard_layouts(&mut self) {
+        let layouts_dir = keyboard_layouts_dir();
+        if !layouts_dir.exists() {
+            return;
+        }
         let glob = match Glob::new("**/*.json") {
             Ok(g) => g.compile_matcher(),
             Err(_) => return,
         };
-        for entry in walkdir_visible(Path::new(KEYBOARD_LAYOUTS_DIRNAME)) {
+        for entry in walkdir_visible(&layouts_dir) {
             let path = entry.path();
             if !glob.is_match(path) {
                 continue;
@@ -194,16 +204,20 @@ impl Context {
         }
     }
 
-    /// Loads dictionary index files from the DICTIONARIES_DIRNAME directory.
+    /// Loads dictionary index files from the dictionaries directory.
     ///
     /// # Errors
     /// Logs errors for individual dictionary load failures but continues processing.
     pub fn load_dictionaries(&mut self) {
+        let dicts_dir = dictionaries_dir();
+        if !dicts_dir.exists() {
+            return;
+        }
         let glob = match Glob::new("**/*.index") {
             Ok(g) => g.compile_matcher(),
             Err(_) => return,
         };
-        for entry in walkdir_visible(Path::new(DICTIONARIES_DIRNAME)) {
+        for entry in walkdir_visible(&dicts_dir) {
             if !glob.is_match(entry.path()) {
                 continue;
             }

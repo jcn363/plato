@@ -1,0 +1,25 @@
+Source: plato
+Section: text
+Priority: optional
+Maintainer: Plato Team <plato@example.com>
+Build-Depends: debhelper (>= 12),
+               cargo,
+               rustc (>= 1.87),
+               libsdl2-dev,
+               libfreetype6-dev,
+               libharfbuzz-dev,
+               pkg-config
+Standards-Version: 4.6.0
+Homepage: https://github.com/baskerville/plato
+
+Package: plato
+Architecture: amd64
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         libsdl2-2.0-0,
+         libfreetype6,
+         libharfbuzz0b
+Description: Document reader for e-ink devices
+ Plato is a document reader designed for e-ink devices.
+ It supports PDF, EPUB, CBZ, and DJVU formats.
+ This package provides the desktop version for Linux.

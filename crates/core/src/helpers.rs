@@ -667,3 +667,79 @@ impl Default for HttpClient {
         Self::new().expect("Failed to create default HTTP client")
     }
 }
+
+/// XDG Base Directory path resolution for desktop Linux
+///
+/// Provides functions to resolve paths following the XDG Base Directory Specification
+/// for proper integration with Linux desktop environments.
+pub mod xdg {
+    use std::env;
+    use std::path::{Path, PathBuf};
+
+    /// Get the XDG config directory for Plato
+    pub fn config_dir() -> PathBuf {
+        env::var_os("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| dirs::home_dir().unwrap_or_default().join(".config"))
+            .join("plato")
+    }
+
+    /// Get the XDG data directory for Plato
+    pub fn data_dir() -> PathBuf {
+        env::var_os("XDG_DATA_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| dirs::home_dir().unwrap_or_default().join(".local/share"))
+            .join("plato")
+    }
+
+    /// Get the system data directory for installed resources
+    pub fn system_data_dir() -> PathBuf {
+        PathBuf::from("/usr/share/plato")
+    }
+
+    /// Check if running from source (development mode)
+    /// Returns true if Settings.toml exists in current directory
+    pub fn is_development_mode() -> bool {
+        Path::new("Settings.toml").exists() || Path::new("fonts").exists()
+    }
+
+    /// Resolve a resource path
+    /// Checks in order: current dir (dev), XDG data dir, system data dir
+    pub fn resolve_resource_path(relative_path: &str) -> PathBuf {
+        if is_development_mode() {
+            PathBuf::from(relative_path)
+        } else {
+            let xdg_path = data_dir().join(relative_path);
+            if xdg_path.exists() {
+                xdg_path
+            } else {
+                system_data_dir().join(relative_path)
+            }
+        }
+    }
+
+    /// Resolve the settings file path
+    pub fn settings_path() -> PathBuf {
+        if is_development_mode() {
+            PathBuf::from("Settings.toml")
+        } else {
+            config_dir().join("Settings.toml")
+        }
+    }
+
+    /// Resolve the library/data path
+    pub fn library_path() -> PathBuf {
+        if is_development_mode() {
+            PathBuf::from(".")
+        } else {
+            data_dir()
+        }
+    }
+
+    /// Ensure XDG directories exist
+    pub fn ensure_xdg_dirs() -> std::io::Result<()> {
+        std::fs::create_dir_all(config_dir())?;
+        std::fs::create_dir_all(data_dir())?;
+        Ok(())
+    }
+}

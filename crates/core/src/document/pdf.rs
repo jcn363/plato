@@ -27,9 +27,12 @@ use super::{chapter, chapter_relative};
 use super::{BoundedText, Document, Location, TocEntry};
 use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir};
+use crate::helpers::xdg;
 use std::path::Path;
 
-const USER_STYLESHEET: &str = "css/html-user.css";
+fn user_stylesheet() -> std::path::PathBuf {
+    xdg::resolve_resource_path("css/html-user.css")
+}
 
 /// Check if a pixel is blank (above threshold)
 fn is_blank_pixel(
@@ -194,7 +197,7 @@ impl PdfOpener {
     /// Loads user stylesheet from css/html-user.css if present.
     pub fn load_user_stylesheet(&mut self) {
         // PDFPurr doesn't need user CSS
-        let _ = std::fs::read_to_string(USER_STYLESHEET).map_err(|e| {
+        let _ = std::fs::read_to_string(user_stylesheet()).map_err(|e| {
             if e.kind() != std::io::ErrorKind::NotFound {
                 crate::log_error!("{:#}", e)
             }

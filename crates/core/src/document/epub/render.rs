@@ -4,6 +4,7 @@ use crate::document::html::layout::{DrawCommand, DrawState, RootData};
 use crate::document::html::layout::{LoopContext, StyleData};
 use crate::document::html::style::StyleSheet;
 use crate::document::html::xml::XmlParser;
+use crate::helpers::xdg;
 use crate::unit::pt_to_px;
 use std::fs;
 use std::io::Read;
@@ -12,8 +13,13 @@ use std::path::PathBuf;
 
 use super::opener::EpubDocument;
 
-const VIEWER_STYLESHEET: &str = "css/epub.css";
-const USER_STYLESHEET: &str = "css/epub-user.css";
+fn viewer_stylesheet() -> PathBuf {
+    xdg::resolve_resource_path("css/epub.css")
+}
+
+fn user_stylesheet() -> PathBuf {
+    xdg::resolve_resource_path("css/epub-user.css")
+}
 
 impl EpubDocument {
     #[inline]
@@ -72,12 +78,12 @@ impl EpubDocument {
 
         let mut stylesheet = StyleSheet::new();
 
-        if let Ok(text) = fs::read_to_string(VIEWER_STYLESHEET) {
+        if let Ok(text) = fs::read_to_string(viewer_stylesheet()) {
             let mut css = CssParser::new(&text).parse();
             stylesheet.append(&mut css, true);
         }
 
-        if let Ok(text) = fs::read_to_string(USER_STYLESHEET) {
+        if let Ok(text) = fs::read_to_string(user_stylesheet()) {
             let mut css = CssParser::new(&text).parse();
             stylesheet.append(&mut css, true);
         }

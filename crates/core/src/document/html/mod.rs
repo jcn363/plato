@@ -33,6 +33,7 @@ use crate::document::{BoundedText, Document, Location, TocEntry};
 use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir, Edge, Rectangle};
 use crate::helpers::decode_entities;
+use crate::helpers::xdg;
 use crate::unit::pt_to_px;
 use anyhow::{Context, Error};
 use rustc_hash::FxHashMap;
@@ -40,8 +41,13 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-const VIEWER_STYLESHEET: &str = "css/html.css";
-const USER_STYLESHEET: &str = "css/html-user.css";
+fn viewer_stylesheet() -> PathBuf {
+    xdg::resolve_resource_path("css/html.css")
+}
+
+fn user_stylesheet() -> PathBuf {
+    xdg::resolve_resource_path("css/html-user.css")
+}
 
 type UriCache = FxHashMap<String, usize>;
 
@@ -95,8 +101,8 @@ impl HtmlDocument {
             pages: Vec::new(),
             parent: parent.to_path_buf(),
             size,
-            viewer_stylesheet: PathBuf::from(VIEWER_STYLESHEET),
-            user_stylesheet: PathBuf::from(USER_STYLESHEET),
+            viewer_stylesheet: viewer_stylesheet(),
+            user_stylesheet: user_stylesheet(),
             ignore_document_css: false,
         })
     }
@@ -110,8 +116,8 @@ impl HtmlDocument {
                 pages: Vec::new(),
                 parent: PathBuf::default(),
                 size: 0,
-                viewer_stylesheet: PathBuf::from(VIEWER_STYLESHEET),
-                user_stylesheet: PathBuf::from(USER_STYLESHEET),
+                viewer_stylesheet: viewer_stylesheet(),
+                user_stylesheet: user_stylesheet(),
                 ignore_document_css: false,
             };
         }
@@ -126,8 +132,8 @@ impl HtmlDocument {
             pages: Vec::new(),
             parent: PathBuf::default(),
             size,
-            viewer_stylesheet: PathBuf::from(VIEWER_STYLESHEET),
-            user_stylesheet: PathBuf::from(USER_STYLESHEET),
+            viewer_stylesheet: viewer_stylesheet(),
+            user_stylesheet: user_stylesheet(),
             ignore_document_css: false,
         }
     }
