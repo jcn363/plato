@@ -7,12 +7,10 @@
 # - Stylus support (Wacom)
 # - Gyroscope (automatic rotation)
 #
-# This script builds with device-specific optimizations:
-# - 2MB thumbnail buffers (vs 1MB standard)
-# - 8MB document buffers (vs 4MB standard)
-# - 3 thumbnail workers (vs 2 standard)
-# - 35 thumbnail cache entries (vs 20 standard)
-# - 40MB page cache (vs 20MB standard)
+# This script builds with Elipsa-specific configuration:
+# - Target CPU: cortex-a7 (via RUSTFLAGS)
+# - Device: elipsa (via PLATO_DEVICE environment variable for conditional compilation)
+# - Clean build with zero warnings (cargo clean + clippy -D warnings)
 
 set -e
 
@@ -20,6 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_NAME="plato"
 TARGET="arm-unknown-linux-gnueabihf"
 PROFILE="release-arm"
+NICKEL_MENU_ARCHIVE="${1:-}"
 
 echo "=========================================="
 echo "Building Plato for Kobo Elipsa"
@@ -42,53 +41,67 @@ export PLATO_DEVICE="elipsa"
 # Number of parallel jobs
 JOBS=$(nproc 2>/dev/null || echo 4)
 
-echo "Step 1: Formatting code..."
+echo "Step 1: Cleaning previous builds..."
+cargo clean
+
+echo ""
+echo "Step 2: Formatting code..."
 cargo fmt --all
 
 echo ""
-echo "Step 2: Running clippy..."
-cargo clippy -p plato-core --target "$TARGET" -- -D warnings
-cargo clippy -p plato --target "$TARGET" -- -D warnings
-
-echo ""
-echo "Step 3: Building third-party libraries..."
-if [ -x "./thirdparty/build.sh" ]; then
-    ./thirdparty/build.sh "$TARGET" fast
-else
-    echo "Warning: thirdparty/build.sh not found, skipping..."
-fi
+echo "Step 3: Running clippy (workspace-wide, warnings as errors)..."
+cargo clippy --target "$TARGET" --workspace -- -D warnings
 
 echo ""
 echo "Step 4: Building Plato for Elipsa..."
-echo "This will use device-optimized settings:"
-echo "  - Thumbnail buffer: 2MB"
-echo "  - Document buffer: 8MB"
-echo "  - Workers: 3 threads"
-echo "  - Cache: 35 entries"
-echo "  - Page cache: 40MB"
+echo "Target: $TARGET (32-bit ARM)"
+echo "Profile: $PROFILE"
+echo "Target CPU: cortex-a7"
 echo ""
 
-RUSTFLAGS="-C target-cpu=cortex-a7 -C target-feature=+vfpv4,+neon" \
+RUSTFLAGS="-C target-cpu=cortex-a7" \
     cargo build -p plato --target "$TARGET" --profile "$PROFILE" -j "$JOBS"
+
+echo ""
+echo "Step 5: Creating distribution bundle..."
+DIST_DIR="dist"
+[ -d "$DIST_DIR" ] && rm -Rf "$DIST_DIR"
+mkdir -p "$DIST_DIR"
+
+# Copy built binary (no external libraries needed - pure Rust)
+cp "target/$TARGET/$PROFILE/plato" "$DIST_DIR/"
+
+# Create bundle (simple or full with NickelMenu depending on archive)
+echo ""
+echo "Step 6: Creating bundle..."
+./bundle.sh "$NICKEL_MENU_ARCHIVE"
 
 echo ""
 echo "=========================================="
 echo "Build complete for Kobo Elipsa!"
 echo "=========================================="
 echo ""
+echo "Distribution location:"
+echo "  $DIST_DIR/"
+echo ""
 echo "Binary location:"
-echo "  target-arm/$TARGET/$PROFILE/plato"
+echo "  $DIST_DIR/plato"
+echo ""
+echo "Bundle location:"
+echo "  $DIST_DIR/plato-bundle-*.zip"
 echo ""
 echo "To deploy to Elipsa:"
 echo "  1. Connect via USB"
-echo "  2. Copy binary to /mnt/onboard/.adds/plato/"
+echo "  2. Extract plato-bundle-*.zip to /mnt/onboard/.adds/plato/"
 echo "  3. Run: ./plato.sh"
 echo ""
-echo "Device optimizations active:"
-echo "  ✓ 2MB thumbnail buffers"
-echo "  ✓ 8MB document buffers"
-echo "  ✓ 3 thumbnail workers"
-echo "  ✓ 35 cache entries"
-echo "  ✓ Stylus support enabled"
-echo "  ✓ Gyroscope rotation enabled"
+echo "Build configuration:"
+echo "  ✓ Target CPU: cortex-a7"
+echo "  ✓ Device: Elipsa (PLATO_DEVICE=elipsa)"
+echo "  ✓ Zero warnings (clippy -D warnings)"
+echo "  ✓ Clean build (cargo clean)"
+echo "  ✓ Bundle created"
+if [ -n "$NICKEL_MENU_ARCHIVE" ]; then
+    echo "  ✓ NickelMenu integration enabled"
+fi
 echo ""

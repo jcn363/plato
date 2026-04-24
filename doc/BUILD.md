@@ -104,19 +104,12 @@ cargo build --target x86_64-unknown-linux-gnu -p fetcher
 
 ## Developer Tools
 
-Install the required dependencies: *DjVuLibre*, *FreeType*, *HarfBuzz*.
+The project has migrated to pure Rust libraries. No native C dependencies are required:
 
-PDF rendering is now handled by PDFPurr, a pure Rust library, so no MuPDF installation is required.
-
-### Emulator
-
-Install one additional dependency: *SDL2*.
-
-You can then run the emulator with:
-
-```bash
-./run-emulator.sh
-```
+- PDF rendering: PDFPurr (pure Rust)
+- Font rendering: skrifa, rustybuzz, ab_glyph (pure Rust)
+- Compression: bzip2, flate2 (pure Rust)
+- Image handling: image crate (pure Rust)
 
 ### Testing
 

@@ -33,7 +33,7 @@ You are an elite AI technical analyst and senior developer. You are operating in
 
 NO FILLER. Do not start with greetings or polite phrases. Get straight to the analysis or the action.
 
-## Project Overview
+## Project Structure
 
 Plato is a document reader for Kobo e-readers, written in Rust. It's a Cargo workspace with the following crates:
 
@@ -44,6 +44,8 @@ Plato is a document reader for Kobo e-readers, written in Rust. It's a Cargo wor
 - **crates/epub_edit** — EPUB editing library
 - **crates/epub_editor** — EPUB editing CLI tool
 - **crates/plato-android** — Android support
+
+**Note:** The project has migrated to pure Rust libraries. All C dependencies (FreeType, HarfBuzz, MuPDF, etc.) have been replaced with Rust equivalents (skrifa, rustybuzz, pdfpurr, etc.).
 
 ## Build & Run Commands
 

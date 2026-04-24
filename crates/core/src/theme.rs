@@ -56,7 +56,7 @@ fn detect_linux_dark_mode() -> bool {
         if value.to_lowercase().contains("kde") || value.to_lowercase().contains("gnome") {
             // Try to read from gsettings or kconfig
             if let Ok(output) = std::process::Command::new("gsettings")
-                .args(&["get", "org.gnome.desktop.interface", "gtk-theme"])
+                .args(["get", "org.gnome.desktop.interface", "gtk-theme"])
                 .output()
             {
                 let theme = String::from_utf8_lossy(&output.stdout);

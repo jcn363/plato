@@ -19,30 +19,27 @@ The Plato project has been successfully set up for development on this machine. 
 
 ### 2. Native Dependencies
 
-- **SDL2**: ✅ Installed (libsdl2-dev)
-- **FreeType**: ✅ Installed (libfreetype-dev)
-- **HarfBuzz**: ✅ Installed (libharfbuzz-dev)
-- **FontConfig**: ✅ Installed (libfontconfig-dev)
 - **OpenSSL**: ✅ Installed (libssl-dev)
 - **pkg-config**: ✅ Installed
 - **Status**: ✅ All native development libraries are present
+
+**Note:** The project has migrated to pure Rust libraries. C dependencies (FreeType, HarfBuzz, MuPDF, SDL2, etc.) are no longer needed.
 
 ### 3. Build Configuration
 
 - **Cargo workspace**: ✅ Configured with 7 crates
 - **Cross-compilation**: ✅ ARM toolchains configured in `.cargo/config.toml`
 - **Build profiles**: ✅ Custom profiles for ARM, ARM64, and embedded targets
-- **Library directories**:
-  - `libs/` → ARM 32-bit (original Kobo)
-  - `libs64/` → ARM 64-bit (newer Kobo)
-  - `libs_host/` → Host/x86_64 (development)
+- **Pure Rust libraries**:
+  - `bzip2`, `html5ever`, `openjp2`, `hayro-jbig2`, `djvu-rs` - Rust compression/parsing
+  - `skrifa`, `rustybuzz`, `ab_glyph` - Rust font stack (replaces FreeType + HarfBuzz)
+  - `pdfpurr` - Pure Rust PDF (replaces MuPDF)
 
 ### 4. Third-Party Libraries
 
-- **libs_host directory**: ✅ Present with pre-built libraries
-- **Symlinks**: ✅ Created for library versioning
-- **PDF Rendering**: Migrated to PDFPurr (pure Rust PDF library), eliminating C dependencies for PDF rendering
-- **PDF Manipulation**: PDF manipulation features (page deletion, rotation, extraction, merging, annotations, redaction, resource extraction) implemented using lopdf
+- **Status**: ✅ All C libraries removed - project uses pure Rust equivalents
+- **PDF Rendering**: PDFPurr (pure Rust PDF library)
+- **PDF Manipulation**: lopdf for page deletion, rotation, extraction, merging, annotations, redaction, resource extraction
 
 ---
 
@@ -232,7 +229,7 @@ Consider adding GitHub Actions or similar for automated testing. This would requ
 | Component           | Status  | Notes                                    |
 |---------------------|---------|------------------------------------------|
 | Rust Toolchain      | ✅      | v1.93.0, all targets installed           |
-| Native Dependencies | ✅      | Minimal (SDL2 for emulator only)         |
+| Native Dependencies | ✅      | Minimal (pure Rust, no C dependencies)   |
 | PDF Rendering       | ✅      | PDFPurr 0.4.0 (pure Rust) with Git patch |
 | PDF Text Extraction | ✅      | Implemented with basic search            |
 | PDF Outlines        | ✅      | Implemented                              |
@@ -270,15 +267,14 @@ All fixes have been applied and verified with `cargo check`.
 
 The Plato workspace consists of:
 
-| Crate         | Purpose                                                |
-|---------------|--------------------------------------------------------|
-| `plato-core`  | Core library: document handling, rendering, UI, device |
-| `plato`       | Main binary for Kobo devices                           |
-| `emulator`    | SDL2 desktop emulator for development                  |
-| `importer`    | Document importer tool                                 |
-| `fetcher`     | Article fetcher from online sources                    |
-| `epub_edit`   | EPUB editing library                                   |
-| `epub_editor` | EPUB editing CLI tool                                  |
+| Crate         | Purpose                                                 |
+|---------------|---------------------------------------------------------|
+| `plato-core`  | Core library: document handling, rendering, UI, device  |
+| `plato`       | Main binary for Kobo devices                            |
+| `importer`    | Document importer tool                                  |
+| `fetcher`     | Article fetcher from online sources                     |
+| `epub_edit`   | EPUB editing library                                    |
+| `epub_editor` | EPUB editing CLI tool                                   |
 
 ---
 

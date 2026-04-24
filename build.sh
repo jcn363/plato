@@ -115,31 +115,6 @@ get_cargo_profile() {
     esac
 }
 
-# Function to get library directory name for target
-# This is the canonical target-to-directory mapping and the single source of truth for it in shell scripts:
-# - arm (arm-unknown-linux-gnueabihf) → libs/ (ARM 32-bit for original Kobo devices)
-# - arm64 (aarch64-unknown-linux-gnu) → libs64/ (ARM 64-bit for newer Kobo devices)
-# - host (x86_64-unknown-linux-gnu) → libs_host/ (host/x86_64 for development)
-get_lib_dir() {
-    case "$1" in
-        arm) echo "libs" ;;
-        arm64) echo "libs64" ;;
-        host) echo "libs_host" ;;
-    esac
-}
-
-LIB_DIR=$(get_lib_dir "$TARGET")
-
-# Create symlinks for libraries if the directory exists
-ensure_symlinks() {
-    local dir="$1"
-    if [ -d "$dir" ]; then
-        echo "Ensuring symlinks in $dir..."
-        (
-            cd "$dir"
-        )
-    fi
-}
 
 # Clean previous builds
 if [ "$SKIP_CLEAN" -eq 0 ]; then
@@ -164,62 +139,10 @@ if [ "$SKIP_CLIPPY" -eq 0 ]; then
     fi
 fi
 
-# Handle thirdparty libraries
-THIRDPARTY_DIR="thirdparty"
-
-check_lib_exists() {
-    local lib="$1"
-    if [ ! -f "$LIB_DIR/$lib" ]; then
-        return 1
-    fi
-    return 0
-}
-
-THIRDPARTY_NEED_REBUILD=0
-
-if [ "$METHOD" = "fast" ] || [ "$METHOD" = "slow" ] || [ "$METHOD" = "skip" ]; then
-    mkdir -p "$LIB_DIR"
-
-    NEED_REBUILD=0
-    
-    if [ "$METHOD" = "fast" ]; then
-        if [ ! -d "$LIB_DIR" ] || [ "$NEED_REBUILD" = "1" ]; then
-            echo "Using fast method - downloading prebuilt libraries"
-            ./download.sh "$LIB_DIR/*"
-        fi
-        ensure_symlinks "$LIB_DIR"
-    elif [ "$METHOD" = "slow" ]; then
-        if [ "$NEED_REBUILD" = "1" ]; then
-            echo "Building thirdparty libraries from source with $JOBS jobs"
-            cd "$THIRDPARTY_DIR"
-            ./download.sh $THIRDPARTY_ARGS
-            ./build.sh $THIRDPARTY_ARGS
-            cd ..
-            
-            mkdir -p "$LIB_DIR"
-            case "$TARGET" in
-                arm|arm64)
-                    ;;
-                host)
-                    find thirdparty -name "*.so*" -type f -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
-                    ;;
-            esac
-            ensure_symlinks "$LIB_DIR"
-        else
-            echo "Thirdparty libraries up to date, skipping rebuild."
-        fi
-    elif [ "$METHOD" = "skip" ]; then
-        if [ "$NEED_REBUILD" = "1" ]; then
-            echo "Warning: Required library missing, using fast method to download..."
-            ./download.sh "$LIB_DIR/*"
-        else
-            echo "Skipping thirdparty library build/download"
-        fi
-        ensure_symlinks "$LIB_DIR"
-    fi
-fi
-
-# mupdf and mupdf_wrapper removed - MuPDF replaced by PDFPurr (pure Rust)
+# Third-party C libraries removed - project migrated to pure Rust
+# - bzip2, html5ever, openjp2, hayro-jbig2, djvu-rs (Rust equivalents)
+# - skrifa, rustybuzz, ab_glyph (Rust font stack, replaces FreeType + HarfBuzz)
+# - pdfpurr (Pure Rust PDF, replaces MuPDF)
 
 # Build all crates in the workspace
 echo "Building Plato workspace crates..."

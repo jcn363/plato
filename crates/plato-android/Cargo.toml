@@ -1,8 +1,10 @@
+[workspace]
+
 [package]
 name = "plato-android"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+version = "0.9.45"
+edition = "2021"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib"]

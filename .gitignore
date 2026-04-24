@@ -9,6 +9,7 @@
 /target/
 /target-arm/
 /target-arm64/
+crates/plato-android/target/
 *.o
 *.obj
 *.exe

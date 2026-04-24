@@ -31,20 +31,6 @@ TARGET_DIR="${CARGO_TARGET_DIR:-target}"
 # Fail-fast prerequisite checks
 echo "Checking prerequisites for target '$TARGET'..."
 
-if [ ! -d "$LIB_DIR" ]; then
-	echo "Error: Library directory '$LIB_DIR' not found. Run './build.sh $TARGET' first."
-	exit 1
-fi
-
-# Check for required shared libraries
-required_libs=""
-for lib in $required_libs; do
-	if [ ! -e "$LIB_DIR/$lib" ]; then
-		echo "Error: Required library '$LIB_DIR/$lib' not found."
-		exit 1
-	fi
-done
-
 # Check for strip tool
 if ! command -v "$STRIP_TOOL" > /dev/null 2>&1; then
 	echo "Error: Strip tool '$STRIP_TOOL' not found on PATH."
@@ -65,7 +51,7 @@ if [ ! -e "$TARGET_DIR/$CARGO_TARGET/$CARGO_PROFILE/plato" ]; then
 	./build.sh "$TARGET"
 fi
 
-mkdir -p dist/libs
+mkdir -p dist
 mkdir dist/dictionaries
 
 cp -R hyphenation-patterns dist
@@ -94,10 +80,5 @@ cp contrib/*.sh dist
 cp contrib/Settings-sample.toml dist
 cp LICENSE-AGPLv3 dist
 
-if command -v patchelf > /dev/null 2>&1; then
-	patchelf --remove-rpath dist/libs/*
-else
-	echo "Warning: patchelf not found, skipping rpath removal."
-fi
-
-$STRIP_TOOL dist/plato dist/libs/*
+# No external libraries needed - pure Rust build
+$STRIP_TOOL dist/plato

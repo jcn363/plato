@@ -143,14 +143,15 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 cargo test --target x86_64-unknown-linux-gnu
 ```
 
-## Library Directories
+## Pure Rust Migration
 
-Plato uses library directories to support different build targets:
+The project has migrated to pure Rust libraries, eliminating all C dependencies:
 
-- **`libs/`** → ARM 32-bit (`arm-unknown-linux-gnueabihf`) for original Kobo devices
-- **`libs_host/`** → Host/x86_64 (`x86_64-unknown-linux-gnu`) for development and emulator
+- **Compression/parsing**: `bzip2`, `html5ever`, `openjp2`, `hayro-jbig2`, `djvu-rs`
+- **Font stack**: `skrifa`, `rustybuzz`, `ab_glyph` (replaces FreeType + HarfBuzz)
+- **PDF rendering**: `pdfpurr` (pure Rust, replaces MuPDF)
 
-Each directory is populated by `build.sh` or `download.sh` with the appropriate native shared libraries for the target architecture. The `get_lib_dir()` function in `build.sh` is the canonical source of truth for this target-to-directory mapping.
+No external shared libraries are required for building or deployment.
 
 ## Performance Optimizations
 

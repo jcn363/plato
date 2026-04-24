@@ -20,6 +20,7 @@ override_dh_auto_clean:
 
 override_dh_auto_build:
 	mkdir -p $(CARGO_HOME)
+	./build.sh host
 	cargo build --release --package plato --target x86_64-unknown-linux-gnu
 
 override_dh_auto_install:
@@ -31,6 +32,7 @@ override_dh_auto_install:
 	cp -r icons debian/plato/usr/share/plato/
 	cp -r keyboard-layouts debian/plato/usr/share/plato/
 	cp -r translations debian/plato/usr/share/plato/
+	cp -r libs_host debian/plato/usr/lib/plato/
 
 override_dh_auto_test:
 	cargo test --release --target x86_64-unknown-linux-gnu
