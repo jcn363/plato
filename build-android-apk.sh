@@ -14,4 +14,8 @@ echo "All native libraries built successfully."
 echo "Building APK..."
 cargo apk build --target aarch64-linux-android -p plato-android
 
-echo "APK built successfully at: target/debug/apk/plato-android.apk"
+# Create dist directory and move APK there
+mkdir -p dist
+cp target/debug/apk/plato-android.apk dist/
+
+echo "APK built successfully at: dist/plato-android.apk"

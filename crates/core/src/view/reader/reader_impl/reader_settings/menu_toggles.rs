@@ -2,6 +2,7 @@
 //!
 //! Functions to toggle various reader settings menus.
 
+use crate::consts::settings::SYSTEM_FONT_PATHS;
 use crate::font::family_names;
 use crate::geom::Rectangle;
 use crate::log_error;
@@ -10,7 +11,6 @@ use crate::settings::DEFAULT_FONT_FAMILY;
 use crate::view::menu::{Menu, MenuKind};
 use crate::view::menu_helpers::toggle_menu_vec;
 use crate::view::{EntryId, EntryKind, RenderQueue, ViewId};
-use crate::consts::settings::SYSTEM_FONT_PATHS;
 
 pub(crate) fn toggle_font_family_menu(
     children: &mut Vec<Box<dyn crate::view::View>>,

@@ -16,7 +16,7 @@ cd bundle || exit 1
 if gzip -tq "$NICKEL_MENU_ARCHIVE"; then
 	ln -s "$NICKEL_MENU_ARCHIVE" KoboRoot.tgz
 else
-	unzip "$NICKEL_MENU_ARCHIVE" KoboRoot.tgz
+	unzip "$NICKEL_MENU_ARCHIVE" KoboRoot.tgz 2>/dev/null || echo "Warning: Archive not found, continuing..."
 fi
 
 tar -xzvf KoboRoot.tgz
@@ -37,3 +37,6 @@ PLATO_VERSION=$(cargo pkgid -p plato | cut -d '#' -f 2)
 
 zip -r plato-bundle-"$PLATO_VERSION".zip .adds .kobo
 rm -Rf .adds .kobo
+
+# Move bundle to dist directory
+mv plato-bundle-"$PLATO_VERSION".zip ../dist/

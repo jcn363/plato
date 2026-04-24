@@ -16,17 +16,17 @@ fn detect_system_dark_mode() -> bool {
     {
         detect_linux_dark_mode()
     }
-    
+
     #[cfg(target_os = "macos")]
     {
         detect_macos_dark_mode()
     }
-    
+
     #[cfg(target_os = "windows")]
     {
         detect_windows_dark_mode()
     }
-    
+
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         // Fallback to light mode for unsupported platforms
@@ -43,14 +43,14 @@ fn detect_linux_dark_mode() -> bool {
             return true;
         }
     }
-    
+
     // Check for KDE settings
     if let Ok(value) = std::env::var("KDE_COLOR_SCHEME") {
         if value.contains("dark") {
             return true;
         }
     }
-    
+
     // Check for XDG desktop portal settings
     if let Ok(value) = std::env::var("XDG_CURRENT_DESKTOP") {
         if value.to_lowercase().contains("kde") || value.to_lowercase().contains("gnome") {
@@ -66,7 +66,7 @@ fn detect_linux_dark_mode() -> bool {
             }
         }
     }
-    
+
     false
 }
 
@@ -89,10 +89,15 @@ fn detect_macos_dark_mode() -> bool {
 fn detect_windows_dark_mode() -> bool {
     use std::ffi::OsString;
     use std::os::windows::ffi::OsStringExt;
-    
+
     // Try to read from Windows Registry
     if let Ok(output) = std::process::Command::new("reg")
-        .args(&["query", "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "/v", "AppsUseLightTheme"])
+        .args(&[
+            "query",
+            "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+            "/v",
+            "AppsUseLightTheme",
+        ])
         .output()
     {
         let output_str = String::from_utf8_lossy(&output.stdout);
@@ -101,7 +106,7 @@ fn detect_windows_dark_mode() -> bool {
             return true;
         }
     }
-    
+
     false
 }
 

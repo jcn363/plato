@@ -193,8 +193,8 @@ pub fn save_settings(settings: &Settings) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
     use std::fs;
+    use std::path::PathBuf;
     use uuid::Uuid;
 
     #[test]
@@ -225,7 +225,7 @@ mod tests {
         let temp_dir = PathBuf::from("tmp");
         fs::create_dir_all(&temp_dir).unwrap();
         let temp_path = temp_dir.join(format!("invalid_config_{}.toml", Uuid::new_v4()));
-        
+
         // Write invalid TOML directly - use a field that exists but with wrong type
         std::fs::write(&temp_path, "frontlight = \"not_a_bool\"").unwrap();
 

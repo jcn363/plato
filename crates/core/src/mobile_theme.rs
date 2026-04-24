@@ -204,13 +204,13 @@ fn detect_mobile_system_dark_mode() -> bool {
     {
         detect_android_dark_mode()
     }
-    
-    // iOS-specific detection  
+
+    // iOS-specific detection
     #[cfg(target_os = "ios")]
     {
         detect_ios_dark_mode()
     }
-    
+
     // Fallback to time-based detection for other cases
     false
 }

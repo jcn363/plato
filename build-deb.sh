@@ -17,5 +17,10 @@ fi
 echo "Building Debian package..."
 dpkg-buildpackage -us -uc -b
 
+# Create dist directory and move .deb files there
+mkdir -p dist
+mv ../plato_*.deb dist/ 2>/dev/null || true
+mv ../plato-dbgsym_*.ddeb dist/ 2>/dev/null || true
+
 echo "Build complete!"
-echo "Package location: ../plato_*.deb"
+echo "Package location: dist/plato_*.deb"
