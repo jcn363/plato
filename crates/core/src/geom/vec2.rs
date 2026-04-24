@@ -11,7 +11,7 @@ pub struct Vec2 {
 impl Vec2 {
     #[inline]
     pub fn new(x: f32, y: f32) -> Vec2 {
-        Vec2 { x, y }
+        Vec2 { x: x.clamp(-10000.0, 10000.0), y: y.clamp(-10000.0, 10000.0) }
     }
 
     #[inline]
