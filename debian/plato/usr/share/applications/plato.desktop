@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Plato
+Comment=Document reader for Linux desktop
+Exec=plato %F
+Icon=plato
+Type=Application
+Categories=Office;Viewer;
+MimeType=application/pdf;application/epub+zip;application/x-cbz;application/x-cbr;image/vnd.djvu;
+Terminal=false
+StartupNotify=true

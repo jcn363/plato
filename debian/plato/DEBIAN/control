@@ -1,18 +1,12 @@
-Source: plato
+Package: plato
+Version: 0.9.45-1
+Architecture: amd64
+Maintainer: Plato Team <plato@example.com>
+Installed-Size: 18138
+Depends: libc6 (>= 2.39), libgcc-s1 (>= 4.2), zlib1g (>= 1:1.1.4)
 Section: text
 Priority: optional
-Maintainer: Plato Team <plato@example.com>
-Build-Depends: debhelper (>= 12),
-               cargo,
-               rustc (>= 1.95),
-               pkg-config
-Standards-Version: 4.6.0
 Homepage: https://github.com/baskerville/plato
-
-Package: plato
-Architecture: amd64
-Depends: ${shlibs:Depends},
-         ${misc:Depends}
 Description: Document reader for Linux
  Plato is a document reader supporting PDF, EPUB, CBZ, and DJVU formats.
  This package provides the Linux version using the Linux framebuffer.

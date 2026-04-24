@@ -1,12 +1,52 @@
+# Rust-specific
 **/*.rs.bk
-/target
+*.rlib
+*.rmeta
+.cargo/config
+.cargo/credentials
+
+# Build artifacts
+/target/
+/target-arm/
+/target-arm64/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.out
+*.pdb
+*.dSYM/
+
+# Cargo
+Cargo.lock
+/.cargo/
+debian/cargo/*
+debian/.debhelper/*
+
+# Project-specific build artifacts
 /extra
 /archives
 /resources
 /libs
 /bin
+/dist
+/bundle
+/plato
+/plato-*.zip
+/actions-runner
+
+# Third-party builds
+/thirdparty/*/*
+!/thirdparty/*/*kobo*
+!/thirdparty/*/build-ios.sh
+!/thirdparty/*/build-kobo.sh
+
+# User data and runtime state
 /Settings.toml
-/.cargo
 /.opencode
 /.qodo
 /.qwen
@@ -15,31 +55,9 @@
 /.fat32-epoch
 /.thumbnail-previews
 /.trash
-/.vscode
-/actions-runner
 /css/*-user.css
 /hyphenation-patterns
 /dictionaries
-/dist
-/bundle
-/plato-*.zip
-/target-arm
-/thirdparty/*/*
-!/thirdparty/*/*kobo*
-!/thirdparty/*/build-ios.sh
-.codex
-.metadata.json
-bacon-ls.log
-
-# Compiled and build artifacts
-*.o
-*.obj
-*.exe
-*.dll
-*.so
-*.a
-*.out
-target/
 
 # Dependencies
 node_modules/
@@ -49,7 +67,6 @@ __pycache__/
 .mypy_cache/
 .pytest_cache/
 .gradle/
-dist/
 build/
 
 # Logs and temp files
@@ -57,6 +74,10 @@ build/
 *.tmp
 *.swp
 *.swo
+*~
+*.bak
+.bacon-ls.log
+.codex
 
 # Environment
 .env
@@ -66,17 +87,26 @@ build/
 # Editors
 .vscode/
 .idea/
+*.sublime-*
 
 # System files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Coverage
 coverage/
 htmlcov/
 .coverage
+*.profraw
+*.profdata
 
-# Compressed files
+# Compressed archives (distribution bundles)
 *.zip
 *.gz
 *.tar
@@ -87,15 +117,11 @@ htmlcov/
 *.rar
 *.zst
 *.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
+.lzh
+.cab
+.arj
+.rpm
+.deb
+.Z
+.lz
+.lzo

@@ -1,0 +1,323 @@
+{
+  "language": "es",
+  "region": "ES",
+  "metadata": {
+    "version": "1.0.0",
+    "last_modified": "2026-04-22",
+    "translators": ["Plato Team"],
+    "completeness": 0.95
+  },
+  "translations": {
+    "close": {
+      "value": "Cerrar",
+      "plural": null,
+      "context": null
+    },
+    "save": {
+      "value": "Guardar",
+      "plural": null,
+      "context": null
+    },
+    "cancel": {
+      "value": "Cancelar",
+      "plural": null,
+      "context": null
+    },
+    "ok": {
+      "value": "Aceptar",
+      "plural": null,
+      "context": null
+    },
+    "yes": {
+      "value": "Sí",
+      "plural": null,
+      "context": null
+    },
+    "no": {
+      "value": "No",
+      "plural": null,
+      "context": null
+    },
+    "settings": {
+      "value": "Configuración",
+      "plural": null,
+      "context": null
+    },
+    "loading": {
+      "value": "Cargando...",
+      "plural": null,
+      "context": null
+    },
+    "menu": {
+      "value": "Menú",
+      "plural": null,
+      "context": null
+    },
+    "about": {
+      "value": "Acerca de",
+      "plural": null,
+      "context": null
+    },
+    "system_info": {
+      "value": "Info del sistema",
+      "plural": null,
+      "context": null
+    },
+    "applications": {
+      "value": "Aplicaciones",
+      "plural": null,
+      "context": null
+    },
+    "rotate": {
+      "value": "Rotar",
+      "plural": null,
+      "context": null
+    },
+    "book": {
+      "value": "Libro",
+      "plural": {
+        "zero": "Libros",
+        "one": "Libro",
+        "other": "Libros"
+      },
+      "context": null
+    },
+    "page": {
+      "value": "Página",
+      "plural": {
+        "zero": "Páginas",
+        "one": "Página",
+        "other": "Páginas"
+      },
+      "context": null
+    },
+    "file": {
+      "value": "Archivo",
+      "plural": {
+        "zero": "Archivos",
+        "one": "Archivo",
+        "other": "Archivos"
+      },
+      "context": null
+    },
+    "items_found": {
+      "value": "{count} elemento encontrado",
+      "plural": {
+        "zero": "No se encontraron elementos",
+        "one": "{count} elemento encontrado",
+        "other": "{count} elementos encontrados"
+      },
+      "context": "search results"
+    },
+    "library": {
+      "value": "Biblioteca",
+      "plural": null,
+      "context": null
+    },
+    "all_books": {
+      "value": "Todos los libros",
+      "plural": null,
+      "context": null
+    },
+    "recent_books": {
+      "value": "Libros recientes",
+      "plural": null,
+      "context": null
+    },
+    "authors": {
+      "value": "Autores",
+      "plural": null,
+      "context": null
+    },
+    "series": {
+      "value": "Series",
+      "plural": null,
+      "context": null
+    },
+    "folders": {
+      "value": "Carpetas",
+      "plural": null,
+      "context": null
+    },
+    "no_books": {
+      "value": "No se encontraron libros",
+      "plural": null,
+      "context": null
+    },
+    "import": {
+      "value": "Importar",
+      "plural": null,
+      "context": null
+    },
+    "delete": {
+      "value": "Eliminar",
+      "plural": null,
+      "context": null
+    },
+    "rename": {
+      "value": "Renombrar",
+      "plural": null,
+      "context": null
+    },
+    "table_of_contents": {
+      "value": "Tabla de contenidos",
+      "plural": null,
+      "context": null
+    },
+    "go_to_page": {
+      "value": "Ir a página",
+      "plural": null,
+      "context": null
+    },
+    "bookmarks": {
+      "value": "Marcadores",
+      "plural": null,
+      "context": null
+    },
+    "annotations": {
+      "value": "Anotaciones",
+      "plural": null,
+      "context": null
+    },
+    "search": {
+      "value": "Buscar",
+      "plural": null,
+      "context": null
+    },
+    "no_results": {
+      "value": "No se encontraron resultados",
+      "plural": null,
+      "context": null
+    },
+    "no_next_page": {
+      "value": "No hay página siguiente.",
+      "plural": null,
+      "context": null
+    },
+    "no_next_file": {
+      "value": "No hay siguiente archivo.",
+      "plural": null,
+      "context": null
+    },
+    "previous_page": {
+      "value": "Página anterior",
+      "plural": null,
+      "context": null
+    },
+    "next_page": {
+      "value": "Página siguiente",
+      "plural": null,
+      "context": null
+    },
+    "dictionary": {
+      "value": "Diccionario",
+      "plural": null,
+      "context": null
+    },
+    "enter_word": {
+      "value": "Introduce una palabra",
+      "plural": null,
+      "context": null
+    },
+    "not_found": {
+      "value": "Palabra no encontrada",
+      "plural": null,
+      "context": null
+    },
+    "calculator": {
+      "value": "Calculadora",
+      "plural": null,
+      "context": null
+    },
+    "sketch": {
+      "value": "Dibujo",
+      "plural": null,
+      "context": null
+    },
+    "clear": {
+      "value": "Limpiar",
+      "plural": null,
+      "context": null
+    },
+    "pen": {
+      "value": "Bolígrafo",
+      "plural": null,
+      "context": null
+    },
+    "eraser": {
+      "value": "Borrador",
+      "plural": null,
+      "context": null
+    },
+    "confirm_delete": {
+      "value": "¿Confirmar eliminación?",
+      "plural": null,
+      "context": null
+    },
+    "processing": {
+      "value": "Procesando...",
+      "plural": null,
+      "context": null
+    },
+    "error": {
+      "value": "Error",
+      "plural": null,
+      "context": null
+    },
+    "frontlight": {
+      "value": "Luz frontal",
+      "plural": null,
+      "context": null
+    },
+    "wifi": {
+      "value": "WiFi",
+      "plural": null,
+      "context": null
+    },
+    "inverted": {
+      "value": "Invertido",
+      "plural": null,
+      "context": null
+    },
+    "sleep_cover": {
+      "value": "Cubierta de suspensión",
+      "plural": null,
+      "context": null
+    },
+    "auto_suspend": {
+      "value": "Suspensión en (min)",
+      "plural": null,
+      "context": null
+    },
+    "auto_power_off": {
+      "value": "Apagado en (h)",
+      "plural": null,
+      "context": null
+    },
+    "auto_dual_page": {
+      "value": "Doble página auto",
+      "plural": null,
+      "context": null
+    },
+    "finished_action": {
+      "value": "Acción al finalizar",
+      "plural": null,
+      "context": null
+    },
+    "language": {
+      "value": "Idioma",
+      "plural": null,
+      "context": null
+    },
+    "on": {
+      "value": "Activado",
+      "plural": null,
+      "context": null
+    },
+    "off": {
+      "value": "Desactivado",
+      "plural": null,
+      "context": null
+    }
+  }
+}

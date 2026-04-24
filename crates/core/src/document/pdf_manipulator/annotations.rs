@@ -621,11 +621,18 @@ impl XfdfHandler {
                                 }
                             }
                             b"annotate" => {
-                                annotations.push(super::PdfAnnotation::new(
-                                    0,
+                                let mut final_annot = super::PdfAnnotation::new(
+                                    annot.page,
                                     annot.subtype.clone(),
                                     annot.contents.clone(),
-                                ));
+                                );
+                                final_annot.rect = annot.rect;
+                                final_annot.color = annot.color;
+                                final_annot.author = annot.author.clone();
+                                final_annot.subject = annot.subject.clone();
+                                final_annot.created_at = annot.created_at;
+                                final_annot.modified_at = annot.modified_at;
+                                annotations.push(final_annot);
                             }
                             _ => {}
                         }
