@@ -15,8 +15,8 @@ pub struct GhostingReducer {
 
 impl GhostingReducer {
     pub fn new(max_partial_updates: u32, full_refresh_interval_sec: u32) -> Self {
-        let max_partial_updates = max_partial_updates.max(1);
-        let full_refresh_interval = full_refresh_interval_sec.max(1);
+        let max_partial_updates = max_partial_updates.clamp(1, 1000);
+        let full_refresh_interval = full_refresh_interval_sec.clamp(1, 3600);
         Self {
             partial_update_count: 0,
             max_partial_updates,
