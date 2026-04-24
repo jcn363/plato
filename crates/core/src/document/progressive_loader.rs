@@ -1,3 +1,5 @@
+use crate::consts::system::{PAGE_CACHE_SIZE_MB, PRELOAD_AHEAD_PAGES, PRELOAD_BEHIND_PAGES};
+use crate::device::{page_cache_size_mb, preload_ahead_pages, preload_behind_pages};
 use crate::document::pdfpurr::Document as PdfPurrDocument;
 use crate::framebuffer::Pixmap;
 use crate::{log_error, log_info, log_warn};
@@ -6,9 +8,6 @@ use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, RwLock};
 use std::time::{Duration, Instant};
-
-// Re-export from canonical source in consts::system per Single Source of Truth rule.
-use crate::consts::system::{PAGE_CACHE_SIZE_MB, PRELOAD_AHEAD_PAGES, PRELOAD_BEHIND_PAGES};
 
 #[derive(Debug, Clone)]
 pub struct PageInfo {
@@ -125,7 +124,7 @@ impl ProgressiveDocLoader {
     }
 
     fn ensure_cache_space(&self, required_bytes: usize) {
-        let max_cache = PAGE_CACHE_SIZE_MB * 1024 * 1024;
+        let max_cache = page_cache_size_mb() * 1024 * 1024;
 
         while self.get_cache_size_bytes() + required_bytes > max_cache {
             if self.evict_lru_page().is_none() {
@@ -140,13 +139,13 @@ impl ProgressiveDocLoader {
         }
 
         let ahead_start = (current + 1).min(self.total_pages);
-        let ahead_end = (current + 1 + PRELOAD_AHEAD_PAGES).min(self.total_pages);
+        let ahead_end = (current + 1 + preload_ahead_pages()).min(self.total_pages);
 
         for page_idx in ahead_start..ahead_end {
             let _ = self.load_page_thumbnail(page_idx);
         }
 
-        let behind_start = current.saturating_sub(PRELOAD_BEHIND_PAGES);
+        let behind_start = current.saturating_sub(preload_behind_pages());
         let behind_end = current;
 
         for page_idx in behind_start..behind_end {

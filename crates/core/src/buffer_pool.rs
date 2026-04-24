@@ -5,35 +5,32 @@
 //! on device capabilities (standard Kobo, Elipsa 1GB, Android 12GB).
 
 use crate::consts::buffer_pool as buffer_consts;
-use crate::device::{Model, CURRENT_DEVICE};
+use crate::device::{is_android, is_elipsa, is_linuxmint};
 use std::sync::LazyLock;
 
 /// Get the appropriate thumbnail buffer size for the current device
 fn get_thumbnail_buffer_size() -> usize {
-    match CURRENT_DEVICE.model {
-        Model::Elipsa | Model::Elipsa2E => buffer_consts::ELIPSA_THUMBNAIL_BUFFER_SIZE,
-        _ => {
-            // Check if running on Android (detected by different environment)
-            if std::env::var("ANDROID_ROOT").is_ok() {
-                buffer_consts::ANDROID_THUMBNAIL_BUFFER_SIZE
-            } else {
-                buffer_consts::THUMBNAIL_BUFFER_SIZE
-            }
-        }
+    if is_linuxmint() {
+        buffer_consts::LINUXMINT_THUMBNAIL_BUFFER_SIZE
+    } else if is_elipsa() {
+        buffer_consts::ELIPSA_THUMBNAIL_BUFFER_SIZE
+    } else if is_android() {
+        buffer_consts::ANDROID_THUMBNAIL_BUFFER_SIZE
+    } else {
+        buffer_consts::THUMBNAIL_BUFFER_SIZE
     }
 }
 
 /// Get the appropriate document buffer size for the current device
 fn get_document_buffer_size() -> usize {
-    match CURRENT_DEVICE.model {
-        Model::Elipsa | Model::Elipsa2E => buffer_consts::ELIPSA_DOCUMENT_BUFFER_SIZE,
-        _ => {
-            if std::env::var("ANDROID_ROOT").is_ok() {
-                buffer_consts::ANDROID_DOCUMENT_BUFFER_SIZE
-            } else {
-                buffer_consts::DOCUMENT_BUFFER_SIZE
-            }
-        }
+    if is_linuxmint() {
+        buffer_consts::LINUXMINT_DOCUMENT_BUFFER_SIZE
+    } else if is_elipsa() {
+        buffer_consts::ELIPSA_DOCUMENT_BUFFER_SIZE
+    } else if is_android() {
+        buffer_consts::ANDROID_DOCUMENT_BUFFER_SIZE
+    } else {
+        buffer_consts::DOCUMENT_BUFFER_SIZE
     }
 }
 

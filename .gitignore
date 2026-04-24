@@ -126,3 +126,4 @@ htmlcov/
 .Z
 .lz
 .lzo
+crates/core/tmp/

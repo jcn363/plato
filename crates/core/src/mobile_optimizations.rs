@@ -13,7 +13,7 @@ use std::sync::LazyLock;
 /// Check if running on a mobile platform (Android or iOS)
 #[inline]
 pub fn is_mobile_platform() -> bool {
-    std::env::var("ANDROID_ROOT").is_ok() || std::env::var("IPHONE_SIMULATOR_ROOT").is_ok()
+    crate::device::is_android() || std::env::var("IPHONE_SIMULATOR_ROOT").is_ok()
 }
 
 // ============================================================================

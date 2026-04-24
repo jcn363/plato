@@ -70,6 +70,9 @@ pub mod system {
     /// Page cache size for Android devices (12GB+ RAM)
     pub const ANDROID_PAGE_CACHE_SIZE_MB: usize = 100;
 
+    /// Page cache size for LinuxMint devices (desktop with 8-16GB RAM)
+    pub const LINUXMINT_PAGE_CACHE_SIZE_MB: usize = 200;
+
     /// Preload ahead pages count for standard devices
     pub const PRELOAD_AHEAD_PAGES: usize = 2;
 
@@ -79,6 +82,9 @@ pub mod system {
     /// Preload ahead pages count for Android (abundant RAM)
     pub const ANDROID_PRELOAD_AHEAD_PAGES: usize = 5;
 
+    /// Preload ahead pages count for LinuxMint (desktop with abundant RAM)
+    pub const LINUXMINT_PRELOAD_AHEAD_PAGES: usize = 5;
+
     /// Preload behind pages count
     pub const PRELOAD_BEHIND_PAGES: usize = 1;
 
@@ -87,6 +93,9 @@ pub mod system {
 
     /// Preload behind pages count for Android
     pub const ANDROID_PRELOAD_BEHIND_PAGES: usize = 3;
+
+    /// Preload behind pages count for LinuxMint
+    pub const LINUXMINT_PRELOAD_BEHIND_PAGES: usize = 3;
 }
 
 /// Buffer pool size constants
@@ -108,6 +117,12 @@ pub mod buffer_pool {
 
     /// Document buffer size for Android devices (16MB)
     pub const ANDROID_DOCUMENT_BUFFER_SIZE: usize = 16 * 1024 * 1024;
+
+    /// Thumbnail buffer size for LinuxMint devices (8MB)
+    pub const LINUXMINT_THUMBNAIL_BUFFER_SIZE: usize = 8 * 1024 * 1024;
+
+    /// Document buffer size for LinuxMint devices (32MB)
+    pub const LINUXMINT_DOCUMENT_BUFFER_SIZE: usize = 32 * 1024 * 1024;
 }
 
 /// PDF manipulation constants
@@ -236,6 +251,12 @@ pub mod thumbnail {
 
     /// Cache size for Android devices (abundant RAM)
     pub const ANDROID_CACHE_SIZE: usize = 50;
+
+    /// Worker threads for LinuxMint devices (desktop with 4-8 cores)
+    pub const LINUXMINT_WORKER_COUNT: usize = 6;
+
+    /// Cache size for LinuxMint devices (desktop with abundant storage)
+    pub const LINUXMINT_CACHE_SIZE: usize = 100;
 }
 
 /// Input and interaction constants

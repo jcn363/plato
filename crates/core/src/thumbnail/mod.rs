@@ -13,7 +13,8 @@ pub use request::ThumbnailRequest;
 // per Single Source of Truth rule.
 pub use crate::consts::thumbnail::{
     ANDROID_CACHE_SIZE, ANDROID_WORKER_COUNT, DEFAULT_CACHE_SIZE, DEFAULT_WORKER_COUNT,
-    ELIPSA_CACHE_SIZE, ELIPSA_WORKER_COUNT, THUMBNAIL_HEIGHT, THUMBNAIL_WIDTH,
+    ELIPSA_CACHE_SIZE, ELIPSA_WORKER_COUNT, LINUXMINT_CACHE_SIZE, LINUXMINT_WORKER_COUNT,
+    THUMBNAIL_HEIGHT, THUMBNAIL_WIDTH,
 };
 
 /// Maximum allowed worker threads for Kobo devices
@@ -34,33 +35,30 @@ pub const ANDROID_MAX_CACHE_SIZE: usize = 100;
 /// Minimum allowed cache size
 pub const MIN_CACHE_SIZE: usize = 5;
 
-use crate::device::{Model, CURRENT_DEVICE};
+use crate::device::{is_android, is_elipsa, is_linuxmint};
 
 /// Get the optimal worker count for the current device
 pub fn optimal_worker_count() -> usize {
-    match CURRENT_DEVICE.model {
-        Model::Elipsa | Model::Elipsa2E => ELIPSA_WORKER_COUNT,
-        _ => {
-            // Check if running on Android
-            if std::env::var("ANDROID_ROOT").is_ok() {
-                ANDROID_WORKER_COUNT
-            } else {
-                DEFAULT_WORKER_COUNT
-            }
-        }
+    if is_linuxmint() {
+        LINUXMINT_WORKER_COUNT
+    } else if is_elipsa() {
+        ELIPSA_WORKER_COUNT
+    } else if is_android() {
+        ANDROID_WORKER_COUNT
+    } else {
+        DEFAULT_WORKER_COUNT
     }
 }
 
 /// Get the optimal cache size for the current device
 pub fn optimal_cache_size() -> usize {
-    match CURRENT_DEVICE.model {
-        Model::Elipsa | Model::Elipsa2E => ELIPSA_CACHE_SIZE,
-        _ => {
-            if std::env::var("ANDROID_ROOT").is_ok() {
-                ANDROID_CACHE_SIZE
-            } else {
-                DEFAULT_CACHE_SIZE
-            }
-        }
+    if is_linuxmint() {
+        LINUXMINT_CACHE_SIZE
+    } else if is_elipsa() {
+        ELIPSA_CACHE_SIZE
+    } else if is_android() {
+        ANDROID_CACHE_SIZE
+    } else {
+        DEFAULT_CACHE_SIZE
     }
 }
