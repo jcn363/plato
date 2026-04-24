@@ -69,6 +69,9 @@ impl RenderPlan {
     }
 
     pub fn index_from_advance(&self, advance: i32) -> usize {
+        if advance < 0 {
+            return 0;
+        }
         let mut sum = 0;
         let mut index = 0;
         while index < self.glyphs.len() {
