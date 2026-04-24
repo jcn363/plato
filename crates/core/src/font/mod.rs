@@ -138,8 +138,12 @@ pub struct FontFamily {
 }
 
 pub fn family_names<P: AsRef<Path>>(search_path: P) -> Result<BTreeSet<String>, Error> {
-    if !search_path.as_ref().exists() {
+    let path = search_path.as_ref();
+    if !path.exists() {
         return Err(format_err!("the search path doesn't exist"));
+    }
+    if path.as_os_str().is_empty() {
+        return Err(format_err!("search path cannot be empty"));
     }
 
     let opener = FontOpener::new()?;
@@ -147,22 +151,22 @@ pub fn family_names<P: AsRef<Path>>(search_path: P) -> Result<BTreeSet<String>, 
 
     let mut families = BTreeSet::new();
 
-    for entry in walkdir_visible(search_path.as_ref()) {
-        let path = entry.path();
-        if !glob.is_match(path) {
+    for entry in walkdir_visible(path) {
+        let entry_path = entry.path();
+        if !glob.is_match(entry_path) {
             continue;
         }
-        if let Ok(font) = opener.open(path).map_err(|e| {
+        if let Ok(font) = opener.open(entry_path).map_err(|e| {
             log_error!(
                 "Failed to load font '{}': {}. Please ensure the font file exists and is valid.",
-                path.display(),
+                entry_path.display(),
                 e
             )
         }) {
             if let Some(family_name) = font.family_name() {
                 families.insert(family_name.to_string());
             } else {
-                log_warn!("Can't get the family name of '{}'.", path.display());
+                log_warn!("Can't get the family name of '{}'.", entry_path.display());
             }
         }
     }
