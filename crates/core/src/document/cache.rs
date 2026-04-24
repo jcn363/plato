@@ -174,6 +174,9 @@ impl PdfCache {
 
     /// Clear cache for a specific document
     pub fn clear_document(&self, doc_id: &str) {
+        if doc_id.is_empty() {
+            return;
+        }
         let mut rendered = self
             .rendered_pages
             .lock()
