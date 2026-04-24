@@ -131,6 +131,10 @@ impl PdfCache {
 
     /// Cache metadata
     pub fn put_metadata(&self, key: PageCacheKey, dims: (f32, f32)) {
+        let (width, height) = dims;
+        if width <= 0.0 || height <= 0.0 {
+            return;
+        }
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("system time before UNIX epoch")
