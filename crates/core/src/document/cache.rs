@@ -109,6 +109,9 @@ impl PdfCache {
 
     /// Cache extracted text
     pub fn put_extracted_text(&self, key: PageCacheKey, text: String) {
+        if text.is_empty() {
+            return;
+        }
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("system time before UNIX epoch")
