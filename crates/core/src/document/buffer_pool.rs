@@ -91,6 +91,8 @@ pub struct BufferPool {
 impl BufferPool {
     /// Create a new buffer pool
     pub fn new(min_buffer_size: usize, max_buffers: usize) -> Self {
+        let min_buffer_size = min_buffer_size.clamp(0, 100_000_000);
+        let max_buffers = max_buffers.clamp(1, 1000);
         Self {
             pool: Arc::new(Mutex::new(VecDeque::with_capacity(max_buffers))),
             min_buffer_size,
