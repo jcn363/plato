@@ -73,16 +73,16 @@ impl Add for Vec2 {
     type Output = Vec2;
     fn add(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
+            x: (self.x + rhs.x).clamp(-10000.0, 10000.0),
+            y: (self.y + rhs.y).clamp(-10000.0, 10000.0),
         }
     }
 }
 
 impl AddAssign for Vec2 {
     fn add_assign(&mut self, rhs: Vec2) {
-        self.x += rhs.x;
-        self.y += rhs.y;
+        self.x = (self.x + rhs.x).clamp(-10000.0, 10000.0);
+        self.y = (self.y + rhs.y).clamp(-10000.0, 10000.0);
     }
 }
 
