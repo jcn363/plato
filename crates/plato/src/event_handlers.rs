@@ -372,7 +372,8 @@ pub(crate) fn handle_screenshot_event(
     rq: &mut RenderQueue,
 ) {
     let name = Local::now().format("screenshot-%Y%m%d_%H%M%S.png");
-    let msg = match context.fb.save(&name.to_string()) {
+    let screenshot_path = format!("./{}", name);
+    let msg = match context.fb.save(&screenshot_path) {
         Err(e) => format!("{}", e),
         Ok(_) => format!("Saved {}.", name),
     };
