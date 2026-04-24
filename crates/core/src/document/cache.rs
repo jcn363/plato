@@ -67,7 +67,8 @@ pub struct PdfCache {
 impl PdfCache {
     /// Create a new PDF cache with specified capacity
     pub fn new(capacity: usize) -> Self {
-        let capacity = NonZeroUsize::new(capacity.max(1)).expect("cache capacity must be non-zero");
+        let capacity = capacity.clamp(1, 10_000);
+        let capacity = NonZeroUsize::new(capacity).expect("cache capacity must be non-zero");
 
         Self {
             rendered_pages: Arc::new(Mutex::new(LruCache::new(capacity))),
