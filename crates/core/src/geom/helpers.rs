@@ -108,6 +108,15 @@ pub struct BorderSpec {
     pub color: Color,
 }
 
+impl BorderSpec {
+    pub fn new(thickness: u16, color: Color) -> Self {
+        Self {
+            thickness: thickness.clamp(0, 100),
+            color,
+        }
+    }
+}
+
 const HALF_PIXEL_DIAGONAL: f32 = consts::SQRT_2 / 2.0;
 
 // Takes the (signed) distance and angle from the center of a pixel to the closest point on a
