@@ -87,6 +87,9 @@ impl PdfCache {
 
     /// Cache rendered page
     pub fn put_rendered_page(&self, key: PageCacheKey, pixmap: PdfPurrPixmap) {
+        if key.doc_id.is_empty() {
+            return;
+        }
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("system time before UNIX epoch")
