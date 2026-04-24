@@ -178,16 +178,16 @@ impl Sub<Vec2> for f32 {
     type Output = Vec2;
     fn sub(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self - rhs.x,
-            y: self - rhs.y,
+            x: (self - rhs.x).clamp(-10000.0, 10000.0),
+            y: (self - rhs.y).clamp(-10000.0, 10000.0),
         }
     }
 }
 
 impl SubAssign<f32> for Vec2 {
     fn sub_assign(&mut self, rhs: f32) {
-        self.x -= rhs;
-        self.y -= rhs;
+        self.x = (self.x - rhs).clamp(-10000.0, 10000.0);
+        self.y = (self.y - rhs).clamp(-10000.0, 10000.0);
     }
 }
 
@@ -195,8 +195,8 @@ impl Mul<f32> for Vec2 {
     type Output = Vec2;
     fn mul(self, rhs: f32) -> Vec2 {
         Vec2 {
-            x: self.x * rhs,
-            y: self.y * rhs,
+            x: (self.x * rhs).clamp(-10000.0, 10000.0),
+            y: (self.y * rhs).clamp(-10000.0, 10000.0),
         }
     }
 }
