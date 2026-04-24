@@ -215,12 +215,12 @@ pub fn elbow(sp: &[Point]) -> usize {
 pub fn halves(n: i32) -> (i32, i32) {
     let small_half = n / 2;
     let big_half = n - small_half;
-    (small_half, big_half)
+    (small_half.max(0), big_half.max(0))
 }
 
 #[inline]
 pub fn small_half(n: i32) -> i32 {
-    n / 2
+    (n / 2).max(0)
 }
 
 #[inline]
