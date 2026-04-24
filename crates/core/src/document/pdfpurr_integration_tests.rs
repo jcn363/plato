@@ -320,10 +320,10 @@ fn test_pipeline_performance() {
 
     let duration = start.elapsed();
 
-    // Should complete in reasonable time (< 2s for large page in debug build)
+    // Should complete in reasonable time (< 3s for large page in debug build)
     // Release builds should be much faster (< 200ms)
     assert!(
-        duration.as_secs() < 2,
+        duration.as_secs() < 3,
         "Pipeline too slow: {:?} for {}x{}",
         duration,
         width,

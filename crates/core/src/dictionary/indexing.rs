@@ -53,7 +53,8 @@ fn normalize(entries: &[Entry], metadata: &Metadata) -> Vec<Entry> {
     for entry in entries.iter() {
         let headword: Cow<str> = if !metadata.all_chars {
             Cow::Owned(
-                entry.headword
+                entry
+                    .headword
                     .chars()
                     .filter(|c| c.is_alphanumeric() || c.is_whitespace())
                     .collect(),
@@ -70,11 +71,11 @@ fn normalize(entries: &[Entry], metadata: &Metadata) -> Vec<Entry> {
 
         let mut i = result.len();
 
-        while i > 0 && headword.as_ref() < &result[i - 1].headword {
+        while i > 0 && headword.as_ref() < result[i - 1].headword.as_str() {
             i -= 1;
         }
 
-        let original = if headword.as_ref() != &entry.headword {
+        let original = if headword.as_ref() != entry.headword.as_str() {
             Some(entry.headword.clone())
         } else {
             None

@@ -706,6 +706,8 @@ mod tests {
     #[test]
     fn test_page_cache_size_android() {
         // Test Android via ANDROID_ROOT
+        std::env::remove_var("PLATO_DEVICE");
+        std::env::remove_var("XDG_CURRENT_DESKTOP");
         std::env::set_var("ANDROID_ROOT", "/system");
         let cache = page_cache_size_mb();
         assert_eq!(cache, crate::consts::system::ANDROID_PAGE_CACHE_SIZE_MB);

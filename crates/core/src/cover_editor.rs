@@ -201,10 +201,11 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
                 .all(|(a, b)| a.eq_ignore_ascii_case(&b))
     }
 
-    for name in archive.file_names() {
+    let file_names: Vec<String> = archive.file_names().map(|s| s.to_string()).collect();
+    for name in &file_names {
         if starts_with_case_insensitive(name, "cover.") {
             if let Ok(mut file) = archive.by_name(name) {
-                let mut buffer = Vec::new();
+                let mut buffer = Vec::with_capacity(1024 * 1024); // 1MB initial capacity for images
                 std::io::Read::read_to_end(&mut file, &mut buffer)?;
                 return image::load_from_memory(&buffer)
                     .map_err(|e| format_err!("Failed to decode cover: {}", e));
@@ -212,14 +213,14 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> Result<DynamicIm
         }
     }
 
-    for entry in archive.file_names() {
+    for entry in &file_names {
         if (contains_case_insensitive(entry, "cover") || contains_case_insensitive(entry, "image"))
             && (ends_with_case_insensitive(entry, ".jpg")
                 || ends_with_case_insensitive(entry, ".jpeg")
                 || ends_with_case_insensitive(entry, ".png"))
         {
             if let Ok(mut file) = archive.by_name(entry) {
-                let mut buffer = Vec::new();
+                let mut buffer = Vec::with_capacity(1024 * 1024); // 1MB initial capacity for images
                 std::io::Read::read_to_end(&mut file, &mut buffer)?;
                 if let Ok(img) = image::load_from_memory(&buffer) {
                     return Ok(img);
@@ -242,7 +243,7 @@ pub fn set_cover_in_epub<P: AsRef<Path>>(epub_path: P, cover_path: P) -> Result<
     let cover_img = image::open(cover_path)?;
     let resized = cover_img.resize(600, 800, image::imageops::FilterType::Lanczos3);
 
-    let mut buffer = Vec::new();
+    let mut buffer = Vec::with_capacity(1024 * 1024); // 1MB initial capacity for JPEG
     let mut cursor = std::io::Cursor::new(&mut buffer);
     resized.write_to(&mut cursor, ImageFormat::Jpeg)?;
 

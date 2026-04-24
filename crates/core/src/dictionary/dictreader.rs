@@ -257,12 +257,12 @@ impl<B: Read + Seek> DictReaderDz<B> {
         flags: &u8,
     ) -> Result<(), DictError> {
         if (flags & GZ_FNAME) != 0 {
-            let mut tmp = Vec::new();
+            let mut tmp = Vec::with_capacity(256); // Typical filename size
             buffered_dzdict.read_until(b'\0', &mut tmp)?;
         }
 
         if (flags & GZ_COMMENT) != 0 {
-            let mut tmp = Vec::new();
+            let mut tmp = Vec::with_capacity(256); // Typical comment size
             buffered_dzdict.read_until(b'\0', &mut tmp)?;
         }
 
