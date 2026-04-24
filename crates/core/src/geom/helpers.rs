@@ -191,6 +191,9 @@ pub fn elbow(sp: &[Point]) -> usize {
         return 0;
     }
     let len = sp.len();
+    if len < 3 {
+        return len / 2;
+    }
     let a: Vec2 = sp[0].into();
     let b: Vec2 = sp[len - 1].into();
     let i1 = len / 3;
