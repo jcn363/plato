@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use crate::log_info;
 use crate::settings::BackgroundSyncSettings;
 use anyhow::{format_err, Context, Error};
@@ -39,6 +40,7 @@ impl BackgroundSync {
         false
     }
 
+    #[allow(unused_variables)]
     fn run_connman_command(action: &str) -> Result<(), Error> {
         #[cfg(target_os = "linux")]
         {
@@ -178,6 +180,7 @@ pub fn check_network_and_sync(
 
 /// Builds and executes a curl command safely using direct argument passing,
 /// avoiding shell interpretation that could lead to command injection.
+#[allow(dead_code)]
 fn run_curl_command(
     url: &str,
     username: Option<&str>,
@@ -202,6 +205,7 @@ fn run_curl_command(
         .map_err(|e| format_err!("Failed to execute curl: {}", e))
 }
 
+#[allow(unused_variables)]
 fn sync_with_webdav(
     url: &str,
     username: Option<&str>,
@@ -236,6 +240,7 @@ fn sync_with_webdav(
     Ok(())
 }
 
+#[allow(unused_variables)]
 pub fn list_webdav_files(
     url: &str,
     username: Option<&str>,
@@ -281,10 +286,17 @@ pub fn list_webdav_files(
     #[cfg(target_os = "ios")]
     {
         // WebDAV not yet implemented for iOS
+        return Ok(vec![]);
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        // WebDAV not yet implemented for other platforms
         Ok(vec![])
     }
 }
 
+#[allow(unused_variables)]
 pub fn download_from_webdav(
     url: &str,
     username: Option<&str>,
@@ -308,6 +320,7 @@ pub fn download_from_webdav(
     Ok(())
 }
 
+#[allow(unused_variables)]
 pub fn upload_to_webdav(
     url: &str,
     username: Option<&str>,
@@ -331,6 +344,7 @@ pub fn upload_to_webdav(
     Ok(())
 }
 
+#[allow(unused_variables)]
 pub fn sync_annotations_with_webdav(
     url: &str,
     username: Option<&str>,
@@ -385,6 +399,8 @@ pub fn sync_annotations_with_webdav(
     Ok(())
 }
 
+#[allow(dead_code)]
+#[allow(unused_variables)]
 fn fetch_remote_file(
     url: &str,
     username: Option<&str>,
@@ -408,6 +424,7 @@ fn fetch_remote_file(
     Ok(String::new())
 }
 
+#[allow(dead_code)]
 fn merge_json(local: &str, remote: &str) -> String {
     let local_val: serde_json::Value =
         serde_json::from_str(local).unwrap_or(serde_json::Value::Array(Vec::new()));
@@ -443,6 +460,7 @@ fn merge_json(local: &str, remote: &str) -> String {
     serde_json::to_string_pretty(&merged).unwrap_or_else(|_| "[]".to_string())
 }
 
+#[allow(unused_variables)]
 pub fn sync_reading_progress_with_webdav(
     url: &str,
     username: Option<&str>,
@@ -475,6 +493,7 @@ pub fn sync_reading_progress_with_webdav(
     Ok(())
 }
 
+#[allow(unused_variables)]
 fn fetch_kobocloud_sync_status(device_id: &str) -> Result<serde_json::Value, Error> {
     #[cfg(target_os = "linux")]
     {
@@ -574,6 +593,7 @@ fn prepare_upload_data(
     Ok(upload_data)
 }
 
+#[allow(unused_variables)]
 fn upload_to_kobocloud(_device_id: &str, upload_data: &serde_json::Value) -> Result<(), Error> {
     #[cfg(target_os = "linux")]
     {
@@ -595,6 +615,7 @@ fn upload_to_kobocloud(_device_id: &str, upload_data: &serde_json::Value) -> Res
         return Err(format_err!("KoboCloud sync only available on Linux"));
     }
 
+    #[allow(unreachable_code)]
     Ok(())
 }
 

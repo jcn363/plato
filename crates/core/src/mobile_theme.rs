@@ -202,16 +202,17 @@ fn detect_mobile_system_dark_mode() -> bool {
     // Android-specific detection
     #[cfg(target_os = "android")]
     {
-        detect_android_dark_mode()
+        return detect_android_dark_mode();
     }
 
     // iOS-specific detection
     #[cfg(target_os = "ios")]
     {
-        detect_ios_dark_mode()
+        return detect_ios_dark_mode();
     }
 
     // Fallback to time-based detection for other cases
+    #[allow(unreachable_code)]
     false
 }
 
@@ -220,13 +221,13 @@ fn detect_mobile_system_dark_mode() -> bool {
 fn detect_android_dark_mode() -> bool {
     // Try to read Android system settings via shell commands
     if let Ok(output) = std::process::Command::new("settings")
-        .args(&["get", "global", "night_mode"])
+        .args(["get", "global", "night_mode"])
         .output()
     {
         let night_mode = String::from_utf8_lossy(&output.stdout);
         night_mode.trim() == "1" || night_mode.trim() == "2"
     } else if let Ok(output) = std::process::Command::new("settings")
-        .args(&["get", "secure", "ui_night_mode"])
+        .args(["get", "secure", "ui_night_mode"])
         .output()
     {
         let ui_mode = String::from_utf8_lossy(&output.stdout);
