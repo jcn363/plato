@@ -20,6 +20,8 @@ pub struct TimeOfDay {
 
 impl TimeOfDay {
     pub fn new(hour: u8, minute: u8) -> Self {
+        let hour = hour.min(23);
+        let minute = minute.min(59);
         Self { hour, minute }
     }
 
