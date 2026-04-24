@@ -127,3 +127,4 @@ htmlcov/
 .lz
 .lzo
 crates/core/tmp/
+debian/

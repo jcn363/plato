@@ -799,7 +799,10 @@ mod tests {
         // Test LinuxMint via PLATO_DEVICE
         std::env::set_var("PLATO_DEVICE", "linuxmint");
         let behind = preload_behind_pages();
-        assert_eq!(behind, crate::consts::system::LINUXMINT_PRELOAD_BEHIND_PAGES);
+        assert_eq!(
+            behind,
+            crate::consts::system::LINUXMINT_PRELOAD_BEHIND_PAGES
+        );
         std::env::remove_var("PLATO_DEVICE");
     }
 }
