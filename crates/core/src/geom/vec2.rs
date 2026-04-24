@@ -205,16 +205,16 @@ impl Mul<Vec2> for f32 {
     type Output = Vec2;
     fn mul(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self * rhs.x,
-            y: self * rhs.y,
+            x: (self * rhs.x).clamp(-10000.0, 10000.0),
+            y: (self * rhs.y).clamp(-10000.0, 10000.0),
         }
     }
 }
 
 impl MulAssign<f32> for Vec2 {
     fn mul_assign(&mut self, rhs: f32) {
-        self.x *= rhs;
-        self.y *= rhs;
+        self.x = (self.x * rhs).clamp(-10000.0, 10000.0);
+        self.y = (self.y * rhs).clamp(-10000.0, 10000.0);
     }
 }
 
@@ -222,8 +222,8 @@ impl Div<f32> for Vec2 {
     type Output = Vec2;
     fn div(self, rhs: f32) -> Vec2 {
         Vec2 {
-            x: self.x / rhs,
-            y: self.y / rhs,
+            x: if rhs.abs() < f32::EPSILON { 0.0 } else { (self.x / rhs).clamp(-10000.0, 10000.0) },
+            y: if rhs.abs() < f32::EPSILON { 0.0 } else { (self.y / rhs).clamp(-10000.0, 10000.0) },
         }
     }
 }
@@ -232,15 +232,15 @@ impl Div<Vec2> for f32 {
     type Output = Vec2;
     fn div(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self / rhs.x,
-            y: self / rhs.y,
+            x: if rhs.x.abs() < f32::EPSILON { 0.0 } else { (self / rhs.x).clamp(-10000.0, 10000.0) },
+            y: if rhs.y.abs() < f32::EPSILON { 0.0 } else { (self / rhs.y).clamp(-10000.0, 10000.0) },
         }
     }
 }
 
 impl DivAssign<f32> for Vec2 {
     fn div_assign(&mut self, rhs: f32) {
-        self.x /= rhs;
-        self.y /= rhs;
+        self.x = if rhs.abs() < f32::EPSILON { 0.0 } else { (self.x / rhs).clamp(-10000.0, 10000.0) };
+        self.y = if rhs.abs() < f32::EPSILON { 0.0 } else { (self.y / rhs).clamp(-10000.0, 10000.0) };
     }
 }
