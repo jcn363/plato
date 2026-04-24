@@ -1,8 +1,9 @@
-Plato for Debian
-================
+Plato Document Reader for Linux Desktop
+========================================
 
-This package provides the desktop Linux version of Plato, a document
-reader designed for e-ink devices.
+This package provides Plato, a document reader for Linux desktop systems.
+It is built with SDL2 for standard displays and supports mouse and keyboard
+input for navigation.
 
 XDG Base Directories
 --------------------

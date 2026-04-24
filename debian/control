@@ -19,7 +19,8 @@ Depends: ${shlibs:Depends},
          libsdl2-2.0-0,
          libfreetype6,
          libharfbuzz0b
-Description: Document reader for e-ink devices
- Plato is a document reader designed for e-ink devices.
- It supports PDF, EPUB, CBZ, and DJVU formats.
- This package provides the desktop version for Linux.
+Description: Document reader for Linux desktop
+ Plato is a document reader supporting PDF, EPUB, CBZ, and DJVU formats.
+ This package provides the desktop Linux version built with SDL2 for
+ standard displays. It shares the same core functionality as the e-ink
+ device version but is adapted for desktop use with mouse/keyboard input.

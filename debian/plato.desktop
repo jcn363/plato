@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Plato
-Comment=Document reader for e-ink devices
+Comment=Document reader for Linux desktop
 Exec=plato %F
 Icon=plato
 Type=Application
