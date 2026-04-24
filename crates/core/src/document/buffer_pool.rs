@@ -18,6 +18,7 @@ pub struct PixelBuffer {
 impl PixelBuffer {
     /// Create a new buffer with specified capacity and SIMD alignment
     pub fn new(capacity: usize) -> Self {
+        let capacity = capacity.clamp(0, 100_000_000);
         let aligned_capacity = (capacity + 31) & !31; // 32-byte alignment
         Self {
             data: Vec::with_capacity(aligned_capacity),
@@ -27,6 +28,7 @@ impl PixelBuffer {
 
     /// Create a new SIMD-aligned buffer for specific size
     pub fn new_aligned(size: usize) -> Self {
+        let size = size.clamp(0, 100_000_000);
         let layout = Layout::from_size_align(size, 32).expect("Invalid alignment layout");
         // SAFETY: We use the global allocator with a valid layout. If allocation fails, ptr is null
         // and we handle that case by falling back to a Vec allocation.
