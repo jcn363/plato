@@ -1,0 +1,242 @@
+selected-library = 0
+keyboard-layout = "English"
+frontlight = true
+wifi = false
+inverted = false
+dark-mode = false
+sleep-cover = true
+sleep-cover-fill = true
+auto-share = false
+button-scheme = "natural"
+auto-suspend = 30.0
+auto-power-off = 3.0
+language = "en"
+locale = "en-GB"
+ui-font = "sans-serif"
+time-format = "%H:%M"
+date-format = "%A, %-d %B %Y"
+external-urls-queue = "bin/article_fetcher/urls.txt"
+reader-presets = []
+
+[theme-settings]
+mode = "system"
+auto-threshold = 100
+
+[theme-settings.schedule]
+enabled = false
+
+[theme-settings.schedule.dark-start]
+hour = 20
+minute = 0
+
+[theme-settings.schedule.dark-end]
+hour = 6
+minute = 0
+
+[[libraries]]
+name = "On Board"
+path = "/mnt/onboard"
+mode = "database"
+sort-method = "opened"
+first-column = "title-and-author"
+second-column = "progress"
+thumbnail-previews = true
+
+[[libraries.hooks]]
+path = "Articles"
+program = "bin/article_fetcher/article_fetcher"
+sort-method = "added"
+first-column = "title-and-author"
+second-column = "progress"
+
+[[libraries]]
+name = "Removable"
+path = "/mnt/sd"
+mode = "database"
+sort-method = "opened"
+first-column = "title-and-author"
+second-column = "progress"
+thumbnail-previews = true
+
+[[libraries]]
+name = "Dropbox"
+path = "/mnt/onboard/.kobo/dropbox"
+mode = "database"
+sort-method = "opened"
+first-column = "title-and-author"
+second-column = "progress"
+thumbnail-previews = true
+
+[[libraries]]
+name = "KePub"
+path = "/mnt/onboard/.kobo/kepub"
+mode = "database"
+sort-method = "opened"
+first-column = "title-and-author"
+second-column = "progress"
+thumbnail-previews = true
+
+[intermissions]
+suspend = "logo:"
+power-off = "logo:"
+share = "logo:"
+
+[home]
+address-bar = false
+navigation-bar = true
+max-levels = 3
+max-trash-size = 33554432
+
+[reader]
+finished = "close"
+south-east-corner = "go-to-page"
+bottom-right-gesture = "toggle-dithered"
+south-strip = "toggle-bars"
+west-strip = "previous-page"
+east-strip = "next-page"
+strip-width = 0.6
+corner-width = 0.4
+font-path = "/mnt/onboard/fonts"
+font-family = "Libertinus Serif"
+available-fonts = []
+font-size = 11.0
+min-font-size = 5.5
+max-font-size = 16.5
+text-align = "left"
+margin-width = 8
+min-margin-width = 0
+max-margin-width = 10
+line-height = 1.2
+continuous-fit-to-width = true
+ignore-document-css = false
+dithered-kinds = ["jpeg", "cbz", "png", "jpg"]
+auto-dual-page = false
+show-time = true
+show-battery = true
+manga-mode = false
+duplicates-detection = false
+page-turn-animation = "none"
+fast-page-turn = false
+use-system-fonts = false
+
+[reader.paragraph-breaker]
+hyphen-penalty = 50
+stretch-tolerance = 1.26
+
+[reader.refresh-rate]
+regular = 8
+inverted = 2
+
+[reader.css-overrides]
+force-hyphenation = false
+disable-indent = false
+footnotes-as-popups = false
+
+[import]
+unshare-trigger = true
+startup-trigger = true
+sync-metadata = true
+metadata-kinds = ["pdf", "epub"]
+allowed-kinds = ["oxps", "xps", "fb2", "fbz", "txt", "cbz", "pdf", "mobi", "epub"]
+enable-duplicates-detection = false
+
+[dictionary]
+margin-width = 4
+font-size = 11.0
+
+[sketch]
+save-path = "Sketches"
+notify-success = true
+
+[sketch.pen]
+size = 2
+dynamic = true
+amplitude = 4.0
+min-speed = 0.0
+max-speed = 1670.0
+
+[sketch.pen.color]
+gray = 0
+
+[calculator]
+font-size = 8.0
+margin-width = 2
+history-size = 4096
+
+[battery]
+warn = 10.0
+power-off = 3.0
+
+[frontlight-levels]
+intensity = 0.0
+warmth = 0.0
+
+[reading-goals]
+daily-minutes = 30
+weekly-books = 1
+enabled = false
+
+[night-light-schedule]
+enabled = false
+start-hour = 20
+start-minute = 0
+end-hour = 6
+end-minute = 0
+warmth-start = 0.5
+warmth-end = 0.0
+
+[gestures]
+swipe-left = "next-page"
+swipe-right = "previous-page"
+swipe-up = "toggle-bars"
+swipe-down = "go-to-page"
+double-tap = "none"
+long-press = "none"
+corner-tap = true
+pinch-to-zoom = true
+
+[search]
+enable-regex = true
+enable-global = false
+save-history = true
+history-size = 50
+
+[external-storage]
+enabled = false
+path = "/mnt/sd"
+auto-import = true
+
+[cover-editor]
+default-width = 600
+default-height = 800
+allow-custom-sizes = true
+jpeg-quality = 85
+
+[plugin-settings]
+enabled = false
+plugins-dir = "plugins"
+allow-network = false
+allow-filesystem = true
+timeout-seconds = 30
+
+[background-sync]
+enabled = false
+wifi-only = true
+sync-on-open = true
+sync-on-close = false
+sync-interval-minutes = 30
+auto-wifi = true
+keep-wifi-on = false
+
+[cloud-sync]
+enabled = false
+sync-method = "web-d-a-v"
+remote-path = "/"
+auto-sync = false
+
+[thumbnail]
+enabled = true
+worker-count = 2
+cache-size = 20
+thumbnail-width = 240
+thumbnail-height = 320

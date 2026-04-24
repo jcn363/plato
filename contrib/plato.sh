@@ -109,9 +109,9 @@ LIBC_FATAL_STDERR_=1 ./plato >> info.log 2>&1
 
 [ "$ORIG_BPP" ] && ./bin/utils/fbdepth -q -d "$ORIG_BPP"
 
-if [ -e /tmp/reboot ] ; then
+if [ -e ./tmp/reboot ] ; then
 	reboot
-elif [ -e /tmp/power_off ] ; then
+elif [ -e ./tmp/power_off ] ; then
 	poweroff -f
 else
 	./nickel.sh &

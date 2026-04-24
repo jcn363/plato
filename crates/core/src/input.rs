@@ -314,7 +314,7 @@ pub fn usb_events() -> Receiver<DeviceEvent> {
 }
 
 fn parse_usb_events(tx: &Sender<DeviceEvent>) {
-    let path = match CString::new("/tmp/nickel-hardware-status") {
+    let path = match CString::new("./tmp/nickel-hardware-status") {
         Ok(p) => p,
         Err(_) => return,
     };

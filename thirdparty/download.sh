@@ -11,7 +11,8 @@ download_lib() {
 	echo "Downloading ${name}..."
 	# Save build-ios.sh if it exists
 	if [ -f "$name/build-ios.sh" ]; then
-		mv "$name/build-ios.sh" "/tmp/${name}-build-ios.sh.bak"
+		mkdir -p ../tmp
+		mv "$name/build-ios.sh" "../tmp/${name}-build-ios.sh.bak"
 	fi
 	# Remove directory completely
 	rm -rf "$name"
@@ -19,8 +20,8 @@ download_lib() {
 	curl -L -o "${name}.tgz" "$url"
 	tar -xz --strip-components 1 -C "$name" -f "${name}.tgz" && rm "${name}.tgz"
 	# Restore build-ios.sh if it was saved
-	if [ -f "/tmp/${name}-build-ios.sh.bak" ]; then
-		mv "/tmp/${name}-build-ios.sh.bak" "$name/build-ios.sh"
+	if [ -f "../tmp/${name}-build-ios.sh.bak" ]; then
+		mv "../tmp/${name}-build-ios.sh.bak" "$name/build-ios.sh"
 	fi
 }
 

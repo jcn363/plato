@@ -108,7 +108,7 @@ pub fn handle_export_chapter(
     context: &mut Context,
 ) -> bool {
     if let super::state::EditorState::EditingChapter { index } = editor.state {
-        let export_path = format!("/tmp/chapter_{}.txt", index);
+        let export_path = format!("./tmp/chapter_{}.txt", index);
         let path = std::path::Path::new(&export_path);
         match editor.core.export_chapter(index, path) {
             Ok(_) => {
