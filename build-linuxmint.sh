@@ -70,6 +70,29 @@ echo ""
 cargo build -p plato --target "$TARGET" --profile "$PROFILE" -j "$JOBS"
 
 echo ""
+echo "Step 5: Creating Debian package..."
+echo ""
+
+# Check if dpkg-buildpackage is available
+if ! command -v dpkg-buildpackage &> /dev/null; then
+    echo "Warning: dpkg-buildpackage not found. Skipping .deb package creation."
+    echo "To build .deb packages, install dpkg-dev:"
+    echo "  sudo apt-get install dpkg-dev debhelper"
+    echo ""
+else
+    # Build the debian package
+    echo "Building Debian package..."
+    dpkg-buildpackage -us -uc -b
+
+    # Create dist directory and move .deb files there
+    mkdir -p dist
+    mv ../plato_*.deb dist/ 2>/dev/null || true
+    mv ../plato-dbgsym_*.ddeb dist/ 2>/dev/null || true
+
+    echo "Debian package created in dist/"
+fi
+
+echo ""
 echo "=========================================="
 echo "Build complete for LinuxMint!"
 echo "=========================================="
@@ -77,8 +100,16 @@ echo ""
 echo "Binary location:"
 echo "  target/$TARGET/$PROFILE/plato"
 echo ""
+if [ -d "dist" ] && ls dist/*.deb 1> /dev/null 2>&1; then
+    echo "Debian package location:"
+    ls -lh dist/*.deb
+    echo ""
+fi
 echo "To run Plato on LinuxMint:"
 echo "  ./target/$TARGET/$PROFILE/plato"
+echo ""
+echo "Or install from .deb package:"
+echo "  sudo dpkg -i dist/plato_*.deb"
 echo ""
 echo "Desktop optimizations active:"
 echo "  ✓ 200MB page cache (abundant RAM)"
