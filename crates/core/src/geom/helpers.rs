@@ -16,10 +16,10 @@ pub struct Edge {
 impl Edge {
     pub fn uniform(value: i32) -> Edge {
         Edge {
-            top: value,
-            right: value,
-            bottom: value,
-            left: value,
+            top: value.max(0),
+            right: value.max(0),
+            bottom: value.max(0),
+            left: value.max(0),
         }
     }
 }
