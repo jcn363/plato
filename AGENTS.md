@@ -406,6 +406,7 @@ When facing multiple compilation errors, resolve in this order:
 - **Zero dead code without justification - All `#[allow(dead_code)]` attributes must be accompanied by a comment explaining the future use; if no justification exists, remove the code immediately
 - **No backward compatibility** — Do not add code to support old APIs, deprecated patterns, or legacy behavior unless explicitly required
 - **Project containment** — All created or used files and directories must be located inside the project root directory (`~/Desktop/plato`); never create or access files outside the project workspace
+- **Git ignore protection** — Do not modify the `.gitignore` file without explicit user permission
 
 ### Dead Code Investigation
 
