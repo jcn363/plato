@@ -86,7 +86,7 @@ pub struct DamageTracker {
 
 impl DamageTracker {
     pub fn new(partial_update_threshold: u32) -> Self {
-        let partial_update_threshold = partial_update_threshold.max(1);
+        let partial_update_threshold = partial_update_threshold.clamp(1, 100_000);
         Self {
             previous_frame: None,
             damage_regions: Vec::new(),
