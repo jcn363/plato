@@ -75,7 +75,7 @@ impl EpubEditorCore {
     /// * Creating the temporary directory fails
     /// * Removing an existing temporary directory fails
     fn create_temp_dir() -> Result<PathBuf> {
-        let temp_dir = std::env::temp_dir().join(format!("epub_editor_{}", uuid::Uuid::new_v4()));
+        let temp_dir = PathBuf::from("tmp").join(format!("epub_editor_{}", uuid::Uuid::new_v4()));
         if temp_dir.exists() {
             fs::remove_dir_all(&temp_dir)?;
         }

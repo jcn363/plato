@@ -193,8 +193,9 @@ pub fn save_settings(settings: &Settings) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-    use tempfile::NamedTempFile;
+    use std::path::PathBuf;
+    use std::fs;
+    use uuid::Uuid;
 
     #[test]
     fn test_config_manager_load_default() {
@@ -207,8 +208,10 @@ mod tests {
 
     #[test]
     fn test_config_manager_save_and_load() {
-        let temp_file = NamedTempFile::new().unwrap();
-        let manager = ConfigManager::with_path(temp_file.path());
+        let temp_dir = PathBuf::from("tmp");
+        fs::create_dir_all(&temp_dir).unwrap();
+        let temp_path = temp_dir.join(format!("config_test_{}.toml", Uuid::new_v4()));
+        let manager = ConfigManager::with_path(&temp_path);
 
         let settings = Settings::default();
         manager.save(&settings).unwrap();
@@ -219,11 +222,14 @@ mod tests {
 
     #[test]
     fn test_config_manager_invalid_settings() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+        let temp_dir = PathBuf::from("tmp");
+        fs::create_dir_all(&temp_dir).unwrap();
+        let temp_path = temp_dir.join(format!("invalid_config_{}.toml", Uuid::new_v4()));
+        
         // Write invalid TOML directly - use a field that exists but with wrong type
-        writeln!(temp_file, "frontlight = \"not_a_bool\"").unwrap();
+        std::fs::write(&temp_path, "frontlight = \"not_a_bool\"").unwrap();
 
-        let manager = ConfigManager::with_path(temp_file.path());
+        let manager = ConfigManager::with_path(&temp_path);
         // Should fail to parse invalid TOML (wrong type for boolean field)
         assert!(manager.load().is_err());
     }

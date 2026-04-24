@@ -206,7 +206,7 @@ impl CoverEditorView {
 
     fn save_cover(&mut self, rq: &mut RenderQueue) -> Result<(), Error> {
         if let (Some(ref img), Some(ref book_path)) = (&self.current_image, &self.book_path) {
-            let temp_cover_path = std::env::temp_dir().join("temp_cover.jpg");
+            let temp_cover_path = PathBuf::from("tmp").join("temp_cover.jpg");
             self.cover_editor.save_as_cover(img, &temp_cover_path)?;
             cover_editor::set_cover_in_epub(book_path, &temp_cover_path)?;
             std::fs::remove_file(&temp_cover_path).ok();
