@@ -68,6 +68,7 @@ impl PixelBuffer {
 
     /// Ensure capacity
     pub fn ensure_capacity(&mut self, capacity: usize) {
+        let capacity = capacity.clamp(0, 100_000_000);
         if capacity > self.capacity {
             self.data.reserve(capacity - self.data.len());
             self.capacity = capacity;
