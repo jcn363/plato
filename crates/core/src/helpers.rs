@@ -627,6 +627,9 @@ impl HttpClient {
 
     /// Fetch a URL as bytes with retry logic
     pub fn fetch_bytes_with_retry(&self, url: &str) -> Result<Vec<u8>, Error> {
+        if url.is_empty() {
+            return Err(Error::msg("URL cannot be empty"));
+        }
         let mut last_error = None;
 
         for attempt in 0..=self.max_retries {
