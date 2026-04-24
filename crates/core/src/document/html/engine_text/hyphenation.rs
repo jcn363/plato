@@ -65,6 +65,12 @@ pub struct HyphenationEngine {
 impl HyphenationEngine {
     /// Create a new hyphenation engine
     pub fn new(config: HyphenationConfig) -> Self {
+        let config = HyphenationConfig {
+            min_word_length: config.min_word_length.clamp(1, 50),
+            min_prefix_length: config.min_prefix_length.clamp(1, 20),
+            min_suffix_length: config.min_suffix_length.clamp(1, 20),
+            ..config
+        };
         Self {
             config,
             hyphenators: FxHashMap::default(),
