@@ -17,6 +17,8 @@ pub struct PartialRefreshManager {
 
 impl PartialRefreshManager {
     pub fn new(max_partial_updates: u32, min_region_size: u32) -> Self {
+        let max_partial_updates = max_partial_updates.max(1);
+        let min_region_size = min_region_size.max(1);
         Self {
             damage_tracker: DamageTracker::new(50),
             max_partial_updates,
