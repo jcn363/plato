@@ -69,8 +69,7 @@ pub fn load_jp2<P: AsRef<Path>>(path: P) -> Result<image::DynamicImage, Error> {
             let buffer: Vec<u8> = r.data.iter()
                 .zip(g.data.iter())
                 .zip(b.data.iter())
-                .map(|((rv, gv), bv)| [*rv as u8, *gv as u8, *bv as u8])
-                .flatten()
+                .flat_map(|((rv, gv), bv)| [*rv as u8, *gv as u8, *bv as u8])
                 .collect();
 
             let rgb_image: RgbImage = ImageBuffer::from_raw(width, height, buffer)
@@ -86,8 +85,7 @@ pub fn load_jp2<P: AsRef<Path>>(path: P) -> Result<image::DynamicImage, Error> {
             let buffer: Vec<u8> = r.data.iter()
                 .zip(g.data.iter())
                 .zip(b.data.iter())
-                .map(|((rv, gv), bv)| [*rv as u8, *gv as u8, *bv as u8])
-                .flatten()
+                .flat_map(|((rv, gv), bv)| [*rv as u8, *gv as u8, *bv as u8])
                 .collect();
 
             let rgb_image: RgbImage = ImageBuffer::from_raw(width, height, buffer)

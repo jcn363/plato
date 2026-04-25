@@ -80,16 +80,16 @@ impl<'a> Page<'a> {
                         // Extract link URI or destination
                         let uri = annot.get_deref(b"A", lopdf_doc)
                             .and_then(|obj| obj.as_dict())
-                            .and_then(|dict| {
+                            .map(|dict| {
                                 // Try URI action
                                 if let Ok(uri_obj) = dict.get(b"URI") {
-                                    Ok(uri_obj.as_str().ok().map(|s| String::from_utf8_lossy(s).to_string()))
+                                    uri_obj.as_str().ok().map(|s| String::from_utf8_lossy(s).to_string())
                                 } else {
                                     // Try GoTo action (destination)
-                                    Ok(dict.get(b"D").ok().and_then(|dest| {
+                                    dict.get(b"D").ok().and_then(|dest| {
                                         // Convert destination to page reference
                                         if let Ok(dest_arr) = dest.as_array() {
-                                            if let Some(page_ref) = dest_arr.get(0) {
+                                            if let Some(page_ref) = dest_arr.first() {
                                                 page_ref.as_i64().ok().map(|page_num| {
                                                     format!("#page{}", page_num + 1)
                                                 })
@@ -99,7 +99,7 @@ impl<'a> Page<'a> {
                                         } else {
                                             None
                                         }
-                                    }))
+                                    })
                                 }
                             })
                             .unwrap_or(None);
