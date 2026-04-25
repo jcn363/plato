@@ -13,6 +13,12 @@ exclude = [
   'crates/plato-android',
 ]
 
+[workspace.lints.rust]
+warnings = "deny"
+
+[workspace.lints.clippy]
+all = "warn"
+
 [workspace.package]
 edition = '2021'
 version = '0.9.45'

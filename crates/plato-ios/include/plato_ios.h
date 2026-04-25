@@ -1,10 +1,11 @@
-// Plato Core C API Header
-// This header defines the C interface for Swift to call into the Rust library
+// Plato iOS C API Header
+// This header defines the C interface for Swift to call into the iOS-specific Rust library
 //
 // Swift can call these functions using the @convention(c) attribute
+// These functions are implemented in crates/plato-ios/src/lib.rs
 
-#ifndef PLATO_CORE_H
-#define PLATO_CORE_H
+#ifndef PLATO_IOS_H
+#define PLATO_IOS_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -78,4 +79,4 @@ void plato_deinit(void);
 }
 #endif
 
-#endif // PLATO_CORE_H
+#endif // PLATO_IOS_H

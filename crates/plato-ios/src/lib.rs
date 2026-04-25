@@ -1,6 +1,5 @@
 #![cfg_attr(not(target_os = "ios"), allow(dead_code, unused_imports))]
 #![warn(missing_docs)]
-#![deny(warnings)]
 #![cfg_attr(feature = "ios", allow(static_mut_refs, dead_code))]
 
 //! Plato iOS library

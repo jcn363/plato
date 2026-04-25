@@ -61,13 +61,25 @@ jobs:
       run: |
         cargo build --target aarch64-apple-ios --release -p plato-core
 
+    - name: Build Rust iOS library for iOS device
+      run: |
+        cargo build --target aarch64-apple-ios --profile release-ios -p plato-ios
+
     - name: Build Rust core for iOS simulator (ARM64)
       run: |
         cargo build --target aarch64-apple-ios-sim --release -p plato-core
 
+    - name: Build Rust iOS library for iOS simulator (ARM64)
+      run: |
+        cargo build --target aarch64-apple-ios-sim --profile release-ios -p plato-ios
+
     - name: Build Rust core for iOS simulator (x86_64)
       run: |
         cargo build --target x86_64-apple-ios --release -p plato-core
+
+    - name: Build Rust iOS library for iOS simulator (x86_64)
+      run: |
+        cargo build --target x86_64-apple-ios --profile release-ios -p plato-ios
 
     - name: Create universal library
       run: |
@@ -77,6 +89,11 @@ jobs:
           target/aarch64-apple-ios-sim/release/libplato_core.a \
           target/x86_64-apple-ios/release/libplato_core.a \
           -output target/universal/libplato_core.a || echo "Universal library creation failed - some targets may not have built"
+        lipo -create \
+          target/aarch64-apple-ios/release-ios/libplato_ios.a \
+          target/aarch64-apple-ios-sim/release-ios/libplato_ios.a \
+          target/x86_64-apple-ios/release-ios/libplato_ios.a \
+          -output target/universal/libplato_ios.a || echo "Universal iOS library creation failed - some targets may not have built"
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -84,9 +101,13 @@ jobs:
         name: ios-libraries
         path: |
           target/aarch64-apple-ios/release/libplato_core.a
+          target/aarch64-apple-ios/release-ios/libplato_ios.a
           target/aarch64-apple-ios-sim/release/libplato_core.a
+          target/aarch64-apple-ios-sim/release-ios/libplato_ios.a
           target/x86_64-apple-ios/release/libplato_core.a
+          target/x86_64-apple-ios/release-ios/libplato_ios.a
           target/universal/libplato_core.a
+          target/universal/libplato_ios.a
         retention-days: 30
     - name: Run tests on host
       run: |
