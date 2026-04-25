@@ -1,7 +1,13 @@
 #![cfg_attr(not(target_os = "android"), allow(dead_code, unused_imports))]
 #![warn(missing_docs)]
 
-use android_activity::{AndroidApp, MainEvent, PollEvent};
+//! Plato Android library
+//! 
+//! This library provides the Android-specific implementation for Plato,
+//! a document reader for e-readers. It handles the Android activity lifecycle
+//! and event loop.
+
+use android_activity::{AndroidApp, PollEvent};
 
 #[cfg(target_os = "android")]
 #[no_mangle]
