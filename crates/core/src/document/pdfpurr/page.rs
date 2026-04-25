@@ -129,9 +129,23 @@ impl<'a> Page<'a> {
 
     pub fn first_annot(&self) -> Option<()> {
         // Extract annotations from the page's annotation dictionary using lopdf
-        // This requires accessing the underlying PDF document structure
-        // For now, stub this out
-        None
+        if let Some(lopdf_doc) = self.lopdf_doc {
+            let pages = lopdf_doc.get_pages();
+            let page_id = pages.get(&(self.index as u32 + 1)).copied()?;
+            
+            if let Ok(annotations) = lopdf_doc.get_page_annotations(page_id) {
+                // Return Some(()) if there are any annotations
+                if !annotations.is_empty() {
+                    Some(())
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
     pub fn render_pixmap(
