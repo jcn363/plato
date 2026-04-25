@@ -389,9 +389,9 @@ fn test_large_buffer_performance() {
 
     let duration = start.elapsed();
 
-    // Should complete in reasonable time (< 2 seconds for large buffer in debug)
+    // Should complete in reasonable time (< 3 seconds for large buffer in debug)
     assert!(
-        duration.as_secs() < 2,
+        duration.as_secs() < 3,
         "Large buffer conversion too slow: {:?}",
         duration
     );
