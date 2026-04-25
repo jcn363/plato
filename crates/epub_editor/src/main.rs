@@ -31,6 +31,8 @@ fn print_menu() {
     println!("11. Optimize images (Grayscale & Resize)");
     println!("12. Sanitize CSS for E-Ink");
     println!("13. Recover TOC from headings");
+    println!("14. Minify HTML (Clean whitespace & comments)");
+    println!("15. Scrub metadata (Remove tracking & junk)");
     println!("0. Exit");
     print!("Select option: ");
 }
@@ -332,6 +334,30 @@ fn main() -> io::Result<()> {
                         Ok(true) => println!("TOC recovered/updated."),
                         Ok(false) => println!("No changes needed or no headings found."),
                         Err(e) => println!("Error recovering TOC: {}", e),
+                    }
+                } else {
+                    println!("Error: No EPUB file open.");
+                }
+                println!();
+            }
+            "14" => {
+                if let Some(ref mut editor) = current_editor {
+                    println!("Minifying HTML...");
+                    match editor.minify_html() {
+                        Ok(count) => println!("Minified HTML in {} chapters.", count),
+                        Err(e) => println!("Error minifying HTML: {}", e),
+                    }
+                } else {
+                    println!("Error: No EPUB file open.");
+                }
+                println!();
+            }
+            "15" => {
+                if let Some(ref mut editor) = current_editor {
+                    println!("Scrubbing metadata...");
+                    match editor.scrub_metadata() {
+                        Ok(_count) => println!("Metadata scrubbed successfully."),
+                        Err(e) => println!("Error scrubbing metadata: {}", e),
                     }
                 } else {
                     println!("Error: No EPUB file open.");

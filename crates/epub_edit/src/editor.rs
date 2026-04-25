@@ -559,6 +559,83 @@ impl EpubEditorCore {
         Ok(())
     }
 
+    /// Minifies HTML across all chapters for better rendering performance.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if writing the minified chapter content fails.
+    pub fn minify_html(&mut self) -> Result<usize> {
+        let mut count = 0;
+        let comment_re = regex::Regex::new(r"(?s)<!--.*?-->").unwrap();
+        let space_re = regex::Regex::new(r"\s+").unwrap();
+
+        for i in 0..self.chapters.len() {
+            let content = self.chapters[i].content.clone();
+            let mut minified = comment_re.replace_all(&content, "").to_string();
+            minified = space_re.replace_all(&minified, " ").to_string();
+            minified = minified.replace("> <", "><").trim().to_string();
+
+            if minified != content {
+                self.update_chapter(i, minified)?;
+                count += 1;
+            }
+        }
+        Ok(count)
+    }
+
+    /// Scrubs non-essential metadata from the OPF file for privacy and cleanliness.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if updating the OPF file fails.
+    pub fn scrub_metadata(&mut self) -> Result<usize> {
+        let mut count = 0;
+        let container_path = self.temp_dir.join("META-INF/container.xml");
+        let container_content = fs::read_to_string(&container_path)?;
+        let rootfile_regex =
+            regex::Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).expect("Invalid rootfile regex");
+
+        if let Some(caps) = rootfile_regex.captures(&container_content) {
+            let opf_path = caps.get(1).map(|m| m.as_str()).unwrap_or("OEBPS/content.opf");
+            let opf_full_path = self.temp_dir.join(opf_path);
+
+            if opf_full_path.exists() {
+                let mut opf_content = fs::read_to_string(&opf_full_path)?;
+                let original = opf_content.clone();
+
+                // Remove common "junk" metadata tags
+                let junk_tags = [
+                    "calibre:timestamp",
+                    "calibre:title_sort",
+                    "calibre:author_link_map",
+                    "calibre:series",
+                    "calibre:series_index",
+                    "calibre:rating",
+                    "calibre:user_categories",
+                    "sigil:version",
+                ];
+
+                for tag in &junk_tags {
+                    let re_str = format!(r#"(?i)<meta[^>]*name="[^"]*{}[^"]*"[^>]*content="[^"]*"[^>]*/>"#, tag);
+                    let re = regex::Regex::new(&re_str).unwrap();
+                    opf_content = re.replace_all(&opf_content, "").to_string();
+
+                    let re_str_alt = format!(r#"(?i)<meta[^>]*content="[^"]*"[^>]*name="[^"]*{}[^"]*"[^>]*/>"#, tag);
+                    let re_alt = regex::Regex::new(&re_str_alt).unwrap();
+                    opf_content = re_alt.replace_all(&opf_content, "").to_string();
+                }
+
+                if opf_content != original {
+                    fs::write(&opf_full_path, opf_content)?;
+                    count += 1;
+                    // Re-parse metadata to reflect changes
+                    self.parse_metadata()?;
+                }
+            }
+        }
+        Ok(count)
+    }
+
     fn walk_dir<W: Write + io::Seek>(
         &self,
         dir: &Path,
