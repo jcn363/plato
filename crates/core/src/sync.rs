@@ -142,6 +142,7 @@ impl Default for BackgroundSync {
 pub fn check_network_and_sync(
     cloud_settings: &crate::settings::CloudSyncSettings,
     background_settings: &BackgroundSyncSettings,
+    library_path: &std::path::Path,
 ) -> Result<(), Error> {
     if !background_settings.enabled {
         return Ok(());
@@ -159,17 +160,36 @@ pub fn check_network_and_sync(
         return Ok(());
     }
 
-    let url = cloud_settings
-        .url
-        .as_ref()
-        .ok_or_else(|| format_err!("No WebDAV URL configured"))?;
+    match cloud_settings.sync_method {
+        crate::settings::CloudSyncMethod::WebDAV => {
+            let url = cloud_settings
+                .url
+                .as_ref()
+                .ok_or_else(|| format_err!("No WebDAV URL configured"))?;
 
-    sync_with_webdav(
-        url,
-        cloud_settings.username.as_deref(),
-        cloud_settings.password.as_deref(),
-        &cloud_settings.remote_path,
-    )?;
+            let username = cloud_settings.username.as_deref();
+            let password = cloud_settings.password.as_deref();
+            let remote_path = &cloud_settings.remote_path;
+
+            sync_with_webdav(url, username, password, remote_path)?;
+            sync_annotations_with_webdav(url, username, password, remote_path, library_path)?;
+            sync_reading_progress_with_webdav(
+                url,
+                username,
+                password,
+                remote_path,
+                &library_path.join(".reading-states"),
+            )?;
+        }
+        crate::settings::CloudSyncMethod::KoboCloud => {
+            let device_id = get_device_id();
+            sync_with_kobocloud(
+                &device_id,
+                library_path,
+                &library_path.join(".reading-states"),
+            )?;
+        }
+    }
 
     if !background_settings.keep_wifi_on && !background_settings.auto_wifi {
         BackgroundSync::disable_wifi()?;
@@ -178,125 +198,105 @@ pub fn check_network_and_sync(
     Ok(())
 }
 
-/// Builds and executes a curl command safely using direct argument passing,
-/// avoiding shell interpretation that could lead to command injection.
-#[allow(dead_code)]
-fn run_curl_command(
-    url: &str,
-    username: Option<&str>,
-    password: Option<&str>,
-    extra_args: &[&str],
-) -> Result<std::process::Output, Error> {
-    let mut cmd = Command::new("curl");
-
-    for arg in extra_args {
-        // Skip shell redirections that don't apply to direct execution
-        if !arg.starts_with("2>") {
-            cmd.arg(arg);
-        }
-    }
-
-    if let (Some(user), Some(pass)) = (username, password) {
-        cmd.arg("-u").arg(format!("{}:{}", user, pass));
-    }
-
-    cmd.arg(url);
-    cmd.output()
-        .map_err(|e| format_err!("Failed to execute curl: {}", e))
+fn get_device_id() -> String {
+    std::fs::read_to_string("/mnt/onboard/.kobo/version")
+        .unwrap_or_default()
+        .split(',')
+        .nth(2)
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|| "unknown-device".to_string())
 }
 
-#[allow(unused_variables)]
+static SYNC_CLIENT: std::sync::LazyLock<reqwest::blocking::Client> = std::sync::LazyLock::new(|| {
+    reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .unwrap_or_else(|_| reqwest::blocking::Client::new())
+});
+
+static WEBDAV_HREF_RE: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+    regex::Regex::new(r"<d:href>([^<]+)</d:href>").expect("invalid WebDAV href regex")
+});
+fn apply_auth(
+    mut req: reqwest::blocking::RequestBuilder,
+    username: Option<&str>,
+    password: Option<&str>,
+) -> reqwest::blocking::RequestBuilder {
+    if let Some(user) = username {
+        req = req.basic_auth(user, password);
+    }
+    req
+}
+
 fn sync_with_webdav(
     url: &str,
     username: Option<&str>,
     password: Option<&str>,
     remote_path: &str,
 ) -> Result<(), Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let base_url = url.trim_end_matches('/');
-        let full_url = format!("{}{}", base_url, remote_path);
+    let base_url = url.trim_end_matches('/');
+    let full_url = format!("{}{}", base_url, remote_path);
 
-        let output = run_curl_command(
-            &full_url,
-            username,
-            password,
-            &["-s", "-X", "PROPFIND", "-H", "Depth: 1"],
-        )
-        .map_err(|e| format_err!("WebDAV sync failed: {}", e))?;
+    let client = SYNC_CLIENT.clone();
+    let req = apply_auth(
+        client
+            .request(reqwest::Method::from_bytes(b"PROPFIND").unwrap(), &full_url)
+            .header("Depth", "1"),
+        username,
+        password,
+    );
 
-        let response = String::from_utf8_lossy(&output.stdout);
+    let response = req.send().map_err(|e| format_err!("WebDAV sync failed: {}", e))?;
+    let text = response.text().unwrap_or_default();
 
-        if response.contains("<d:response>") {
-            log_info!("WebDAV: Connected to server, sync available");
-        }
-    }
-    #[cfg(target_os = "ios")]
-    {
-        // WebDAV sync not yet implemented for iOS
-        log_info!("WebDAV sync not available on iOS");
+    if text.contains("<d:response>") {
+        log_info!("WebDAV: Connected to server, sync available");
     }
 
     Ok(())
 }
 
-#[allow(unused_variables)]
 pub fn list_webdav_files(
     url: &str,
     username: Option<&str>,
     password: Option<&str>,
     remote_path: &str,
 ) -> Result<Vec<String>, Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let base_url = url.trim_end_matches('/');
-        let full_url = format!("{}{}", base_url, remote_path);
+    let base_url = url.trim_end_matches('/');
+    let full_url = format!("{}{}", base_url, remote_path);
 
-        let output = run_curl_command(
-            &full_url,
-            username,
-            password,
-            &["-s", "-X", "PROPFIND", "-H", "Depth: 1"],
-        )
-        .map_err(|e| format_err!("WebDAV list failed: {}", e))?;
+    let client = SYNC_CLIENT.clone();
+    let req = apply_auth(
+        client
+            .request(reqwest::Method::from_bytes(b"PROPFIND").unwrap(), &full_url)
+            .header("Depth", "1"),
+        username,
+        password,
+    );
 
-        let response = String::from_utf8_lossy(&output.stdout);
-        // Pre-allocate files vector with estimated capacity to reduce reallocations
-        let mut files = Vec::with_capacity(64);
+    let response = req.send().map_err(|e| format_err!("WebDAV list failed: {}", e))?;
+    let text = response.text().unwrap_or_default();
 
-        let re = regex::Regex::new(r"<d:href>([^<]+)</d:href>").expect("invalid WebDAV href regex");
-        for cap in re.captures_iter(&response) {
-            if let Some(m) = cap.get(1) {
-                let href = m.as_str();
-                if !href.ends_with("/") && !href.contains(".metadata.json") {
-                    let filename = std::path::Path::new(href)
-                        .file_name()
-                        .and_then(|f| f.to_str())
-                        .unwrap_or("")
-                        .to_string();
-                    if !filename.is_empty() {
-                        files.push(filename);
-                    }
+    let mut files = Vec::with_capacity(64);
+    for cap in WEBDAV_HREF_RE.captures_iter(&text) {
+        if let Some(m) = cap.get(1) {
+            let href = m.as_str();
+            if !href.ends_with('/') && !href.contains(".metadata.json") {
+                let filename = std::path::Path::new(href)
+                    .file_name()
+                    .and_then(|f| f.to_str())
+                    .unwrap_or("")
+                    .to_string();
+                if !filename.is_empty() {
+                    files.push(filename);
                 }
             }
         }
-
-        Ok(files)
-    }
-    #[cfg(target_os = "ios")]
-    {
-        // WebDAV not yet implemented for iOS
-        return Ok(vec![]);
     }
 
-    #[cfg(not(target_os = "linux"))]
-    {
-        // WebDAV not yet implemented for other platforms
-        Ok(vec![])
-    }
+    Ok(files)
 }
 
-#[allow(unused_variables)]
 pub fn download_from_webdav(
     url: &str,
     username: Option<&str>,
@@ -304,23 +304,22 @@ pub fn download_from_webdav(
     remote_path: &str,
     local_path: &std::path::Path,
 ) -> Result<(), Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
-        let local_path_str = local_path.display().to_string();
+    let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
 
-        run_curl_command(&full_url, username, password, &["-o", &local_path_str])
-            .map_err(|e| format_err!("Download failed: {}", e))?;
+    let client = SYNC_CLIENT.clone();
+    let req = apply_auth(client.get(&full_url), username, password);
+
+    let mut response = req.send().map_err(|e| format_err!("Download failed: {}", e))?;
+    if !response.status().is_success() {
+        return Err(format_err!("Download failed with status: {}", response.status()));
     }
-    #[cfg(target_os = "ios")]
-    {
-        // WebDAV download not yet implemented for iOS
-    }
+
+    let mut file = std::fs::File::create(local_path)?;
+    response.copy_to(&mut file)?;
 
     Ok(())
 }
 
-#[allow(unused_variables)]
 pub fn upload_to_webdav(
     url: &str,
     username: Option<&str>,
@@ -328,103 +327,93 @@ pub fn upload_to_webdav(
     local_path: &std::path::Path,
     remote_path: &str,
 ) -> Result<(), Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
-        let local_path_str = local_path.display().to_string();
+    let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
 
-        run_curl_command(&full_url, username, password, &["-T", &local_path_str])
-            .map_err(|e| format_err!("Upload failed: {}", e))?;
-    }
-    #[cfg(target_os = "ios")]
-    {
-        // WebDAV upload not yet implemented for iOS
+    let file = std::fs::File::open(local_path)?;
+    let client = SYNC_CLIENT.clone();
+    let req = apply_auth(client.put(&full_url), username, password).body(file);
+
+    let response = req.send().map_err(|e| format_err!("Upload failed: {}", e))?;
+    if !response.status().is_success() {
+        return Err(format_err!("Upload failed with status: {}", response.status()));
     }
 
     Ok(())
 }
 
-#[allow(unused_variables)]
 pub fn sync_annotations_with_webdav(
     url: &str,
     username: Option<&str>,
     password: Option<&str>,
     remote_base: &str,
     local_library_path: &std::path::Path,
-    library_db: &serde_json::Value,
 ) -> Result<(), Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let annotations_dir = local_library_path.join(".annotations");
-        std::fs::create_dir_all(&annotations_dir).with_context(|| {
-            format!(
-                "Failed to create annotations directory: {}",
-                annotations_dir.display()
-            )
-        })?;
+    let annotations_dir = local_library_path.join(".annotations");
+    std::fs::create_dir_all(&annotations_dir).with_context(|| {
+        format!(
+            "Failed to create annotations directory: {}",
+            annotations_dir.display()
+        )
+    })?;
 
-        let remote_annotations_url = format!("{}/.annotations", remote_base.trim_end_matches('/'));
+    let metadata_path = local_library_path.join(".metadata.json");
+    let library_db: serde_json::Value = if metadata_path.exists() {
+        let file = std::fs::File::open(&metadata_path)?;
+        serde_json::from_reader(file).unwrap_or(serde_json::Value::Null)
+    } else {
+        return Ok(());
+    };
 
-        for (fingerprint, info) in library_db
-            .as_object()
-            .ok_or_else(|| anyhow::anyhow!("Invalid library DB"))?
-            .iter()
-        {
-            if let Some(annotations) = info.get("annotations") {
-                if !annotations.as_array().unwrap_or(&Vec::new()).is_empty() {
-                    let local_file = annotations_dir.join(format!("{}.json", fingerprint));
-                    let remote_file = format!("{}/{}.json", remote_annotations_url, fingerprint);
+    let remote_annotations_url = format!("{}/.annotations", remote_base.trim_end_matches('/'));
 
-                    let local_content = if local_file.exists() {
-                        std::fs::read_to_string(&local_file).unwrap_or_default()
-                    } else {
-                        String::new()
-                    };
+    if let Some(obj) = library_db.as_object() {
+        for (fingerprint, info) in obj.iter() {
+            if let Some(reader) = info.get("reader") {
+                if let Some(annotations) = reader.get("annotations") {
+                    if !annotations.as_array().unwrap_or(&Vec::new()).is_empty() {
+                        let local_file = annotations_dir.join(format!("{}.json", fingerprint));
+                        let remote_file = format!("{}/{}.json", remote_annotations_url, fingerprint);
 
-                    let remote_content = fetch_remote_file(url, username, password, &remote_file)
-                        .unwrap_or_default();
+                        let local_content = if local_file.exists() {
+                            std::fs::read_to_string(&local_file).unwrap_or_default()
+                        } else {
+                            String::new()
+                        };
 
-                    let merged = merge_json(&local_content, &remote_content);
-                    std::fs::write(&local_file, &merged)?;
+                        let remote_content = fetch_remote_file(url, username, password, &remote_file)
+                            .unwrap_or_default();
 
-                    upload_to_webdav(url, username, password, &local_file, &remote_file)?;
+                        let merged = merge_json(&local_content, &remote_content);
+                        std::fs::write(&local_file, &merged)?;
+
+                        upload_to_webdav(url, username, password, &local_file, &remote_file)?;
+                    }
                 }
             }
         }
     }
-    #[cfg(target_os = "ios")]
-    {
-        // WebDAV annotations sync not yet implemented for iOS
-    }
     Ok(())
 }
 
-#[allow(dead_code)]
-#[allow(unused_variables)]
 fn fetch_remote_file(
     url: &str,
     username: Option<&str>,
     password: Option<&str>,
     remote_path: &str,
 ) -> Result<String, Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
+    let full_url = format!("{}/{}", url.trim_end_matches('/'), remote_path);
 
-        let output = run_curl_command(&full_url, username, password, &["-s"])
-            .map_err(|e| format_err!("Fetch failed: {}", e))?;
+    let client = SYNC_CLIENT.clone();
+    let req = apply_auth(client.get(&full_url), username, password);
 
-        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    let response = req.send().map_err(|e| format_err!("Fetch failed: {}", e))?;
+    if !response.status().is_success() {
+        return Err(format_err!("Fetch failed with status: {}", response.status()));
     }
-    #[cfg(target_os = "ios")]
-    {
-        Ok(String::new())
-    }
-    #[cfg(not(any(target_os = "linux", target_os = "ios")))]
-    Ok(String::new())
+
+    Ok(response.text().unwrap_or_default())
 }
 
-#[allow(dead_code)]
 fn merge_json(local: &str, remote: &str) -> String {
     let local_val: serde_json::Value =
         serde_json::from_str(local).unwrap_or(serde_json::Value::Array(Vec::new()));
@@ -460,7 +449,6 @@ fn merge_json(local: &str, remote: &str) -> String {
     serde_json::to_string_pretty(&merged).unwrap_or_else(|_| "[]".to_string())
 }
 
-#[allow(unused_variables)]
 pub fn sync_reading_progress_with_webdav(
     url: &str,
     username: Option<&str>,
@@ -468,66 +456,49 @@ pub fn sync_reading_progress_with_webdav(
     remote_base: &str,
     local_states_dir: &std::path::Path,
 ) -> Result<(), Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let remote_states_url = format!("{}/.reading-states", remote_base.trim_end_matches('/'));
+    let remote_states_url = format!("{}/.reading-states", remote_base.trim_end_matches('/'));
 
-        if local_states_dir.exists() {
-            for entry in std::fs::read_dir(local_states_dir)? {
-                let entry = entry?;
-                let path = entry.path();
-                if path.extension().map(|e| e == "json").unwrap_or(false) {
-                    let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    if local_states_dir.exists() {
+        for entry in std::fs::read_dir(local_states_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.extension().map(|e| e == "json").unwrap_or(false) {
+                let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
-                    let remote_file = format!("{}/{}", remote_states_url, filename);
+                let remote_file = format!("{}/{}", remote_states_url, filename);
 
-                    upload_to_webdav(url, username, password, &path, &remote_file)?;
-                }
+                upload_to_webdav(url, username, password, &path, &remote_file)?;
             }
         }
-    }
-    #[cfg(target_os = "ios")]
-    {
-        // Reading progress sync not yet implemented for iOS
     }
     Ok(())
 }
 
-#[allow(unused_variables)]
 fn fetch_kobocloud_sync_status(device_id: &str) -> Result<serde_json::Value, Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let api_url = "https://api.kobobooks.com/v1";
-        let client = reqwest::blocking::Client::new();
+    let api_url = "https://api.kobobooks.com/v1";
+    let client = reqwest::blocking::Client::new();
 
-        let device_info = serde_json::json!({
-            "DeviceId": device_id,
-            "DeviceType": "KoboPlato",
-            "AppVersion": "3.19.0",
-        });
+    let device_info = serde_json::json!({
+        "DeviceId": device_id,
+        "DeviceType": "KoboPlato",
+        "AppVersion": "3.19.0",
+    });
 
-        let response = client
-            .post(format!("{}/syncStatus", api_url))
-            .json(&device_info)
-            .send()
-            .map_err(|e| format_err!("KoboCloud sync failed: {}", e))?;
+    let response = client
+        .post(format!("{}/syncStatus", api_url))
+        .json(&device_info)
+        .send()
+        .map_err(|e| format_err!("KoboCloud sync failed: {}", e))?;
 
-        if !response.status().is_success() {
-            return Err(format_err!("KoboCloud API error: {}", response.status()));
-        }
-
-        let sync_data: serde_json::Value = response
-            .json()
-            .map_err(|e| format_err!("Failed to parse sync response: {}", e))?;
-
-        Ok(sync_data)
+    if !response.status().is_success() {
+        return Err(format_err!("KoboCloud API error: {}", response.status()));
     }
-    #[cfg(target_os = "ios")]
-    {
-        Err(format_err!("KoboCloud sync not available on iOS"))
-    }
-    #[cfg(not(any(target_os = "linux", target_os = "ios")))]
-    Err(format_err!("KoboCloud sync only available on Linux"))
+
+    let sync_data: serde_json::Value = response
+        .json()
+        .map_err(|e| format_err!("Failed to parse sync response: {}", e))?;
+
+    Ok(sync_data)
 }
 
 fn process_kobocloud_books(
@@ -593,29 +564,20 @@ fn prepare_upload_data(
     Ok(upload_data)
 }
 
-#[allow(unused_variables)]
 fn upload_to_kobocloud(_device_id: &str, upload_data: &serde_json::Value) -> Result<(), Error> {
-    #[cfg(target_os = "linux")]
-    {
-        let api_url = "https://api.kobobooks.com/v1";
-        let client = reqwest::blocking::Client::new();
+    let api_url = "https://api.kobobooks.com/v1";
+    let client = SYNC_CLIENT.clone();
 
-        client
-            .post(format!("{}/sync", api_url))
-            .json(upload_data)
-            .send()
-            .map_err(|e| format_err!("KoboCloud upload failed: {}", e))?;
-    }
-    #[cfg(target_os = "ios")]
-    {
-        return Err(format_err!("KoboCloud sync not available on iOS"));
-    }
-    #[cfg(not(any(target_os = "linux", target_os = "ios")))]
-    {
-        return Err(format_err!("KoboCloud sync only available on Linux"));
+    let response = client
+        .post(format!("{}/sync", api_url))
+        .json(upload_data)
+        .send()
+        .map_err(|e| format_err!("KoboCloud upload failed: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format_err!("KoboCloud API error: {}", response.status()));
     }
 
-    #[allow(unreachable_code)]
     Ok(())
 }
 

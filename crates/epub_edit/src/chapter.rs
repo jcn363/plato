@@ -2,6 +2,20 @@
 
 use anyhow::{bail, Context};
 use regex::Regex;
+use std::sync::LazyLock;
+
+static IMG_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<img[^>]+src=["']([^"']+)["'][^>]*>"#).expect("invalid regex"));
+static ALT_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"alt=["']([^"']*)["']"#).expect("invalid regex"));
+static LINK_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>"#)
+        .expect("invalid regex")
+});
+static MEDIA_TYPE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"media=["']([^"']*)["']"#).expect("invalid regex"));
+static STYLE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<style[^>]*>(.*?)</style>"#).expect("invalid regex"));
 use std::fs;
 use std::path::Path;
 
@@ -183,16 +197,14 @@ impl EpubEditorCore {
     #[must_use]
     pub fn list_images(&self) -> Vec<ImageInfo> {
         let mut images = Vec::new();
-        let img_re = Regex::new(r#"<img[^>]+src=["']([^"']+)["'][^>]*>"#).unwrap();
-        let alt_re = Regex::new(r#"alt=["']([^"']*)["']"#).unwrap();
 
         for (index, chapter) in self.chapters.iter().enumerate() {
-            for cap in img_re.captures_iter(&chapter.content) {
+            for cap in IMG_RE.captures_iter(&chapter.content) {
                 let src = cap
                     .get(1)
                     .map(|m| m.as_str().to_string())
                     .unwrap_or_default();
-                let alt = alt_re
+                let alt = ALT_RE
                     .captures(&cap[0])
                     .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
 
@@ -216,19 +228,14 @@ impl EpubEditorCore {
     #[must_use]
     pub fn list_css(&self) -> Vec<CSSInfo> {
         let mut css_files = Vec::new();
-        let link_re =
-            Regex::new(r#"<link[^>]+rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>"#)
-                .unwrap();
-        let media_type_re = Regex::new(r#"media=["']([^"']*)["']"#).unwrap();
-        let style_re = Regex::new(r#"<style[^>]*>(.*?)</style>"#).unwrap();
 
         for (index, chapter) in self.chapters.iter().enumerate() {
-            for cap in link_re.captures_iter(&chapter.content) {
+            for cap in LINK_RE.captures_iter(&chapter.content) {
                 let href = cap
                     .get(1)
                     .map(|m| m.as_str().to_string())
                     .unwrap_or_default();
-                let media_type = media_type_re
+                let media_type = MEDIA_TYPE_RE
                     .captures(&cap[0])
                     .and_then(|c| c.get(1).map(|m| m.as_str().to_string()));
 
@@ -240,7 +247,7 @@ impl EpubEditorCore {
                 });
             }
 
-            for _cap in style_re.captures_iter(&chapter.content) {
+            for _cap in STYLE_RE.captures_iter(&chapter.content) {
                 css_files.push(CSSInfo {
                     chapter_index: index,
                     chapter_title: chapter.title.clone(),

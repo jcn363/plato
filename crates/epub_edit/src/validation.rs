@@ -1,7 +1,14 @@
 //! Content validation and spell checking for EPUB files.
 
 use regex::Regex;
+use std::sync::LazyLock;
 
+static WORD_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"[a-zA-Z]+").expect("invalid regex"));
+static HREF_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"href="([^"]+)""#).expect("invalid regex"));
+static IMG_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<img[^>]+src="([^"]+)""#).expect("invalid regex"));
 use crate::editor::EpubEditorCore;
 use crate::types::{
     ChapterStatistics, SpellCheckResult, SpellError, ValidationIssue, ValidationResult,
@@ -27,8 +34,7 @@ impl ValidationHelpers {
     }
 
     fn extract_words(text: &str) -> Vec<String> {
-        let word_re = Regex::new(r"[a-zA-Z]+").unwrap();
-        word_re
+        WORD_RE
             .find_iter(text)
             .map(|m| m.as_str().to_string())
             .collect()
@@ -239,17 +245,18 @@ impl EpubEditorCore {
         chapter: &crate::types::EpubChapter,
         issues: &mut Vec<ValidationIssue>,
     ) {
-        let href_re = Regex::new(r#"href="([^"]+)""#).unwrap();
-        for mat in href_re.find_iter(content) {
-            let href = &content[mat.start() + 6..mat.end() - 1];
-            if href.is_empty() || href == "#" {
-                issues.push(ValidationIssue {
-                    chapter_index: index,
-                    chapter_title: chapter.title.clone(),
-                    issue_type: "Broken Link".to_string(),
-                    message: format!("Empty or invalid href: {}", href),
-                    location: Some(format!("Position {}", mat.start())),
-                });
+        for cap in HREF_RE.captures_iter(content) {
+            if let Some(href_match) = cap.get(1) {
+                let href = href_match.as_str();
+                if href.is_empty() || href == "#" {
+                    issues.push(ValidationIssue {
+                        chapter_index: index,
+                        chapter_title: chapter.title.clone(),
+                        issue_type: "Broken Link".to_string(),
+                        message: format!("Empty or invalid href: {}", href),
+                        location: Some(format!("Position {}", href_match.start())),
+                    });
+                }
             }
         }
     }
@@ -260,17 +267,18 @@ impl EpubEditorCore {
         chapter: &crate::types::EpubChapter,
         issues: &mut Vec<ValidationIssue>,
     ) {
-        let img_re = Regex::new(r#"<img[^>]+src="([^"]+)""#).unwrap();
-        for mat in img_re.find_iter(content) {
-            let src = &content[mat.start() + mat.as_str().find("src=").unwrap() + 5..mat.end() - 1];
-            if src.starts_with("http://") || src.starts_with("https://") {
-                issues.push(ValidationIssue {
-                    chapter_index: index,
-                    chapter_title: chapter.title.clone(),
-                    issue_type: "External Image".to_string(),
-                    message: format!("External image reference: {}", src),
-                    location: Some(format!("Position {}", mat.start())),
-                });
+        for cap in IMG_RE.captures_iter(content) {
+            if let Some(src_match) = cap.get(1) {
+                let src = src_match.as_str();
+                if src.starts_with("http://") || src.starts_with("https://") {
+                    issues.push(ValidationIssue {
+                        chapter_index: index,
+                        chapter_title: chapter.title.clone(),
+                        issue_type: "External Image".to_string(),
+                        message: format!("External image reference: {}", src),
+                        location: Some(format!("Position {}", src_match.start())),
+                    });
+                }
             }
         }
     }

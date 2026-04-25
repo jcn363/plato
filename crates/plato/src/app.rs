@@ -231,10 +231,12 @@ pub fn run() -> Result<(), Error> {
                         // Perform actual sync in a background thread
                         let tx_sync = tx.clone();
                         let settings = context.settings.clone();
+                        let library_home = context.library.home.clone();
                         thread::spawn(move || {
                             if let Err(e) = plato_core::sync::check_network_and_sync(
                                 &settings.cloud_sync,
                                 &settings.background_sync,
+                                &library_home,
                             ) {
                                 log_error!("Background sync failed: {}", e);
                             } else {
