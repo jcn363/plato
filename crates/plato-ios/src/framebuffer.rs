@@ -193,123 +193,135 @@ impl Framebuffer for IOSFramebuffer {
     }
 }
 
-/// Wrapper for Arc<Mutex<IOSFramebuffer>> to enable shared ownership
-/// This allows the same framebuffer instance to be used by both
-/// the global render path and the Context
-pub struct ArcFramebuffer(pub Arc<Mutex<IOSFramebuffer>>);
+/// Wrapper for accessing the global framebuffer without per-pixel locking
+/// This provides direct mutable access to the global FRAMEBUFFER static
+/// Rendering happens on the main thread, so no synchronization is needed
+pub struct GlobalFramebuffer;
 
-impl Framebuffer for ArcFramebuffer {
+impl Framebuffer for GlobalFramebuffer {
     fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.set_pixel(x, y, color);
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.set_pixel(x, y, color);
+            }
         }
     }
 
     fn set_blended_pixel(&mut self, x: u32, y: u32, color: Color, alpha: f32) {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.set_blended_pixel(x, y, color, alpha);
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.set_blended_pixel(x, y, color, alpha);
+            }
         }
     }
 
     fn invert_region(&mut self, rect: &Rectangle) {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.invert_region(rect);
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.invert_region(rect);
+            }
         }
     }
 
     fn shift_region(&mut self, rect: &Rectangle, drift: u8) {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.shift_region(rect, drift);
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.shift_region(rect, drift);
+            }
         }
     }
 
     fn update(&mut self, rect: &Rectangle, mode: UpdateMode) -> Result<u32, anyhow::Error> {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.update(rect, mode)
-        } else {
-            Ok(0)
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.update(rect, mode)
+            } else {
+                Ok(0)
+            }
         }
     }
 
     fn wait(&self, token: u32) -> Result<i32, anyhow::Error> {
-        if let Ok(fb) = self.0.lock() {
-            fb.wait(token)
-        } else {
-            Ok(0)
+        unsafe {
+            if let Some(ref fb) = crate::get_framebuffer() {
+                fb.wait(token)
+            } else {
+                Ok(0)
+            }
         }
     }
 
     fn save(&self, path: &str) -> Result<(), anyhow::Error> {
-        if let Ok(fb) = self.0.lock() {
-            fb.save(path)
-        } else {
-            Ok(())
+        unsafe {
+            if let Some(ref fb) = crate::get_framebuffer() {
+                fb.save(path)
+            } else {
+                Ok(())
+            }
         }
     }
 
     fn set_rotation(&mut self, n: i8) -> Result<(u32, u32), anyhow::Error> {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.set_rotation(n)
-        } else {
-            Ok((0, 0))
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.set_rotation(n)
+            } else {
+                Ok((0, 0))
+            }
         }
     }
 
     fn set_monochrome(&mut self, enable: bool) {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.set_monochrome(enable);
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.set_monochrome(enable);
+            }
         }
     }
 
     fn set_dithered(&mut self, enable: bool) {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.set_dithered(enable);
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.set_dithered(enable);
+            }
         }
     }
 
     fn set_inverted(&mut self, enable: bool) {
-        if let Ok(mut fb) = self.0.lock() {
-            fb.set_inverted(enable);
+        unsafe {
+            if let Some(ref mut fb) = crate::get_framebuffer_mut() {
+                fb.set_inverted(enable);
+            }
         }
     }
 
     fn width(&self) -> u32 {
-        if let Ok(fb) = self.0.lock() {
-            fb.width()
-        } else {
-            0
+        unsafe {
+            crate::get_framebuffer().map(|fb| fb.width()).unwrap_or(0)
         }
     }
 
     fn height(&self) -> u32 {
-        if let Ok(fb) = self.0.lock() {
-            fb.height()
-        } else {
-            0
+        unsafe {
+            crate::get_framebuffer().map(|fb| fb.height()).unwrap_or(0)
         }
     }
 
     fn monochrome(&self) -> bool {
-        if let Ok(fb) = self.0.lock() {
-            fb.monochrome()
-        } else {
-            false
+        unsafe {
+            crate::get_framebuffer().map(|fb| fb.monochrome()).unwrap_or(false)
         }
     }
 
     fn dithered(&self) -> bool {
-        if let Ok(fb) = self.0.lock() {
-            fb.dithered()
-        } else {
-            false
+        unsafe {
+            crate::get_framebuffer().map(|fb| fb.dithered()).unwrap_or(false)
         }
     }
 
     fn inverted(&self) -> bool {
-        if let Ok(fb) = self.0.lock() {
-            fb.inverted()
-        } else {
-            false
+        unsafe {
+            crate::get_framebuffer().map(|fb| fb.inverted()).unwrap_or(false)
         }
     }
 }

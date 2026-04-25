@@ -45,33 +45,47 @@ bool plato_init(
 Context* plato_get_context(void);
 
 /**
- * Handle a touch event from iOS
+ * Handle touch down event
  * 
- * @param finger_id Unique identifier for the finger
- * @param x Touch X coordinate
- * @param y Touch Y coordinate
- * @param status Touch status: 0=Down, 1=Motion, 2=Up
+ * @param id Touch finger identifier
+ * @param x Touch X coordinate in pixels
+ * @param y Touch Y coordinate in pixels
  */
-void plato_handle_touch(
-    int32_t finger_id,
-    float x,
-    float y,
-    int32_t status
-);
+void plato_touch_down(int32_t id, int32_t x, int32_t y);
 
 /**
- * Render the current view
+ * Handle touch move event
+ * 
+ * @param id Touch finger identifier
+ * @param x Touch X coordinate in pixels
+ * @param y Touch Y coordinate in pixels
+ */
+void plato_touch_move(int32_t id, int32_t x, int32_t y);
+
+/**
+ * Handle touch up event
+ * 
+ * @param id Touch finger identifier
+ * @param x Touch X coordinate in pixels
+ * @param y Touch Y coordinate in pixels
+ */
+void plato_touch_up(int32_t id, int32_t x, int32_t y);
+
+/**
+ * Render the current view to a caller-provided buffer
  * Should be called on each frame or when rendering is needed
  * 
+ * @param buffer_ptr Pointer to pixel buffer (RGBA8888 format)
+ * @param len Length of buffer in bytes (must be width * height * 4)
  * @return true on success, false on failure
  */
-bool plato_render(void);
+bool plato_render(uint8_t* buffer_ptr, size_t len);
 
 /**
  * Cleanup resources
  * Should be called when the app is terminating
  */
-void plato_cleanup(void);
+void plato_deinit(void);
 
 #ifdef __cplusplus
 }

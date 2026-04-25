@@ -50,16 +50,24 @@ class PlatoBridge {
         } ?? false
     }
     
-    static func handleTouch(fingerId: Int32, x: Float, y: Float, status: Int32) {
-        plato_handle_touch(fingerId, x, y, status)
+    static func touchDown(id: Int32, x: Int32, y: Int32) {
+        plato_touch_down(id, x, y)
     }
     
-    static func render() -> Bool {
-        plato_render()
+    static func touchMove(id: Int32, x: Int32, y: Int32) {
+        plato_touch_move(id, x, y)
     }
     
-    static func cleanup() {
-        plato_cleanup()
+    static func touchUp(id: Int32, x: Int32, y: Int32) {
+        plato_touch_up(id, x, y)
+    }
+    
+    static func render(buffer: UnsafeMutablePointer<UInt8>, length: Int) -> Bool {
+        plato_render(buffer, length)
+    }
+    
+    static func deinit() {
+        plato_deinit()
     }
 }
 ```
@@ -92,9 +100,11 @@ The C API provides functions that Swift can call:
 
 - `plato_init`: Initialize the app with screen dimensions and paths
 - `plato_get_context`: Get the global context pointer
-- `plato_handle_touch`: Process touch events
-- `plato_render`: Render the current view
-- `plato_cleanup`: Cleanup resources
+- `plato_touch_down`: Process touch down events
+- `plato_touch_move`: Process touch move events
+- `plato_touch_up`: Process touch up events
+- `plato_render`: Render the current view to a caller-provided buffer
+- `plato_deinit`: Cleanup resources
 
 ## MVP Limitations
 

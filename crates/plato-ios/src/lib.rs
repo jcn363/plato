@@ -80,9 +80,21 @@ use std::default::Default;
 static mut CONTEXT: Option<Context> = None;
 
 /// Global framebuffer for iOS app (stored as concrete type for render access)
-/// Uses Arc<Mutex> to share ownership with Context safely
+/// Stored directly since rendering is single-threaded on the main thread
 #[cfg(feature = "ios")]
-static mut FRAMEBUFFER: Option<std::sync::Arc<std::sync::Mutex<framebuffer::IOSFramebuffer>>> = None;
+static mut FRAMEBUFFER: Option<framebuffer::IOSFramebuffer> = None;
+
+/// Get mutable reference to global framebuffer (internal use only)
+#[cfg(feature = "ios")]
+pub unsafe fn get_framebuffer_mut() -> Option<&'static mut framebuffer::IOSFramebuffer> {
+    FRAMEBUFFER.as_mut()
+}
+
+/// Get reference to global framebuffer (internal use only)
+#[cfg(feature = "ios")]
+pub unsafe fn get_framebuffer() -> Option<&'static framebuffer::IOSFramebuffer> {
+    FRAMEBUFFER.as_ref()
+}
 
 /// Global event sender for iOS app
 #[cfg(feature = "ios")]
@@ -127,8 +139,32 @@ pub unsafe extern "C" fn plato_get_context() -> *mut Context {
 /// Called from Swift when the app launches
 #[cfg(feature = "ios")]
 #[no_mangle]
-pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
+pub unsafe extern "C" fn plato_init(
+    width: u32,
+    height: u32,
+    library_path_ptr: *const u8,
+    library_path_len: usize,
+    settings_path_ptr: *const u8,
+    settings_path_len: usize,
+) -> bool {
     log::info!("Plato iOS initializing...");
+
+    // Set paths from Swift if provided
+    if !library_path_ptr.is_null() && library_path_len > 0 {
+        let library_path = std::str::from_utf8_unchecked(
+            std::slice::from_raw_parts(library_path_ptr, library_path_len)
+        );
+        storage::set_library_path(library_path.to_string());
+        log::info!("Library path from Swift: {}", library_path);
+    }
+
+    if !settings_path_ptr.is_null() && settings_path_len > 0 {
+        let settings_path = std::str::from_utf8_unchecked(
+            std::slice::from_raw_parts(settings_path_ptr, settings_path_len)
+        );
+        storage::set_settings_path(settings_path.to_string());
+        log::info!("Settings path from Swift: {}", settings_path);
+    }
 
     // Initialize mobile optimization configs
     let touch_config = TouchConfig::platform_optimal();
@@ -148,6 +184,18 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     log::info!("Library path: {:?}", library_path);
     log::info!("Settings path: {:?}", settings_path);
 
+    // Create required directories before initialization
+    if let Err(e) = std::fs::create_dir_all(&library_path) {
+        log::error!("Failed to create library directory {}: {}", library_path, e);
+        return false;
+    }
+
+    let settings_dir = Path::new(&settings_path);
+    if let Err(e) = std::fs::create_dir_all(settings_dir) {
+        log::error!("Failed to create settings directory {}: {}", settings_path, e);
+        return false;
+    }
+
     // Create event channel for touch events
     let (event_tx, event_rx) = mpsc::channel();
     EVENT_TX = Some(event_tx);
@@ -162,7 +210,7 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     let rq = RenderQueue::new();
     RENDER_QUEUE = Some(rq);
 
-    // Create framebuffer wrapped in Arc<Mutex> for shared ownership
+    // Create framebuffer
     let fb = match framebuffer::IOSFramebuffer::new(width, height) {
         Ok(fb) => fb,
         Err(e) => {
@@ -171,13 +219,12 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
         }
     };
 
-    let fb_arc = Arc::new(Mutex::new(fb));
+    // Store framebuffer for render access (direct storage, no Arc<Mutex>)
+    FRAMEBUFFER = Some(fb);
 
-    // Store framebuffer for render access (shared ownership)
-    FRAMEBUFFER = Some(fb_arc.clone());
-
-    // Box the framebuffer for context (same Arc instance)
-    let fb_boxed = Box::new(framebuffer::ArcFramebuffer(fb_arc)) as Box<dyn plato_core::framebuffer::Framebuffer>;
+    // Create a mutable wrapper for Context that references the global framebuffer
+    // This wrapper will provide mutable access during render
+    let fb_boxed = Box::new(framebuffer::GlobalFramebuffer) as Box<dyn plato_core::framebuffer::Framebuffer>;
 
     // Load settings
     let settings_path = Path::new(&settings_path).join("Settings.toml");
@@ -264,11 +311,10 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     SEGMENTS = Some(segments);
 
     // Create Home view
-    let fb_arc = FRAMEBUFFER.as_ref().unwrap();
-    let (fb_width, fb_height) = if let Ok(fb) = fb_arc.lock() {
+    let (fb_width, fb_height) = if let Some(ref fb) = FRAMEBUFFER {
         (fb.width(), fb.height())
     } else {
-        log::error!("Failed to lock framebuffer for view creation");
+        log::error!("No framebuffer available for view creation");
         return false;
     };
     let fb_rect = plato_core::geom::Rectangle::new(
@@ -339,7 +385,7 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
     // Create a mutable slice from the buffer
     let buffer = std::slice::from_raw_parts_mut(buffer_ptr, len);
 
-    // Collect DeviceEvents and detect simple taps
+    // Collect DeviceEvents and process all touch phases
     let mut device_events = VecDeque::new();
     if let Some(ref mut rx) = EVENT_RX {
         while let Ok(device_event) = rx.try_recv() {
@@ -347,28 +393,27 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
         }
     }
 
-    // Simple gesture detection: detect taps from DeviceEvents
-    // For MVP, convert Finger events directly to GestureEvent::Tap
+    // Process all finger phases (Down, Motion, Up) through gesture handling
     let mut bus = Bus::new();
     if let (Some(ref mut view), Some(ref mut rq), Some(ref mut context), Some(ref hub)) = 
         (VIEW.as_mut(), RENDER_QUEUE.as_mut(), CONTEXT.as_mut(), HUB.as_ref()) {
         for device_event in device_events {
-            if let plato_core::input::DeviceEvent::Finger { status: FingerStatus::Up, position, .. } = device_event {
-                // Convert finger up to tap gesture (simplified)
-                let gesture_event = plato_core::view::Event::Gesture(GestureEvent::Tap(position));
-                view.handle_event(&gesture_event, hub, &mut bus, rq, context);
-            }
+            // Pass all DeviceEvent::Finger events directly to the view
+            // This preserves Down, Motion, and Up semantics for continuous gestures
+            let view_event = plato_core::view::Event::Device(device_event);
+            view.handle_event(&view_event, hub, &mut bus, rq, context);
         }
     }
 
-    // Render the view to framebuffer (simplified)
+    // Render the view to framebuffer (direct access, no locking)
     if let (Some(ref mut view), Some(ref mut context)) = (VIEW.as_mut(), CONTEXT.as_mut()) {
-        let fb_arc = FRAMEBUFFER.as_ref().unwrap();
-        let (fb_width, fb_height) = if let Ok(fb) = fb_arc.lock() {
-            (fb.width(), fb.height())
-        } else {
-            log::error!("Failed to lock framebuffer for render");
-            return false;
+        let (fb_width, fb_height) = unsafe {
+            if let Some(ref fb) = FRAMEBUFFER {
+                (fb.width(), fb.height())
+            } else {
+                log::error!("No framebuffer available for render");
+                return false;
+            }
         };
         let fb_rect = plato_core::geom::Rectangle::new(
             plato_core::geom::Point::new(0, 0),
@@ -377,28 +422,21 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
         view.render(context.fb.as_mut(), fb_rect, &mut context.fonts);
     }
 
-    // Get framebuffer and fill the Swift-allocated buffer in-place
-    if let Some(ref fb_arc) = FRAMEBUFFER {
-        // Lock the framebuffer before accessing
-        match fb_arc.lock() {
-            Ok(fb) => {
-                // Validate buffer size matches framebuffer dimensions
-                let expected_len = fb.width() * fb.height() * 4;
-                if len != expected_len as usize {
-                    log::error!("Buffer size mismatch: expected {} bytes, got {} bytes", expected_len, len);
-                    return false;
-                }
-                fb.fill_rgba_buffer(buffer);
-                true
+    // Fill the Swift-allocated buffer in-place (direct access, no locking)
+    unsafe {
+        if let Some(ref fb) = FRAMEBUFFER {
+            // Validate buffer size matches framebuffer dimensions
+            let expected_len = fb.width() * fb.height() * 4;
+            if len != expected_len as usize {
+                log::error!("Buffer size mismatch: expected {} bytes, got {} bytes", expected_len, len);
+                return false;
             }
-            Err(e) => {
-                log::error!("Failed to lock framebuffer: {}", e);
-                false
-            }
+            fb.fill_rgba_buffer(buffer);
+            true
+        } else {
+            log::error!("No framebuffer available");
+            false
         }
-    } else {
-        log::error!("No framebuffer available");
-        false
     }
 }
 
