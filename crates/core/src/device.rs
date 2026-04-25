@@ -1,7 +1,7 @@
 use crate::input::TouchProto;
-use lazy_static::lazy_static;
 use std::env;
 use std::fmt;
+use std::sync::LazyLock;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[non_exhaustive]
@@ -644,14 +644,12 @@ pub fn preload_behind_pages() -> usize {
     }
 }
 
-lazy_static! {
-    pub static ref CURRENT_DEVICE: KoboDevice = {
-        let product = env::var("PRODUCT").unwrap_or_default();
-        let model_number = env::var("MODEL_NUMBER").unwrap_or_default();
+pub static CURRENT_DEVICE: LazyLock<KoboDevice> = LazyLock::new(|| {
+    let product = env::var("PRODUCT").unwrap_or_default();
+    let model_number = env::var("MODEL_NUMBER").unwrap_or_default();
 
-        KoboDevice::new(&product, &model_number)
-    };
-}
+    KoboDevice::new(&product, &model_number)
+});
 
 #[cfg(test)]
 mod tests {

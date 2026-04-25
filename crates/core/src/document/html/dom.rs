@@ -192,12 +192,20 @@ impl XmlTree {
     }
 
     fn node(&self, id: NodeId) -> &Node {
-        // SAFETY: NodeId is derived from a valid index into the nodes vector.
+        // SAFETY: NodeId is always created via NodeId::from_index() which ensures:
+        // 1. The index is within bounds of the nodes vector (nodes are only added via push)
+        // 2. The index + 1 is non-zero (guaranteed by NonZeroUsize::new_unchecked)
+        // 3. The index is never invalidated (nodes are never removed from the vector)
+        // This is a performance optimization to avoid bounds checking in hot DOM traversal paths.
         unsafe { self.nodes.get_unchecked(id.to_index()) }
     }
 
     fn node_mut(&mut self, id: NodeId) -> &mut Node {
-        // SAFETY: NodeId is derived from a valid index into the nodes vector.
+        // SAFETY: Same invariants as node() - NodeId is guaranteed to be a valid index.
+        // Mutable access is safe because:
+        // 1. No other references exist when node_mut is called (borrow checker enforces this)
+        // 2. The nodes vector is never reallocated with nodes still in use
+        // 3. Index is never invalidated during mutation
         unsafe { self.nodes.get_unchecked_mut(id.to_index()) }
     }
 

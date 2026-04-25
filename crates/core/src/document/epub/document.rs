@@ -326,19 +326,23 @@ impl Document for EpubDocument {
                     .iter()
                     .filter_map(|dc| match dc {
                         DrawCommand::Text(TextCommand {
-                            uri, rect, offset, ..
+                            uri, rect, offset: _, ..
                         })
                         | DrawCommand::Image(ImageCommand {
-                            uri, rect, offset, ..
-                        }) if uri.is_some() => {
-                            let bounds: Boundary = (*rect).into();
-                            Some(BoundedText {
-                                text: uri.clone().expect("URI is missing"),
-                                rect: bounds,
-                                location: bounds.min.into(),
+                            uri, rect, offset: _, ..
+                        }) => {
+                            uri.as_ref().map(|u| {
+                                let bounds: Boundary = (*rect).into();
+                                BoundedText {
+                                    text: u.clone(),
+                                    rect: bounds,
+                                    location: bounds.min.into(),
+                                }
                             })
                         }
-                        _ => None,
+                        DrawCommand::ExtraText(_)
+                        | DrawCommand::Marker(_)
+                        | DrawCommand::ExtraRect(_) => None,
                     })
                     .collect(),
                 offset,

@@ -1,4 +1,5 @@
 use crate::geom::lerp;
+use anyhow::{bail, Error};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -111,18 +112,18 @@ fn rgb_to_grayscale_scalar(red: u8, green: u8, blue: u8) -> u8 {
 /// # Returns
 /// A vector of grayscale values (1 byte per pixel)
 ///
-/// # Panics
-/// Panics if rgb_data length is not a multiple of 3
-pub fn rgb_to_grayscale_bulk(rgb_data: &[u8]) -> Vec<u8> {
+/// # Errors
+/// Returns an error if rgb_data length is not a multiple of 3
+pub fn rgb_to_grayscale_bulk(rgb_data: &[u8]) -> Result<Vec<u8>, Error> {
     if !rgb_data.len().is_multiple_of(3) {
-        panic!("RGB data length must be a multiple of 3");
+        bail!("RGB data length must be a multiple of 3, got {}", rgb_data.len());
     }
     let len = rgb_data.len() / 3;
     let mut result = Vec::with_capacity(len);
     for chunk in rgb_data.chunks_exact(3) {
         result.push(rgb_to_grayscale_scalar(chunk[0], chunk[1], chunk[2]));
     }
-    result
+    Ok(result)
 }
 
 macro_rules! gray {

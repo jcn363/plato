@@ -27,9 +27,10 @@ impl PixelBuffer {
     }
 
     /// Create a new SIMD-aligned buffer for specific size
-    pub fn new_aligned(size: usize) -> Self {
+    pub fn new_aligned(size: usize) -> Result<Self> {
         let size = size.clamp(0, 100_000_000);
-        let layout = Layout::from_size_align(size, 32).expect("Invalid alignment layout");
+        let layout = Layout::from_size_align(size, 32)
+            .map_err(|e| anyhow::anyhow!("Invalid alignment layout: {}", e))?;
         // SAFETY: We use the global allocator with a valid layout. If allocation fails, ptr is null
         // and we handle that case by falling back to a Vec allocation.
         let ptr = unsafe { std::alloc::alloc(layout) };
@@ -45,10 +46,10 @@ impl PixelBuffer {
             }
         };
 
-        Self {
+        Ok(Self {
             data: vec,
             capacity: size,
-        }
+        })
     }
 
     /// Get the underlying data

@@ -2,15 +2,15 @@ name: iOS Build
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
     inputs:
       target:
-        description: 'Build target'
+        description: "Build target"
         required: false
-        default: 'universal'
+        default: "universal"
         type: choice
         options:
           - device
@@ -26,97 +26,97 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios,x86_64-apple-darwin
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios,x86_64-apple-darwin
 
-    - name: Download thirdparty library sources
-      run: |
-        echo "Downloading thirdparty library sources..."
-        cd thirdparty
-        chmod +x download.sh
-        ./download.sh
-        echo "Verifying downloaded sources..."
-        for lib in zlib bzip2 libpng libjpeg openjpeg jbig2dec freetype2 harfbuzz gumbo djvulibre mupdf; do
-          if [ -d "$lib" ]; then
-            echo "$lib directory exists"
-            ls -la "$lib" | head -20
-          else
-            echo "ERROR: $lib directory does not exist after download"
-            exit 1
-          fi
-        done
+      - name: Download thirdparty library sources
+        run: |
+          echo "Downloading thirdparty library sources..."
+          cd thirdparty
+          chmod +x download.sh
+          ./download.sh
+          echo "Verifying downloaded sources..."
+          for lib in zlib bzip2 libpng libjpeg openjpeg jbig2dec freetype2 harfbuzz gumbo djvulibre mupdf; do
+            if [ -d "$lib" ]; then
+              echo "$lib directory exists"
+              ls -la "$lib" | head -20
+            else
+              echo "ERROR: $lib directory does not exist after download"
+              exit 1
+            fi
+          done
 
-    - name: Build native dependencies for iOS
-      run: |
-        echo "Building native libraries for iOS..."
-        chmod +x build-ios.sh || true
-        chmod +x thirdparty/build-ios.sh || true
-        ./build-ios.sh universal
+      - name: Build native dependencies for iOS
+        run: |
+          echo "Building native libraries for iOS..."
+          chmod +x build-ios.sh || true
+          chmod +x thirdparty/build-ios.sh || true
+          ./build-ios.sh universal
 
-    - name: Build Rust core for iOS device
-      run: |
-        cargo build --target aarch64-apple-ios --release -p plato-core -- -D warnings
+      - name: Build Rust core for iOS device
+        run: |
+          cargo build --target aarch64-apple-ios --release -p plato-core -- -D warnings
 
-    - name: Build Rust iOS library for iOS device
-      run: |
-        cargo build --target aarch64-apple-ios --profile release-ios -p plato-ios -- -D warnings
+      - name: Build Rust iOS library for iOS device
+        run: |
+          cargo build --target aarch64-apple-ios --profile release-ios -p plato-ios -- -D warnings
 
-    - name: Build Rust core for iOS simulator (ARM64)
-      run: |
-        cargo build --target aarch64-apple-ios-sim --release -p plato-core -- -D warnings
+      - name: Build Rust core for iOS simulator (ARM64)
+        run: |
+          cargo build --target aarch64-apple-ios-sim --release -p plato-core -- -D warnings
 
-    - name: Build Rust iOS library for iOS simulator (ARM64)
-      run: |
-        cargo build --target aarch64-apple-ios-sim --profile release-ios -p plato-ios -- -D warnings
+      - name: Build Rust iOS library for iOS simulator (ARM64)
+        run: |
+          cargo build --target aarch64-apple-ios-sim --profile release-ios -p plato-ios -- -D warnings
 
-    - name: Build Rust core for iOS simulator (x86_64)
-      run: |
-        cargo build --target x86_64-apple-ios --release -p plato-core -- -D warnings
+      - name: Build Rust core for iOS simulator (x86_64)
+        run: |
+          cargo build --target x86_64-apple-ios --release -p plato-core -- -D warnings
 
-    - name: Build Rust iOS library for iOS simulator (x86_64)
-      run: |
-        cargo build --target x86_64-apple-ios --profile release-ios -p plato-ios -- -D warnings
+      - name: Build Rust iOS library for iOS simulator (x86_64)
+        run: |
+          cargo build --target x86_64-apple-ios --profile release-ios -p plato-ios -- -D warnings
 
-    - name: Create universal library
-      run: |
-        mkdir -p target/universal
-        lipo -create \
-          target/aarch64-apple-ios/release/libplato_core.a \
-          target/aarch64-apple-ios-sim/release/libplato_core.a \
-          target/x86_64-apple-ios/release/libplato_core.a \
-          -output target/universal/libplato_core.a || echo "Universal library creation failed - some targets may not have built"
-        lipo -create \
-          target/aarch64-apple-ios/release-ios/libplato_ios.a \
-          target/aarch64-apple-ios-sim/release-ios/libplato_ios.a \
-          target/x86_64-apple-ios/release-ios/libplato_ios.a \
-          -output target/universal/libplato_ios.a || echo "Universal iOS library creation failed - some targets may not have built"
+      - name: Create universal library
+        run: |
+          mkdir -p target/universal
+          lipo -create \
+            target/aarch64-apple-ios/release/libplato_core.a \
+            target/aarch64-apple-ios-sim/release/libplato_core.a \
+            target/x86_64-apple-ios/release/libplato_core.a \
+            -output target/universal/libplato_core.a || echo "Universal library creation failed - some targets may not have built"
+          lipo -create \
+            target/aarch64-apple-ios/release-ios/libplato_ios.a \
+            target/aarch64-apple-ios-sim/release-ios/libplato_ios.a \
+            target/x86_64-apple-ios/release-ios/libplato_ios.a \
+            -output target/universal/libplato_ios.a || echo "Universal iOS library creation failed - some targets may not have built"
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ios-libraries
-        path: |
-          target/aarch64-apple-ios/release/libplato_core.a
-          target/aarch64-apple-ios/release-ios/libplato_ios.a
-          target/aarch64-apple-ios-sim/release/libplato_core.a
-          target/aarch64-apple-ios-sim/release-ios/libplato_ios.a
-          target/x86_64-apple-ios/release/libplato_core.a
-          target/x86_64-apple-ios/release-ios/libplato_ios.a
-          target/universal/libplato_core.a
-          target/universal/libplato_ios.a
-        retention-days: 30
-    - name: Run tests on host
-      run: |
-        cargo test --target x86_64-apple-darwin --verbose
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-libraries
+          path: |
+            target/aarch64-apple-ios/release/libplato_core.a
+            target/aarch64-apple-ios/release-ios/libplato_ios.a
+            target/aarch64-apple-ios-sim/release/libplato_core.a
+            target/aarch64-apple-ios-sim/release-ios/libplato_ios.a
+            target/x86_64-apple-ios/release/libplato_core.a
+            target/x86_64-apple-ios/release-ios/libplato_ios.a
+            target/universal/libplato_core.a
+            target/universal/libplato_ios.a
+          retention-days: 30
+      - name: Run tests on host
+        run: |
+          cargo test --target x86_64-apple-darwin --verbose
 
-    - name: Summary
-      run: |
-        echo "## iOS Build Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Native libraries built for iOS" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Rust core built for all iOS targets" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Universal library created" >> $GITHUB_STEP_SUMMARY
-        echo "- 📦 Artifacts uploaded for download" >> $GITHUB_STEP_SUMMARY
+      - name: Summary
+        run: |
+          echo "## iOS Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Native libraries built for iOS" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Rust core built for all iOS targets" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Universal library created" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 Artifacts uploaded for download" >> $GITHUB_STEP_SUMMARY
