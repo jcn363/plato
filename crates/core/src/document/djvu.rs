@@ -76,8 +76,7 @@ impl crate::document::Document for DjvuDocument {
     fn pages_count(&self) -> usize {
         self.inner
             .as_ref()
-            .and_then(|doc| doc.page(0).ok())
-            .map(|_| 1) // Placeholder - need to get actual page count from djvu-rs
+            .map(|doc| doc.page_count())
             .unwrap_or(0)
     }
 
