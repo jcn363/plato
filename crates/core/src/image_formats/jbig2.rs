@@ -14,7 +14,8 @@
 //!
 //! - `hayro-jbig2` - Rust bindings for the JBIG2 decoder
 
-use anyhow::Error;
+use anyhow::{Context, Error};
+use image::{DynamicImage, GrayImage, ImageBuffer, ImageDecoder};
 
 /// Decode JBIG2 image data
 ///
@@ -23,22 +24,38 @@ use anyhow::Error;
 ///
 /// # Returns
 /// A DynamicImage from the image crate
-///
-/// # Note
-/// This is a placeholder implementation. Full JBIG2 support requires
-/// integrating with the hayro-jbig2 crate for actual decoding.
 pub fn decode_jbig2(data: &[u8]) -> Result<image::DynamicImage, Error> {
     // Validate input
     if data.is_empty() {
         return Err(Error::msg("JBIG2 data is empty"));
     }
 
-    // Decode JBIG2 using hayro-jbig2
-    // This is a placeholder - full implementation would use hayro_jbig2::decode
-    // For now, we return an error indicating this needs implementation
-    Err(Error::msg(
-        "JBIG2 decoding not yet implemented - requires hayro-jbig2 integration",
-    ))
+    // Parse JBIG2 image using hayro-jbig2
+    let jbig2_image = hayro_jbig2::Image::new(data)
+        .with_context(|| "Failed to parse JBIG2 image data")?;
+
+    // Get image dimensions
+    let width = jbig2_image.width();
+    let height = jbig2_image.height();
+
+    // Validate dimensions
+    if width == 0 || height == 0 {
+        return Err(Error::msg("JBIG2 image has invalid dimensions"));
+    }
+
+    // Create buffer for decoded image data
+    let mut buffer = vec![0u8; (width * height) as usize];
+
+    // Decode the image data using the ImageDecoder trait
+    jbig2_image
+        .read_image(&mut buffer)
+        .with_context(|| "Failed to decode JBIG2 image data")?;
+
+    // Convert to GrayImage (JBIG2 is bi-level)
+    let gray_image: GrayImage = ImageBuffer::from_raw(width, height, buffer)
+        .with_context(|| "Failed to create GrayImage from JBIG2 data")?;
+
+    Ok(DynamicImage::ImageLuma8(gray_image))
 }
 
 /// Check if data is JBIG2 format
