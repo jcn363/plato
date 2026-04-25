@@ -70,23 +70,53 @@ for target in "${IOS_TARGETS[@]}"; do
   }
 done
 
-# Create universal library if on macOS
-if [ "$ON_MACOS" = true ] && [ "$TARGET" = "universal" ]; then
-  echo "Creating universal library with lipo..."
-  
-  UNIVERSAL_DIR="target/universal"
-  mkdir -p "$UNIVERSAL_DIR"
-  
-  # Create universal static library
-  lipo -create \
-    target/aarch64-apple-ios/release/libplato_core.a \
-    target/aarch64-apple-ios-sim/release/libplato_core.a \
-    target/x86_64-apple-ios/release/libplato_core.a \
-    -output "$UNIVERSAL_DIR/libplato_core.a" || {
-    echo "Warning: Failed to create universal library (some targets may not have been built)"
+# Build Rust iOS library for iOS targets
+echo "Building Rust iOS library for iOS targets..."
+for target in "${IOS_TARGETS[@]}"; do
+  echo "Building for target: $target"
+  cargo build --target "$target" --profile release-ios -p plato-ios || {
+    echo "Warning: Failed to build for $target (may require macOS for some targets)"
   }
-  
-  echo "Universal library created at: $UNIVERSAL_DIR/libplato_core.a"
+done
+
+# Create device and simulator libraries if on macOS
+if [ "$ON_MACOS" = true ]; then
+  if [ "$TARGET" = "device" ] || [ "$TARGET" = "universal" ]; then
+    echo "Copying device library..."
+    DEVICE_DIR="target/iOS-device"
+    mkdir -p "$DEVICE_DIR"
+    cp target/aarch64-apple-ios/release/libplato_core.a "$DEVICE_DIR/libplato_core.a" || {
+      echo "Warning: Failed to copy device plato_core library"
+    }
+    cp target/aarch64-apple-ios/release-ios/libplato_ios.a "$DEVICE_DIR/libplato_ios.a" || {
+      echo "Warning: Failed to copy device plato_ios library"
+    }
+    echo "Device library copied to: $DEVICE_DIR"
+  fi
+
+  if [ "$TARGET" = "simulator" ] || [ "$TARGET" = "universal" ]; then
+    echo "Creating simulator universal library with lipo..."
+    SIMULATOR_DIR="target/iOS-simulator"
+    mkdir -p "$SIMULATOR_DIR"
+
+    # Create universal static library for plato-core (simulator only)
+    lipo -create \
+      target/aarch64-apple-ios-sim/release/libplato_core.a \
+      target/x86_64-apple-ios/release/libplato_core.a \
+      -output "$SIMULATOR_DIR/libplato_core.a" || {
+      echo "Warning: Failed to create simulator universal library (some targets may not have been built)"
+    }
+
+    # Create universal static library for plato-ios (simulator only)
+    lipo -create \
+      target/aarch64-apple-ios-sim/release-ios/libplato_ios.a \
+      target/x86_64-apple-ios/release-ios/libplato_ios.a \
+      -output "$SIMULATOR_DIR/libplato_ios.a" || {
+      echo "Warning: Failed to create simulator universal iOS library (some targets may not have been built)"
+    }
+
+    echo "Simulator universal library created at: $SIMULATOR_DIR"
+  fi
 fi
 
 echo "iOS build process completed!"

@@ -2349,6 +2349,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "plato-ios"
+version = "0.9.45"
+dependencies = [
+ "anyhow",
+ "log",
+ "plato-core",
+]
+
+[[package]]
 name = "png"
 version = "0.17.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"

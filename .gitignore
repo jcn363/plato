@@ -68,7 +68,11 @@ __pycache__/
 .mypy_cache/
 .pytest_cache/
 .gradle/
+.agents/
+.roo/
+.windsurf/
 build/
+tmp/
 
 # Logs and temp files
 *.log

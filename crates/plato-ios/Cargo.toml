@@ -1,0 +1,17 @@
+[package]
+name = "plato-ios"
+version = "0.9.45"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+plato-core = { path = "../core" }
+log = "0.4.29"
+anyhow = "1.0.102"
+
+[features]
+default = ["ios"]
+ios = []
