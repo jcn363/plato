@@ -264,8 +264,13 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     SEGMENTS = Some(segments);
 
     // Create Home view
-    let fb_width = FRAMEBUFFER.as_ref().unwrap().width();
-    let fb_height = FRAMEBUFFER.as_ref().unwrap().height();
+    let fb_arc = FRAMEBUFFER.as_ref().unwrap();
+    let (fb_width, fb_height) = if let Ok(fb) = fb_arc.lock() {
+        (fb.width(), fb.height())
+    } else {
+        log::error!("Failed to lock framebuffer for view creation");
+        return false;
+    };
     let fb_rect = plato_core::geom::Rectangle::new(
         plato_core::geom::Point::new(0, 0),
         plato_core::geom::Point::new(fb_width as i32, fb_height as i32),
@@ -358,12 +363,16 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
 
     // Render the view to framebuffer (simplified)
     if let (Some(ref mut view), Some(ref mut context)) = (VIEW.as_mut(), CONTEXT.as_mut()) {
+        let fb_arc = FRAMEBUFFER.as_ref().unwrap();
+        let (fb_width, fb_height) = if let Ok(fb) = fb_arc.lock() {
+            (fb.width(), fb.height())
+        } else {
+            log::error!("Failed to lock framebuffer for render");
+            return false;
+        };
         let fb_rect = plato_core::geom::Rectangle::new(
             plato_core::geom::Point::new(0, 0),
-            plato_core::geom::Point::new(
-                FRAMEBUFFER.as_ref().unwrap().width() as i32,
-                FRAMEBUFFER.as_ref().unwrap().height() as i32,
-            ),
+            plato_core::geom::Point::new(fb_width as i32, fb_height as i32),
         );
         view.render(context.fb.as_mut(), fb_rect, &mut context.fonts);
     }

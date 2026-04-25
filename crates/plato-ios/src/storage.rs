@@ -4,6 +4,7 @@
 //! taking into account iOS sandboxing and file system structure.
 
 #![cfg(feature = "ios")]
+#![deny(warnings)]
 
 use std::path::PathBuf;
 
