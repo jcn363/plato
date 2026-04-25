@@ -4,7 +4,7 @@
 
 This plan outlines performance optimizations for the Plato codebase following AGENTS.md guidelines, focusing on hot-path improvements, memory usage, and battery efficiency. **No backward compatibility constraints apply** - all optimizations will implement current best practices without legacy support.
 
-## Implementation Status (April 22, 2026)
+## Implementation Status (April 25, 2026)
 
 ### Implemented Optimizations
 
@@ -23,9 +23,9 @@ This plan outlines performance optimizations for the Plato codebase following AG
 
 ### Not Implemented
 
-- **`Cow<str>`**: Not implemented in other parts of codebase
-- **Buffer Reuse Integration**: Not integrated into document parsing
-- **Stack Overflow Prevention**: Not implemented (Box for large arrays)
+- **`Cow<str>`**: Not implemented in other parts of codebase - High risk refactoring for minimal gain
+- **Buffer Reuse Integration**: Not integrated into document parsing - Buffer pool designed for temporary work, not applicable where ownership transfer required
+- **Stack Overflow Prevention**: Not implemented (Box for large arrays) - No large stack arrays found in hot paths
 
 ## Hot‑Path Optimizations
 
