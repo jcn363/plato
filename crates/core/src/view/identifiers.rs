@@ -101,6 +101,7 @@ pub enum ViewId {
     NavigationBar,
     Shelf(usize),
     BookView,
+    Opds,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -157,4 +158,5 @@ pub enum AppCmd {
     OpenPdfManipulator(std::path::PathBuf),
     TouchEvents,
     RotationValues,
+    Opds { url: Option<String> },
 }

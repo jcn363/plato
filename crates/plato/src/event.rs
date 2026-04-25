@@ -25,6 +25,7 @@ use plato_core::view::rotation_values::RotationValues;
 use plato_core::view::sketch::Sketch;
 use plato_core::view::statistics::StatisticsView;
 use plato_core::view::touch_events::TouchEvents;
+use plato_core::view::opds::OpdsView;
 use plato_core::view::{
     handle_event, AppCmd, EntryId, Event, RenderData, RenderQueue, UpdateData, View, ViewId,
 };
@@ -491,6 +492,12 @@ pub fn handle_launch(
                     None
                 }
             }
+        }
+        AppCmd::Opds { ref url } => {
+            let url = url.as_ref().cloned().unwrap_or_else(|| {
+                context.settings.opds.catalogs[0].url.clone()
+            });
+            Some(Box::new(OpdsView::new(context.fb.rect(), url, context)) as Box<dyn View>)
         }
     };
 

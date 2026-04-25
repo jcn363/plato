@@ -321,7 +321,8 @@ impl EpubEditorCore {
         // 1. mimetype must be FIRST and UNCOMPRESSED
         let mimetype_path = self.temp_dir.join("mimetype");
         if mimetype_path.exists() {
-            let options: FileOptions<'_, ()> = FileOptions::default().compression_method(CompressionMethod::STORE);
+            let options: FileOptions<'_, ()> =
+                FileOptions::default().compression_method(CompressionMethod::STORE);
             zip.start_file("mimetype", options)?;
             let content = fs::read(&mimetype_path)?;
             zip.write_all(&content)?;
@@ -423,10 +424,10 @@ impl EpubEditorCore {
             if path.is_file() {
                 if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
                     let ext = ext.to_lowercase();
-                    if ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(&ext.as_str()) {
-                        if self.optimize_image(path, max_dim).is_ok() {
-                            count += 1;
-                        }
+                    if ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(&ext.as_str())
+                        && self.optimize_image(path, max_dim).is_ok()
+                    {
+                        count += 1;
                     }
                 }
             }
@@ -445,7 +446,9 @@ impl EpubEditorCore {
 
         // Convert to grayscale for E-Ink
         let grayscale = processed.into_luma8();
-        grayscale.save(path).context("Failed to save optimized image")?;
+        grayscale
+            .save(path)
+            .context("Failed to save optimized image")?;
         Ok(())
     }
 
@@ -501,7 +504,9 @@ impl EpubEditorCore {
 
         // Force black text on white background for high contrast
         let bg_re = regex::Regex::new(r"background-color\s*:[^;]+;?").unwrap();
-        result = bg_re.replace_all(&result, "background-color: #fff;").to_string();
+        result = bg_re
+            .replace_all(&result, "background-color: #fff;")
+            .to_string();
 
         let color_re = regex::Regex::new(r"(?i)color\s*:[^;]+;?").unwrap();
         result = color_re.replace_all(&result, "color: #000;").to_string();
@@ -521,7 +526,9 @@ impl EpubEditorCore {
         for chapter in &self.chapters {
             for cap in heading_re.captures_iter(&chapter.content) {
                 let level = cap[1].parse::<usize>().unwrap_or(1);
-                let title = crate::validation::ValidationHelpers::strip_html_tags(&cap[2]).trim().to_string();
+                let title = crate::validation::ValidationHelpers::strip_html_tags(&cap[2])
+                    .trim()
+                    .to_string();
                 if !title.is_empty() {
                     new_toc.push((level, title, chapter.href.clone()));
                 }
@@ -535,7 +542,10 @@ impl EpubEditorCore {
         // Simple heuristic: if we have headings, use them to build a new TOC
         let mut toc_html = String::from("<nav epub:type=\"toc\">\n  <ol>\n");
         for (_level, title, href) in new_toc {
-            toc_html.push_str(&format!("    <li><a href=\"{}\">{}</a></li>\n", href, title));
+            toc_html.push_str(&format!(
+                "    <li><a href=\"{}\">{}</a></li>\n",
+                href, title
+            ));
         }
         toc_html.push_str("  </ol>\n</nav>");
 
@@ -596,7 +606,10 @@ impl EpubEditorCore {
             regex::Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).expect("Invalid rootfile regex");
 
         if let Some(caps) = rootfile_regex.captures(&container_content) {
-            let opf_path = caps.get(1).map(|m| m.as_str()).unwrap_or("OEBPS/content.opf");
+            let opf_path = caps
+                .get(1)
+                .map(|m| m.as_str())
+                .unwrap_or("OEBPS/content.opf");
             let opf_full_path = self.temp_dir.join(opf_path);
 
             if opf_full_path.exists() {
@@ -616,11 +629,17 @@ impl EpubEditorCore {
                 ];
 
                 for tag in &junk_tags {
-                    let re_str = format!(r#"(?i)<meta[^>]*name="[^"]*{}[^"]*"[^>]*content="[^"]*"[^>]*/>"#, tag);
+                    let re_str = format!(
+                        r#"(?i)<meta[^>]*name="[^"]*{}[^"]*"[^>]*content="[^"]*"[^>]*/>"#,
+                        tag
+                    );
                     let re = regex::Regex::new(&re_str).unwrap();
                     opf_content = re.replace_all(&opf_content, "").to_string();
 
-                    let re_str_alt = format!(r#"(?i)<meta[^>]*content="[^"]*"[^>]*name="[^"]*{}[^"]*"[^>]*/>"#, tag);
+                    let re_str_alt = format!(
+                        r#"(?i)<meta[^>]*content="[^"]*"[^>]*name="[^"]*{}[^"]*"[^>]*/>"#,
+                        tag
+                    );
                     let re_alt = regex::Regex::new(&re_str_alt).unwrap();
                     opf_content = re_alt.replace_all(&opf_content, "").to_string();
                 }

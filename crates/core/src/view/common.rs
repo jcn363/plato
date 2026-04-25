@@ -212,6 +212,10 @@ pub fn toggle_main_menu(
                     "Rotation Values".to_string(),
                     EntryId::Launch(AppCmd::RotationValues),
                 ),
+                EntryKind::Command(
+                    "OPDS Catalog".to_string(),
+                    EntryId::Launch(AppCmd::Opds { url: None }),
+                ),
             ];
             let mut entries = vec![
                 EntryKind::Command("About".to_string(), EntryId::About),

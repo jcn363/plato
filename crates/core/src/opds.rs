@@ -214,17 +214,40 @@ impl AtomParserState {
                 self.current_entry = Some(OPDSEntry::default());
             } else if name == "content" && self.in_entry {
                 self.in_content = true;
+            } else if name == "link" && self.in_entry {
+                if let Some(ref mut entry) = self.current_entry {
+                    let mut rel = String::new();
+                    let mut href = String::new();
+                    for attr in elem.attributes().flatten() {
+                        match attr.key.as_ref() {
+                            b"rel" => rel = String::from_utf8_lossy(&attr.value).to_string(),
+                            b"href" => href = String::from_utf8_lossy(&attr.value).to_string(),
+                            _ => {}
+                        }
+                    }
+                    if !rel.is_empty() && !href.is_empty() {
+                        entry.links.insert(rel, href);
+                    }
+                }
+            } else if name == "title" && self.in_entry {
+                self.in_title = true;
             }
         }
     }
 
     fn handle_text_event(&mut self, title: &mut String, text: &str) {
         if self.in_title {
-            title.push_str(text);
+            if self.in_entry {
+                if let Some(ref mut entry) = self.current_entry {
+                    entry.title.push_str(text);
+                }
+            } else {
+                title.push_str(text);
+            }
         } else if self.in_entry {
             if let Some(ref mut entry) = self.current_entry {
                 if self.in_content {
-                    entry.summary = text.to_string();
+                    entry.summary.push_str(text);
                 }
             }
         }
@@ -233,7 +256,7 @@ impl AtomParserState {
     fn handle_end_event(&mut self, entries: &mut Vec<OPDSEntry>, e: quick_xml::events::Event) {
         if let quick_xml::events::Event::End(elem) = e {
             let name = String::from_utf8_lossy(elem.name().as_ref()).to_string();
-            if name == "title" && !self.in_entry {
+            if name == "title" {
                 self.in_title = false;
             } else if name == "entry" {
                 if let Some(entry) = self.current_entry.take() {
@@ -277,11 +300,20 @@ pub struct OPDSEntry {
 }
 
 impl OPDSEntry {
-    pub fn download_url(&self) -> Option<&String> {
+    pub fn download_url(&self) -> Option<String> {
         self.links
             .get("http://opds-spec.org/acquisition/open-access")
+            .or(self.links.get("http://opds-spec.org/acquisition"))
             .or(self.links.get("http://opds-spec.org/acquisition/borrow"))
-            .or(self.links.get("http://opds-spec.org/image"))
+            .cloned()
+    }
+
+    pub fn catalog_url(&self) -> Option<String> {
+        self.links
+            .get("subsection")
+            .or(self.links.get("alternate"))
+            .or(self.links.get("self"))
+            .cloned()
     }
 }
 

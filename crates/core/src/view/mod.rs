@@ -131,6 +131,7 @@ pub mod pdf_manipulator;
 pub mod preset;
 pub mod presets_list;
 pub mod reader;
+pub mod opds;
 pub mod rotation_values;
 pub mod rounded_button;
 pub mod search_bar;

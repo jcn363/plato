@@ -50,18 +50,24 @@ From the interactive menu, select options 11-13 to apply these optimizations.
 In addition to the core optimization features, Plato includes several advanced tools for deep cleaning and performance tuning.
 
 ### 1. HTML Minification
+
 This tool aggressively reduces the size of all XHTML chapters by:
+
 - Removing unnecessary whitespace and newlines.
 - Consolidating redundant tags.
 - Stripping HTML comments.
 **Benefit**: Significantly reduces the time required for the e-reader to parse and render each chapter, leading to snappier page turns.
 
 ### 2. Metadata Scrubbing
+
 E-books often contain "junk" metadata added by various management tools (e.g., Calibre timestamps, version strings, or internal tracking IDs).
+
 - **Privacy**: Removes non-essential metadata fields that may contain information about your library or computer.
 - **Efficiency**: Cleans up the `content.opf` file, reducing overhead for the e-reader's library parser.
 
 ### 3. Smart Cover Recovery
+
 Ensures every book has a visible cover in the Plato library view:
+
 - If a cover is not explicitly defined in the OPF metadata, the tool scans the first few chapters for large images.
 - It automatically updates the OPF manifest to mark the most likely candidate as the official cover image.

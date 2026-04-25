@@ -202,6 +202,8 @@ pub enum EntryId {
     OpenFileBrowser,
     SelectFile(PathBuf),
     OpenRedactionEditor(PathBuf, usize),
+    OpenOpds(String),
+    DownloadOpds(String),
 }
 
 impl EntryId {
@@ -356,6 +358,8 @@ impl EntryId {
             EntryId::SelectFile(_) => "SelectFile",
             EntryId::OpenRedactionEditor(_, _) => "OpenRedactionEditor",
             EntryId::HighlightColor(_) => "HighlightColor",
+            EntryId::OpenOpds(_) => "OpenOpds",
+            EntryId::DownloadOpds(_) => "DownloadOpds",
         }
     }
 }

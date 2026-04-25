@@ -63,6 +63,7 @@ mod reading;
 mod theme;
 mod thumbnail;
 mod tools;
+mod opds;
 
 use crate::validation::{validate_finite_f32, validate_range, validate_string_length};
 use anyhow::{bail, Context, Error};
@@ -85,6 +86,7 @@ pub use manager::{load_settings, save_settings, ConfigManager};
 pub use reading::*;
 pub use thumbnail::*;
 pub use tools::*;
+pub use opds::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, validator::Validate)]
 #[serde(default, rename_all = "kebab-case")]
@@ -144,6 +146,7 @@ pub struct Settings {
     pub background_sync: BackgroundSyncSettings,
     pub cloud_sync: CloudSyncSettings,
     pub thumbnail: ThumbnailSettings,
+    pub opds: OpdsSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -432,6 +435,7 @@ impl Default for Settings {
             background_sync: BackgroundSyncSettings::default(),
             cloud_sync: CloudSyncSettings::default(),
             thumbnail: ThumbnailSettings::default(),
+            opds: OpdsSettings::default(),
         }
     }
 }
@@ -519,6 +523,9 @@ impl Settings {
         self.thumbnail
             .validate()
             .context("thumbnail settings validation failed")?;
+        self.opds
+            .validate()
+            .context("opds settings validation failed")?;
 
         // Validate all library settings
         for (i, lib) in self.libraries.iter().enumerate() {
