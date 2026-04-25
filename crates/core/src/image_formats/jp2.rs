@@ -1,19 +1,20 @@
 //! JPEG 2000 image support
 //!
-//! This module provides JPEG 2000 (JP2) format support using the `openjp2` crate.
+//! This module provides JPEG 2000 (JP2) format support using the `justjp2` crate.
 //! JPEG 2000 is a compression standard and coding system for digital images.
 //!
 //! ## Features
 //!
 //! - Decode JPEG 2000 images
 //! - Convert to standard image formats for rendering
-//! - Support for both JP2 and JPX file formats
+//! - Support for both JP2 and J2K file formats with auto-detection
 //!
 //! ## Dependencies
 //!
-//! - `openjp2` - Rust bindings for OpenJPEG library
+//! - `justjp2` - Pure Rust JPEG 2000 encoder and decoder
 
 use anyhow::{Context, Error};
+use image::{DynamicImage, GrayImage, ImageBuffer, RgbImage};
 use std::path::Path;
 
 /// Load a JPEG 2000 (JP2) image from a file path
@@ -23,11 +24,6 @@ use std::path::Path;
 ///
 /// # Returns
 /// A DynamicImage from the image crate
-///
-/// # Note
-/// This is a placeholder implementation. The openjp2 crate provides C bindings
-/// for OpenJPEG library. Full integration requires understanding the specific
-/// API exposed by the openjp2 Rust bindings.
 pub fn load_jp2<P: AsRef<Path>>(path: P) -> Result<image::DynamicImage, Error> {
     let path = path.as_ref();
 
@@ -40,14 +36,71 @@ pub fn load_jp2<P: AsRef<Path>>(path: P) -> Result<image::DynamicImage, Error> {
     }
 
     // Read JPEG 2000 file data
-    let _data = std::fs::read(path).context("Failed to read JPEG 2000 file")?;
+    let data = std::fs::read(path).context("Failed to read JPEG 2000 file")?;
 
-    // The openjp2 crate provides C bindings to OpenJPEG library
-    // Full implementation requires understanding the specific API
-    // For now, return an error indicating this needs investigation
-    Err(Error::msg(
-        "JPEG 2000 decoding requires openjp2 API investigation - crate provides C bindings",
-    ))
+    // Decode JPEG 2000 image using justjp2 (auto-detects JP2 vs J2K)
+    let jp2_image = justjp2::decode(&data)
+        .with_context(|| "Failed to decode JPEG 2000 image")?;
+
+    // Convert justjp2::Image to image::DynamicImage
+    let width = jp2_image.width;
+    let height = jp2_image.height;
+
+    if jp2_image.components.is_empty() {
+        return Err(Error::msg("JPEG 2000 image has no components"));
+    }
+
+    // Handle different color spaces
+    match jp2_image.components.len() {
+        1 => {
+            // Grayscale
+            let comp = &jp2_image.components[0];
+            let buffer: Vec<u8> = comp.data.iter().map(|&v| v as u8).collect();
+            let gray_image: GrayImage = ImageBuffer::from_raw(width, height, buffer)
+                .with_context(|| "Failed to create GrayImage from JPEG 2000 data")?;
+            Ok(DynamicImage::ImageLuma8(gray_image))
+        }
+        3 => {
+            // RGB
+            let r = &jp2_image.components[0];
+            let g = &jp2_image.components[1];
+            let b = &jp2_image.components[2];
+
+            let buffer: Vec<u8> = r.data.iter()
+                .zip(g.data.iter())
+                .zip(b.data.iter())
+                .map(|((rv, gv), bv)| [*rv as u8, *gv as u8, *bv as u8])
+                .flatten()
+                .collect();
+
+            let rgb_image: RgbImage = ImageBuffer::from_raw(width, height, buffer)
+                .with_context(|| "Failed to create RgbImage from JPEG 2000 data")?;
+            Ok(DynamicImage::ImageRgb8(rgb_image))
+        }
+        4 => {
+            // RGBA - convert to RGB for now
+            let r = &jp2_image.components[0];
+            let g = &jp2_image.components[1];
+            let b = &jp2_image.components[2];
+
+            let buffer: Vec<u8> = r.data.iter()
+                .zip(g.data.iter())
+                .zip(b.data.iter())
+                .map(|((rv, gv), bv)| [*rv as u8, *gv as u8, *bv as u8])
+                .flatten()
+                .collect();
+
+            let rgb_image: RgbImage = ImageBuffer::from_raw(width, height, buffer)
+                .with_context(|| "Failed to create RgbImage from JPEG 2000 data")?;
+            Ok(DynamicImage::ImageRgb8(rgb_image))
+        }
+        n => {
+            Err(Error::msg(format!(
+                "JPEG 2000 image has unsupported number of components: {}",
+                n
+            )))
+        }
+    }
 }
 
 /// Check if a file is a JPEG 2000 format
