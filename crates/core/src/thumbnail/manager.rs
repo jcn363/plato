@@ -1,6 +1,7 @@
 use crate::thumbnail::cache::ThumbnailCache;
 use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
 use crate::thumbnail::request::ThumbnailRequest;
+use crate::thumbnail::worker::ThumbnailWorkerPool;
 use crate::thumbnail::{optimal_cache_size, optimal_worker_count};
 use dashmap::DashMap;
 use std::path::{Path, PathBuf};
@@ -112,7 +113,7 @@ pub struct ThumbnailManager {
     config: ThumbnailConfig,
     cache: Arc<Mutex<ThumbnailCache>>,
     pending_requests: Arc<DashMap<PathBuf, ()>>,
-    request_sender: Sender<ThumbnailRequest>,
+    worker_pool: ThumbnailWorkerPool,
     /// Library home directory for proper thumbnail path computation
     library_home: Option<PathBuf>,
 }
@@ -140,13 +141,13 @@ impl ThumbnailManager {
             validated_config.cache_size,
         )?));
 
-        // Create communication channels
-        let (request_sender, _request_receiver) = mpsc::channel::<ThumbnailRequest>();
+        // Create worker pool
+        let worker_pool = ThumbnailWorkerPool::new(validated_config.worker_count)?;
 
         Ok(Self {
             config: validated_config,
             cache,
-            request_sender,
+            worker_pool,
             pending_requests: Arc::new(DashMap::new()),
             library_home: None,
         })
@@ -209,7 +210,7 @@ impl ThumbnailManager {
             response_tx,
         );
 
-        if self.request_sender.send(request).is_err() {
+        if self.worker_pool.submit(request).is_err() {
             // Remove from pending if submission failed
             self.pending_requests.remove(&file_path);
             return Err(ThumbnailError::Channel);

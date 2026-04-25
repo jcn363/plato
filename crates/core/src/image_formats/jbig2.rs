@@ -31,8 +31,8 @@ pub fn decode_jbig2(data: &[u8]) -> Result<image::DynamicImage, Error> {
     }
 
     // Parse JBIG2 image using hayro-jbig2
-    let jbig2_image = hayro_jbig2::Image::new(data)
-        .with_context(|| "Failed to parse JBIG2 image data")?;
+    let jbig2_image =
+        hayro_jbig2::Image::new(data).with_context(|| "Failed to parse JBIG2 image data")?;
 
     // Get image dimensions
     let width = jbig2_image.width();

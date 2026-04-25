@@ -86,13 +86,8 @@ impl Pixmap {
         let (width, height) = (rgba.width(), rgba.height());
         let samples = 4;
         let mut pixmap = Pixmap::new(width, height, samples)?;
-        for (i, pixel) in rgba.pixels().enumerate() {
-            let addr = i * samples;
-            pixmap.data[addr] = pixel[0];
-            pixmap.data[addr + 1] = pixel[1];
-            pixmap.data[addr + 2] = pixel[2];
-            pixmap.data[addr + 3] = pixel[3];
-        }
+        // Bulk copy of all RGBA pixels at once
+        pixmap.data.copy_from_slice(rgba.as_raw());
         Ok(pixmap)
     }
 
@@ -118,13 +113,8 @@ impl Pixmap {
         let (width, height) = (rgba.width(), rgba.height());
         let samples = 4;
         let mut pixmap = Pixmap::new(width, height, samples)?;
-        for (i, pixel) in rgba.pixels().enumerate() {
-            let addr = i * samples;
-            pixmap.data[addr] = pixel[0];
-            pixmap.data[addr + 1] = pixel[1];
-            pixmap.data[addr + 2] = pixel[2];
-            pixmap.data[addr + 3] = pixel[3];
-        }
+        // Bulk copy of all RGBA pixels at once
+        pixmap.data.copy_from_slice(rgba.as_raw());
         Ok(pixmap)
     }
 

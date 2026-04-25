@@ -207,12 +207,13 @@ fn get_device_id() -> String {
         .unwrap_or_else(|| "unknown-device".to_string())
 }
 
-static SYNC_CLIENT: std::sync::LazyLock<reqwest::blocking::Client> = std::sync::LazyLock::new(|| {
-    reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-        .unwrap_or_else(|_| reqwest::blocking::Client::new())
-});
+static SYNC_CLIENT: std::sync::LazyLock<reqwest::blocking::Client> =
+    std::sync::LazyLock::new(|| {
+        reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .unwrap_or_else(|_| reqwest::blocking::Client::new())
+    });
 
 static WEBDAV_HREF_RE: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
     regex::Regex::new(r"<d:href>([^<]+)</d:href>").expect("invalid WebDAV href regex")
@@ -240,13 +241,19 @@ fn sync_with_webdav(
     let client = SYNC_CLIENT.clone();
     let req = apply_auth(
         client
-            .request(reqwest::Method::from_bytes(b"PROPFIND").unwrap(), &full_url)
+            .request(
+                reqwest::Method::from_bytes(b"PROPFIND")
+                    .map_err(|e| anyhow::format_err!("Invalid HTTP method: {}", e))?,
+                &full_url,
+            )
             .header("Depth", "1"),
         username,
         password,
     );
 
-    let response = req.send().map_err(|e| format_err!("WebDAV sync failed: {}", e))?;
+    let response = req
+        .send()
+        .map_err(|e| format_err!("WebDAV sync failed: {}", e))?;
     let text = response.text().unwrap_or_default();
 
     if text.contains("<d:response>") {
@@ -268,13 +275,19 @@ pub fn list_webdav_files(
     let client = SYNC_CLIENT.clone();
     let req = apply_auth(
         client
-            .request(reqwest::Method::from_bytes(b"PROPFIND").unwrap(), &full_url)
+            .request(
+                reqwest::Method::from_bytes(b"PROPFIND")
+                    .map_err(|e| anyhow::format_err!("Invalid HTTP method: {}", e))?,
+                &full_url,
+            )
             .header("Depth", "1"),
         username,
         password,
     );
 
-    let response = req.send().map_err(|e| format_err!("WebDAV list failed: {}", e))?;
+    let response = req
+        .send()
+        .map_err(|e| format_err!("WebDAV list failed: {}", e))?;
     let text = response.text().unwrap_or_default();
 
     let mut files = Vec::with_capacity(64);
@@ -309,9 +322,14 @@ pub fn download_from_webdav(
     let client = SYNC_CLIENT.clone();
     let req = apply_auth(client.get(&full_url), username, password);
 
-    let mut response = req.send().map_err(|e| format_err!("Download failed: {}", e))?;
+    let mut response = req
+        .send()
+        .map_err(|e| format_err!("Download failed: {}", e))?;
     if !response.status().is_success() {
-        return Err(format_err!("Download failed with status: {}", response.status()));
+        return Err(format_err!(
+            "Download failed with status: {}",
+            response.status()
+        ));
     }
 
     let mut file = std::fs::File::create(local_path)?;
@@ -333,9 +351,14 @@ pub fn upload_to_webdav(
     let client = SYNC_CLIENT.clone();
     let req = apply_auth(client.put(&full_url), username, password).body(file);
 
-    let response = req.send().map_err(|e| format_err!("Upload failed: {}", e))?;
+    let response = req
+        .send()
+        .map_err(|e| format_err!("Upload failed: {}", e))?;
     if !response.status().is_success() {
-        return Err(format_err!("Upload failed with status: {}", response.status()));
+        return Err(format_err!(
+            "Upload failed with status: {}",
+            response.status()
+        ));
     }
 
     Ok(())
@@ -372,7 +395,8 @@ pub fn sync_annotations_with_webdav(
                 if let Some(annotations) = reader.get("annotations") {
                     if !annotations.as_array().unwrap_or(&Vec::new()).is_empty() {
                         let local_file = annotations_dir.join(format!("{}.json", fingerprint));
-                        let remote_file = format!("{}/{}.json", remote_annotations_url, fingerprint);
+                        let remote_file =
+                            format!("{}/{}.json", remote_annotations_url, fingerprint);
 
                         let local_content = if local_file.exists() {
                             std::fs::read_to_string(&local_file).unwrap_or_default()
@@ -380,8 +404,9 @@ pub fn sync_annotations_with_webdav(
                             String::new()
                         };
 
-                        let remote_content = fetch_remote_file(url, username, password, &remote_file)
-                            .unwrap_or_default();
+                        let remote_content =
+                            fetch_remote_file(url, username, password, &remote_file)
+                                .unwrap_or_default();
 
                         let merged = merge_json(&local_content, &remote_content);
                         std::fs::write(&local_file, &merged)?;
@@ -408,7 +433,10 @@ fn fetch_remote_file(
 
     let response = req.send().map_err(|e| format_err!("Fetch failed: {}", e))?;
     if !response.status().is_success() {
-        return Err(format_err!("Fetch failed with status: {}", response.status()));
+        return Err(format_err!(
+            "Fetch failed with status: {}",
+            response.status()
+        ));
     }
 
     Ok(response.text().unwrap_or_default())

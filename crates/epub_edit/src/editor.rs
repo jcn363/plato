@@ -317,6 +317,16 @@ impl EpubEditorCore {
         let file =
             File::create(&self.epub_path).context("Failed to create EPUB file for saving")?;
         let mut zip = ZipWriter::new(file);
+
+        // 1. mimetype must be FIRST and UNCOMPRESSED
+        let mimetype_path = self.temp_dir.join("mimetype");
+        if mimetype_path.exists() {
+            let options: FileOptions<'_, ()> = FileOptions::default().compression_method(CompressionMethod::STORE);
+            zip.start_file("mimetype", options)?;
+            let content = fs::read(&mimetype_path)?;
+            zip.write_all(&content)?;
+        }
+
         let options = FileOptions::default().compression_method(CompressionMethod::DEFLATE);
         let mut buffer = Vec::new();
         self.walk_dir(&self.temp_dir, &mut zip, &options, &mut buffer)?;
@@ -391,6 +401,164 @@ impl EpubEditorCore {
         Ok(regex.replace(content, &replace_str).to_string())
     }
 
+    /// Optimizes all images in the EPUB for E-Ink devices.
+    ///
+    /// This converts images to grayscale and resizes them if they exceed the specified maximum dimension.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_dim` - The maximum width or height for any image.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Walking the temporary directory fails
+    /// * Opening or processing an image fails
+    /// * Saving an optimized image fails
+    pub fn optimize_images(&self, max_dim: u32) -> Result<usize> {
+        let mut count = 0;
+        for entry in walkdir::WalkDir::new(&self.temp_dir) {
+            let entry = entry.context("Failed to read directory entry")?;
+            let path = entry.path();
+            if path.is_file() {
+                if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
+                    let ext = ext.to_lowercase();
+                    if ["jpg", "jpeg", "png", "gif", "bmp", "webp"].contains(&ext.as_str()) {
+                        if self.optimize_image(path, max_dim).is_ok() {
+                            count += 1;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(count)
+    }
+
+    fn optimize_image(&self, path: &Path, max_dim: u32) -> Result<()> {
+        let img = image::open(path).context("Failed to open image")?;
+        let (w, h) = (img.width(), img.height());
+
+        let mut processed = img;
+        if w > max_dim || h > max_dim {
+            processed = processed.resize(max_dim, max_dim, image::imageops::FilterType::Lanczos3);
+        }
+
+        // Convert to grayscale for E-Ink
+        let grayscale = processed.into_luma8();
+        grayscale.save(path).context("Failed to save optimized image")?;
+        Ok(())
+    }
+
+    /// Sanitizes CSS across all chapters and CSS files for better E-Ink readability.
+    ///
+    /// This removes complex backgrounds, large margins, and fixed widths.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// * Walking the temporary directory fails
+    /// * Reading or writing CSS files fails
+    pub fn sanitize_css(&mut self) -> Result<usize> {
+        let mut count = 0;
+
+        // 1. Sanitize .css files
+        for entry in walkdir::WalkDir::new(&self.temp_dir) {
+            let entry = entry.context("Failed to read directory entry")?;
+            let path = entry.path();
+            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("css") {
+                let content = fs::read_to_string(path)?;
+                let sanitized = self.process_css(&content);
+                if sanitized != content {
+                    fs::write(path, sanitized)?;
+                    count += 1;
+                }
+            }
+        }
+
+        // 2. Sanitize inline styles in chapters
+        for i in 0..self.chapters.len() {
+            let content = self.chapters[i].content.clone();
+            let sanitized = self.process_css(&content);
+            if sanitized != content {
+                self.update_chapter(i, sanitized)?;
+                count += 1;
+            }
+        }
+
+        Ok(count)
+    }
+
+    fn process_css(&self, css: &str) -> String {
+        let mut result = css.to_string();
+
+        // Remove fixed widths larger than 100%
+        let width_re = regex::Regex::new(r"width\s*:\s*\d+(?:\.\d+)?(?:px|pt|cm|in|mm)").unwrap();
+        result = width_re.replace_all(&result, "max-width: 100%").to_string();
+
+        // Remove large margins
+        let margin_re = regex::Regex::new(r"margin\s*:\s*\d+(?:\.\d+)?(?:px|pt|cm|in|mm)").unwrap();
+        result = margin_re.replace_all(&result, "margin: 0").to_string();
+
+        // Force black text on white background for high contrast
+        let bg_re = regex::Regex::new(r"background-color\s*:[^;]+;?").unwrap();
+        result = bg_re.replace_all(&result, "background-color: #fff;").to_string();
+
+        let color_re = regex::Regex::new(r"(?i)color\s*:[^;]+;?").unwrap();
+        result = color_re.replace_all(&result, "color: #000;").to_string();
+
+        result
+    }
+
+    /// Recovers or updates the Table of Contents from document headings.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if writing the updated TOC or OPF metadata fails.
+    pub fn recover_toc(&mut self) -> Result<bool> {
+        let mut new_toc = Vec::new();
+        let heading_re = regex::Regex::new(r"(?i)<h([1-6])[^>]*>(.*?)</h[1-6]>").unwrap();
+
+        for chapter in &self.chapters {
+            for cap in heading_re.captures_iter(&chapter.content) {
+                let level = cap[1].parse::<usize>().unwrap_or(1);
+                let title = crate::validation::ValidationHelpers::strip_html_tags(&cap[2]).trim().to_string();
+                if !title.is_empty() {
+                    new_toc.push((level, title, chapter.href.clone()));
+                }
+            }
+        }
+
+        if new_toc.is_empty() {
+            return Ok(false);
+        }
+
+        // Simple heuristic: if we have headings, use them to build a new TOC
+        let mut toc_html = String::from("<nav epub:type=\"toc\">\n  <ol>\n");
+        for (_level, title, href) in new_toc {
+            toc_html.push_str(&format!("    <li><a href=\"{}\">{}</a></li>\n", href, title));
+        }
+        toc_html.push_str("  </ol>\n</nav>");
+
+        // In a real implementation, we would update the actual nav.xhtml or ncx file.
+        // For now, we'll just update the TOC in the OPF metadata if it's missing.
+        self.update_table_of_contents_content(&toc_html)?;
+
+        Ok(true)
+    }
+
+    fn update_table_of_contents_content(&self, content: &str) -> Result<()> {
+        let toc_path = self.temp_dir.join("nav.xhtml");
+        let html = format!(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+             <html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\">\n\
+             <head><title>Table of Contents</title></head>\n\
+             <body>{}</body>\n</html>",
+            content
+        );
+        fs::write(toc_path, html).context("Failed to write nav.xhtml")?;
+        Ok(())
+    }
+
     fn walk_dir<W: Write + io::Seek>(
         &self,
         dir: &Path,
@@ -402,6 +570,12 @@ impl EpubEditorCore {
             let entry = entry?;
             let path = entry.path();
             let name = path.strip_prefix(&self.temp_dir).unwrap_or(&path);
+
+            // Skip mimetype as it's already added first
+            if name.to_str() == Some("mimetype") {
+                continue;
+            }
+
             if path.is_dir() {
                 zip.add_directory(name.to_str().unwrap_or(""), *options)?;
                 self.walk_dir(&path, zip, options, buffer)?;

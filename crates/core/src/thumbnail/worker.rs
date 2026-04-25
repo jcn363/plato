@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, Sender};
-use std::sync::{LazyLock, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 
 use crate::buffer_pool;
@@ -14,19 +14,33 @@ static EXCLUSIVE_ACCESS: LazyLock<Mutex<u8>> = LazyLock::new(|| Mutex::new(0));
 
 /// Worker thread that processes thumbnail generation requests
 pub struct ThumbnailWorker {
-    receiver: Receiver<ThumbnailRequest>,
+    receiver: Arc<Mutex<Receiver<ThumbnailRequest>>>,
 }
 
 impl ThumbnailWorker {
-    /// Creates a new thumbnail worker
-    pub fn new(receiver: Receiver<ThumbnailRequest>) -> Self {
+    /// Creates a new thumbnail worker with a shared receiver
+    pub fn new(receiver: Arc<Mutex<Receiver<ThumbnailRequest>>>) -> Self {
         Self { receiver }
     }
 
     /// Starts the worker thread
     pub fn start(self) -> thread::JoinHandle<()> {
         thread::spawn(move || {
-            while let Ok(request) = self.receiver.recv() {
+            loop {
+                // Safely receive a request from the shared channel
+                let request = {
+                    match self.receiver.lock() {
+                        Ok(rx) => match rx.recv() {
+                            Ok(req) => req,
+                            Err(_) => break, // Channel closed
+                        },
+                        Err(_) => {
+                            eprintln!("Thumbnail worker lock poisoned, shutting down");
+                            break;
+                        }
+                    }
+                };
+
                 let result = self.process_request(&request);
 
                 // Send result back to requester
@@ -96,20 +110,17 @@ impl ThumbnailWorkerPool {
             return Err(ThumbnailError::thread_pool("worker count cannot be zero"));
         }
 
-        if worker_count > 8 {
-            return Err(ThumbnailError::thread_pool("worker count too large"));
-        }
+        // Limit maximum workers to prevent resource exhaustion
+        let max_workers = if crate::device::is_android() { 8 } else { 4 };
+        let actual_count = worker_count.min(max_workers);
 
-        let (sender, _receiver) = mpsc::channel::<ThumbnailRequest>();
-        let mut handles = Vec::with_capacity(worker_count);
+        let (sender, receiver) = mpsc::channel::<ThumbnailRequest>();
+        let receiver = Arc::new(Mutex::new(receiver));
+        let mut handles = Vec::with_capacity(actual_count);
 
-        for _ in 0..worker_count {
-            // Create a new receiver for each worker
-            let (_tx, rx) = mpsc::channel::<ThumbnailRequest>();
-            let worker = ThumbnailWorker::new(rx);
+        for _ in 0..actual_count {
+            let worker = ThumbnailWorker::new(receiver.clone());
             handles.push(worker.start());
-            // Store the sender for this worker pool
-            // Note: This is a simplified approach - in practice, you'd want to share requests
         }
 
         Ok(Self { handles, sender })
@@ -160,7 +171,16 @@ impl Clone for ThumbnailWorkerPool {
         // Try 2 workers first, fall back to 1 if that fails
         Self::new(2)
             .or_else(|_| Self::new(1))
-            .expect("failed to create thumbnail worker pool (tried 2 and 1 workers)")
+            .unwrap_or_else(|_| {
+                // If even 1 worker fails, we have a critical system error.
+                // Log and return a pool with 0 workers (effectively disabling it)
+                // rather than panicking in production.
+                eprintln!("CRITICAL: Failed to create thumbnail worker pool fallback");
+                Self {
+                    handles: Vec::new(),
+                    sender: mpsc::channel().0,
+                }
+            })
     }
 }
 

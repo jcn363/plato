@@ -53,9 +53,9 @@ impl PdfAnnotationManager {
         for (page_num, page_id) in pages_map {
             let page_dict = doc
                 .get_object(page_id)
-                .expect("page object not found")
+                .map_err(|e| format_err!("page object not found: {}", e))?
                 .as_dict()
-                .expect("page object is not a dictionary");
+                .map_err(|_| format_err!("page object is not a dictionary"))?;
             if let Ok(annot_ref) = page_dict.get(b"Annots") {
                 if let Ok(annot_array) = annot_ref.as_array() {
                     for annot_obj in annot_array {
@@ -281,7 +281,7 @@ impl PdfAnnotationExporter {
         }
         let page_id = page_ids
             .get(page_index)
-            .expect("page index out of bounds after check");
+            .ok_or_else(|| format_err!("page index out of bounds after check"))?;
 
         // Create annotation dictionary
         let mut annot_dict = Dictionary::new();
@@ -389,9 +389,9 @@ impl PdfAnnotationExporter {
         if let Some(page_id) = page_ids.get(page_index) {
             let page_dict = doc
                 .get_object(**page_id)
-                .expect("page object not found")
+                .map_err(|e| format_err!("page object not found: {}", e))?
                 .as_dict()
-                .expect("page object is not a dictionary");
+                .map_err(|_| format_err!("page object is not a dictionary"))?;
 
             // Check if annotations exist and copy them
             if let Ok(annot_ref) = page_dict.get(b"Annots") {
@@ -412,7 +412,7 @@ impl PdfAnnotationExporter {
                     if page_index < output_page_ids.len() {
                         let output_page_id = output_page_ids
                             .get(page_index)
-                            .expect("output page index out of bounds");
+                            .ok_or_else(|| format_err!("output page index out of bounds"))?;
                         let output_page_dict = output_doc
                             .get_object_mut(**output_page_id)
                             .map_err(|e| format_err!("Failed to get output page object: {}", e))?

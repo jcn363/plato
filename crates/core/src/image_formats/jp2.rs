@@ -39,8 +39,7 @@ pub fn load_jp2<P: AsRef<Path>>(path: P) -> Result<image::DynamicImage, Error> {
     let data = std::fs::read(path).context("Failed to read JPEG 2000 file")?;
 
     // Decode JPEG 2000 image using justjp2 (auto-detects JP2 vs J2K)
-    let jp2_image = justjp2::decode(&data)
-        .with_context(|| "Failed to decode JPEG 2000 image")?;
+    let jp2_image = justjp2::decode(&data).with_context(|| "Failed to decode JPEG 2000 image")?;
 
     // Convert justjp2::Image to image::DynamicImage
     let width = jp2_image.width;
@@ -66,7 +65,9 @@ pub fn load_jp2<P: AsRef<Path>>(path: P) -> Result<image::DynamicImage, Error> {
             let g = &jp2_image.components[1];
             let b = &jp2_image.components[2];
 
-            let buffer: Vec<u8> = r.data.iter()
+            let buffer: Vec<u8> = r
+                .data
+                .iter()
                 .zip(g.data.iter())
                 .zip(b.data.iter())
                 .flat_map(|((rv, gv), bv)| [*rv as u8, *gv as u8, *bv as u8])
@@ -82,7 +83,9 @@ pub fn load_jp2<P: AsRef<Path>>(path: P) -> Result<image::DynamicImage, Error> {
             let g = &jp2_image.components[1];
             let b = &jp2_image.components[2];
 
-            let buffer: Vec<u8> = r.data.iter()
+            let buffer: Vec<u8> = r
+                .data
+                .iter()
                 .zip(g.data.iter())
                 .zip(b.data.iter())
                 .flat_map(|((rv, gv), bv)| [*rv as u8, *gv as u8, *bv as u8])
@@ -92,12 +95,10 @@ pub fn load_jp2<P: AsRef<Path>>(path: P) -> Result<image::DynamicImage, Error> {
                 .with_context(|| "Failed to create RgbImage from JPEG 2000 data")?;
             Ok(DynamicImage::ImageRgb8(rgb_image))
         }
-        n => {
-            Err(Error::msg(format!(
-                "JPEG 2000 image has unsupported number of components: {}",
-                n
-            )))
-        }
+        n => Err(Error::msg(format!(
+            "JPEG 2000 image has unsupported number of components: {}",
+            n
+        ))),
     }
 }
 

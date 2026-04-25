@@ -27,6 +27,7 @@ Documentation:
 - [Hooks documentation](doc/HOOKS.md)
 - [Library documentation](doc/LIBRARY.md)
 - [PDF features](doc/PDF_FEATURES.md)
+- [EPUB Editor features](doc/EPUB_EDITOR.md)
 - [Navigation documentation](doc/NAVIGATION.md)
 
 ## Supported firmwares
@@ -89,6 +90,7 @@ None currently.
 - Library features including metadata extraction, thumbnail previews, batch delete/move, removable-storage import, and article fetching hooks.
 - Sync and extension infrastructure including WebDAV sync, KoboCloud sync, shell/python plugin triggers, and plugin network permission checks.
 - PDF-specific tooling including page delete/rotate/extract/reorder/merge operations, redaction, resource extraction, PDF/A inspection, and PDF annotation export.
+- EPUB maintenance tools including image optimization (grayscale/resize), CSS sanitization for E-Ink, and automated TOC recovery from headings.
 - Progressive document loading support for large PDFs.
 
 [![Tn01](artworks/thumbnail01.png)](artworks/screenshot01.png) [![Tn02](artworks/thumbnail02.png)](artworks/screenshot02.png) [![Tn03](artworks/thumbnail03.png)](artworks/screenshot03.png) [![Tn04](artworks/thumbnail04.png)](artworks/screenshot04.png)
@@ -102,7 +104,7 @@ None currently.
 - **Memory** - Optimized string building with pre-allocated buffers, fixed memory availability detection, reduced thumbnail memory by 75% (grayscale instead of RGBA), fixed Pixmap OOM panics, optimized pixmap creation to avoid double allocation
 - PDF - Added auto-crop margins feature for scanned documents, PDF/A detection, annotation reading and export, interactive redaction region definition UI, and PDF merging functionality. **Note:** These features are implemented and stable.
 - **Rendering** - Added minimum font size support for better readability
-- **ePUB** - Enhanced HTML engine with improved font handling
+- **ePUB** - Enhanced HTML engine with improved font handling, image optimization (grayscale/resize), and automated TOC recovery
 - **CSS** - Full CSS support including border, background, text-transform, text-decoration, tab-size
 - **Framebuffer** - Added `#[inline]` to all pixel operations for faster rendering
 - **Geometry** - Added `#[inline]` to Point, Vec2, Rectangle methods for faster calculations

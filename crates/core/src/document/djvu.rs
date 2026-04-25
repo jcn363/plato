@@ -74,10 +74,7 @@ impl crate::document::Document for DjvuDocument {
     }
 
     fn pages_count(&self) -> usize {
-        self.inner
-            .as_ref()
-            .map(|doc| doc.page_count())
-            .unwrap_or(0)
+        self.inner.as_ref().map(|doc| doc.page_count()).unwrap_or(0)
     }
 
     fn toc(&mut self) -> Option<Vec<TocEntry>> {

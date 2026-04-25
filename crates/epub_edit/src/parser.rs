@@ -13,22 +13,28 @@ use crate::types::EpubChapter;
 
 static TITLE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<dc:title[^>]*>([^<]+)</dc:title>"#).expect("invalid regex"));
-static AUTHOR_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:creator[^>]*>([^<]+)</dc:creator>"#).expect("invalid regex"));
-static LANGUAGE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:language[^>]*>([^<]+)</dc:language>"#).expect("invalid regex"));
-static IDENTIFIER_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:identifier[^>]*>([^<]+)</dc:identifier>"#).expect("invalid regex"));
-static PUBLISHER_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:publisher[^>]*>([^<]+)</dc:publisher>"#).expect("invalid regex"));
+static AUTHOR_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<dc:creator[^>]*>([^<]+)</dc:creator>"#).expect("invalid regex")
+});
+static LANGUAGE_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<dc:language[^>]*>([^<]+)</dc:language>"#).expect("invalid regex")
+});
+static IDENTIFIER_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<dc:identifier[^>]*>([^<]+)</dc:identifier>"#).expect("invalid regex")
+});
+static PUBLISHER_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<dc:publisher[^>]*>([^<]+)</dc:publisher>"#).expect("invalid regex")
+});
 static DATE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<dc:date[^>]*>([^<]+)</dc:date>"#).expect("invalid regex"));
-static DESCRIPTION_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:description[^>]*>([^<]+)</dc:description>"#).expect("invalid regex"));
+static DESCRIPTION_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<dc:description[^>]*>([^<]+)</dc:description>"#).expect("invalid regex")
+});
 static ROOTFILE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).expect("invalid regex"));
-static ITEM_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<item[^>]+href="([^"]+)"[^>]+id="([^"]+)"[^>]*>"#).expect("invalid regex"));
+static ITEM_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<item[^>]+href="([^"]+)"[^>]+id="([^"]+)"[^>]*>"#).expect("invalid regex")
+});
 static SPINE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<itemref[^>]+idref="([^"]+)"[^>]*>"#).expect("invalid regex"));
 

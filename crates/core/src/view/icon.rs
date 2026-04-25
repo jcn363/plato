@@ -70,14 +70,19 @@ pub static ICONS_PIXMAPS: LazyLock<FxHashMap<&'static str, Pixmap>> = LazyLock::
     .cloned()
     {
         let path = dir.join(format!("{}.svg", name));
-        let doc = PdfOpener::new()
-            .and_then(|o| o.open(path))
-            .expect("failed to open icon");
-        let pixmap = doc
-            .page(0)
-            .and_then(|p| p.pixmap(scale, 1))
-            .expect("failed to render icon");
-        m.insert(name, pixmap);
+        let pixmap = if let Some(doc) = PdfOpener::new().and_then(|o| o.open(&path)) {
+            doc.page(0).and_then(|page| page.pixmap(scale, 1))
+        } else {
+            None
+        };
+
+        if let Some(pixmap) = pixmap {
+            m.insert(name, pixmap);
+        } else {
+            eprintln!("Warning: failed to load icon at {}", path.display());
+            // Insert a dummy empty pixmap to avoid panics in render()
+            m.insert(name, Pixmap::empty(1, 1, 1));
+        }
     }
     m
 });

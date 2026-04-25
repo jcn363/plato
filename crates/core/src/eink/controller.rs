@@ -104,9 +104,7 @@ impl SunxiController {
         if device_path.is_empty() {
             anyhow::bail!("Device path cannot be empty");
         }
-        Ok(Self {
-            device_path,
-        })
+        Ok(Self { device_path })
     }
 
     #[allow(clippy::should_implement_trait)]
@@ -208,9 +206,7 @@ impl MxcController {
         if device_path.is_empty() {
             anyhow::bail!("Device path cannot be empty");
         }
-        Ok(Self {
-            device_path,
-        })
+        Ok(Self { device_path })
     }
 
     #[allow(clippy::should_implement_trait)]

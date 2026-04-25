@@ -49,41 +49,50 @@ impl<'a> Page<'a> {
         if let Some(lopdf_doc) = self.lopdf_doc {
             let pages = lopdf_doc.get_pages();
             let page_id = pages.get(&(self.index as u32 + 1)).copied()?;
-            
+
             let mut annotations = Vec::new();
-            
+
             if let Ok(lopdf_annots) = lopdf_doc.get_page_annotations(page_id) {
                 for annot in lopdf_annots {
                     // Check if this is a Link annotation
-                    let subtype = annot.get_deref(b"Subtype", lopdf_doc)
+                    let subtype = annot
+                        .get_deref(b"Subtype", lopdf_doc)
                         .and_then(|obj| obj.as_name())
                         .map(|name| String::from_utf8_lossy(name).to_string())
                         .unwrap_or_default();
-                    
+
                     if subtype == "Link" {
                         // Extract bounding box
-                        let rect = annot.get_deref(b"Rect", lopdf_doc)
+                        let rect = annot
+                            .get_deref(b"Rect", lopdf_doc)
                             .and_then(|obj| obj.as_array())
                             .and_then(|arr| {
-                                let coords: Vec<f64> = arr.iter()
+                                let coords: Vec<f64> = arr
+                                    .iter()
                                     .filter_map(|obj| obj.as_i64().ok())
                                     .map(|i| i as f64)
                                     .collect();
                                 if coords.len() == 4 {
                                     Ok([coords[0], coords[1], coords[2], coords[3]])
                                 } else {
-                                    Err(lopdf::Error::Syntax("Invalid rect coordinates".to_string()))
+                                    Err(lopdf::Error::Syntax(
+                                        "Invalid rect coordinates".to_string(),
+                                    ))
                                 }
                             })
                             .unwrap_or([0.0, 0.0, 0.0, 0.0]);
-                        
+
                         // Extract link URI or destination
-                        let uri = annot.get_deref(b"A", lopdf_doc)
+                        let uri = annot
+                            .get_deref(b"A", lopdf_doc)
                             .and_then(|obj| obj.as_dict())
                             .map(|dict| {
                                 // Try URI action
                                 if let Ok(uri_obj) = dict.get(b"URI") {
-                                    uri_obj.as_str().ok().map(|s| String::from_utf8_lossy(s).to_string())
+                                    uri_obj
+                                        .as_str()
+                                        .ok()
+                                        .map(|s| String::from_utf8_lossy(s).to_string())
                                 } else {
                                     // Try GoTo action (destination)
                                     dict.get(b"D").ok().and_then(|dest| {
@@ -103,7 +112,7 @@ impl<'a> Page<'a> {
                                 }
                             })
                             .unwrap_or(None);
-                        
+
                         // Create PDFPurr Annotation
                         annotations.push(pdfpurr::structure::Annotation {
                             subtype: "Link".to_string(),
@@ -119,7 +128,7 @@ impl<'a> Page<'a> {
                     }
                 }
             }
-            
+
             Some(Link::new(annotations, 0))
         } else {
             // Fallback to empty link list if lopdf document not available
@@ -132,7 +141,7 @@ impl<'a> Page<'a> {
         if let Some(lopdf_doc) = self.lopdf_doc {
             let pages = lopdf_doc.get_pages();
             let page_id = pages.get(&(self.index as u32 + 1)).copied()?;
-            
+
             if let Ok(annotations) = lopdf_doc.get_page_annotations(page_id) {
                 // Return Some(()) if there are any annotations
                 if !annotations.is_empty() {

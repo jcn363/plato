@@ -38,13 +38,13 @@ pub type PdfPurrDocument = Document;
 impl Document {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let doc_id = path.as_ref().to_string_lossy().to_string();
-        let inner =
-            PdfPurrDoc::open(&path).map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
-        
+        let inner = PdfPurrDoc::open(&path)
+            .map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+
         // Load lopdf document for link extraction
         let lopdf_doc = lopdf::Document::load(path.as_ref())
             .context("Failed to load PDF with lopdf for link extraction")?;
-        
+
         Ok(Document {
             inner,
             cache: None,
@@ -55,13 +55,13 @@ impl Document {
 
     pub fn open_with_cache<P: AsRef<Path>>(path: P, cache: Arc<PdfCache>) -> Result<Self> {
         let doc_id = path.as_ref().to_string_lossy().to_string();
-        let inner =
-            PdfPurrDoc::open(&path).map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
-        
+        let inner = PdfPurrDoc::open(&path)
+            .map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+
         // Load lopdf document for link extraction
         let lopdf_doc = lopdf::Document::load(path.as_ref())
             .context("Failed to load PDF with lopdf for link extraction")?;
-        
+
         Ok(Document {
             inner,
             cache: Some(cache),
@@ -77,11 +77,11 @@ impl Document {
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
         let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
-        
+
         // Load lopdf document for link extraction
         let lopdf_doc = lopdf::Document::load_mem(data)
             .context("Failed to load PDF with lopdf for link extraction")?;
-        
+
         Ok(Document {
             inner,
             cache: None,
@@ -97,11 +97,11 @@ impl Document {
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
         let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
-        
+
         // Load lopdf document for link extraction
         let lopdf_doc = lopdf::Document::load_mem(data)
             .context("Failed to load PDF with lopdf for link extraction")?;
-        
+
         Ok(Document {
             inner,
             cache: Some(cache),

@@ -1,3 +1,4 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::LazyLock;
 
 use crate::color;
@@ -110,7 +111,7 @@ fn detect_windows_dark_mode() -> bool {
     false
 }
 
-static DARK_MODE: LazyLock<std::sync::Mutex<bool>> = LazyLock::new(|| std::sync::Mutex::new(false));
+static DARK_MODE: AtomicBool = AtomicBool::new(false);
 static THEME_MODE: LazyLock<std::sync::Mutex<ThemeMode>> =
     LazyLock::new(|| std::sync::Mutex::new(ThemeMode::System));
 static AUTO_THRESHOLD: LazyLock<std::sync::Mutex<u16>> =
@@ -118,7 +119,7 @@ static AUTO_THRESHOLD: LazyLock<std::sync::Mutex<u16>> =
 
 #[inline]
 pub fn is_dark_mode() -> bool {
-    *DARK_MODE.lock().expect("DARK_MODE lock poisoned")
+    DARK_MODE.load(Ordering::Relaxed)
 }
 
 #[inline]
@@ -133,7 +134,7 @@ pub fn theme_mode() -> ThemeMode {
 
 #[inline]
 pub fn set_dark_mode(enabled: bool) {
-    *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = enabled;
+    DARK_MODE.store(enabled, Ordering::Relaxed);
 }
 
 #[inline]
@@ -141,13 +142,13 @@ pub fn set_theme_mode(mode: ThemeMode) {
     *THEME_MODE.lock().expect("THEME_MODE lock poisoned") = mode;
     match mode {
         ThemeMode::Light | ThemeMode::Sepia => {
-            *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = false;
+            DARK_MODE.store(false, Ordering::Relaxed);
         }
         ThemeMode::Dark => {
-            *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = true;
+            DARK_MODE.store(true, Ordering::Relaxed);
         }
         ThemeMode::System => {
-            *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = detect_system_dark_mode();
+            DARK_MODE.store(detect_system_dark_mode(), Ordering::Relaxed);
         }
         ThemeMode::Auto | ThemeMode::Scheduled => {}
     }
@@ -169,10 +170,10 @@ pub fn update_from_light_sensor(light_level: u16) {
     if mode == ThemeMode::Auto {
         let threshold = *AUTO_THRESHOLD.lock().expect("AUTO_THRESHOLD lock poisoned");
         let dark = light_level < threshold;
-        *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = dark;
+        DARK_MODE.store(dark, Ordering::Relaxed);
     } else if mode == ThemeMode::System {
         // Re-detect system theme in case it changed
-        *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = detect_system_dark_mode();
+        DARK_MODE.store(detect_system_dark_mode(), Ordering::Relaxed);
     }
 }
 
@@ -195,7 +196,7 @@ pub fn update_from_schedule(schedule: &ThemeSchedule, current_time: &DateTime<Lo
         now_minutes >= start_minutes || now_minutes < end_minutes
     };
 
-    *DARK_MODE.lock().expect("DARK_MODE lock poisoned") = is_dark;
+    DARK_MODE.store(is_dark, Ordering::Relaxed);
 }
 
 #[inline]

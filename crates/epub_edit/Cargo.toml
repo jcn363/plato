@@ -6,8 +6,10 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "gif", "bmp", "webp", "tga"] }
 log.workspace = true
 regex.workspace = true
 serde.workspace = true
 uuid.workspace = true
+walkdir = "2.5.0"
 zip.workspace = true

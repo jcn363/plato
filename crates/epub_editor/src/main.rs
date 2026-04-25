@@ -28,6 +28,9 @@ fn print_menu() {
     println!("8. Undo last change");
     println!("9. Redo last change");
     println!("10. Save EPUB");
+    println!("11. Optimize images (Grayscale & Resize)");
+    println!("12. Sanitize CSS for E-Ink");
+    println!("13. Recover TOC from headings");
     println!("0. Exit");
     print!("Select option: ");
 }
@@ -286,6 +289,49 @@ fn main() -> io::Result<()> {
                     match editor.save() {
                         Ok(_) => println!("EPUB saved successfully."),
                         Err(e) => println!("Error saving EPUB: {}", e),
+                    }
+                } else {
+                    println!("Error: No EPUB file open.");
+                }
+                println!();
+            }
+            "11" => {
+                if let Some(ref editor) = current_editor {
+                    print!("Enter max dimension (default 1600): ");
+                    io::stdout().flush()?;
+                    let mut input = String::new();
+                    io::stdin().read_line(&mut input)?;
+                    let max_dim = input.trim().parse::<u32>().unwrap_or(1600);
+
+                    println!("Optimizing images...");
+                    match editor.optimize_images(max_dim) {
+                        Ok(count) => println!("Optimized {} images.", count),
+                        Err(e) => println!("Error optimizing images: {}", e),
+                    }
+                } else {
+                    println!("Error: No EPUB file open.");
+                }
+                println!();
+            }
+            "12" => {
+                if let Some(ref mut editor) = current_editor {
+                    println!("Sanitizing CSS...");
+                    match editor.sanitize_css() {
+                        Ok(count) => println!("Sanitized CSS in {} locations.", count),
+                        Err(e) => println!("Error sanitizing CSS: {}", e),
+                    }
+                } else {
+                    println!("Error: No EPUB file open.");
+                }
+                println!();
+            }
+            "13" => {
+                if let Some(ref mut editor) = current_editor {
+                    println!("Recovering TOC from headings...");
+                    match editor.recover_toc() {
+                        Ok(true) => println!("TOC recovered/updated."),
+                        Ok(false) => println!("No changes needed or no headings found."),
+                        Err(e) => println!("Error recovering TOC: {}", e),
                     }
                 } else {
                     println!("Error: No EPUB file open.");

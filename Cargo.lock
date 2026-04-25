@@ -765,10 +765,12 @@ name = "epub_edit"
 version = "0.9.45"
 dependencies = [
  "anyhow",
+ "image",
  "log",
  "regex",
  "serde",
  "uuid",
+ "walkdir",
  "zip 8.5.1",
 ]
 
