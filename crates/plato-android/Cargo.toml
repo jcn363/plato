@@ -11,9 +11,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 plato-core = { path = "../core" }
-android-activity = { version = "0.6.1", features = ["native-activity"] }
-ndk = "0.9.0"
-ndk-context = "0.1.1"
-ndk-glue = "0.7.0"
-android_logger = "0.15.1"
+android-activity = { version = "0.6.1", features = ["native-activity"], optional = true }
+ndk = { version = "0.9.0", features = ["nativewindow"], optional = true }
+ndk-context = { version = "0.1.1", optional = true }
+android_logger = { version = "0.15.1", optional = true }
 log = "0.4.29"
+anyhow = "1.0.102"
+
+[features]
+default = ["android"]
+android = ["android-activity", "ndk", "ndk-context", "android_logger"]

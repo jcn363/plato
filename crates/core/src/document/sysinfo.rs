@@ -17,6 +17,7 @@ use std::env;
 use std::fs;
 use std::process::Command;
 
+#[allow(dead_code)]
 const INTERNAL_CARD_ROOT: &str = "/mnt/onboard";
 
 const CPUINFO_KEYS: [&str; 3] = ["Processor", "Features", "Hardware"];

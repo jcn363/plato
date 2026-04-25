@@ -17,3 +17,9 @@ rustflags = [
 
 [build]
 target = "arm-unknown-linux-gnueabihf"
+
+# Android ARM 64-bit target
+[target.aarch64-linux-android]
+ar = "/usr/lib/android-sdk/ndk/26.2.11394342/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+linker = "/usr/lib/android-sdk/ndk/26.2.11394342/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android33-clang"
+rustflags = ["-C", "link-arg=-landroid"]
