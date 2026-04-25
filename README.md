@@ -29,6 +29,9 @@ Documentation:
 - [PDF features](doc/PDF_FEATURES.md)
 - [EPUB Editor features](doc/EPUB_EDITOR.md)
 - [Navigation documentation](doc/NAVIGATION.md)
+- [OPDS Catalog](doc/OPDS_CATALOG.md)
+- [Theme System](doc/THEME_AWARE.md)
+- [Recently Implemented Features](doc/IMPLEMENTED_FEATURES.md)
 
 ## Supported firmwares
 
@@ -133,9 +136,6 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 
 # Create distribution bundle
 ./dist.sh [arm|arm64]
-
-# Run the desktop emulator (requires SDL2)
-./run-emulator.sh
 
 # Install the importer helper
 ./install-importer.sh
