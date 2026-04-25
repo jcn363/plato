@@ -59,27 +59,27 @@ jobs:
 
     - name: Build Rust core for iOS device
       run: |
-        cargo build --target aarch64-apple-ios --release -p plato-core
+        cargo build --target aarch64-apple-ios --release -p plato-core -- -D warnings
 
     - name: Build Rust iOS library for iOS device
       run: |
-        cargo build --target aarch64-apple-ios --profile release-ios -p plato-ios
+        cargo build --target aarch64-apple-ios --profile release-ios -p plato-ios -- -D warnings
 
     - name: Build Rust core for iOS simulator (ARM64)
       run: |
-        cargo build --target aarch64-apple-ios-sim --release -p plato-core
+        cargo build --target aarch64-apple-ios-sim --release -p plato-core -- -D warnings
 
     - name: Build Rust iOS library for iOS simulator (ARM64)
       run: |
-        cargo build --target aarch64-apple-ios-sim --profile release-ios -p plato-ios
+        cargo build --target aarch64-apple-ios-sim --profile release-ios -p plato-ios -- -D warnings
 
     - name: Build Rust core for iOS simulator (x86_64)
       run: |
-        cargo build --target x86_64-apple-ios --release -p plato-core
+        cargo build --target x86_64-apple-ios --release -p plato-core -- -D warnings
 
     - name: Build Rust iOS library for iOS simulator (x86_64)
       run: |
-        cargo build --target x86_64-apple-ios --profile release-ios -p plato-ios
+        cargo build --target x86_64-apple-ios --profile release-ios -p plato-ios -- -D warnings
 
     - name: Create universal library
       run: |
