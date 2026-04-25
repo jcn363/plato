@@ -375,9 +375,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.60"
+version = "1.2.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43c5703da9466b66a946814e1adf53ea2c90f10063b86290cc9eb67ce3478a20"
+checksum = "d16d90359e986641506914ba71350897565610e87ce0ad9e6f28569db3dd5c6d"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -1598,6 +1598,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "justjp2"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ac40df17c8b973a06a93d07994ec15d4b0f72245864fcfb8eeef6711d7a403b"
+dependencies = [
+ "bitflags 2.11.1",
+ "rayon",
+]
+
+[[package]]
 name = "kl-hyphenate"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2202,6 +2212,7 @@ dependencies = [
  "html5ever",
  "image",
  "indexmap",
+ "justjp2",
  "kl-hyphenate",
  "lazy_static",
  "levenshtein",
@@ -2209,7 +2220,6 @@ dependencies = [
  "lopdf",
  "lru",
  "nix",
- "openjp2",
  "paragraph-breaker",
  "pdfpurr",
  "percent-encoding",
@@ -2766,9 +2776,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-pki-types"
-version = "1.14.0"
+version = "1.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be040f8b0a225e40375822a563fa9524378b9d63112f53e19ffff34df5d33fdd"
+checksum = "30a7197ae7eb376e574fe940d068c30fe0462554a3ddbe4eca7838e049c937a9"
 dependencies = [
  "web-time",
  "zeroize",

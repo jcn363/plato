@@ -382,7 +382,14 @@ impl View for NavigationBar {
         }
     }
 
-    fn render(&self, _fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {}
+    fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
+        for child in self.children().iter() {
+            let child_rect = child.rect();
+            if let Some(intersection) = rect.intersection(child_rect) {
+                child.render(fb, intersection, fonts);
+            }
+        }
+    }
 
     fn rect(&self) -> &Rectangle {
         &self.rect
