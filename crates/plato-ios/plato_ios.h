@@ -19,23 +19,22 @@ typedef struct Context Context;
 
 /**
  * Initialize the Plato iOS app
- * 
+ *
  * @param width Screen width in pixels
  * @param height Screen height in pixels
- * @param library_path_ptr Pointer to library path UTF-8 string (can be null)
- * @param library_path_len Length of library path string
- * @param settings_path_ptr Pointer to settings path UTF-8 string (can be null)
- * @param settings_path_len Length of settings path string
  * @return true on success, false on failure
  */
-bool plato_init(
-    uint32_t width,
-    uint32_t height,
-    const uint8_t* library_path_ptr,
-    size_t library_path_len,
-    const uint8_t* settings_path_ptr,
-    size_t settings_path_len
-);
+bool plato_init(uint32_t width, uint32_t height);
+
+/**
+ * Resize the framebuffer to new dimensions
+ * Should be called when view bounds change (rotation, resizing)
+ *
+ * @param width New screen width in pixels
+ * @param height New screen height in pixels
+ * @return true on success, false on failure
+ */
+bool plato_resize(uint32_t width, uint32_t height);
 
 /**
  * Get the global context pointer

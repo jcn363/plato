@@ -139,32 +139,8 @@ pub unsafe extern "C" fn plato_get_context() -> *mut Context {
 /// Called from Swift when the app launches
 #[cfg(feature = "ios")]
 #[no_mangle]
-pub unsafe extern "C" fn plato_init(
-    width: u32,
-    height: u32,
-    library_path_ptr: *const u8,
-    library_path_len: usize,
-    settings_path_ptr: *const u8,
-    settings_path_len: usize,
-) -> bool {
+pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     log::info!("Plato iOS initializing...");
-
-    // Set paths from Swift if provided
-    if !library_path_ptr.is_null() && library_path_len > 0 {
-        let library_path = std::str::from_utf8_unchecked(
-            std::slice::from_raw_parts(library_path_ptr, library_path_len)
-        );
-        storage::set_library_path(library_path.to_string());
-        log::info!("Library path from Swift: {}", library_path);
-    }
-
-    if !settings_path_ptr.is_null() && settings_path_len > 0 {
-        let settings_path = std::str::from_utf8_unchecked(
-            std::slice::from_raw_parts(settings_path_ptr, settings_path_len)
-        );
-        storage::set_settings_path(settings_path.to_string());
-        log::info!("Settings path from Swift: {}", settings_path);
-    }
 
     // Initialize mobile optimization configs
     let touch_config = TouchConfig::platform_optimal();
@@ -336,6 +312,55 @@ pub unsafe extern "C" fn plato_init(
     }
 
     true
+}
+
+/// Resize the framebuffer to new dimensions
+/// Called from Swift when view bounds change (rotation, resizing)
+#[cfg(feature = "ios")]
+#[no_mangle]
+pub unsafe extern "C" fn plato_resize(width: u32, height: u32) -> bool {
+    log::info!("Resizing framebuffer to {}x{}", width, height);
+
+    // Create new framebuffer with new dimensions
+    let new_fb = match framebuffer::IOSFramebuffer::new(width, height) {
+        Ok(fb) => fb,
+        Err(e) => {
+            log::error!("Failed to create new framebuffer: {}", e);
+            return false;
+        }
+    };
+
+    // Replace the global framebuffer
+    FRAMEBUFFER = Some(new_fb);
+
+    // Recreate the view with new dimensions
+    let (fb_width, fb_height) = if let Some(ref fb) = FRAMEBUFFER {
+        (fb.width(), fb.height())
+    } else {
+        log::error!("No framebuffer available after resize");
+        return false;
+    };
+    let fb_rect = plato_core::geom::Rectangle::new(
+        plato_core::geom::Point::new(0, 0),
+        plato_core::geom::Point::new(fb_width as i32, fb_height as i32),
+    );
+
+    if let (Some(hub_ref), Some(rq_ref), Some(context_ref)) = (HUB.as_ref(), RENDER_QUEUE.as_mut(), CONTEXT.as_mut()) {
+        match Home::new(fb_rect, hub_ref, rq_ref, context_ref) {
+            Ok(home) => {
+                VIEW = Some(Box::new(home) as Box<dyn View>);
+                log::info!("View resized successfully");
+                true
+            }
+            Err(e) => {
+                log::error!("Failed to recreate view after resize: {}", e);
+                false
+            }
+        }
+    } else {
+        log::error!("Missing required components for resize");
+        false
+    }
 }
 
 /// Handle touch down event

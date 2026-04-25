@@ -6,6 +6,8 @@ class PlatoRenderer {
     private var displayLink: CADisplayLink?
     private var pixelBuffer: UnsafeMutablePointer<UInt8>?
     private var bufferSize: Int = 0
+    private var currentWidth: Int = 0
+    private var currentHeight: Int = 0
 
     init(view: UIView) {
         self.view = view
@@ -21,6 +23,7 @@ class PlatoRenderer {
 
     private func setupDisplayLink() {
         displayLink = CADisplayLink(target: self, selector: #selector(renderFrame))
+        displayLink?.preferredFramesPerSecond = 60
         displayLink?.add(to: .main, forMode: .common)
     }
 
@@ -33,6 +36,18 @@ class PlatoRenderer {
         let height = Int(view.bounds.height * scale)
         let requiredSize = width * height * 4
 
+        // Check if dimensions changed and resize Rust framebuffer if needed
+        if width != currentWidth || height != currentHeight {
+            if plato_resize(UInt32(width), UInt32(height)) {
+                currentWidth = width
+                currentHeight = height
+            } else {
+                // Resize failed, skip this frame
+                return
+            }
+        }
+
+        // Reallocate Swift buffer if size changed
         if bufferSize != requiredSize {
             if let buffer = pixelBuffer {
                 buffer.deallocate()
