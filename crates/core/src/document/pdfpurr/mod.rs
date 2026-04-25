@@ -17,7 +17,7 @@ pub use outline::{Link, Outline};
 pub use page::Page;
 pub use text::{TextBlock, TextChar, TextLine, TextPage};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use pdfpurr::Document as PdfPurrDoc;
 use std::path::Path;
 use std::sync::Arc;
@@ -29,6 +29,7 @@ pub struct Document {
     inner: PdfPurrDoc,
     cache: Option<Arc<PdfCache>>,
     doc_id: String,
+    lopdf_doc: Option<lopdf::Document>,
 }
 
 /// Type alias for compatibility
@@ -38,22 +39,34 @@ impl Document {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let doc_id = path.as_ref().to_string_lossy().to_string();
         let inner =
-            PdfPurrDoc::open(path).map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+            PdfPurrDoc::open(&path).map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+        
+        // Load lopdf document for link extraction
+        let lopdf_doc = lopdf::Document::load(path.as_ref())
+            .context("Failed to load PDF with lopdf for link extraction")?;
+        
         Ok(Document {
             inner,
             cache: None,
             doc_id,
+            lopdf_doc: Some(lopdf_doc),
         })
     }
 
     pub fn open_with_cache<P: AsRef<Path>>(path: P, cache: Arc<PdfCache>) -> Result<Self> {
         let doc_id = path.as_ref().to_string_lossy().to_string();
         let inner =
-            PdfPurrDoc::open(path).map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+            PdfPurrDoc::open(&path).map_err(|e| anyhow::format_err!("Failed to open PDF: {}", e))?;
+        
+        // Load lopdf document for link extraction
+        let lopdf_doc = lopdf::Document::load(path.as_ref())
+            .context("Failed to load PDF with lopdf for link extraction")?;
+        
         Ok(Document {
             inner,
             cache: Some(cache),
             doc_id,
+            lopdf_doc: Some(lopdf_doc),
         })
     }
 
@@ -64,10 +77,16 @@ impl Document {
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
         let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
+        
+        // Load lopdf document for link extraction
+        let lopdf_doc = lopdf::Document::load_mem(data)
+            .context("Failed to load PDF with lopdf for link extraction")?;
+        
         Ok(Document {
             inner,
             cache: None,
             doc_id,
+            lopdf_doc: Some(lopdf_doc),
         })
     }
 
@@ -78,10 +97,16 @@ impl Document {
         let inner = PdfPurrDoc::from_bytes(data)
             .map_err(|e| anyhow::format_err!("Failed to load PDF from bytes: {}", e))?;
         let doc_id = format!("bytes_{}", hex::encode(&data[..8]));
+        
+        // Load lopdf document for link extraction
+        let lopdf_doc = lopdf::Document::load_mem(data)
+            .context("Failed to load PDF with lopdf for link extraction")?;
+        
         Ok(Document {
             inner,
             cache: Some(cache),
             doc_id,
+            lopdf_doc: Some(lopdf_doc),
         })
     }
 
@@ -112,6 +137,7 @@ impl Document {
             page_index,
             cache_key,
             self.cache.clone(),
+            self.lopdf_doc.as_ref(),
         ))
     }
 

@@ -16,6 +16,7 @@ pub struct Page<'a> {
     index: usize,
     cache_key: PageCacheKey,
     cache: Option<Arc<PdfCache>>,
+    lopdf_doc: Option<&'a lopdf::Document>,
 }
 
 impl<'a> Page<'a> {
@@ -24,12 +25,14 @@ impl<'a> Page<'a> {
         index: usize,
         cache_key: PageCacheKey,
         cache: Option<Arc<PdfCache>>,
+        lopdf_doc: Option<&'a lopdf::Document>,
     ) -> Self {
         Self {
             doc,
             index,
             cache_key,
             cache,
+            lopdf_doc,
         }
     }
 
@@ -43,18 +46,85 @@ impl<'a> Page<'a> {
 
     pub fn load_links(&self) -> Option<Link> {
         // Extract links from the page's annotation dictionary using lopdf
-        // This requires accessing the underlying PDF document structure
-
-        // For now, return empty list as this requires deeper PDF structure access
-        // A full implementation would:
-        // 1. Get the page dictionary
-        // 2. Access the /Annots array
-        // 3. Filter for /Link annotations
-        // 4. Extract their URIs and bounding boxes
-
-        // This is a complex feature that requires lopdf integration
-        // For Phase 4, we stub this out
-        Some(Link::new(Vec::new(), 0))
+        if let Some(lopdf_doc) = self.lopdf_doc {
+            let pages = lopdf_doc.get_pages();
+            let page_id = pages.get(&(self.index as u32 + 1)).copied()?;
+            
+            let mut annotations = Vec::new();
+            
+            if let Ok(lopdf_annots) = lopdf_doc.get_page_annotations(page_id) {
+                for annot in lopdf_annots {
+                    // Check if this is a Link annotation
+                    let subtype = annot.get_deref(b"Subtype", lopdf_doc)
+                        .and_then(|obj| obj.as_name())
+                        .map(|name| String::from_utf8_lossy(name).to_string())
+                        .unwrap_or_default();
+                    
+                    if subtype == "Link" {
+                        // Extract bounding box
+                        let rect = annot.get_deref(b"Rect", lopdf_doc)
+                            .and_then(|obj| obj.as_array())
+                            .and_then(|arr| {
+                                let coords: Vec<f64> = arr.iter()
+                                    .filter_map(|obj| obj.as_i64().ok())
+                                    .map(|i| i as f64)
+                                    .collect();
+                                if coords.len() == 4 {
+                                    Ok([coords[0], coords[1], coords[2], coords[3]])
+                                } else {
+                                    Err(lopdf::Error::Syntax("Invalid rect coordinates".to_string()))
+                                }
+                            })
+                            .unwrap_or([0.0, 0.0, 0.0, 0.0]);
+                        
+                        // Extract link URI or destination
+                        let uri = annot.get_deref(b"A", lopdf_doc)
+                            .and_then(|obj| obj.as_dict())
+                            .and_then(|dict| {
+                                // Try URI action
+                                if let Ok(uri_obj) = dict.get(b"URI") {
+                                    Ok(uri_obj.as_str().ok().map(|s| String::from_utf8_lossy(s).to_string()))
+                                } else {
+                                    // Try GoTo action (destination)
+                                    Ok(dict.get(b"D").ok().and_then(|dest| {
+                                        // Convert destination to page reference
+                                        if let Ok(dest_arr) = dest.as_array() {
+                                            if let Some(page_ref) = dest_arr.get(0) {
+                                                page_ref.as_i64().ok().map(|page_num| {
+                                                    format!("#page{}", page_num + 1)
+                                                })
+                                            } else {
+                                                None
+                                            }
+                                        } else {
+                                            None
+                                        }
+                                    }))
+                                }
+                            })
+                            .unwrap_or(None);
+                        
+                        // Create PDFPurr Annotation
+                        annotations.push(pdfpurr::structure::Annotation {
+                            subtype: "Link".to_string(),
+                            rect,
+                            contents: None,
+                            flags: 0,
+                            color: None,
+                            author: None,
+                            modified_date: None,
+                            uri,
+                            quad_points: Vec::new(),
+                        });
+                    }
+                }
+            }
+            
+            Some(Link::new(annotations, 0))
+        } else {
+            // Fallback to empty link list if lopdf document not available
+            Some(Link::new(Vec::new(), 0))
+        }
     }
 
     pub fn first_annot(&self) -> Option<()> {
