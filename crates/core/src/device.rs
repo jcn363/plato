@@ -688,6 +688,7 @@ mod tests {
     #[test]
     fn test_is_android_with_android_root() {
         // Test with ANDROID_ROOT (simulated Android environment)
+        std::env::remove_var("ANDROID_ROOT");
         std::env::set_var("ANDROID_ROOT", "/system");
         assert!(is_android());
         std::env::remove_var("ANDROID_ROOT");
@@ -708,6 +709,7 @@ mod tests {
         // Test Android via ANDROID_ROOT
         std::env::remove_var("PLATO_DEVICE");
         std::env::remove_var("XDG_CURRENT_DESKTOP");
+        std::env::remove_var("ANDROID_ROOT");
         std::env::set_var("ANDROID_ROOT", "/system");
         let cache = page_cache_size_mb();
         assert_eq!(cache, crate::consts::system::ANDROID_PAGE_CACHE_SIZE_MB);
