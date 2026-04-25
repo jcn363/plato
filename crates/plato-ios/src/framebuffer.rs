@@ -12,7 +12,7 @@ use plato_core::framebuffer::Framebuffer;
 use plato_core::framebuffer::UpdateMode;
 use plato_core::geom::Rectangle;
 use anyhow::{Context, Result};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// iOS framebuffer implementation using Metal for hardware-accelerated rendering
 #[derive(Clone)]

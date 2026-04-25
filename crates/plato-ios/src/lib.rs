@@ -370,8 +370,23 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
 
     // Get framebuffer and fill the Swift-allocated buffer in-place
     if let Some(ref fb_arc) = FRAMEBUFFER {
-        fb_arc.fill_rgba_buffer(buffer);
-        true
+        // Lock the framebuffer before accessing
+        match fb_arc.lock() {
+            Ok(fb) => {
+                // Validate buffer size matches framebuffer dimensions
+                let expected_len = fb.width() * fb.height() * 4;
+                if len != expected_len as usize {
+                    log::error!("Buffer size mismatch: expected {} bytes, got {} bytes", expected_len, len);
+                    return false;
+                }
+                fb.fill_rgba_buffer(buffer);
+                true
+            }
+            Err(e) => {
+                log::error!("Failed to lock framebuffer: {}", e);
+                false
+            }
+        }
     } else {
         log::error!("No framebuffer available");
         false

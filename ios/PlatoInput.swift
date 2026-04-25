@@ -1,11 +1,18 @@
 import UIKit
 
-class PlatoInput: NSObject {
+class PlatoInput: UIResponder {
     private weak var view: UIView?
 
     init(view: UIView) {
         self.view = view
         super.init()
+    }
+
+    // Helper function to convert touch to stable Int32 identifier
+    private func touchId(_ touch: UITouch) -> Int32 {
+        // Use ObjectIdentifier for stable touch identity, convert to Int32
+        let objectId = ObjectIdentifier(touch)
+        return Int32(truncatingIfNeeded: objectId.hashValue)
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -16,7 +23,7 @@ class PlatoInput: NSObject {
             let scale = UIScreen.main.scale
             let x = Int32(location.x * scale)
             let y = Int32(location.y * scale)
-            let id = Int32(bitPattern: touch.hashValue)
+            let id = touchId(touch)
 
             plato_touch_down(id, x, y)
         }
@@ -30,7 +37,7 @@ class PlatoInput: NSObject {
             let scale = UIScreen.main.scale
             let x = Int32(location.x * scale)
             let y = Int32(location.y * scale)
-            let id = Int32(bitPattern: touch.hashValue)
+            let id = touchId(touch)
 
             plato_touch_move(id, x, y)
         }
@@ -44,7 +51,7 @@ class PlatoInput: NSObject {
             let scale = UIScreen.main.scale
             let x = Int32(location.x * scale)
             let y = Int32(location.y * scale)
-            let id = Int32(bitPattern: touch.hashValue)
+            let id = touchId(touch)
 
             plato_touch_up(id, x, y)
         }
@@ -58,7 +65,7 @@ class PlatoInput: NSObject {
             let scale = UIScreen.main.scale
             let x = Int32(location.x * scale)
             let y = Int32(location.y * scale)
-            let id = Int32(bitPattern: touch.hashValue)
+            let id = touchId(touch)
 
             plato_touch_up(id, x, y)
         }
