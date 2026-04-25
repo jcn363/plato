@@ -89,7 +89,7 @@ impl OpdsView {
         std::thread::spawn(move || {
             match reqwest::blocking::get(&url) {
                 Ok(response) => {
-                    let filename = url.split('/').last().unwrap_or("book.epub");
+                    let filename = url.split('/').next_back().unwrap_or("book.epub");
                     let mut dest_path = downloads_path.join(filename);
                     if !dest_path.to_string_lossy().contains('.') {
                         dest_path.set_extension("epub");

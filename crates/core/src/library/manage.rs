@@ -86,10 +86,22 @@ impl Library {
         if paths.is_empty() {
             return Ok(());
         }
+        let mut failed = 0usize;
         for path in paths {
-            self.remove(path)?;
+            if let Err(e) = self.remove(path) {
+                crate::log_error!("remove_batch: failed to remove {}: {:#}", path.display(), e);
+                failed += 1;
+            }
         }
-        Ok(())
+        if failed > 0 {
+            Err(anyhow::format_err!(
+                "{}/{} files could not be removed (see log for details)",
+                failed,
+                paths.len()
+            ))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn copy_to<P: AsRef<Path>>(&mut self, path: P, other: &mut Library) -> Result<(), Error> {
@@ -322,9 +334,21 @@ impl Library {
         if paths.is_empty() {
             return Ok(());
         }
+        let mut failed = 0usize;
         for path in paths {
-            self.move_to(path, other)?;
+            if let Err(e) = self.move_to(path, other) {
+                crate::log_error!("move_batch: failed to move {}: {:#}", path.display(), e);
+                failed += 1;
+            }
         }
-        Ok(())
+        if failed > 0 {
+            Err(anyhow::format_err!(
+                "{}/{} files could not be moved (see log for details)",
+                failed,
+                paths.len()
+            ))
+        } else {
+            Ok(())
+        }
     }
 }
