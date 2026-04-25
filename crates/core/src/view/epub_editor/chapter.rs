@@ -1,10 +1,17 @@
 //! Chapter manipulation event handlers for EPUB Editor
 
+use rustc_hash::FxHashSet;
+use std::fs;
+use std::path::Path;
+
 use crate::context::Context;
 use crate::view::notification::Notification;
 use crate::view::{Hub, RenderQueue, View};
 
-/// Handle rename chapter action
+/// Handle rename chapter action (BUG-2).
+///
+/// Shows a pre-filled input field so the user can edit the chapter title.
+/// The result arrives via `Event::Submit(ViewId::RenameDocumentInput, text)`.
 pub fn handle_rename_chapter(
     editor: &mut super::EpubEditor,
     hub: &Hub,
@@ -12,13 +19,7 @@ pub fn handle_rename_chapter(
     context: &mut Context,
 ) -> bool {
     if let super::state::EditorState::EditingChapter { index: _ } = editor.state {
-        let notif = Notification::new(
-            "Chapter rename feature - UI input needed".to_string(),
-            hub,
-            rq,
-            context,
-        );
-        editor.children.push(Box::new(notif) as Box<dyn View>);
+        super::helpers::show_rename_input(editor, hub, rq, context);
     }
     true
 }
@@ -100,7 +101,10 @@ pub fn handle_move_chapter_down(
     true
 }
 
-/// Handle export chapter action
+/// Handle export chapter action (BUG-4).
+///
+/// Exports the current chapter to `<library>/Exports/chapter_N_<title>.txt`
+/// instead of the fragile relative `./tmp/` path.
 pub fn handle_export_chapter(
     editor: &mut super::EpubEditor,
     hub: &Hub,
@@ -108,12 +112,36 @@ pub fn handle_export_chapter(
     context: &mut Context,
 ) -> bool {
     if let super::state::EditorState::EditingChapter { index } = editor.state {
-        let export_path = format!("./tmp/chapter_{}.txt", index);
-        let path = std::path::Path::new(&export_path);
-        match editor.core.export_chapter(index, path) {
+        let library_path = context.settings.libraries[context.settings.selected_library]
+            .path
+            .clone();
+        let exports_path = library_path.join("Exports");
+
+        if !exports_path.exists() {
+            if let Err(e) = fs::create_dir_all(&exports_path) {
+                let notif = Notification::new(
+                    format!("Error creating Exports directory: {}", e),
+                    hub,
+                    rq,
+                    context,
+                );
+                editor.children.push(Box::new(notif) as Box<dyn View>);
+                return true;
+            }
+        }
+
+        let chapter_title = &editor.core.chapters[index].title;
+        let safe_title: String = chapter_title
+            .chars()
+            .map(|c| if c.is_alphanumeric() || c == ' ' { c } else { '_' })
+            .collect();
+        let file_name = format!("chapter_{}_{}.txt", index, safe_title.trim());
+        let dest = exports_path.join(&file_name);
+
+        match editor.core.export_chapter(index, Path::new(&dest)) {
             Ok(_) => {
                 let notif = Notification::new(
-                    format!("Chapter exported to {}", export_path),
+                    format!("Chapter exported to Exports/{}", file_name),
                     hub,
                     rq,
                     context,
@@ -130,7 +158,11 @@ pub fn handle_export_chapter(
     true
 }
 
-/// Handle import chapter action
+/// Handle import chapter action (BUG-3).
+///
+/// Scans the library's `Downloads/` directory for `.xhtml`, `.html`, and `.txt`
+/// files, then presents them as a menu. The selection is handled via
+/// `Event::Select(EntryId::ImportChapterFile(path))` in `event_handlers.rs`.
 pub fn handle_import_chapter(
     editor: &mut super::EpubEditor,
     hub: &Hub,
@@ -138,13 +170,7 @@ pub fn handle_import_chapter(
     context: &mut Context,
 ) -> bool {
     if let super::state::EditorState::EditingChapter { index: _ } = editor.state {
-        let notif = Notification::new(
-            "Chapter import - file path selection needed".to_string(),
-            hub,
-            rq,
-            context,
-        );
-        editor.children.push(Box::new(notif) as Box<dyn View>);
+        super::helpers::show_import_chapter_menu(editor, hub, rq, context);
     }
     true
 }
@@ -210,7 +236,7 @@ pub fn handle_generate_toc(
     true
 }
 
-/// Handle list images action
+/// Handle list images action (CQ-2: uses project-standard FxHashSet).
 pub fn handle_list_images(
     editor: &mut super::EpubEditor,
     hub: &Hub,
@@ -218,16 +244,13 @@ pub fn handle_list_images(
     context: &mut Context,
 ) -> bool {
     let images = editor.core.list_images();
+    let chapter_count = images
+        .iter()
+        .map(|i| i.chapter_index)
+        .collect::<FxHashSet<_>>()
+        .len();
     let notif = Notification::new(
-        format!(
-            "Found {} images across {} chapters",
-            images.len(),
-            images
-                .iter()
-                .map(|i| i.chapter_index)
-                .collect::<std::collections::HashSet<_>>()
-                .len()
-        ),
+        format!("Found {} images across {} chapters", images.len(), chapter_count),
         hub,
         rq,
         context,
@@ -236,7 +259,7 @@ pub fn handle_list_images(
     true
 }
 
-/// Handle list CSS action
+/// Handle list CSS action (CQ-2: uses project-standard FxHashSet).
 pub fn handle_list_css(
     editor: &mut super::EpubEditor,
     hub: &Hub,
@@ -244,16 +267,13 @@ pub fn handle_list_css(
     context: &mut Context,
 ) -> bool {
     let css_files = editor.core.list_css();
+    let chapter_count = css_files
+        .iter()
+        .map(|c| c.chapter_index)
+        .collect::<FxHashSet<_>>()
+        .len();
     let notif = Notification::new(
-        format!(
-            "Found {} CSS files across {} chapters",
-            css_files.len(),
-            css_files
-                .iter()
-                .map(|c| c.chapter_index)
-                .collect::<std::collections::HashSet<_>>()
-                .len()
-        ),
+        format!("Found {} CSS files across {} chapters", css_files.len(), chapter_count),
         hub,
         rq,
         context,

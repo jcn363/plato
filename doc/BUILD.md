@@ -31,7 +31,6 @@ rustup target add aarch64-unknown-linux-gnu
 rustup target add x86_64-unknown-linux-gnu
 ```
 
-The Rust workspace contains `crates/core`, `crates/plato`, `crates/emulator`, `crates/importer`, `crates/fetcher`, `crates/epub_edit`, `crates/epub_editor`, and `crates/plato-android`.
 
 ## Build Phase
 
@@ -45,7 +44,6 @@ This script will:
 2. Handle thirdparty libraries (download or build)
 3. Ensure necessary symlinks are in the library directory
 4. Run `cargo fmt` and `cargo clippy --workspace` (with target-specific exclusions)
-5. Build the workspace crates (optionally skipping the emulator for ARM)
 
 ### Common Options
 
@@ -86,8 +84,6 @@ cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
 # Build for host (development/testing)
 cargo build --target x86_64-unknown-linux-gnu -p plato
 
-# Build the desktop emulator binary
-cargo build --target x86_64-unknown-linux-gnu -p emulator
 
 # Build the importer helper
 cargo build --target x86_64-unknown-linux-gnu -p importer

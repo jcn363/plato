@@ -153,10 +153,8 @@ cargo check --target x86_64-unknown-linux-gnu
 
 ```bash
 # First time setup (creates Settings.toml)
-./run-emulator.sh
 
 # Subsequent runs
-./service.sh run_emulator
 ```
 
 ### Testing
@@ -203,7 +201,6 @@ If available from project releases, download the correct host archive.
 Test the desktop emulator to ensure rendering and input work correctly:
 
 ```bash
-./run-emulator.sh
 ```
 
 ### 3. Cross-Compilation Verification

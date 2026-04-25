@@ -209,7 +209,9 @@ impl View for EpubEditor {
         fonts: &mut crate::font::Fonts,
     ) {
         for child in self.children().iter() {
-            child.render(fb, rect, fonts);
+            if let Some(intersection) = child.rect().intersection(&rect) {
+                child.render(fb, intersection, fonts);
+            }
         }
     }
 

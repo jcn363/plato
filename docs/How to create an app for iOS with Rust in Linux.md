@@ -269,4 +269,3 @@ export DEVELOPER_ID="Your Apple ID"
 
 - [Android Build](../build-android-apk.sh) - Reference for mobile platform builds
 - [Kobo Build](../build.sh) - Original target platform build
-- [Emulator Build](../run-emulator.sh) - Desktop testing environment

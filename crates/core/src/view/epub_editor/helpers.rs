@@ -19,6 +19,8 @@ use crate::view::{
     THICKNESS_MEDIUM,
 };
 use epub_edit::SearchOptions;
+use std::fs;
+
 
 /// Show the chapter list view.
 pub fn show_chapter_list(
@@ -454,4 +456,133 @@ pub fn update_input_field(
 pub fn close_search_replace(editor: &mut super::EpubEditor, rq: &mut RenderQueue) {
     editor.children.retain(|c| !c.is::<SearchReplaceView>());
     rq.add(RenderData::new(editor.id, editor.rect, UpdateMode::Gui));
+}
+
+/// Show a single-line input field pre-filled with the current chapter title for renaming (BUG-2).
+///
+/// The submitted text arrives as `Event::Submit(ViewId::RenameDocumentInput, text)`.
+pub fn show_rename_input(
+    editor: &mut super::EpubEditor,
+    _hub: &Hub,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
+    let EditorState::EditingChapter { index } = editor.state else { return };
+    if index >= editor.core.chapters.len() {
+        return;
+    }
+
+    // Remove any stale rename inputs.
+    editor.children.retain(|c| !c.is::<InputField>() || c.view_id() != Some(ViewId::RenameDocumentInput));
+
+    let current_title = editor.core.chapters[index].title.clone();
+    let dpi = crate::unit::get_device_dpi();
+    let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
+    let row_height = scale_by_dpi(40.0, dpi) as i32;
+    let padding = scale_by_dpi(10.0, dpi) as i32;
+
+    // Label
+    let label_rect = rect![
+        editor.rect.min.x + padding,
+        editor.rect.min.y + small_height + padding,
+        editor.rect.max.x - padding,
+        editor.rect.min.y + small_height + padding + row_height
+    ];
+    editor
+        .children
+        .push(Box::new(Label::new(label_rect, "Rename chapter:".to_string(), Align::Left(0))) as Box<dyn View>);
+
+    // Pre-filled input field
+    let input_rect = rect![
+        editor.rect.min.x + padding,
+        editor.rect.min.y + small_height + padding + row_height,
+        editor.rect.max.x - padding,
+        editor.rect.min.y + small_height + padding + row_height * 2
+    ];
+    let input = InputField::new(input_rect, ViewId::RenameDocumentInput)
+        .border(true)
+        .text(&current_title, context);
+    editor.children.push(Box::new(input) as Box<dyn View>);
+
+    // Keyboard
+    let mut kb_rect = rect![
+        editor.rect.min.x,
+        editor.rect.max.y - small_height,
+        editor.rect.max.x,
+        editor.rect.max.y
+    ];
+    let keyboard = Keyboard::new(&mut kb_rect, true, context);
+    editor.children.push(Box::new(keyboard) as Box<dyn View>);
+
+    rq.add(RenderData::new(editor.id, editor.rect, UpdateMode::Gui));
+}
+
+/// Scan the library's `Downloads/` directory for importable files and show them as a menu (BUG-3).
+///
+/// Supports `.xhtml`, `.html`, and `.txt` files.
+/// If no files are found, a notification is shown instead.
+/// The selected file path arrives as `Event::Select(EntryId::ImportChapterFile(path))`.
+pub fn show_import_chapter_menu(
+    editor: &mut super::EpubEditor,
+    hub: &Hub,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) {
+    let library_path = context.settings.libraries[context.settings.selected_library]
+        .path
+        .clone();
+    let downloads_path = library_path.join("Downloads");
+
+    let importable: Vec<std::path::PathBuf> = fs::read_dir(&downloads_path)
+        .map(|dir| {
+            dir.flatten()
+                .map(|e| e.path())
+                .filter(|p| {
+                    matches!(
+                        p.extension().and_then(|s| s.to_str()),
+                        Some("xhtml" | "html" | "txt")
+                    )
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    if importable.is_empty() {
+        let notif = Notification::new(
+            format!("No importable files in {}", downloads_path.display()),
+            hub,
+            rq,
+            context,
+        );
+        editor.children.push(Box::new(notif) as Box<dyn View>);
+        return;
+    }
+
+    let entries: Vec<EntryKind> = importable
+        .iter()
+        .map(|p| {
+            let name = p
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("unknown")
+                .to_string();
+            EntryKind::Command(
+                name,
+                EntryId::ImportChapterFile(p.to_string_lossy().into_owned()),
+            )
+        })
+        .collect();
+
+    let dpi = crate::unit::get_device_dpi();
+    let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
+    let rect = rect![
+        editor.rect.min.x,
+        editor.rect.min.y + small_height + 1,
+        editor.rect.max.x,
+        editor.rect.max.y
+    ];
+
+    let menu = Menu::new(rect, ViewId::BookMenu, MenuKind::Contextual, entries, context);
+    rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
+    editor.children.push(Box::new(menu) as Box<dyn View>);
 }

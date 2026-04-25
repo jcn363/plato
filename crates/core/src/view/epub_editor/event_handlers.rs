@@ -101,6 +101,14 @@ pub fn handle_event(
         Event::Submit(ViewId::EpubEditorReplaceInput, text) => {
             handle_submit_replace_input(editor, text)
         }
+        // BUG-2: commit the renamed chapter title entered by the user
+        Event::Submit(ViewId::RenameDocumentInput, ref new_title) => {
+            handle_submit_rename_chapter(editor, new_title, hub, rq, context)
+        }
+        // BUG-3: import a file chosen from the Downloads menu
+        Event::Select(EntryId::ImportChapterFile(ref path)) => {
+            handle_select_import_file(editor, path, hub, rq, context)
+        }
         _ => {
             for child in editor.children_mut().iter_mut() {
                 if child.handle_event(event, hub, bus, rq, context) {
@@ -172,11 +180,12 @@ fn handle_redo(editor: &mut super::EpubEditor, bus: &mut Bus, rq: &mut RenderQue
 }
 
 fn handle_preview(editor: &mut super::EpubEditor, bus: &mut Bus) -> bool {
+    // CQ-4: emit Event::OpenHtml so the main loop opens the chapter in the Reader.
     if let EditorState::EditingChapter { index } = editor.state {
-        bus.push_back(Event::Render(format!(
-            "Preview: {}",
-            editor.core.chapters[index].title
-        )));
+        if index < editor.core.chapters.len() {
+            let content = editor.core.chapters[index].content.clone();
+            bus.push_back(Event::OpenHtml(content, None));
+        }
     }
     true
 }
@@ -329,4 +338,78 @@ fn handle_close(editor: &mut super::EpubEditor, rq: &mut RenderQueue) -> bool {
     } else {
         false
     }
+}
+
+/// BUG-2: Apply the new chapter title submitted via the rename input field.
+fn handle_submit_rename_chapter(
+    editor: &mut super::EpubEditor,
+    new_title: &str,
+    hub: &Hub,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) -> bool {
+    let new_title = new_title.trim();
+    if new_title.is_empty() {
+        return true;
+    }
+    if let EditorState::EditingChapter { index } = editor.state {
+        match editor.core.rename_chapter(index, new_title) {
+            Ok(_) => {
+                editor.modified = true;
+                // Dismiss the rename input and keyboard, refresh the edit view.
+                super::helpers::show_edit_view(editor, index, hub, rq, context);
+                let notif = Notification::new(
+                    format!("Chapter renamed to \"{}\".", new_title),
+                    hub, rq, context,
+                );
+                editor.children.push(Box::new(notif) as Box<dyn View>);
+            }
+            Err(e) => {
+                let notif = Notification::new(
+                    format!("Error renaming chapter: {}", e),
+                    hub, rq, context,
+                );
+                editor.children.push(Box::new(notif) as Box<dyn View>);
+            }
+        }
+    }
+    true
+}
+
+/// BUG-3: Import chapter content from the file path selected in the Downloads menu.
+fn handle_select_import_file(
+    editor: &mut super::EpubEditor,
+    path: &str,
+    hub: &Hub,
+    rq: &mut RenderQueue,
+    context: &mut Context,
+) -> bool {
+    if let EditorState::EditingChapter { index } = editor.state {
+        let import_path = std::path::Path::new(path);
+        match editor.core.import_chapter(index, import_path) {
+            Ok(_) => {
+                editor.modified = true;
+                if !editor.modified_chapters.contains(&index) {
+                    editor.modified_chapters.push(index);
+                }
+                super::helpers::update_input_field(editor, rq, context);
+                let notif = Notification::new(
+                    format!(
+                        "Imported content into \"{}\"",
+                        editor.core.chapters[index].title
+                    ),
+                    hub, rq, context,
+                );
+                editor.children.push(Box::new(notif) as Box<dyn View>);
+            }
+            Err(e) => {
+                let notif = Notification::new(
+                    format!("Error importing chapter: {}", e),
+                    hub, rq, context,
+                );
+                editor.children.push(Box::new(notif) as Box<dyn View>);
+            }
+        }
+    }
+    true
 }

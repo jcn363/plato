@@ -426,7 +426,6 @@ When developing for Plato:
 4. **Test on Libra/Forma** for button and gyroscope features
 5. **Test on Clara Colour/Libra Colour** for color display handling
 
-The emulator (`./run-emulator.sh`) provides x86_64 desktop testing but cannot simulate device-specific hardware features like e-ink refresh or stylus input.
 
 ## Android Devices
 

@@ -608,18 +608,10 @@ pub fn is_elipsa() -> bool {
     is_device_type("elipsa") || matches!(CURRENT_DEVICE.model, Model::Elipsa | Model::Elipsa2E)
 }
 
-/// Check if running on LinuxMint (via PLATO_DEVICE or desktop environment)
-#[inline]
-pub fn is_linuxmint() -> bool {
-    is_device_type("linuxmint") || (std::env::var("XDG_CURRENT_DESKTOP").is_ok() && !is_android())
-}
-
 /// Get device-specific page cache size in MB
 #[inline]
 pub fn page_cache_size_mb() -> usize {
-    if is_linuxmint() {
-        crate::consts::system::LINUXMINT_PAGE_CACHE_SIZE_MB
-    } else if is_elipsa() {
+    if is_elipsa() {
         crate::consts::system::ELIPSA_PAGE_CACHE_SIZE_MB
     } else if is_android() {
         crate::consts::system::ANDROID_PAGE_CACHE_SIZE_MB
@@ -631,9 +623,7 @@ pub fn page_cache_size_mb() -> usize {
 /// Get device-specific preload ahead pages count
 #[inline]
 pub fn preload_ahead_pages() -> usize {
-    if is_linuxmint() {
-        crate::consts::system::LINUXMINT_PRELOAD_AHEAD_PAGES
-    } else if is_elipsa() {
+    if is_elipsa() {
         crate::consts::system::ELIPSA_PRELOAD_AHEAD_PAGES
     } else if is_android() {
         crate::consts::system::ANDROID_PRELOAD_AHEAD_PAGES
@@ -645,9 +635,7 @@ pub fn preload_ahead_pages() -> usize {
 /// Get device-specific preload behind pages count
 #[inline]
 pub fn preload_behind_pages() -> usize {
-    if is_linuxmint() {
-        crate::consts::system::LINUXMINT_PRELOAD_BEHIND_PAGES
-    } else if is_elipsa() {
+    if is_elipsa() {
         crate::consts::system::ELIPSA_PRELOAD_BEHIND_PAGES
     } else if is_android() {
         crate::consts::system::ANDROID_PRELOAD_BEHIND_PAGES
@@ -753,60 +741,5 @@ mod tests {
         let behind = preload_behind_pages();
         assert_eq!(behind, crate::consts::system::ANDROID_PRELOAD_BEHIND_PAGES);
         std::env::remove_var("ANDROID_ROOT");
-    }
-
-    #[test]
-    fn test_is_linuxmint_without_env() {
-        // Test without PLATO_DEVICE or XDG_CURRENT_DESKTOP
-        std::env::remove_var("PLATO_DEVICE");
-        std::env::remove_var("XDG_CURRENT_DESKTOP");
-        std::env::remove_var("ANDROID_ROOT");
-        assert!(!is_linuxmint());
-    }
-
-    #[test]
-    fn test_is_linuxmint_with_plato_device() {
-        // Test with PLATO_DEVICE=linuxmint
-        std::env::set_var("PLATO_DEVICE", "linuxmint");
-        assert!(is_linuxmint());
-        std::env::remove_var("PLATO_DEVICE");
-    }
-
-    #[test]
-    fn test_is_linuxmint_with_xdg_desktop() {
-        // Test with XDG_CURRENT_DESKTOP (desktop environment)
-        std::env::set_var("XDG_CURRENT_DESKTOP", "X-Cinnamon");
-        assert!(is_linuxmint());
-        std::env::remove_var("XDG_CURRENT_DESKTOP");
-    }
-
-    #[test]
-    fn test_page_cache_size_linuxmint() {
-        // Test LinuxMint via PLATO_DEVICE
-        std::env::set_var("PLATO_DEVICE", "linuxmint");
-        let cache = page_cache_size_mb();
-        assert_eq!(cache, crate::consts::system::LINUXMINT_PAGE_CACHE_SIZE_MB);
-        std::env::remove_var("PLATO_DEVICE");
-    }
-
-    #[test]
-    fn test_preload_ahead_linuxmint() {
-        // Test LinuxMint via PLATO_DEVICE
-        std::env::set_var("PLATO_DEVICE", "linuxmint");
-        let ahead = preload_ahead_pages();
-        assert_eq!(ahead, crate::consts::system::LINUXMINT_PRELOAD_AHEAD_PAGES);
-        std::env::remove_var("PLATO_DEVICE");
-    }
-
-    #[test]
-    fn test_preload_behind_linuxmint() {
-        // Test LinuxMint via PLATO_DEVICE
-        std::env::set_var("PLATO_DEVICE", "linuxmint");
-        let behind = preload_behind_pages();
-        assert_eq!(
-            behind,
-            crate::consts::system::LINUXMINT_PRELOAD_BEHIND_PAGES
-        );
-        std::env::remove_var("PLATO_DEVICE");
     }
 }

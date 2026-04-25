@@ -16,6 +16,8 @@ For user-facing documentation, see the [doc/](../doc/) directory:
 - [Navigation Guide](../doc/NAVIGATION.md)
 - [Not Implemented Features](../doc/NOT_IMPLEMENTED.md)
 - [PDF Features](../doc/PDF_FEATURES.md)
+- [OPDS Catalog](../doc/OPDS_CATALOG.md)
+- [Theme System](../doc/THEME_AWARE.md)
 
 ## Project Documentation
 
@@ -26,7 +28,6 @@ Root level documentation:
 - [DEVELOPMENT_SETUP.md](../DEVELOPMENT_SETUP.md) - Development environment setup
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Contributing guidelines
 - [AGENTS.md](../AGENTS.md) - AI coding agent guidance
-- [PDF.md](../PDF.md) - PDFPurr migration status (BLOCKED)
 
 ## Planning Documents
 
@@ -34,49 +35,40 @@ Root level documentation:
 
 - [PLAN.md](PLAN.md) - Overall project plan
 - [PLAN2.md](PLAN2.md) - Updated project plan
-- [MODULARIZATION_PLAN.md](MODULARIZATION_PLAN.md) - Code modularization strategy
-- [OPTI_PLAN.md](OPTI_PLAN.md) - Performance optimization plan
 
-### Feature Implementation
+### Active Plans
 
-- [STUB_PLAN.md](STUB_PLAN.md) - Stub implementation plan
-- [DEAD-CODE_PLAN.md](DEAD-CODE_PLAN.md) - Dead code removal plan
-- [CROP_PLAN.md](CROP_PLAN.md) - Margin cropping feature plan
-- [PDF-UI_PLAN.md](PDF-UI_PLAN.md) - PDF UI improvements
-- [HOME-VIEW_PLAN.md](HOME-VIEW_PLAN.md) - Home view enhancements
-- [THEME-AWARE_PLAN.md](THEME-AWARE_PLAN.md) - Theme-aware UI plan
-- [LAZY-THUMBNAIL_PLAN.md](LAZY-THUMBNAIL_PLAN.md) - Thumbnail generation optimization
-
-### Font System
-
-- [FONT-WRAPPERS.md](FONT-WRAPPERS.md) - Font wrapper implementation
+- [APPLE-PLAN.md](APPLE-PLAN.md) - iPhone and iPad support plan
+- [Mu-OUT.md](Mu-OUT.md) - MuPDF-free document handling (Future)
 
 ### Architecture
 
 - [architecture/](architecture/) - Architecture documentation
 
-## Specialized Documentation
-
-### PDF Rendering
-
-- [PDFRust.md](PDFRust.md) - PDF library migration plan (historical)
-
-### Platform Support
-
-- [APPLE-PLAN.md](APPLE-PLAN.md) - iPhone and iPad support plan
-
 ## Archive
 
 Outdated or superseded planning documents:
 
-- APK-complete_PLAN.md (superseded by current APK implementation)
-- APK_PLAN.md (superseded by current APK implementation)
-- APK_PLAN2.md (superseded by current APK implementation)
-- MOBIPLAN.md (superseded by current MOBI implementation)
-- RUST-ONLY.md (superseded by current implementation)
-- Uncensored.md (outdated)
-- OSRUST.md (outdated)
-- GEMINI.md (outdated)
+- [archive/](archive/) - Directory containing completed or superseded plans:
+  - [APK-complete_PLAN.md](archive/APK-complete_PLAN.md)
+  - [APK_PLAN.md](archive/APK_PLAN.md)
+  - [APK_PLAN2.md](archive/APK_PLAN2.md)
+  - [CROP_PLAN.md](archive/CROP_PLAN.md) (Completed)
+  - [DEAD-CODE_PLAN.md](archive/DEAD-CODE_PLAN.md) (Completed)
+  - [FONT-WRAPPERS.md](archive/FONT-WRAPPERS.md) (Completed)
+  - [GEMINI.md](archive/GEMINI.md) (Outdated)
+  - [HOME-VIEW_PLAN.md](archive/HOME-VIEW_PLAN.md) (Completed)
+  - [IMPROVEMENTS_LOG.md](archive/IMPROVEMENTS_LOG.md) (Formerly IMPRO.md - Completed items)
+  - [LAZY-THUMBNAIL_PLAN.md](archive/LAZY-THUMBNAIL_PLAN.md) (Completed)
+  - [MOBIPLAN.md](archive/MOBIPLAN.md)
+  - [MODULARIZATION_PLAN.md](archive/MODULARIZATION_PLAN.md) (Completed)
+  - [OPTI_PLAN.md](archive/OPTI_PLAN.md) (Completed)
+  - [OSRUST.md](archive/OSRUST.md)
+  - [PDF-UI_PLAN.md](archive/PDF-UI_PLAN.md) (Completed)
+  - [PDFRust.md](archive/PDFRust.md)
+  - [RUST-ONLY.md](archive/RUST-ONLY.md)
+  - [STUB_PLAN.md](archive/STUB_PLAN.md) (Completed)
+  - [Uncensored.md](archive/Uncensored.md)
 
 ## Documentation Standards
 

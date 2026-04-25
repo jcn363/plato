@@ -7,6 +7,22 @@ use crate::view::{Hub, RenderData, RenderQueue, View};
 
 use super::helpers::{close_search_replace, do_replace_in_chapter, do_search, show_search_replace};
 
+// ── CQ-1: Single authoritative sync helper ────────────────────────────────────
+/// Copy the current text values from the on-screen `SearchReplaceView` widget
+/// into `editor.search_replace`, so that action handlers always operate on
+/// up-to-date data.  Call this at the top of any handler that reads search text.
+fn sync_search_state(editor: &mut super::EpubEditor) {
+    if let Some(state) = editor.search_replace.as_mut() {
+        if let Some(view) = editor.children.iter().find(|c| c.is::<SearchReplaceView>()) {
+            if let Some(sr_view) = view.downcast_ref::<SearchReplaceView>() {
+                state.search_text = sr_view.get_search_text().to_string();
+                state.replace_text = sr_view.get_replace_text().to_string();
+            }
+        }
+    }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 /// Handle toggle regex option
 pub fn handle_toggle_regex(editor: &mut super::EpubEditor, rq: &mut RenderQueue) -> bool {
     if let Some(sr) = editor
@@ -73,14 +89,7 @@ pub fn handle_search_replace(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) -> bool {
-    if let Some(state) = editor.search_replace.as_mut() {
-        if let Some(view) = editor.children.iter().find(|c| c.is::<SearchReplaceView>()) {
-            if let Some(sr_view) = view.downcast_ref::<SearchReplaceView>() {
-                state.search_text = sr_view.get_search_text().to_string();
-                state.replace_text = sr_view.get_replace_text().to_string();
-            }
-        }
-    }
+    sync_search_state(editor);
     do_search(editor, rq, context);
     true
 }
@@ -92,14 +101,7 @@ pub fn handle_replace_in_chapter(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) -> bool {
-    if let Some(state) = editor.search_replace.as_mut() {
-        if let Some(view) = editor.children.iter().find(|c| c.is::<SearchReplaceView>()) {
-            if let Some(sr_view) = view.downcast_ref::<SearchReplaceView>() {
-                state.search_text = sr_view.get_search_text().to_string();
-                state.replace_text = sr_view.get_replace_text().to_string();
-            }
-        }
-    }
+    sync_search_state(editor);
     do_replace_in_chapter(editor, hub, rq, context);
     true
 }
@@ -111,14 +113,8 @@ pub fn handle_replace_in_document(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) -> bool {
-    if let Some(state) = editor.search_replace.as_mut() {
-        if let Some(view) = editor.children.iter().find(|c| c.is::<SearchReplaceView>()) {
-            if let Some(sr_view) = view.downcast_ref::<SearchReplaceView>() {
-                state.search_text = sr_view.get_search_text().to_string();
-                state.replace_text = sr_view.get_replace_text().to_string();
-            }
-        }
-    }
+    sync_search_state(editor);
+
     if let Some(state) = &editor.search_replace {
         if state.search_text.is_empty() {
             let notif = crate::view::notification::Notification::new(
