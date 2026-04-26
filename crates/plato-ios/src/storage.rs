@@ -63,20 +63,22 @@ pub fn ios_settings_path() -> String {
 
 /// Get the cache directory for iOS
 /// This would typically be in the app's Caches directory
+// TODO: Integrate with Swift to obtain actual cache path via
+// NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
 #[must_use]
 pub fn ios_cache_path() -> String {
-    // For MVP, use a placeholder
-    // In production, this would be obtained from Swift via:
-    // NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
+    // Stub implementation - returns placeholder path.
+    // Production implementation requires Swift bridge integration.
     "/var/mobile/Containers/Data/Application/Library/Caches".to_string()
 }
 
 /// Get the temporary directory for iOS
 /// This would typically be `NSTemporaryDirectory()`
+// TODO: Integrate with Swift to obtain actual temp directory via NSTemporaryDirectory()
 #[must_use]
 pub fn ios_temp_path() -> String {
-    // For MVP, use a placeholder
-    // In production, this would be obtained from Swift via NSTemporaryDirectory()
+    // Stub implementation - returns placeholder path.
+    // Production implementation requires Swift bridge integration.
     "/tmp".to_string()
 }
 
