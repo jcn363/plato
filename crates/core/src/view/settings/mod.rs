@@ -1,6 +1,7 @@
 mod accessibility;
 mod defaults;
 mod display;
+mod gestures;
 mod interface;
 mod reading;
 mod reading_advanced;
@@ -167,6 +168,17 @@ impl SettingsEditor {
         children.append(&mut accessibility_children);
         y_pos = y;
 
+        let (mut gestures_children, y) = gestures::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut gestures_children);
+        y_pos = y;
+
         let button_height = x_height * 3;
         let button_width = window_width - 2 * padding;
         let save_rect = rect![
@@ -208,6 +220,7 @@ impl View for SettingsEditor {
         let reading_offset = interface_offset + interface::CHILD_COUNT;
         let reading_adv_offset = reading_offset + reading_advanced::CHILD_COUNT;
         let accessibility_offset = reading_adv_offset + accessibility::CHILD_COUNT;
+        let gestures_offset = accessibility_offset + gestures::CHILD_COUNT;
 
         if display::handle_event(evt, &mut self.children, display_offset, bus, rq, context) {
             self.dirty = true;
@@ -240,6 +253,18 @@ impl View for SettingsEditor {
             evt,
             &mut self.children,
             accessibility_offset,
+            bus,
+            rq,
+            context,
+        ) {
+            self.dirty = true;
+            return true;
+        }
+
+        if gestures::handle_event(
+            evt,
+            &mut self.children,
+            gestures_offset,
             bus,
             rq,
             context,
