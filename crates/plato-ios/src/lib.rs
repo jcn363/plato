@@ -335,9 +335,9 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
         plato_core::geom::Point::new(0, 0),
         plato_core::geom::Point::new(fb_width as i32, fb_height as i32),
     );
-    let hub_ref = HUB.as_ref().unwrap();
-    let rq_ref = RENDER_QUEUE.as_mut().unwrap();
-    let context_ref = CONTEXT.as_mut().unwrap();
+    let hub_ref = HUB.as_ref().expect("HUB not initialized");
+    let rq_ref = RENDER_QUEUE.as_mut().expect("RENDER_QUEUE not initialized");
+    let context_ref = CONTEXT.as_mut().expect("CONTEXT not initialized");
     match Home::new(fb_rect, hub_ref, rq_ref, context_ref) {
         Ok(home) => {
             VIEW = Some(Box::new(home) as Box<dyn View>);

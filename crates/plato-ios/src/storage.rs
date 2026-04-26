@@ -24,32 +24,36 @@ static TEMP_PATH: Mutex<Option<String>> = Mutex::new(None);
 /// Set the library path from Swift
 /// This should be called during initialization before any path resolution
 pub fn set_library_path(path: String) {
-    *LIBRARY_PATH.lock().unwrap() = Some(path);
+    *LIBRARY_PATH.lock().expect("LIBRARY_PATH lock poisoned") = Some(path);
 }
 
 /// Set the settings path from Swift
 /// This should be called during initialization before any path resolution
 pub fn set_settings_path(path: String) {
-    *SETTINGS_PATH.lock().unwrap() = Some(path);
+    *SETTINGS_PATH.lock().expect("SETTINGS_PATH lock poisoned") = Some(path);
 }
 
 /// Set the cache path from Swift
 /// This should be called during initialization before any path resolution
 pub fn set_cache_path(path: String) {
-    *CACHE_PATH.lock().unwrap() = Some(path);
+    *CACHE_PATH.lock().expect("CACHE_PATH lock poisoned") = Some(path);
 }
 
 /// Set the temp path from Swift
 /// This should be called during initialization before any path resolution
 pub fn set_temp_path(path: String) {
-    *TEMP_PATH.lock().unwrap() = Some(path);
+    *TEMP_PATH.lock().expect("TEMP_PATH lock poisoned") = Some(path);
 }
 
 /// Get the default library path for iOS
 /// This would typically be in the app's Documents directory
 pub fn ios_library_path() -> String {
     // Return the path set from Swift, or derive from home directory as fallback
-    if let Some(path) = LIBRARY_PATH.lock().unwrap().as_ref() {
+    if let Some(path) = LIBRARY_PATH
+        .lock()
+        .expect("LIBRARY_PATH lock poisoned")
+        .as_ref()
+    {
         return path.clone();
     }
 
@@ -66,7 +70,11 @@ pub fn ios_library_path() -> String {
 /// This would typically be in the app's Library directory
 pub fn ios_settings_path() -> String {
     // Return the path set from Swift, or derive from home directory as fallback
-    if let Some(path) = SETTINGS_PATH.lock().unwrap().as_ref() {
+    if let Some(path) = SETTINGS_PATH
+        .lock()
+        .expect("SETTINGS_PATH lock poisoned")
+        .as_ref()
+    {
         return path.clone();
     }
 
@@ -84,7 +92,11 @@ pub fn ios_settings_path() -> String {
 #[must_use]
 pub fn ios_cache_path() -> String {
     // Return the path set from Swift, or derive from home directory as fallback
-    if let Some(path) = CACHE_PATH.lock().unwrap().as_ref() {
+    if let Some(path) = CACHE_PATH
+        .lock()
+        .expect("CACHE_PATH lock poisoned")
+        .as_ref()
+    {
         return path.clone();
     }
 
@@ -102,7 +114,7 @@ pub fn ios_cache_path() -> String {
 #[must_use]
 pub fn ios_temp_path() -> String {
     // Return the path set from Swift, or derive from system temp as fallback
-    if let Some(path) = TEMP_PATH.lock().unwrap().as_ref() {
+    if let Some(path) = TEMP_PATH.lock().expect("TEMP_PATH lock poisoned").as_ref() {
         return path.clone();
     }
 

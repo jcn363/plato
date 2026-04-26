@@ -492,20 +492,24 @@ impl EpubEditorCore {
         let mut result = css.to_string();
 
         // Remove fixed widths larger than 100%
-        let width_re = regex::Regex::new(r"width\s*:\s*\d+(?:\.\d+)?(?:px|pt|cm|in|mm)").unwrap();
+        let width_re = regex::Regex::new(r"width\s*:\s*\d+(?:\.\d+)?(?:px|pt|cm|in|mm)")
+            .expect("CSS width regex is valid");
         result = width_re.replace_all(&result, "max-width: 100%").to_string();
 
         // Remove large margins
-        let margin_re = regex::Regex::new(r"margin\s*:\s*\d+(?:\.\d+)?(?:px|pt|cm|in|mm)").unwrap();
+        let margin_re = regex::Regex::new(r"margin\s*:\s*\d+(?:\.\d+)?(?:px|pt|cm|in|mm)")
+            .expect("CSS margin regex is valid");
         result = margin_re.replace_all(&result, "margin: 0").to_string();
 
         // Force black text on white background for high contrast
-        let bg_re = regex::Regex::new(r"background-color\s*:[^;]+;?").unwrap();
+        let bg_re = regex::Regex::new(r"background-color\s*:[^;]+;?")
+            .expect("CSS background-color regex is valid");
         result = bg_re
             .replace_all(&result, "background-color: #fff;")
             .to_string();
 
-        let color_re = regex::Regex::new(r"(?i)color\s*:[^;]+;?").unwrap();
+        let color_re =
+            regex::Regex::new(r"(?i)color\s*:[^;]+;?").expect("CSS color regex is valid");
         result = color_re.replace_all(&result, "color: #000;").to_string();
 
         result
@@ -518,7 +522,8 @@ impl EpubEditorCore {
     /// Returns an error if writing the updated TOC or OPF metadata fails.
     pub fn recover_toc(&mut self) -> Result<bool> {
         let mut new_toc = Vec::new();
-        let heading_re = regex::Regex::new(r"(?i)<h([1-6])[^>]*>(.*?)</h[1-6]>").unwrap();
+        let heading_re = regex::Regex::new(r"(?i)<h([1-6])[^>]*>(.*?)</h[1-6]>")
+            .expect("HTML heading regex is valid");
 
         for chapter in &self.chapters {
             for cap in heading_re.captures_iter(&chapter.content) {
@@ -569,8 +574,8 @@ impl EpubEditorCore {
     /// Returns an error if writing the minified chapter content fails.
     pub fn minify_html(&mut self) -> Result<usize> {
         let mut count = 0;
-        let comment_re = regex::Regex::new(r"(?s)<!--.*?-->").unwrap();
-        let space_re = regex::Regex::new(r"\s+").unwrap();
+        let comment_re = regex::Regex::new(r"(?s)<!--.*?-->").expect("HTML comment regex is valid");
+        let space_re = regex::Regex::new(r"\s+").expect("Whitespace regex is valid");
 
         for i in 0..self.chapters.len() {
             let content = self.chapters[i].content.clone();
@@ -622,13 +627,15 @@ impl EpubEditorCore {
                     let re_str = format!(
                         r#"(?i)<meta[^>]*name="[^"]*{tag}[^"]*"[^>]*content="[^"]*"[^>]*/>"#
                     );
-                    let re = regex::Regex::new(&re_str).unwrap();
+                    let re =
+                        regex::Regex::new(&re_str).expect("Dynamic metadata tag regex is valid");
                     opf_content = re.replace_all(&opf_content, "").to_string();
 
                     let re_str_alt = format!(
                         r#"(?i)<meta[^>]*content="[^"]*"[^>]*name="[^"]*{tag}[^"]*"[^>]*/>"#
                     );
-                    let re_alt = regex::Regex::new(&re_str_alt).unwrap();
+                    let re_alt = regex::Regex::new(&re_str_alt)
+                        .expect("Alternative metadata tag regex is valid");
                     opf_content = re_alt.replace_all(&opf_content, "").to_string();
                 }
 
