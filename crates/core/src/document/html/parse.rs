@@ -152,7 +152,7 @@ pub fn parse_viewport_length(
 
 // Input and output sizes are in points.
 pub fn parse_font_size(value: &str, em: f32, rem: f32) -> Option<f32> {
-    if value.find(|c: char| c.is_ascii_digit()).is_some() {
+    if value.contains(|c: char| c.is_ascii_digit()) {
         if let Some(index) = value.find(|c: char| c.is_ascii_alphabetic()) {
             value[..index].parse().ok().and_then(|v| {
                 if v <= 0.0 {

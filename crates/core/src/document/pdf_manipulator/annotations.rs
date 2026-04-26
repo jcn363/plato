@@ -79,7 +79,7 @@ impl PdfAnnotationManager {
     fn parse_annotation(&self, dict: &Dictionary, page: usize) -> Result<PdfAnnotation, Error> {
         let subtype_str = if let Ok(name_obj) = dict.get(b"Subtype") {
             if let Ok(name) = name_obj.as_name() {
-                std::str::from_utf8(name).unwrap_or("Text").to_string()
+                String::from_utf8_lossy(name).into_owned()
             } else {
                 "Text".to_string()
             }
@@ -90,7 +90,7 @@ impl PdfAnnotationManager {
 
         let contents = if let Ok(contents_obj) = dict.get(b"Contents") {
             if let Ok(bytes) = contents_obj.as_str() {
-                std::str::from_utf8(bytes).unwrap_or("").to_string()
+                String::from_utf8_lossy(bytes).into_owned()
             } else {
                 String::new()
             }
@@ -137,7 +137,7 @@ impl PdfAnnotationManager {
 
         let author = if let Ok(author_obj) = dict.get(b"T") {
             if let Ok(bytes) = author_obj.as_str() {
-                std::str::from_utf8(bytes).ok().map(|s| s.to_string())
+                Some(String::from_utf8_lossy(bytes).into_owned())
             } else {
                 None
             }
@@ -147,7 +147,7 @@ impl PdfAnnotationManager {
 
         let subject = if let Ok(subject_obj) = dict.get(b"Subj") {
             if let Ok(bytes) = subject_obj.as_str() {
-                std::str::from_utf8(bytes).ok().map(|s| s.to_string())
+                Some(String::from_utf8_lossy(bytes).into_owned())
             } else {
                 None
             }
@@ -575,7 +575,7 @@ impl XfdfHandler {
                     _ => {}
                 },
                 Ok(Event::Text(e)) => {
-                    current_text.push_str(std::str::from_utf8(&e).unwrap_or(""));
+                    current_text.push_str(&String::from_utf8_lossy(&e));
                 }
                 Ok(Event::End(ref e)) => {
                     if let Some(ref mut annot) = current_annot {

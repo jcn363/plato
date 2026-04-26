@@ -59,7 +59,7 @@ impl ::std::fmt::Display for DictError {
             DictError::InvalidFileFormat(ref explanation, ref path) => write!(
                 f,
                 "{}{}",
-                path.clone().unwrap_or_else(String::new),
+                path.as_deref().unwrap_or(""),
                 explanation
             ),
         }
