@@ -106,6 +106,11 @@
       "sourceType": "github",
       "computedHash": "d004c5e5e2e7132e1d64e9c2a339db7f7aaa69053a5c19cddc210dd35dd6fff5"
     },
+    "m15-anti-pattern": {
+      "source": "zhanghandong/rust-skills",
+      "sourceType": "github",
+      "computedHash": "d9f5d80bd2ab49f063a61d90a96100298788ea0e1e5bd5e917be3c7e124078a2"
+    },
     "memory-merger": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
@@ -146,10 +151,30 @@
       "sourceType": "github",
       "computedHash": "0977c17696ab66ea613ce5b83c856bc7cd01332d98ae237dac7539840fe96187"
     },
+    "rust-async-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "1e68b5edfa95069e54af75acf2a34634a5d0266021fa4af3b9706eaec5b6207e"
+    },
     "rust-best-practices": {
       "source": "apollographql/skills",
       "sourceType": "github",
       "computedHash": "fd336f2f772eb46ddf8658de5f9dd8faa1f35615b316665307fc82eeb4b2e658"
+    },
+    "rust-engineer": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "5a8b4c69ded4bec7009af144c8aea3de5f463765f211c780afea8d7a47fb35e6"
+    },
+    "rust-mcp-server-generator": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "420ae9213c67ac826ea54fbc3d7571189d74f22f3dfda3645fd3c6f7277c4944"
+    },
+    "rust-testing": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "computedHash": "8f6cab4bcbdc5bd8c19f179e893ca5d502604a03e4e443bd27ba7c3a88a93add"
     },
     "self-improving-agent": {
       "source": "charon-fan/agent-playbook",
