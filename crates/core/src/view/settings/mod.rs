@@ -1,3 +1,4 @@
+mod accessibility;
 mod defaults;
 mod display;
 mod interface;
@@ -155,6 +156,17 @@ impl SettingsEditor {
         children.append(&mut reading_adv_children);
         y_pos = y;
 
+        let (mut accessibility_children, y) = accessibility::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut accessibility_children);
+        y_pos = y;
+
         let button_height = x_height * 3;
         let button_width = window_width - 2 * padding;
         let save_rect = rect![
@@ -195,6 +207,7 @@ impl View for SettingsEditor {
         let interface_offset = display_offset + display::CHILD_COUNT;
         let reading_offset = interface_offset + interface::CHILD_COUNT;
         let reading_adv_offset = reading_offset + reading_advanced::CHILD_COUNT;
+        let accessibility_offset = reading_adv_offset + accessibility::CHILD_COUNT;
 
         if display::handle_event(evt, &mut self.children, display_offset, bus, rq, context) {
             self.dirty = true;
@@ -223,12 +236,14 @@ impl View for SettingsEditor {
             return true;
         }
 
-        if interface::handle_event(evt, &mut self.children, interface_offset, bus, rq, context) {
-            self.dirty = true;
-            return true;
-        }
-
-        if reading::handle_event(evt, &mut self.children, reading_offset, bus, rq, context) {
+        if accessibility::handle_event(
+            evt,
+            &mut self.children,
+            accessibility_offset,
+            bus,
+            rq,
+            context,
+        ) {
             self.dirty = true;
             return true;
         }
