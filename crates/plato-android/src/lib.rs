@@ -17,9 +17,22 @@ pub mod input;
 /// Android path resolution for library and settings
 pub mod storage;
 
+use anyhow::{Context as AnyhowContext, Result};
+
+#[cfg(feature = "android")]
+use std::collections::VecDeque;
+#[cfg(feature = "android")]
+use std::default::Default;
+#[cfg(feature = "android")]
+use std::path::Path;
+#[cfg(feature = "android")]
+use std::sync::mpsc;
+#[cfg(feature = "android")]
+use std::sync::{Arc, Mutex};
+
 #[cfg(feature = "android")]
 use android_activity::{AndroidApp, MainEvent, PollEvent};
-use anyhow::{Context as AnyhowContext, Result};
+
 #[cfg(feature = "android")]
 use plato_core::battery::FakeBattery;
 #[cfg(feature = "android")]
@@ -29,11 +42,15 @@ use plato_core::font::Fonts;
 #[cfg(feature = "android")]
 use plato_core::frontlight::LightLevels;
 #[cfg(feature = "android")]
+use plato_core::geom::Point;
+#[cfg(feature = "android")]
 use plato_core::helpers::load_toml;
 #[cfg(feature = "android")]
 use plato_core::input::DeviceEvent;
 #[cfg(feature = "android")]
 use plato_core::library::Library;
+#[cfg(feature = "android")]
+use plato_core::metadata::SortMethod;
 #[cfg(feature = "android")]
 use plato_core::mobile_optimizations::{AnimationConfig, MemoryConfig, TouchConfig};
 #[cfg(feature = "android")]
@@ -41,33 +58,19 @@ use plato_core::mobile_theme::{set_mobile_theme_mode, MobileThemeMode};
 #[cfg(feature = "android")]
 use plato_core::plugin::PluginSystem;
 #[cfg(feature = "android")]
-use plato_core::settings::{LibraryMode, LibrarySettings};
+use plato_core::rustc_hash::FxHashMap;
 #[cfg(feature = "android")]
-use plato_core::metadata::SortMethod;
+use plato_core::settings::Settings;
 #[cfg(feature = "android")]
 use plato_core::settings::{FirstColumn, SecondColumn};
 #[cfg(feature = "android")]
-use plato_core::settings::Settings;
+use plato_core::settings::{LibraryMode, LibrarySettings};
 #[cfg(feature = "android")]
 use plato_core::sync::BackgroundSync;
 #[cfg(feature = "android")]
 use plato_core::view::home::Home;
 #[cfg(feature = "android")]
 use plato_core::view::{RenderQueue, View};
-#[cfg(feature = "android")]
-use plato_core::rustc_hash::FxHashMap;
-#[cfg(feature = "android")]
-use plato_core::geom::Point;
-#[cfg(feature = "android")]
-use std::path::Path;
-#[cfg(feature = "android")]
-use std::collections::VecDeque;
-#[cfg(feature = "android")]
-use std::sync::mpsc;
-#[cfg(feature = "android")]
-use std::sync::{Arc, Mutex};
-#[cfg(feature = "android")]
-use std::default::Default;
 
 #[cfg(all(target_os = "android", feature = "android"))]
 #[no_mangle]

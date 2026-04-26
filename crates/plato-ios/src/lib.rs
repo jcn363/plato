@@ -18,6 +18,17 @@ pub mod input;
 pub mod storage;
 
 #[cfg(feature = "ios")]
+use std::collections::VecDeque;
+#[cfg(feature = "ios")]
+use std::default::Default;
+#[cfg(feature = "ios")]
+use std::path::{Path, PathBuf};
+#[cfg(feature = "ios")]
+use std::sync::mpsc;
+#[cfg(feature = "ios")]
+use std::sync::{Arc, Mutex};
+
+#[cfg(feature = "ios")]
 use anyhow::{Context as AnyhowContext, Result};
 #[cfg(feature = "ios")]
 use plato_core::battery::FakeBattery;
@@ -63,16 +74,6 @@ use plato_core::sync::BackgroundSync;
 use plato_core::view::home::Home;
 #[cfg(feature = "ios")]
 use plato_core::view::{Bus, Hub, RenderQueue, View};
-#[cfg(feature = "ios")]
-use std::collections::VecDeque;
-#[cfg(feature = "ios")]
-use std::default::Default;
-#[cfg(feature = "ios")]
-use std::path::{Path, PathBuf};
-#[cfg(feature = "ios")]
-use std::sync::mpsc;
-#[cfg(feature = "ios")]
-use std::sync::{Arc, Mutex};
 
 /// Type alias for touch contact tracking (finger id -> (position, timestamp))
 #[cfg(feature = "ios")]
