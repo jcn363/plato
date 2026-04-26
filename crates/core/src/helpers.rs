@@ -14,7 +14,7 @@
 //! ## Dependencies
 //!
 //! - `rustc-hash` - For fast hashing (FxHashMap, FxHashSet)
-//! - `septem` - For number-to-words conversion
+//! - `num2words` - For number-to-words conversion
 //! - `bzip2` - For BZIP2 compression
 //! - `percent-encoding` - For URL encoding
 //! - `globset` - For glob-based file selection
@@ -24,6 +24,7 @@ use anyhow::{Context, Error};
 use bzip2::read::{BzDecoder, BzEncoder};
 use entities::ENTITIES;
 use globset::{Glob, GlobSetBuilder};
+use num2words::Num2Words;
 use percent_encoding::{percent_decode, percent_encode, AsciiSet, CONTROLS};
 use rustc_hash::FxHashMap;
 use serde::de::{self, Visitor};
@@ -332,16 +333,58 @@ impl IsHidden for DirEntry {
     }
 }
 
-/// Convert a number to English words using septem
+/// Convert a number to English words using num2words
 /// Returns the number as words (e.g., 42 -> "forty-two")
 pub fn number_to_words(n: u64) -> String {
-    format!("{}", n) // TODO: Simplified implementation - septem API needs investigation
+    Num2Words::new(n)
+        .to_words()
+        .unwrap_or_else(|_| n.to_string())
 }
 
-/// Convert text containing numbers to words using septem
+/// Convert text containing numbers to words using num2words
 /// Finds numbers in the text and converts them to words
 pub fn text_to_words(text: &str) -> String {
-    text.to_string() // TODO: Simplified implementation - septem API needs investigation
+    let mut result = String::with_capacity(text.len() * 2);
+    let mut last_end = 0;
+
+    for (start, number) in find_numbers(text) {
+        result.push_str(&text[last_end..start]);
+        result.push_str(&number_to_words(number));
+        last_end = start + number.to_string().len();
+    }
+
+    result.push_str(&text[last_end..]);
+    result
+}
+
+/// Find all numbers in text, returning (position, value) pairs
+fn find_numbers(text: &str) -> Vec<(usize, u64)> {
+    let mut numbers = Vec::new();
+    let mut current_num = String::new();
+    let mut start_pos = 0;
+
+    for (i, ch) in text.char_indices() {
+        if ch.is_ascii_digit() {
+            if current_num.is_empty() {
+                start_pos = i;
+            }
+            current_num.push(ch);
+        } else if !current_num.is_empty() {
+            if let Ok(n) = current_num.parse::<u64>() {
+                numbers.push((start_pos, n));
+            }
+            current_num.clear();
+        }
+    }
+
+    // Handle number at end of string
+    if !current_num.is_empty() {
+        if let Ok(n) = current_num.parse::<u64>() {
+            numbers.push((start_pos, n));
+        }
+    }
+
+    numbers
 }
 
 /// Compress data using BZIP2 algorithm
