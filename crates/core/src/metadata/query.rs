@@ -27,6 +27,12 @@ pub struct BookQuery {
     pub bookmarks: Option<bool>,
     pub opened_after: Option<(bool, NaiveDateTime)>,
     pub added_after: Option<(bool, NaiveDateTime)>,
+    /// File size filter: (min_size, max_size) in bytes
+    pub file_size: Option<(u64, u64)>,
+    /// Collection filter: match documents in specific collection
+    pub collection: Option<String>,
+    /// Boolean operator: true for AND, false for OR
+    pub boolean_and: bool,
 }
 
 pub fn make_query(text: &str) -> Option<Regex> {
@@ -82,6 +88,12 @@ impl BookQuery {
                             Self::set_date_field(&mut buf, invert, &mut query.opened_after)
                         }
                         Some('D') => Self::set_date_field(&mut buf, invert, &mut query.added_after),
+                        Some('S') => Self::set_size_field(&mut buf, invert, &mut query.file_size),
+                        Some('C') => {
+                            Self::set_collection_field(&mut buf, invert, &mut query.collection)
+                        }
+                        Some('&') => query.boolean_and = true,
+                        Some('|') => query.boolean_and = false,
                         Some('\'') => buf.push(&word[1..]),
                         _ => (),
                     }
@@ -125,6 +137,24 @@ impl BookQuery {
         buf.clear();
     }
 
+    fn set_size_field(buf: &mut Vec<&str>, invert: bool, field: &mut Option<(u64, u64)>) {
+        buf.reverse();
+        if buf.len() >= 2 {
+            let min: u64 = buf[0].parse().ok().unwrap_or(0);
+            let max: u64 = buf[1].parse().ok().unwrap_or(u64::MAX);
+            *field = if invert { None } else { Some((min, max)) };
+        }
+        buf.clear();
+    }
+
+    fn set_collection_field(buf: &mut Vec<&str>, _invert: bool, field: &mut Option<String>) {
+        buf.reverse();
+        if !buf.is_empty() {
+            *field = Some(buf.join(" "));
+        }
+        buf.clear();
+    }
+
     fn is_query_empty(query: &BookQuery) -> bool {
         query.free.is_none()
             && query.title.is_none()
@@ -144,6 +174,8 @@ impl BookQuery {
             && query.bookmarks.is_none()
             && query.opened_after.is_none()
             && query.added_after.is_none()
+            && query.file_size.is_none()
+            && query.collection.is_none()
     }
 
     #[inline]
@@ -168,6 +200,8 @@ impl BookQuery {
                 i.reader_info.as_ref().map(|r| r.opened).unwrap_or_default()
             })
             && self.matches_date_field(&self.added_after, info, |_| info.added)
+            && self.matches_size_field(info)
+            && self.matches_collection_field(info)
     }
 
     fn matches_free_field(&self, info: &Info) -> bool {
@@ -216,6 +250,18 @@ impl BookQuery {
         field
             .as_ref()
             .is_none_or(|(eq, date)| get_date(info).gt(date) == *eq)
+    }
+
+    fn matches_size_field(&self, info: &Info) -> bool {
+        self.file_size
+            .as_ref()
+            .is_none_or(|(min, max)| info.file.size >= *min && info.file.size <= *max)
+    }
+
+    fn matches_collection_field(&self, info: &Info) -> bool {
+        self.collection
+            .as_ref()
+            .is_none_or(|col| info.collection.as_ref().is_some_and(|c| c == col))
     }
 
     #[inline]

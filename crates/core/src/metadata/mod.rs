@@ -3,6 +3,8 @@ mod constants;
 mod extraction;
 mod info;
 mod query;
+mod saved_queries;
+mod search_index;
 mod sorting;
 mod types;
 
@@ -25,6 +27,9 @@ pub use info::SimpleStatus;
 pub use info::Status;
 pub use query::make_query;
 pub use query::BookQuery;
+pub use saved_queries::SavedQueries;
+pub use saved_queries::SavedQuery;
+pub use search_index::SearchIndex;
 pub use sorting::sort;
 pub use sorting::sort_added;
 pub use sorting::sort_author;
