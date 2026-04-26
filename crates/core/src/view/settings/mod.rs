@@ -1,6 +1,8 @@
 mod accessibility;
+mod calibre;
 mod defaults;
 mod display;
+mod epub_to_pdf;
 mod gestures;
 mod interface;
 mod reading;
@@ -179,6 +181,28 @@ impl SettingsEditor {
         children.append(&mut gestures_children);
         y_pos = y;
 
+        let (mut calibre_children, y) = calibre::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut calibre_children);
+        y_pos = y;
+
+        let (mut epub_to_pdf_children, y) = epub_to_pdf::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut epub_to_pdf_children);
+        y_pos = y;
+
         let button_height = x_height * 3;
         let button_width = window_width - 2 * padding;
         let save_rect = rect![
@@ -221,6 +245,8 @@ impl View for SettingsEditor {
         let reading_adv_offset = reading_offset + reading_advanced::CHILD_COUNT;
         let accessibility_offset = reading_adv_offset + accessibility::CHILD_COUNT;
         let gestures_offset = accessibility_offset + gestures::CHILD_COUNT;
+        let calibre_offset = gestures_offset + calibre::CHILD_COUNT;
+        let epub_to_pdf_offset = calibre_offset + epub_to_pdf::CHILD_COUNT;
 
         if display::handle_event(evt, &mut self.children, display_offset, bus, rq, context) {
             self.dirty = true;
@@ -265,6 +291,30 @@ impl View for SettingsEditor {
             evt,
             &mut self.children,
             gestures_offset,
+            bus,
+            rq,
+            context,
+        ) {
+            self.dirty = true;
+            return true;
+        }
+
+        if calibre::handle_event(
+            evt,
+            &mut self.children,
+            calibre_offset,
+            bus,
+            rq,
+            context,
+        ) {
+            self.dirty = true;
+            return true;
+        }
+
+        if epub_to_pdf::handle_event(
+            evt,
+            &mut self.children,
+            epub_to_pdf_offset,
             bus,
             rq,
             context,

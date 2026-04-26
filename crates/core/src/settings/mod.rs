@@ -148,6 +148,8 @@ pub struct Settings {
     pub thumbnail: ThumbnailSettings,
     pub opds: OpdsSettings,
     pub accessibility: AccessibilitySettings,
+    pub calibre: CalibreSettings,
+    pub epub_to_pdf: EpubToPdfSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -177,16 +179,82 @@ impl AccessibilitySettings {
         validate_finite_f32(self.word_spacing, "word_spacing", 0.0, 2.0)?;
         validate_finite_f32(self.line_height, "line_height", 0.5, 3.0)?;
         validate_finite_f32(self.large_text_scale, "large_text_scale", 1.0, 3.0)?;
-        
-        // Validate color_blindness_mode is one of the allowed values
-        let valid_modes = ["none", "deuteranopia", "protanopia", "tritanopia"];
-        if !valid_modes.contains(&self.color_blindness_mode.as_str()) {
-            bail!(
-                "color_blindness_mode must be one of: {}",
-                valid_modes.join(", ")
-            );
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct CalibreSettings {
+    /// Calibre Content Server host
+    pub host: String,
+    /// Calibre Content Server port
+    pub port: u16,
+    /// Calibre Content Server username (optional)
+    pub username: Option<String>,
+    /// Calibre Content Server password (optional)
+    pub password: Option<String>,
+    /// Auto-sync on Wi-Fi connection
+    pub auto_sync: bool,
+    /// Sync metadata (ratings, tags, collections)
+    pub sync_metadata: bool,
+    /// Last sync timestamp
+    pub last_sync: Option<i64>,
+}
+
+impl CalibreSettings {
+    pub fn validate(&self) -> Result<(), Error> {
+        if self.host.is_empty() {
+            bail!("Calibre host cannot be empty");
         }
-        
+        if self.port == 0 {
+            bail!("Calibre port must be between 1 and 65535");
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct EpubToPdfSettings {
+    /// Page size (A4, A5, letter, custom)
+    pub page_size: String,
+    /// Custom page width (mm)
+    pub custom_width: Option<f32>,
+    /// Custom page height (mm)
+    pub custom_height: Option<f32>,
+    /// Margin top (mm)
+    pub margin_top: f32,
+    /// Margin bottom (mm)
+    pub margin_bottom: f32,
+    /// Margin left (mm)
+    pub margin_left: f32,
+    /// Margin right (mm)
+    pub margin_right: f32,
+    /// Font embedding
+    pub embed_fonts: bool,
+    /// Image quality (1-100)
+    pub image_quality: u8,
+}
+
+impl EpubToPdfSettings {
+    pub fn validate(&self) -> Result<(), Error> {
+        if !["A4", "A5", "letter", "custom"].contains(&self.page_size.as_str()) {
+            bail!("Invalid page size: {}", self.page_size);
+        }
+        if self.page_size == "custom" {
+            if let Some(w) = self.custom_width {
+                if w <= 0.0 || w > 1000.0 {
+                    bail!("Custom width must be between 0 and 1000 mm");
+                }
+            }
+            if let Some(h) = self.custom_height {
+                if h <= 0.0 || h > 1000.0 {
+                    bail!("Custom height must be between 0 and 1000 mm");
+                }
+            }
+        }
+        validate_range(self.image_quality, 1, 100, "image_quality")?;
         Ok(())
     }
 }
@@ -479,6 +547,8 @@ impl Default for Settings {
             thumbnail: ThumbnailSettings::default(),
             opds: OpdsSettings::default(),
             accessibility: AccessibilitySettings::default(),
+            calibre: CalibreSettings::default(),
+            epub_to_pdf: EpubToPdfSettings::default(),
         }
     }
 }
