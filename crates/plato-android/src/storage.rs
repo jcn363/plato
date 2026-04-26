@@ -29,12 +29,18 @@ pub fn android_library_path() -> PathBuf {
 
 /// Get the Android settings path for storing Settings.toml
 /// Returns the app internal data directory using ndk_context
-// TODO: Improve ndk_context integration to obtain actual app internal data directory
 #[cfg(target_os = "android")]
 pub fn android_settings_path() -> PathBuf {
-    // Stub implementation using library path fallback.
-    // Production implementation should use ndk_context to get the app's
-    // internal data directory (Context.getFilesDir() equivalent).
+    // Use ndk_context to get the actual app internal data directory
+    if let Some(ctx) = ndk_context::android_context() {
+        if let Some(data_dir) = ctx.app_data_dir() {
+            let mut path = PathBuf::from(data_dir);
+            path.push(".plato");
+            return path;
+        }
+    }
+
+    // Fallback to library path if ndk_context is unavailable
     let mut path = android_library_path();
     path.push(".plato");
     path

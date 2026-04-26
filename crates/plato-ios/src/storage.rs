@@ -15,6 +15,12 @@ static LIBRARY_PATH: Mutex<Option<String>> = Mutex::new(None);
 /// Global settings path set from Swift
 static SETTINGS_PATH: Mutex<Option<String>> = Mutex::new(None);
 
+/// Global cache path set from Swift
+static CACHE_PATH: Mutex<Option<String>> = Mutex::new(None);
+
+/// Global temp path set from Swift
+static TEMP_PATH: Mutex<Option<String>> = Mutex::new(None);
+
 /// Set the library path from Swift
 /// This should be called during initialization before any path resolution
 pub fn set_library_path(path: String) {
@@ -25,6 +31,18 @@ pub fn set_library_path(path: String) {
 /// This should be called during initialization before any path resolution
 pub fn set_settings_path(path: String) {
     *SETTINGS_PATH.lock().unwrap() = Some(path);
+}
+
+/// Set the cache path from Swift
+/// This should be called during initialization before any path resolution
+pub fn set_cache_path(path: String) {
+    *CACHE_PATH.lock().unwrap() = Some(path);
+}
+
+/// Set the temp path from Swift
+/// This should be called during initialization before any path resolution
+pub fn set_temp_path(path: String) {
+    *TEMP_PATH.lock().unwrap() = Some(path);
 }
 
 /// Get the default library path for iOS
@@ -63,23 +81,33 @@ pub fn ios_settings_path() -> String {
 
 /// Get the cache directory for iOS
 /// This would typically be in the app's Caches directory
-// TODO: Integrate with Swift to obtain actual cache path via
-// NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true)
 #[must_use]
 pub fn ios_cache_path() -> String {
-    // Stub implementation - returns placeholder path.
-    // Production implementation requires Swift bridge integration.
-    "/var/mobile/Containers/Data/Application/Library/Caches".to_string()
+    // Return the path set from Swift, or derive from home directory as fallback
+    if let Some(path) = CACHE_PATH.lock().unwrap().as_ref() {
+        return path.clone();
+    }
+
+    // Fallback: derive from process home directory
+    if let Ok(home) = std::env::var("HOME") {
+        format!("{home}/Library/Caches")
+    } else {
+        // Last resort fallback (should not happen on real iOS)
+        "/var/mobile/Containers/Data/Application/Library/Caches".to_string()
+    }
 }
 
 /// Get the temporary directory for iOS
 /// This would typically be `NSTemporaryDirectory()`
-// TODO: Integrate with Swift to obtain actual temp directory via NSTemporaryDirectory()
 #[must_use]
 pub fn ios_temp_path() -> String {
-    // Stub implementation - returns placeholder path.
-    // Production implementation requires Swift bridge integration.
-    "/tmp".to_string()
+    // Return the path set from Swift, or derive from system temp as fallback
+    if let Some(path) = TEMP_PATH.lock().unwrap().as_ref() {
+        return path.clone();
+    }
+
+    // Fallback: use system temp directory
+    std::env::temp_dir().to_string_lossy().to_string()
 }
 
 /// Resolve a path relative to the library directory
