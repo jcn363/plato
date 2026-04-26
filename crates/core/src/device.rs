@@ -651,16 +651,3 @@ pub static CURRENT_DEVICE: LazyLock<KoboDevice> = LazyLock::new(|| {
 
     KoboDevice::new(&product, &model_number)
 });
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_is_device_type_case_insensitive() {
-        // Test case insensitivity by checking the implementation logic
-        // Since we can't reliably set env vars in parallel tests,
-        // we test the logic by verifying the function exists and has the right signature
-        let _ = is_device_type; // Verify function exists
-    }
-}
