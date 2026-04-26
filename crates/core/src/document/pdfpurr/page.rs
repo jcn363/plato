@@ -195,11 +195,13 @@ impl<'a> Page<'a> {
                     )
                     .unwrap_or_else(|| {
                         // Fallback to black (0, 0, 0, 255) - always valid
-                        tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap()
+                        tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255)
+                            .expect("black color (0, 0, 0, 255) is always valid")
                     })
                 } else {
                     // Fallback to black (0, 0, 0, 255) - always valid
-                    tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255).unwrap()
+                    tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255)
+                        .expect("black color (0, 0, 0, 255) is always valid")
                 }
             })
             .collect();
