@@ -465,7 +465,10 @@ fn parse_edge_length(value: &str, em: f32, rem: f32, width: i32, auto_value: i32
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Edge parsing requires all four sides (top, right, bottom, left) plus em/rem/dpi for unit conversion"
+)]
 pub fn parse_edge(
     top_edge: Option<&str>,
     right_edge: Option<&str>,

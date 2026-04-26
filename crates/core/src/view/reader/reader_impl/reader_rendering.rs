@@ -167,7 +167,10 @@ pub(crate) fn selection_rect(
 ///
 /// # Returns
 /// Adjusted page offset, or None if margins are out of bounds
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Margin calculation requires many parameters (offset, dimensions, margins, link locations) for accurate page positioning"
+)]
 pub(crate) fn calculate_margin_offset(
     offset: Point,
     pixmap_width: u32,

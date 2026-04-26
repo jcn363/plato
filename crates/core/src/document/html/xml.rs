@@ -256,7 +256,10 @@ pub fn extract_attribute_by_tag(
 }
 
 /// Extract all elements matching a tag name with their attributes
-#[allow(clippy::type_complexity)]
+#[expect(
+    clippy::type_complexity,
+    reason = "Return type is complex (Vec of tuples with HashMap) but accurately represents XML element structure"
+)]
 pub fn extract_elements_with_attrs(
     xml: &str,
     tag_name: &str,

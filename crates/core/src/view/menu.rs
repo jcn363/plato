@@ -282,7 +282,10 @@ impl Menu {
         (x_min, x_max)
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Menu builder requires many parameters (entries, coordinates, direction, hub, fonts) for comprehensive menu construction"
+    )]
     fn build_menu_children(
         entries: &[EntryKind],
         x_min: i32,

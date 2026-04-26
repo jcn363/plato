@@ -26,7 +26,10 @@ impl WaveformMode {
         }
     }
 
-    #[allow(clippy::should_implement_trait)]
+    #[expect(
+        clippy::should_implement_trait,
+        reason = "Custom FromStr provides case-insensitive parsing and specific error handling for e-ink waveform modes"
+    )]
     pub fn from_str(s: &str) -> Result<Self> {
         match s.to_uppercase().as_str() {
             "GC16" => Ok(Self::GC16),

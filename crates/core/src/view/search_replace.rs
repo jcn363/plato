@@ -142,7 +142,10 @@ impl SearchReplaceView {
         children.push(Box::new(title_label) as Box<dyn View>);
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Search fields builder requires many parameters (children, rect, dimensions, IDs, fonts) for comprehensive field construction"
+    )]
     fn add_search_fields(
         children: &mut Vec<Box<dyn View>>,
         rect: &Rectangle,
@@ -180,7 +183,10 @@ impl SearchReplaceView {
         children.push(Box::new(search_input) as Box<dyn View>);
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Replace fields builder requires many parameters (children, rect, dimensions, IDs, fonts) for comprehensive field construction"
+    )]
     fn add_replace_fields(
         children: &mut Vec<Box<dyn View>>,
         rect: &Rectangle,

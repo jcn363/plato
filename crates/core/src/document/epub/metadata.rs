@@ -32,7 +32,10 @@ impl EpubDocument {
         result
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Helper function requires many parameters for TOC navigation (toc, offsets, path, mutable references for chapter tracking)"
+    )]
     pub fn chapter_aux<'a>(
         &mut self,
         toc: &'a [TocEntry],

@@ -94,7 +94,10 @@ impl SearchBar {
         children.push(Box::new(sep) as Box<dyn View>);
     }
 
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Input field builder requires many parameters (children, rect, dimensions, IDs, fonts) for comprehensive field construction"
+    )]
     fn add_input_field(
         children: &mut Vec<Box<dyn View>>,
         rect: &Rectangle,

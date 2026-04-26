@@ -66,7 +66,10 @@ pub(crate) fn toggle_annotation_menu(
     );
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Selection menu requires many parameters (children, page info, file info, hub) for comprehensive menu construction"
+)]
 pub(crate) fn toggle_selection_menu(
     children: &mut Vec<Box<dyn View>>,
     current_page: usize,
@@ -138,7 +141,10 @@ pub(crate) fn toggle_selection_menu(
     );
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Title menu requires many parameters (children, rect, reflowable, file info, hub) for comprehensive menu construction"
+)]
 pub(crate) fn toggle_title_menu(
     children: &mut Vec<Box<dyn View>>,
     rect: Rectangle,

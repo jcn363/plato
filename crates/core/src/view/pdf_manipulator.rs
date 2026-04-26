@@ -265,7 +265,10 @@ Max: 30MB, 500 pages. Keep battery charged."
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
     }
 
-    #[allow(clippy::ptr_arg)]
+    #[expect(
+        clippy::ptr_arg,
+        reason = "PathBuf passed by reference to avoid cloning when only reading the path for redaction processing"
+    )]
     fn process_redaction(&mut self, file_path: &PathBuf, page: usize) -> Result<PathBuf, Error> {
         use crate::document::pdf_manipulator::{RedactionEditor, RedactionRegion};
 

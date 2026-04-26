@@ -259,7 +259,10 @@ fn get_fallback_translation(key: &str) -> String {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[allow(dead_code)] // Zero and Two variants reserved for future language support (e.g., Arabic uses Zero, some Slavic languages use Two)
+#[expect(
+    dead_code,
+    reason = "Zero and Two variants reserved for future language support (e.g., Arabic uses Zero, some Slavic languages use Two)"
+)]
 enum PluralForm {
     Zero,
     One,

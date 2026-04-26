@@ -89,7 +89,10 @@ impl EpubDocument {
         entries
     }
 
-    #[allow(clippy::only_used_in_recursion)]
+    #[expect(
+        clippy::only_used_in_recursion,
+        reason = "Helper function specifically designed for recursive TOC traversal"
+    )]
     pub fn walk_toc_nav(
         &mut self,
         node: NodeRef,

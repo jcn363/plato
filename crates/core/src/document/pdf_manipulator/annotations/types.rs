@@ -35,7 +35,10 @@ pub enum AnnotationSubtype {
 }
 
 impl AnnotationSubtype {
-    #[allow(clippy::should_implement_trait)]
+    #[expect(
+        clippy::should_implement_trait,
+        reason = "Custom FromStr implementation provides case-insensitive parsing and specific error handling for PDF annotation types"
+    )]
     pub fn from_str(s: &str) -> Result<Self, Error> {
         match s.to_lowercase().as_str() {
             "text" => Ok(AnnotationSubtype::Text),

@@ -580,7 +580,7 @@ impl<'a> PdfPage<'a> {
                     }
                 } else {
                     // RGB
-                    #[allow(clippy::needless_range_loop)]
+                    #[allow(clippy::needless_range_loop, reason = "Indexed loop required for pixel-by-pixel RGBA to RGB conversion with specific indexing pattern")]
                     for i in 0..(width * height) as usize {
                         let rgba_idx = i * 4;
                         let rgb_idx = i * 3;

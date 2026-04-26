@@ -235,7 +235,10 @@ impl Sketch {
 }
 
 #[inline]
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Drawing function requires many parameters (pixmap, touch state, position, time, pen settings) for accurate stroke rendering"
+)]
 fn draw_segment(
     pixmap: &mut Pixmap,
     ts: &mut TouchState,

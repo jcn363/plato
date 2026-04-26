@@ -86,7 +86,10 @@ impl Context {
     /// * `lightsensor` - Ambient light sensor
     /// * `plugin_system` - Plugin system for extensibility
     /// * `background_sync` - Background synchronization system
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Context requires many dependencies (framebuffer, RTC, library, settings, device, battery, frontlight, lightsensor, plugin_system, background_sync)"
+    )]
     pub fn new(
         fb: Box<dyn Framebuffer>,
         rtc: Option<Rtc>,

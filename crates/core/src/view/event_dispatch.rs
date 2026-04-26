@@ -61,7 +61,10 @@ pub fn handle_event(
 // We render from bottom to top. For a view to render it has to either appear in `ids` or intersect
 // one of the rectangles in `bgs`. When we're about to render a view, if `wait` is true, we'll wait
 // for all the updates in `updating` that intersect with the view.
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Render function requires many parameters (view, wait flag, IDs, rectangles, backgrounds, update queue, link handler) for comprehensive rendering pipeline"
+)]
 pub fn render(
     view: &dyn View,
     wait: bool,

@@ -17,7 +17,10 @@ pub struct FzRect {
 }
 
 impl FzRect {
-    #[allow(clippy::should_implement_trait)]
+    #[expect(
+        clippy::should_implement_trait,
+        reason = "Custom default() provides zero-initialized rectangle specific to PDF coordinate system"
+    )]
     pub fn default() -> Self {
         FzRect {
             x0: 0.0,

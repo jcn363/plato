@@ -49,7 +49,10 @@ pub struct Engine {
     pub dpi: u16,
 }
 
-#[allow(clippy::new_without_default)]
+#[expect(
+    clippy::new_without_default,
+    reason = "Engine has specific initialization logic (margin, line_height, min_font_size) that doesn't match Default semantics"
+)]
 impl Engine {
     pub fn new() -> Engine {
         let margin =
@@ -196,8 +199,11 @@ impl Engine {
     /// - Element nodes: Applies CSS rules, computes layout, recurses on children
     /// - Block elements: Creates layout rectangles with proper margins
     /// - Inline elements: Flows text within line boxes
-    #[allow(clippy::only_used_in_recursion)]
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Recursive helper requires same parameters as parent for layout traversal"
+    )]
+    #[allow(clippy::only_used_in_recursion, reason = "Parameters loop_context and resource_fetcher are passed through in recursive calls")]
     fn build_display_list_recursive(
         &mut self,
         node: NodeRef,

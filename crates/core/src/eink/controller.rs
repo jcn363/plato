@@ -209,7 +209,10 @@ impl MxcController {
         Ok(Self { device_path })
     }
 
-    #[allow(clippy::should_implement_trait)]
+    #[expect(
+        clippy::should_implement_trait,
+        reason = "Custom default() provides device-specific path (/dev/fb0) instead of generic Default semantics"
+    )]
     pub fn default() -> Result<Self> {
         Self::new("/dev/fb0".to_string())
     }

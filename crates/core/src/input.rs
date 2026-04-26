@@ -621,7 +621,10 @@ fn send_finger_event(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Key event handler requires many parameters (event, button scheme, rotation, touch codes, dimensions) for comprehensive input processing"
+)]
 fn handle_key_event(
     evt: InputEvent,
     button_scheme: &mut ButtonScheme,

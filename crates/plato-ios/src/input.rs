@@ -49,7 +49,7 @@ pub fn translate_touch_event(
 
 /// Translate a gesture recognizer event
 /// For MVP, we handle basic tap gestures
-#[allow(dead_code)] // Reserved for future iOS gesture recognizer integration (UIGestureRecognizer for pinch, tap)
+#[allow(dead_code, reason = "Reserved for future iOS gesture recognizer integration (UIGestureRecognizer for pinch, tap)")]
 #[must_use]
 pub fn translate_gesture_event(
     gesture_type: i32, // 0=Tap, 1=Pinch, etc.
