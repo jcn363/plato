@@ -270,6 +270,11 @@ impl HomeInputExt for Home {
                 self.set_manual_order(path, *order, hub, rq, context);
                 true
             }
+            Event::Select(EntryId::ToggleReverseOrder) => {
+                let next_value = !self.reverse_order;
+                self.set_reverse_order(next_value, hub, rq, context);
+                true
+            }
             Event::Select(EntryId::ReverseOrder) => {
                 let next_value = !self.reverse_order;
                 self.set_reverse_order(next_value, hub, rq, context);

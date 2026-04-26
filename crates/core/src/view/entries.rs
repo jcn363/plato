@@ -168,6 +168,7 @@ pub enum EntryId {
     DecreaseLetterSpacing,
     IncreaseLineHeight,
     DecreaseLineHeight,
+    ToggleReverseOrder,
     ToggleDarkMode,
     SetAutoThemeThreshold,
     TogglePluginSystem,
@@ -333,7 +334,7 @@ impl EntryId {
             EntryId::DecreaseLetterSpacing => "DecreaseLetterSpacing",
             EntryId::IncreaseLineHeight => "IncreaseLineHeight",
             EntryId::DecreaseLineHeight => "DecreaseLineHeight",
-            EntryId::Preview => "Preview",
+            EntryId::ToggleReverseOrder => "ToggleReverseOrder",
             EntryId::SearchReplace => "SearchReplace",
             EntryId::ReplaceInChapter => "ReplaceInChapter",
             EntryId::ReplaceInDocument => "ReplaceInDocument",
@@ -384,6 +385,7 @@ impl EntryId {
             EntryId::DeleteCollection(_) => "DeleteCollection",
             EntryId::AddToCollection => "AddToCollection",
             EntryId::RemoveFromCollection => "RemoveFromCollection",
+            EntryId::Preview => "Preview",
         }
     }
 }

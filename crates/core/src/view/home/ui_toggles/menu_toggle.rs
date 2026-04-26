@@ -83,25 +83,72 @@ impl Home {
 
     /// Create sort menu
     fn create_sort_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
+        let reverse_text = if self.reverse_order { "↓" } else { "↑" };
+        
         let entries = vec![
             EntryKind::Command(
-                "Sort by Title".to_string(),
+                format!("Reverse Order {}", reverse_text),
+                EntryId::ToggleReverseOrder,
+            ),
+            EntryKind::Separator,
+            EntryKind::Command(
+                "Recently Read".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Opened),
+            ),
+            EntryKind::Command(
+                "Recently Added".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Added),
+            ),
+            EntryKind::Command(
+                "A-Z Title".to_string(),
                 EntryId::Sort(crate::metadata::SortMethod::Title),
             ),
             EntryKind::Command(
-                "Sort by Author".to_string(),
+                "A-Z Author".to_string(),
                 EntryId::Sort(crate::metadata::SortMethod::Author),
             ),
+            EntryKind::Separator,
             EntryKind::Command(
-                "Sort by Date".to_string(),
-                EntryId::Sort(crate::metadata::SortMethod::Date),
+                "Reading Progress".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Progress),
             ),
             EntryKind::Command(
-                "Sort by Size".to_string(),
+                "Status".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Status),
+            ),
+            EntryKind::Separator,
+            EntryKind::Command(
+                "Year".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Year),
+            ),
+            EntryKind::Command(
+                "Series".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Series),
+            ),
+            EntryKind::Command(
+                "Pages".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Pages),
+            ),
+            EntryKind::Command(
+                "File Size".to_string(),
                 EntryId::Sort(crate::metadata::SortMethod::Size),
             ),
             EntryKind::Command(
-                "Sort by Manual Order".to_string(),
+                "File Type".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::Kind),
+            ),
+            EntryKind::Separator,
+            EntryKind::Command(
+                "File Name".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::FileName),
+            ),
+            EntryKind::Command(
+                "File Path".to_string(),
+                EntryId::Sort(crate::metadata::SortMethod::FilePath),
+            ),
+            EntryKind::Separator,
+            EntryKind::Command(
+                "Manual Order".to_string(),
                 EntryId::Sort(crate::metadata::SortMethod::Manual),
             ),
             EntryKind::Command("Edit Order".to_string(), EntryId::ToggleReorderMode),
