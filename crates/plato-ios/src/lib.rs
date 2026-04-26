@@ -92,12 +92,20 @@ static mut CONTEXT: Option<Context> = None;
 static mut FRAMEBUFFER: Option<framebuffer::IOSFramebuffer> = None;
 
 /// Get mutable reference to global framebuffer (internal use only)
+///
+/// # Safety
+/// This function accesses global static mutable state and must only be called
+/// from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
 pub unsafe fn get_framebuffer_mut() -> Option<&'static mut framebuffer::IOSFramebuffer> {
     FRAMEBUFFER.as_mut()
 }
 
 /// Get reference to global framebuffer (internal use only)
+///
+/// # Safety
+/// This function accesses global static mutable state and must only be called
+/// from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
 pub unsafe fn get_framebuffer() -> Option<&'static framebuffer::IOSFramebuffer> {
     FRAMEBUFFER.as_ref()
@@ -136,6 +144,11 @@ static mut CONTACTS: Option<TouchContacts> = None;
 static mut SEGMENTS: Option<TouchSegments> = None;
 
 /// Get mutable reference to global context (internal use only)
+///
+/// # Safety
+/// This function accesses global static mutable state and must only be called
+/// from the main thread after `plato_init` has been called. The returned pointer
+/// is only valid until the next call to `plato_deinit`.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_get_context() -> *mut Context {
@@ -145,8 +158,14 @@ pub unsafe extern "C" fn plato_get_context() -> *mut Context {
         .unwrap_or(std::ptr::null_mut())
 }
 
-/// Initialize the Plato core
-/// Called from Swift when the app launches
+/// Initialize the Plato iOS library
+/// Called from Swift when the app starts
+///
+/// # Safety
+/// This function modifies global static state (CONTEXT, FRAMEBUFFER, VIEW, etc.)
+/// and must only be called once from the main thread before any other
+/// plato_* functions. Calling this function while previous state exists
+/// will leak resources.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
@@ -335,6 +354,11 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
 
 /// Resize the framebuffer to new dimensions
 /// Called from Swift when view bounds change (rotation, resizing)
+///
+/// # Safety
+/// This function modifies global static state (FRAMEBUFFER, VIEW) and must
+/// only be called from the main thread after `plato_init` has been called.
+/// The caller must ensure no rendering is in progress when this is called.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_resize(width: u32, height: u32) -> bool {
@@ -386,6 +410,10 @@ pub unsafe extern "C" fn plato_resize(width: u32, height: u32) -> bool {
 
 /// Handle touch down event
 /// Called from Swift when touch down occurs
+///
+/// # Safety
+/// This function accesses global static state (EVENT_TX) and must only be
+/// called from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_touch_down(id: i32, x: i32, y: i32) {
@@ -397,6 +425,10 @@ pub unsafe extern "C" fn plato_touch_down(id: i32, x: i32, y: i32) {
 
 /// Handle touch move event
 /// Called from Swift when touch move occurs
+///
+/// # Safety
+/// This function accesses global static state (EVENT_TX) and must only be
+/// called from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_touch_move(id: i32, x: i32, y: i32) {
@@ -408,6 +440,10 @@ pub unsafe extern "C" fn plato_touch_move(id: i32, x: i32, y: i32) {
 
 /// Handle touch up event
 /// Called from Swift when touch up occurs
+///
+/// # Safety
+/// This function accesses global static state (EVENT_TX) and must only be
+/// called from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_touch_up(id: i32, x: i32, y: i32) {
@@ -419,6 +455,16 @@ pub unsafe extern "C" fn plato_touch_up(id: i32, x: i32, y: i32) {
 
 /// Render the current view to a caller-provided buffer
 /// Called from Swift on each frame or when needed
+///
+/// # Safety
+/// This function accesses global static state and must only be called from
+/// the main thread after `plato_init` has been called.
+///
+/// The caller must ensure:
+/// - `buffer_ptr` is non-null and points to valid writable memory
+/// - `len` matches the framebuffer size in bytes (width * height * 4)
+/// - No other rendering is in progress
+/// - The buffer remains valid for the duration of this call
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
@@ -496,6 +542,11 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
 
 /// Cleanup resources
 /// Called from Swift when the app is terminating
+///
+/// # Safety
+/// This function modifies global static state and must only be called from
+/// the main thread. After calling this function, no other plato_* functions
+/// should be called without first calling `plato_init` again.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_deinit() {

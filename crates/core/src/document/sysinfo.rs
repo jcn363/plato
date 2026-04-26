@@ -4,10 +4,9 @@
 //! Collects device details, memory stats, storage info, and hardware configuration.
 
 use crate::device::CURRENT_DEVICE;
-#[allow(unused_imports)]
 use crate::document::HumanSize;
 use crate::log_error;
-#[allow(unused_imports)]
+#[cfg(target_os = "linux")]
 use nix::sys::statvfs;
 #[cfg(target_os = "linux")]
 use nix::sys::sysinfo;
@@ -17,7 +16,6 @@ use std::env;
 use std::fs;
 use std::process::Command;
 
-#[allow(dead_code)]
 const INTERNAL_CARD_ROOT: &str = "/mnt/onboard";
 
 const CPUINFO_KEYS: [&str; 3] = ["Processor", "Features", "Hardware"];
@@ -134,8 +132,6 @@ fn append_ip_address(buf: &mut String) {
     }
 }
 
-#[allow(unused_variables)]
-#[allow(clippy::ptr_arg)]
 fn append_storage_info(buf: &mut String) {
     #[cfg(target_os = "linux")]
     {
