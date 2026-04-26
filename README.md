@@ -32,6 +32,7 @@ Documentation:
 - [OPDS Catalog](doc/OPDS_CATALOG.md)
 - [Theme System](doc/THEME_AWARE.md)
 - [Recently Implemented Features](doc/IMPLEMENTED_FEATURES.md)
+- [Rust Best Practices](rust-best-practices.md) - Coding standards and guidelines for Rust development
 
 ## Supported firmwares
 

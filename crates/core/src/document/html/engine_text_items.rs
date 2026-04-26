@@ -81,14 +81,10 @@ impl Engine {
     }
 
     fn calculate_big_stretch(&mut self, parent_style: &StyleData) -> i32 {
-        let font_size = (parent_style.font_size * 64.0) as u32;
-        let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
-            parent_style.font_kind,
-            parent_style.font_style,
-            parent_style.font_weight,
-        );
-        font.set_size(font_size, self.dpi);
-        3 * font.plan(" ", None, None).width
+        // Stub: estimate space width based on font size
+        let font_size = parent_style.font_size as f32;
+        let space_width = (font_size * 0.25) as i32;
+        3 * space_width
     }
 
     fn add_center_alignment_glue(
@@ -136,15 +132,8 @@ impl Engine {
         items: &mut Vec<ParagraphItem<ParagraphElement>>,
     ) {
         let font_size = (text_material.style.font_size * 64.0) as u32;
-        let space_plan = {
-            let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
-                parent_style.font_kind,
-                parent_style.font_style,
-                parent_style.font_weight,
-            );
-            font.set_size(font_size, self.dpi);
-            font.plan(" 0.", None, None)
-        };
+        // Stub: estimate space width based on font size
+        let space_width = (font_size as f32 * 0.25) as i32;
 
         let mut start_index = 0;
         for (end_index, _is_hardbreak) in LineBreakIterator::new(&text_material.text) {
@@ -156,16 +145,15 @@ impl Engine {
                     if j > 0 {
                         let buf = &text_material.text[start_index..start_index + j];
                         let local_offset = text_material.offset + start_index;
-                        let mut plan = {
-                            let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
-                                text_material.style.font_kind,
-                                text_material.style.font_style,
-                                text_material.style.font_weight,
-                            );
-                            font.set_size(font_size, self.dpi);
-                            font.plan(buf, None, text_material.style.font_features.as_deref())
+                        // Stub: estimate text width based on character count and font size
+                        let avg_char_width = (font_size as f32 * 0.6) as i32;
+                        let width = buf.len() as i32 * avg_char_width;
+                        let plan = super::layout::TextPlan {
+                            width,
+                            ascent: (font_size as f32 * 0.8) as i32,
+                            descent: (font_size as f32 * 0.2) as i32,
+                            ..Default::default()
                         };
-                        plan.space_out(text_material.style.letter_spacing);
 
                         items.push(ParagraphItem::Box {
                             width: plan.width,

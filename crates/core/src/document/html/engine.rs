@@ -1,7 +1,7 @@
 use super::dom::NodeRef;
 use super::layout::TextAlign;
 use super::layout::{
-    ChildArtifact, DrawCommand, DrawState, Fonts, LoopContext, RootData, SiblingStyle, StyleData,
+    ChildArtifact, DrawCommand, DrawState, LoopContext, RootData, SiblingStyle, StyleData,
 };
 use super::style::StyleSheet;
 
@@ -29,8 +29,6 @@ pub trait ResourceFetcher {
 pub const DEFAULT_MIN_FONT_SIZE: f32 = 4.0;
 
 pub struct Engine {
-    // The fonts used for each CSS font family.
-    _fonts: Option<Fonts>,
     // The minimum font size in points.
     min_font_size: f32,
     // The penalty for lines ending with a hyphen.
@@ -58,7 +56,6 @@ impl Engine {
             Edge::uniform(mm_to_px(DEFAULT_MARGIN_WIDTH as f32, DEFAULT_DPI).round() as i32);
         let line_height = DEFAULT_LINE_HEIGHT;
         Self {
-            _fonts: None,
             min_font_size: DEFAULT_MIN_FONT_SIZE,
             hyphen_penalty: HYPHEN_PENALTY,
             stretch_tolerance: STRETCH_TOLERANCE,

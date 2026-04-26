@@ -102,6 +102,7 @@ Tests use standard Rust `#[cfg(test)]` / `#[test]` attributes. See the [Test Seg
 - Use default `rustfmt` settings as a baseline, then customize via `rustfmt.toml`
 - Run `cargo fmt` before committing
 - Run `cargo clippy` to catch common issues
+- Refer to [rust-best-practices.md](rust-best-practices.md) for comprehensive Rust coding guidelines
 
 ### Imports
 

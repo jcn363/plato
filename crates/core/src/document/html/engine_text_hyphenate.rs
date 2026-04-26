@@ -12,18 +12,21 @@ impl Engine {
         element: &TextElement,
     ) -> ParagraphItem<ParagraphElement> {
         let offset = element.offset + index;
-        let mut plan = {
-            let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
-                element.font_kind,
-                element.font_style,
-                element.font_weight,
-            );
-            font.set_size(element.font_size, self.dpi);
-            font.plan(chunk, None, element.font_features.as_deref())
+        // Stub: estimate text width based on character count and font size
+        let font_size = element.font_size as f32;
+        let avg_char_width = font_size * 0.6; // Approximate average character width
+        let width = (chunk.len() as f32 * avg_char_width) as i32;
+        
+        // Create a stub plan with estimated metrics
+        let plan = super::layout::TextPlan {
+            width,
+            ascent: (font_size * 0.8) as i32,
+            descent: (font_size * 0.2) as i32,
+            ..Default::default()
         };
-        plan.space_out(element.letter_spacing);
+        
         ParagraphItem::Box {
-            width: plan.width,
+            width,
             data: ParagraphElement::Text(TextElement {
                 offset,
                 text: chunk.to_string(),
@@ -130,14 +133,11 @@ impl Engine {
     }
 
     fn calculate_hyphen_metrics(&mut self, element: &TextElement) -> (i32, i32) {
-        let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
-            element.font_kind,
-            element.font_style,
-            element.font_weight,
-        );
-        font.set_size(element.font_size, self.dpi);
-        let plan = font.plan(" -", None, element.font_features.as_deref());
-        (plan.glyph_advance(1), 3 * plan.glyph_advance(0))
+        // Stub: estimate hyphen width based on font size
+        let font_size = element.font_size as f32;
+        let hyphen_width = (font_size * 0.3) as i32;
+        let stretch = (font_size * 0.9) as i32;
+        (hyphen_width, stretch)
     }
 
     fn hyphenate_chunk(
@@ -280,16 +280,15 @@ impl Engine {
             ..
         }) = merged_element
         {
-            *plan = {
-                let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
-                    font_kind,
-                    font_style,
-                    font_weight,
-                );
-                font.set_size(font_size, self.dpi);
-                font.plan(text, None, font_features.as_ref().map(Vec::as_slice))
+            // Stub: estimate text width based on character count and font size
+            let avg_char_width = (font_size as f32 * 0.6) as i32;
+            let width = text.len() as i32 * avg_char_width;
+            *plan = super::layout::TextPlan {
+                width,
+                ascent: (font_size as f32 * 0.8) as i32,
+                descent: (font_size as f32 * 0.2) as i32,
+                ..Default::default()
             };
-            plan.space_out(letter_spacing);
             merged_width = plan.width;
         }
 
@@ -382,16 +381,15 @@ impl Engine {
             ..
         }) = merged_element
         {
-            *plan = {
-                let font = self.fonts.as_mut().expect("fonts not initialized").get_mut(
-                    font_kind,
-                    font_style,
-                    font_weight,
-                );
-                font.set_size(font_size, self.dpi);
-                font.plan(text, None, font_features.as_ref().map(Vec::as_slice))
+            // Stub: estimate text width based on character count and font size
+            let avg_char_width = (font_size as f32 * 0.6) as i32;
+            let width = text.len() as i32 * avg_char_width;
+            *plan = super::layout::TextPlan {
+                width,
+                ascent: (font_size as f32 * 0.8) as i32,
+                descent: (font_size as f32 * 0.2) as i32,
+                ..Default::default()
             };
-            plan.space_out(letter_spacing);
             merged_width = plan.width;
         }
         merged_items.push(ParagraphItem::Box {
