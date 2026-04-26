@@ -40,8 +40,9 @@ pub fn android_settings_path() -> PathBuf {
     path
 }
 
-/// Get the Android settings path for storing Settings.toml
-/// Returns the app internal data directory (non-Android stub)
+/// Get the Android settings path for storing Settings.toml.
+/// Returns the app internal data directory.
+/// This is a stub implementation for non-Android platforms (e.g., desktop testing).
 #[cfg(not(target_os = "android"))]
 pub fn android_settings_path() -> PathBuf {
     let mut path = android_library_path();

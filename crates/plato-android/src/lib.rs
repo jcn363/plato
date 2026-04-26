@@ -161,7 +161,9 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
     // Load fonts
     let fonts = Fonts::load().with_context(|| "Failed to load fonts")?;
 
-    // Initialize stubs for hardware not present on Android
+    // Initialize stubs for hardware not present on Android devices.
+    // Android devices don't have Kobo-specific hardware like battery sensors,
+    // frontlight controllers, or ambient light sensors, so we use fake implementations.
     let battery = Box::new(FakeBattery::new()) as Box<dyn plato_core::battery::Battery>;
     let frontlight = Box::new(LightLevels::default()) as Box<dyn plato_core::frontlight::Frontlight>;
     let lightsensor = Box::new(0u16) as Box<dyn plato_core::lightsensor::LightSensor>;

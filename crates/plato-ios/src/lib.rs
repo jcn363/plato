@@ -291,7 +291,9 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
         }
     };
 
-    // Initialize stubs for hardware not present on iOS
+    // Initialize stubs for hardware not present on iOS devices.
+    // iOS devices don't have Kobo-specific hardware like battery sensors,
+    // frontlight controllers, or ambient light sensors, so we use fake implementations.
     let battery = Box::new(FakeBattery::new()) as Box<dyn plato_core::battery::Battery>;
     let frontlight =
         Box::new(LightLevels::default()) as Box<dyn plato_core::frontlight::Frontlight>;
