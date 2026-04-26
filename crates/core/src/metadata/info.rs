@@ -56,6 +56,8 @@ pub struct Info {
     pub added: NaiveDateTime,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub manual_order: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reading_time_seconds: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -180,6 +182,7 @@ impl Default for Info {
             simple_toc: None,
             added: Local::now().naive_local(),
             manual_order: None,
+            reading_time_seconds: None,
         }
     }
 }
@@ -332,6 +335,43 @@ impl Info {
             Cow::Owned(format!("{} · {}", self.title(), &self.author))
         } else {
             self.title()
+        }
+    }
+
+    /// Get formatted reading time if available
+    ///
+    /// Returns a human-readable string like "5 min", "1h 30m", or None if not calculated
+    pub fn formatted_reading_time(&self) -> Option<String> {
+        self.reading_time_seconds.map(|secs| {
+            if secs < 60 {
+                "< 1 min".to_string()
+            } else if secs < 3600 {
+                format!("{} min", secs / 60)
+            } else {
+                let hours = secs / 3600;
+                let minutes = (secs % 3600) / 60;
+                if minutes == 0 {
+                    format!("{}h", hours)
+                } else {
+                    format!("{}h {}m", hours, minutes)
+                }
+            }
+        })
+    }
+
+    /// Calculate and set reading time based on page count
+    ///
+    /// This is a convenience method that estimates reading time from the document's
+    /// page count and stores it in the metadata.
+    pub fn calculate_reading_time(&mut self, wpm: u32) {
+        if let Some(ref reader_info) = self.reader_info {
+            let pages = reader_info.pages_count;
+            if pages > 0 {
+                // Estimate: ~280 words per page, average reading speed
+                let word_count = pages as u32 * 280;
+                let minutes = (word_count as f32 / wpm as f32).ceil() as u64;
+                self.reading_time_seconds = Some(minutes * 60);
+            }
         }
     }
 }

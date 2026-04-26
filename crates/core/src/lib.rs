@@ -33,6 +33,7 @@ pub mod mobile_optimizations;
 pub mod mobile_theme;
 pub mod opds;
 pub mod plugin;
+pub mod reading_time;
 pub mod rtc;
 pub mod settings;
 pub mod sync;
@@ -42,6 +43,10 @@ mod unit;
 pub mod update;
 pub mod validation;
 pub mod view;
+
+pub use reading_time::{
+    estimate_from_page_count, estimate_from_word_count, format_duration, ReadingSpeed,
+};
 
 /// Mock implementations for testing
 ///

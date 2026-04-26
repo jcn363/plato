@@ -204,7 +204,10 @@ mod tests {
     #[test]
     fn test_count_words() {
         assert_eq!(count_words("Hello world"), 2);
-        assert_eq!(count_words("The quick brown fox jumps over the lazy dog"), 9);
+        assert_eq!(
+            count_words("The quick brown fox jumps over the lazy dog"),
+            9
+        );
         assert_eq!(count_words(""), 0);
         assert_eq!(count_words("   "), 0);
     }

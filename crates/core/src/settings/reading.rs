@@ -1,4 +1,5 @@
 use crate::metadata::TextAlign;
+use crate::reading_time::ReadingSpeed;
 use crate::validation::{validate_finite_f32, validate_range};
 use anyhow::{bail, Error};
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -47,6 +48,7 @@ pub struct ReaderSettings {
     pub page_turn_animation: PageTurnAnimation,
     pub fast_page_turn: bool,
     pub use_system_fonts: bool,
+    pub reading_speed: ReadingSpeed,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -269,6 +271,7 @@ impl Default for ReaderSettings {
             page_turn_animation: PageTurnAnimation::None,
             fast_page_turn: false,
             use_system_fonts: false,
+            reading_speed: ReadingSpeed::Average,
         }
     }
 }
