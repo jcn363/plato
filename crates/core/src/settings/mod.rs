@@ -150,6 +150,9 @@ pub struct Settings {
     pub accessibility: AccessibilitySettings,
     pub calibre: CalibreSettings,
     pub epub_to_pdf: EpubToPdfSettings,
+    pub goodreads: GoodreadsSettings,
+    pub pocket: PocketSettings,
+    pub cloud_storage: CloudStorageSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -255,6 +258,86 @@ impl EpubToPdfSettings {
             }
         }
         validate_range(self.image_quality, 1, 100, "image_quality")?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct GoodreadsSettings {
+    /// Goodreads API key
+    pub api_key: Option<String>,
+    /// Goodreads API secret
+    pub api_secret: Option<String>,
+    /// OAuth access token
+    pub access_token: Option<String>,
+    /// OAuth access token secret
+    pub access_token_secret: Option<String>,
+    /// Auto-sync reading progress
+    pub auto_sync: bool,
+    /// Sync shelves
+    pub sync_shelves: bool,
+    /// Sync reviews
+    pub sync_reviews: bool,
+}
+
+impl GoodreadsSettings {
+    pub fn validate(&self) -> Result<(), Error> {
+        if let Some(key) = &self.api_key {
+            if key.is_empty() {
+                bail!("Goodreads API key cannot be empty");
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct PocketSettings {
+    /// Pocket consumer key
+    pub consumer_key: Option<String>,
+    /// Pocket access token
+    pub access_token: Option<String>,
+    /// Auto-sync on Wi-Fi connection
+    pub auto_sync: bool,
+    /// Sync reading progress
+    pub sync_progress: bool,
+    /// Archive after reading
+    pub archive_after_reading: bool,
+}
+
+impl PocketSettings {
+    pub fn validate(&self) -> Result<(), Error> {
+        if let Some(key) = &self.consumer_key {
+            if key.is_empty() {
+                bail!("Pocket consumer key cannot be empty");
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct CloudStorageSettings {
+    /// Dropbox access token
+    pub dropbox_token: Option<String>,
+    /// Google Drive access token
+    pub google_drive_token: Option<String>,
+    /// OneDrive access token
+    pub onedrive_token: Option<String>,
+    /// Auto-sync on Wi-Fi connection
+    pub auto_sync: bool,
+    /// Sync reading progress
+    pub sync_progress: bool,
+    /// Sync annotations
+    pub sync_annotations: bool,
+}
+
+impl CloudStorageSettings {
+    pub fn validate(&self) -> Result<(), Error> {
+        // No required fields for cloud storage - tokens are optional
         Ok(())
     }
 }
@@ -549,6 +632,9 @@ impl Default for Settings {
             accessibility: AccessibilitySettings::default(),
             calibre: CalibreSettings::default(),
             epub_to_pdf: EpubToPdfSettings::default(),
+            goodreads: GoodreadsSettings::default(),
+            pocket: PocketSettings::default(),
+            cloud_storage: CloudStorageSettings::default(),
         }
     }
 }

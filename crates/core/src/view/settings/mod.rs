@@ -1,10 +1,13 @@
 mod accessibility;
 mod calibre;
+mod cloud_storage;
 mod defaults;
 mod display;
 mod epub_to_pdf;
 mod gestures;
+mod goodreads;
 mod interface;
+mod pocket;
 mod reading;
 mod reading_advanced;
 mod security;
@@ -203,6 +206,39 @@ impl SettingsEditor {
         children.append(&mut epub_to_pdf_children);
         y_pos = y;
 
+        let (mut goodreads_children, y) = goodreads::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut goodreads_children);
+        y_pos = y;
+
+        let (mut pocket_children, y) = pocket::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut pocket_children);
+        y_pos = y;
+
+        let (mut cloud_storage_children, y) = cloud_storage::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut cloud_storage_children);
+        y_pos = y;
+
         let button_height = x_height * 3;
         let button_width = window_width - 2 * padding;
         let save_rect = rect![
@@ -247,6 +283,9 @@ impl View for SettingsEditor {
         let gestures_offset = accessibility_offset + gestures::CHILD_COUNT;
         let calibre_offset = gestures_offset + calibre::CHILD_COUNT;
         let epub_to_pdf_offset = calibre_offset + epub_to_pdf::CHILD_COUNT;
+        let goodreads_offset = epub_to_pdf_offset + goodreads::CHILD_COUNT;
+        let pocket_offset = goodreads_offset + pocket::CHILD_COUNT;
+        let cloud_storage_offset = pocket_offset + cloud_storage::CHILD_COUNT;
 
         if display::handle_event(evt, &mut self.children, display_offset, bus, rq, context) {
             self.dirty = true;
@@ -315,6 +354,42 @@ impl View for SettingsEditor {
             evt,
             &mut self.children,
             epub_to_pdf_offset,
+            bus,
+            rq,
+            context,
+        ) {
+            self.dirty = true;
+            return true;
+        }
+
+        if goodreads::handle_event(
+            evt,
+            &mut self.children,
+            goodreads_offset,
+            bus,
+            rq,
+            context,
+        ) {
+            self.dirty = true;
+            return true;
+        }
+
+        if pocket::handle_event(
+            evt,
+            &mut self.children,
+            pocket_offset,
+            bus,
+            rq,
+            context,
+        ) {
+            self.dirty = true;
+            return true;
+        }
+
+        if cloud_storage::handle_event(
+            evt,
+            &mut self.children,
+            cloud_storage_offset,
             bus,
             rq,
             context,
