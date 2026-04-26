@@ -158,5 +158,7 @@ pub enum AppCmd {
     OpenPdfManipulator(std::path::PathBuf),
     TouchEvents,
     RotationValues,
-    Opds { url: Option<String> },
+    Opds {
+        url: Option<String>,
+    },
 }

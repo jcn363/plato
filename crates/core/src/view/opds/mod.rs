@@ -1,13 +1,15 @@
 use crate::context::Context;
 use crate::font::Fonts;
 use crate::framebuffer::Framebuffer;
-use crate::geom::Rectangle;
-use crate::opds::{OPDSCatalog};
-use crate::view::{View, Id, ViewId, ID_FEEDER, RenderQueue, RenderData, Event, Hub, Bus, EntryId, EntryKind};
-use crate::view::top_bar::TopBar;
-use crate::view::menu::{Menu, MenuKind};
-use crate::view::common::{locate_by_id};
 use crate::framebuffer::UpdateMode;
+use crate::geom::Rectangle;
+use crate::opds::OPDSCatalog;
+use crate::view::common::locate_by_id;
+use crate::view::menu::{Menu, MenuKind};
+use crate::view::top_bar::TopBar;
+use crate::view::{
+    Bus, EntryId, EntryKind, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER,
+};
 use std::fs;
 
 pub struct OpdsView {
@@ -23,11 +25,19 @@ impl OpdsView {
     pub fn new(rect: Rectangle, url: String, context: &mut Context) -> OpdsView {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
-        
-        let top_bar_rect = rect![rect.min, pt!(rect.max.x, rect.min.y + context.display.dims.1 as i32 / 15)];
-        let top_bar = TopBar::new(top_bar_rect, Event::Back, "OPDS Catalog".to_string(), context);
+
+        let top_bar_rect = rect![
+            rect.min,
+            pt!(rect.max.x, rect.min.y + context.display.dims.1 as i32 / 15)
+        ];
+        let top_bar = TopBar::new(
+            top_bar_rect,
+            Event::Back,
+            "OPDS Catalog".to_string(),
+            context,
+        );
         children.push(Box::new(top_bar) as Box<dyn View>);
-        
+
         let mut view = OpdsView {
             id,
             rect,
@@ -36,7 +46,7 @@ impl OpdsView {
             stack: Vec::new(),
             current_url: url.clone(),
         };
-        
+
         view.load_catalog(&url, context);
         view
     }
@@ -60,65 +70,87 @@ impl OpdsView {
         }
 
         let Some(catalog) = &self.catalog else { return };
-        
+
         let mut entries = Vec::new();
         for entry in catalog.entries() {
             let title = entry.title.clone();
             if let Some(url) = entry.catalog_url() {
                 entries.push(EntryKind::Command(title, EntryId::OpenOpds(url)));
             } else if let Some(url) = entry.download_url() {
-                entries.push(EntryKind::Command(format!("Download: {}", title), EntryId::DownloadOpds(url)));
+                entries.push(EntryKind::Command(
+                    format!("Download: {}", title),
+                    EntryId::DownloadOpds(url),
+                ));
             }
         }
 
-        let menu_rect = rect![self.rect.min.x, self.children[0].rect().max.y, self.rect.max.x, self.rect.max.y];
-        let menu = Menu::new(menu_rect, ViewId::DirectoryMenu, MenuKind::Contextual, entries, context);
+        let menu_rect = rect![
+            self.rect.min.x,
+            self.children[0].rect().max.y,
+            self.rect.max.x,
+            self.rect.max.y
+        ];
+        let menu = Menu::new(
+            menu_rect,
+            ViewId::DirectoryMenu,
+            MenuKind::Contextual,
+            entries,
+            context,
+        );
         self.children.push(Box::new(menu) as Box<dyn View>);
     }
 
     fn download_book(&self, url: &str, hub: &Hub, context: &Context) {
         let url = url.to_string();
-        let library_path = context.settings.libraries[context.settings.selected_library].path.clone();
+        let library_path = context.settings.libraries[context.settings.selected_library]
+            .path
+            .clone();
         let downloads_path = library_path.join("Downloads");
         let hub = hub.clone();
-        
+
         if !downloads_path.exists() {
             let _ = fs::create_dir_all(&downloads_path);
         }
 
-        std::thread::spawn(move || {
-            match reqwest::blocking::get(&url) {
-                Ok(response) => {
-                    let filename = url.split('/').next_back().unwrap_or("book.epub");
-                    let mut dest_path = downloads_path.join(filename);
-                    if !dest_path.to_string_lossy().contains('.') {
-                        dest_path.set_extension("epub");
-                    }
-                    
-                    match fs::File::create(&dest_path) {
-                        Ok(mut file) => {
-                            if let Ok(bytes) = response.bytes() {
-                                if std::io::copy(&mut bytes.as_ref(), &mut file).is_ok() {
-                                    hub.send(Event::Notify(format!("Downloaded {}", filename))).ok();
-                                    hub.send(Event::Select(EntryId::Import)).ok();
-                                }
+        std::thread::spawn(move || match reqwest::blocking::get(&url) {
+            Ok(response) => {
+                let filename = url.split('/').next_back().unwrap_or("book.epub");
+                let mut dest_path = downloads_path.join(filename);
+                if !dest_path.to_string_lossy().contains('.') {
+                    dest_path.set_extension("epub");
+                }
+
+                match fs::File::create(&dest_path) {
+                    Ok(mut file) => {
+                        if let Ok(bytes) = response.bytes() {
+                            if std::io::copy(&mut bytes.as_ref(), &mut file).is_ok() {
+                                hub.send(Event::Notify(format!("Downloaded {}", filename)))
+                                    .ok();
+                                hub.send(Event::Select(EntryId::Import)).ok();
                             }
                         }
-                        Err(e) => {
-                            crate::log_error!("Failed to create file {:?}: {}", dest_path, e);
-                        }
+                    }
+                    Err(e) => {
+                        crate::log_error!("Failed to create file {:?}: {}", dest_path, e);
                     }
                 }
-                Err(e) => {
-                    crate::log_error!("Failed to download book: {}", e);
-                }
+            }
+            Err(e) => {
+                crate::log_error!("Failed to download book: {}", e);
             }
         });
     }
 }
 
 impl View for OpdsView {
-    fn handle_event(&mut self, evt: &Event, hub: &Hub, _bus: &mut Bus, rq: &mut RenderQueue, context: &mut Context) -> bool {
+    fn handle_event(
+        &mut self,
+        evt: &Event,
+        hub: &Hub,
+        _bus: &mut Bus,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) -> bool {
         match *evt {
             Event::Back => {
                 if let Some(url) = self.stack.pop() {

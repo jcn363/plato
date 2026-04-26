@@ -7,11 +7,11 @@
 #![cfg(feature = "ios")]
 #![deny(warnings)]
 
+use anyhow::{Context, Result};
 use plato_core::color::Color;
 use plato_core::framebuffer::Framebuffer;
 use plato_core::framebuffer::UpdateMode;
 use plato_core::geom::Rectangle;
-use anyhow::{Context, Result};
 use std::sync::{Arc, Mutex};
 
 /// iOS framebuffer implementation using Metal for hardware-accelerated rendering
@@ -64,7 +64,7 @@ impl IOSFramebuffer {
             rgba.push(rgb[0]); // R
             rgba.push(rgb[1]); // G
             rgba.push(rgb[2]); // B
-            rgba.push(255);    // A (fully opaque)
+            rgba.push(255); // A (fully opaque)
         }
         rgba
     }
@@ -76,10 +76,10 @@ impl IOSFramebuffer {
         for color in &self.buffer {
             if i + 4 <= out.len() {
                 let rgb = color.rgb();
-                out[i] = rgb[0];     // R
+                out[i] = rgb[0]; // R
                 out[i + 1] = rgb[1]; // G
                 out[i + 2] = rgb[2]; // B
-                out[i + 3] = 255;   // A (fully opaque)
+                out[i + 3] = 255; // A (fully opaque)
                 i += 4;
             }
         }
@@ -243,7 +243,7 @@ impl Framebuffer for GlobalFramebuffer {
 
     fn wait(&self, token: u32) -> Result<i32, anyhow::Error> {
         unsafe {
-            if let Some(ref fb) = crate::get_framebuffer() {
+            if let Some(fb) = crate::get_framebuffer() {
                 fb.wait(token)
             } else {
                 Ok(0)
@@ -253,7 +253,7 @@ impl Framebuffer for GlobalFramebuffer {
 
     fn save(&self, path: &str) -> Result<(), anyhow::Error> {
         unsafe {
-            if let Some(ref fb) = crate::get_framebuffer() {
+            if let Some(fb) = crate::get_framebuffer() {
                 fb.save(path)
             } else {
                 Ok(())
@@ -296,32 +296,34 @@ impl Framebuffer for GlobalFramebuffer {
     }
 
     fn width(&self) -> u32 {
-        unsafe {
-            crate::get_framebuffer().map(|fb| fb.width()).unwrap_or(0)
-        }
+        unsafe { crate::get_framebuffer().map(|fb| fb.width()).unwrap_or(0) }
     }
 
     fn height(&self) -> u32 {
-        unsafe {
-            crate::get_framebuffer().map(|fb| fb.height()).unwrap_or(0)
-        }
+        unsafe { crate::get_framebuffer().map(|fb| fb.height()).unwrap_or(0) }
     }
 
     fn monochrome(&self) -> bool {
         unsafe {
-            crate::get_framebuffer().map(|fb| fb.monochrome()).unwrap_or(false)
+            crate::get_framebuffer()
+                .map(|fb| fb.monochrome())
+                .unwrap_or(false)
         }
     }
 
     fn dithered(&self) -> bool {
         unsafe {
-            crate::get_framebuffer().map(|fb| fb.dithered()).unwrap_or(false)
+            crate::get_framebuffer()
+                .map(|fb| fb.dithered())
+                .unwrap_or(false)
         }
     }
 
     fn inverted(&self) -> bool {
         unsafe {
-            crate::get_framebuffer().map(|fb| fb.inverted()).unwrap_or(false)
+            crate::get_framebuffer()
+                .map(|fb| fb.inverted())
+                .unwrap_or(false)
         }
     }
 }

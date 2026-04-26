@@ -1,4 +1,4 @@
-#![cfg_attr(not(target_os = "ios"), allow(dead_code, unused_imports))]
+#![cfg_attr(not(target_os = "ios"), allow(unused_imports))]
 #![warn(missing_docs)]
 #![cfg_attr(feature = "ios", allow(static_mut_refs, dead_code))]
 
@@ -24,17 +24,25 @@ use plato_core::battery::FakeBattery;
 #[cfg(feature = "ios")]
 use plato_core::context::Context;
 #[cfg(feature = "ios")]
-use plato_core::framebuffer::Framebuffer;
-#[cfg(feature = "ios")]
 use plato_core::font::Fonts;
 #[cfg(feature = "ios")]
+use plato_core::framebuffer::Framebuffer;
+#[cfg(feature = "ios")]
 use plato_core::frontlight::LightLevels;
+#[cfg(feature = "ios")]
+use plato_core::geom::Point;
+#[cfg(feature = "ios")]
+use plato_core::gesture::GestureEvent;
 #[cfg(feature = "ios")]
 use plato_core::helpers::load_toml;
 #[cfg(feature = "ios")]
 use plato_core::input::DeviceEvent;
 #[cfg(feature = "ios")]
+use plato_core::input::{ButtonCode, FingerStatus};
+#[cfg(feature = "ios")]
 use plato_core::library::Library;
+#[cfg(feature = "ios")]
+use plato_core::metadata::SortMethod;
 #[cfg(feature = "ios")]
 use plato_core::mobile_optimizations::{AnimationConfig, MemoryConfig, TouchConfig};
 #[cfg(feature = "ios")]
@@ -42,37 +50,37 @@ use plato_core::mobile_theme::{set_mobile_theme_mode, MobileThemeMode};
 #[cfg(feature = "ios")]
 use plato_core::plugin::PluginSystem;
 #[cfg(feature = "ios")]
-use plato_core::settings::{LibraryMode, LibrarySettings};
+use plato_core::rustc_hash::FxHashMap;
 #[cfg(feature = "ios")]
-use plato_core::metadata::SortMethod;
+use plato_core::settings::Settings;
 #[cfg(feature = "ios")]
 use plato_core::settings::{FirstColumn, SecondColumn};
 #[cfg(feature = "ios")]
-use plato_core::settings::Settings;
+use plato_core::settings::{LibraryMode, LibrarySettings};
 #[cfg(feature = "ios")]
 use plato_core::sync::BackgroundSync;
 #[cfg(feature = "ios")]
 use plato_core::view::home::Home;
 #[cfg(feature = "ios")]
-use plato_core::view::{RenderQueue, View, Hub, Bus};
-#[cfg(feature = "ios")]
-use plato_core::rustc_hash::FxHashMap;
-#[cfg(feature = "ios")]
-use plato_core::geom::Point;
-#[cfg(feature = "ios")]
-use plato_core::gesture::GestureEvent;
-#[cfg(feature = "ios")]
-use plato_core::input::{ButtonCode, FingerStatus};
-#[cfg(feature = "ios")]
-use std::path::{Path, PathBuf};
+use plato_core::view::{Bus, Hub, RenderQueue, View};
 #[cfg(feature = "ios")]
 use std::collections::VecDeque;
+#[cfg(feature = "ios")]
+use std::default::Default;
+#[cfg(feature = "ios")]
+use std::path::{Path, PathBuf};
 #[cfg(feature = "ios")]
 use std::sync::mpsc;
 #[cfg(feature = "ios")]
 use std::sync::{Arc, Mutex};
+
+/// Type alias for touch contact tracking (finger id -> (position, timestamp))
 #[cfg(feature = "ios")]
-use std::default::Default;
+pub type TouchContacts = Arc<Mutex<FxHashMap<i32, (Point, f64)>>>;
+
+/// Type alias for touch path segments
+#[cfg(feature = "ios")]
+pub type TouchSegments = Arc<Mutex<Vec<Vec<Point>>>>;
 
 /// Global context for iOS app
 #[cfg(feature = "ios")]
@@ -121,17 +129,20 @@ static mut RENDER_QUEUE: Option<RenderQueue> = None;
 
 /// Global gesture state: contacts (finger touch tracking)
 #[cfg(feature = "ios")]
-static mut CONTACTS: Option<Arc<Mutex<FxHashMap<i32, (Point, f64)>>>> = None;
+static mut CONTACTS: Option<TouchContacts> = None;
 
 /// Global gesture state: segments (touch path segments)
 #[cfg(feature = "ios")]
-static mut SEGMENTS: Option<Arc<Mutex<Vec<Vec<Point>>>>> = None;
+static mut SEGMENTS: Option<TouchSegments> = None;
 
 /// Get mutable reference to global context (internal use only)
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_get_context() -> *mut Context {
-    CONTEXT.as_mut().map(|c| c as *mut Context).unwrap_or(std::ptr::null_mut())
+    CONTEXT
+        .as_mut()
+        .map(|c| c as *mut Context)
+        .unwrap_or(std::ptr::null_mut())
 }
 
 /// Initialize the Plato core
@@ -149,8 +160,11 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     // Set mobile theme mode for OLED-optimized color palette
     set_mobile_theme_mode(MobileThemeMode::System);
 
-    log::info!("Touch config: tap_jitter={}mm, hold_delay={}ms",
-        touch_config.tap_jitter_mm, touch_config.hold_delay_ms);
+    log::info!(
+        "Touch config: tap_jitter={}mm, hold_delay={}ms",
+        touch_config.tap_jitter_mm,
+        touch_config.hold_delay_ms
+    );
 
     // Use iOS-specific path resolution
     let library_path = storage::ios_library_path();
@@ -167,7 +181,11 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
 
     let settings_dir = Path::new(&settings_path);
     if let Err(e) = std::fs::create_dir_all(settings_dir) {
-        log::error!("Failed to create settings directory {}: {}", settings_path, e);
+        log::error!(
+            "Failed to create settings directory {}: {}",
+            settings_path,
+            e
+        );
         return false;
     }
 
@@ -199,7 +217,8 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
 
     // Create a mutable wrapper for Context that references the global framebuffer
     // This wrapper will provide mutable access during render
-    let fb_boxed = Box::new(framebuffer::GlobalFramebuffer) as Box<dyn plato_core::framebuffer::Framebuffer>;
+    let fb_boxed =
+        Box::new(framebuffer::GlobalFramebuffer) as Box<dyn plato_core::framebuffer::Framebuffer>;
 
     // Load settings
     let settings_path = Path::new(&settings_path).join("Settings.toml");
@@ -255,7 +274,8 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
 
     // Initialize stubs for hardware not present on iOS
     let battery = Box::new(FakeBattery::new()) as Box<dyn plato_core::battery::Battery>;
-    let frontlight = Box::new(LightLevels::default()) as Box<dyn plato_core::frontlight::Frontlight>;
+    let frontlight =
+        Box::new(LightLevels::default()) as Box<dyn plato_core::frontlight::Frontlight>;
     let lightsensor = Box::new(0u16) as Box<dyn plato_core::lightsensor::LightSensor>;
 
     // Initialize plugin system and background sync
@@ -344,7 +364,9 @@ pub unsafe extern "C" fn plato_resize(width: u32, height: u32) -> bool {
         plato_core::geom::Point::new(fb_width as i32, fb_height as i32),
     );
 
-    if let (Some(hub_ref), Some(rq_ref), Some(context_ref)) = (HUB.as_ref(), RENDER_QUEUE.as_mut(), CONTEXT.as_mut()) {
+    if let (Some(hub_ref), Some(rq_ref), Some(context_ref)) =
+        (HUB.as_ref(), RENDER_QUEUE.as_mut(), CONTEXT.as_mut())
+    {
         match Home::new(fb_rect, hub_ref, rq_ref, context_ref) {
             Ok(home) => {
                 VIEW = Some(Box::new(home) as Box<dyn View>);
@@ -419,8 +441,12 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
 
     // Process all finger phases (Down, Motion, Up) through gesture handling
     let mut bus = Bus::new();
-    if let (Some(ref mut view), Some(ref mut rq), Some(ref mut context), Some(ref hub)) = 
-        (VIEW.as_mut(), RENDER_QUEUE.as_mut(), CONTEXT.as_mut(), HUB.as_ref()) {
+    if let (Some(ref mut view), Some(ref mut rq), Some(ref mut context), Some(hub)) = (
+        VIEW.as_mut(),
+        RENDER_QUEUE.as_mut(),
+        CONTEXT.as_mut(),
+        HUB.as_ref(),
+    ) {
         for device_event in device_events {
             // Pass all DeviceEvent::Finger events directly to the view
             // This preserves Down, Motion, and Up semantics for continuous gestures
@@ -452,7 +478,11 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
             // Validate buffer size matches framebuffer dimensions
             let expected_len = fb.width() * fb.height() * 4;
             if len != expected_len as usize {
-                log::error!("Buffer size mismatch: expected {} bytes, got {} bytes", expected_len, len);
+                log::error!(
+                    "Buffer size mismatch: expected {} bytes, got {} bytes",
+                    expected_len,
+                    len
+                );
                 return false;
             }
             fb.fill_rgba_buffer(buffer);

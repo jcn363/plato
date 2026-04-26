@@ -1,6 +1,6 @@
+use crate::validation::validate_string_length;
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
-use crate::validation::validate_string_length;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
@@ -41,7 +41,10 @@ impl OpdsSettings {
         for (i, catalog) in self.catalogs.iter().enumerate() {
             validate_string_length(&catalog.name, &format!("opds.catalogs[{}].name", i), 1, 100)?;
             if catalog.url.is_empty() {
-                return Err(Error::msg(format!("opds.catalogs[{}].url cannot be empty", i)));
+                return Err(Error::msg(format!(
+                    "opds.catalogs[{}].url cannot be empty",
+                    i
+                )));
             }
         }
         Ok(())

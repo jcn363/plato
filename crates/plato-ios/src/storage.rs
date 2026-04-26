@@ -34,7 +34,7 @@ pub fn ios_library_path() -> String {
     if let Some(path) = LIBRARY_PATH.lock().unwrap().as_ref() {
         return path.clone();
     }
-    
+
     // Fallback: derive from process home directory
     if let Ok(home) = std::env::var("HOME") {
         format!("{}/Documents", home)
@@ -51,7 +51,7 @@ pub fn ios_settings_path() -> String {
     if let Some(path) = SETTINGS_PATH.lock().unwrap().as_ref() {
         return path.clone();
     }
-    
+
     // Fallback: derive from process home directory
     if let Ok(home) = std::env::var("HOME") {
         format!("{}/Library", home)

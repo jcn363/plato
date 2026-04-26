@@ -20,12 +20,12 @@ use plato_core::view::dictionary::Dictionary;
 use plato_core::view::epub_editor::EpubEditor;
 use plato_core::view::intermission::Intermission;
 use plato_core::view::notification::Notification;
+use plato_core::view::opds::OpdsView;
 use plato_core::view::pdf_manipulator::PdfManipulatorView;
 use plato_core::view::rotation_values::RotationValues;
 use plato_core::view::sketch::Sketch;
 use plato_core::view::statistics::StatisticsView;
 use plato_core::view::touch_events::TouchEvents;
-use plato_core::view::opds::OpdsView;
 use plato_core::view::{
     handle_event, AppCmd, EntryId, Event, RenderData, RenderQueue, UpdateData, View, ViewId,
 };
@@ -494,9 +494,10 @@ pub fn handle_launch(
             }
         }
         AppCmd::Opds { ref url } => {
-            let url = url.as_ref().cloned().unwrap_or_else(|| {
-                context.settings.opds.catalogs[0].url.clone()
-            });
+            let url = url
+                .as_ref()
+                .cloned()
+                .unwrap_or_else(|| context.settings.opds.catalogs[0].url.clone());
             Some(Box::new(OpdsView::new(context.fb.rect(), url, context)) as Box<dyn View>)
         }
     };

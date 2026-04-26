@@ -21,7 +21,6 @@ use crate::view::{
 use epub_edit::SearchOptions;
 use std::fs;
 
-
 /// Show the chapter list view.
 pub fn show_chapter_list(
     editor: &mut super::EpubEditor,
@@ -467,13 +466,17 @@ pub fn show_rename_input(
     rq: &mut RenderQueue,
     context: &mut Context,
 ) {
-    let EditorState::EditingChapter { index } = editor.state else { return };
+    let EditorState::EditingChapter { index } = editor.state else {
+        return;
+    };
     if index >= editor.core.chapters.len() {
         return;
     }
 
     // Remove any stale rename inputs.
-    editor.children.retain(|c| !c.is::<InputField>() || c.view_id() != Some(ViewId::RenameDocumentInput));
+    editor
+        .children
+        .retain(|c| !c.is::<InputField>() || c.view_id() != Some(ViewId::RenameDocumentInput));
 
     let current_title = editor.core.chapters[index].title.clone();
     let dpi = crate::unit::get_device_dpi();
@@ -488,9 +491,11 @@ pub fn show_rename_input(
         editor.rect.max.x - padding,
         editor.rect.min.y + small_height + padding + row_height
     ];
-    editor
-        .children
-        .push(Box::new(Label::new(label_rect, "Rename chapter:".to_string(), Align::Left(0))) as Box<dyn View>);
+    editor.children.push(Box::new(Label::new(
+        label_rect,
+        "Rename chapter:".to_string(),
+        Align::Left(0),
+    )) as Box<dyn View>);
 
     // Pre-filled input field
     let input_rect = rect![
@@ -582,7 +587,13 @@ pub fn show_import_chapter_menu(
         editor.rect.max.y
     ];
 
-    let menu = Menu::new(rect, ViewId::BookMenu, MenuKind::Contextual, entries, context);
+    let menu = Menu::new(
+        rect,
+        ViewId::BookMenu,
+        MenuKind::Contextual,
+        entries,
+        context,
+    );
     rq.add(RenderData::new(menu.id(), *menu.rect(), UpdateMode::Gui));
     editor.children.push(Box::new(menu) as Box<dyn View>);
 }

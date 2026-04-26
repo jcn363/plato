@@ -3,7 +3,7 @@ use crate::device::{page_cache_size_mb, preload_ahead_pages, preload_behind_page
 use crate::document::pdfpurr::Document as PdfPurrDocument;
 use crate::framebuffer::Pixmap;
 use crate::{log_error, log_info, log_warn};
-use anyhow::{format_err, Error};
+use anyhow::{bail, format_err, Context, Error};
 use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, RwLock};

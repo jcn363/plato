@@ -169,18 +169,16 @@ impl Clone for ThumbnailWorkerPool {
     fn clone(&self) -> Self {
         // Create a new worker pool with a default number of workers
         // Try 2 workers first, fall back to 1 if that fails
-        Self::new(2)
-            .or_else(|_| Self::new(1))
-            .unwrap_or_else(|_| {
-                // If even 1 worker fails, we have a critical system error.
-                // Log and return a pool with 0 workers (effectively disabling it)
-                // rather than panicking in production.
-                eprintln!("CRITICAL: Failed to create thumbnail worker pool fallback");
-                Self {
-                    handles: Vec::new(),
-                    sender: mpsc::channel().0,
-                }
-            })
+        Self::new(2).or_else(|_| Self::new(1)).unwrap_or_else(|_| {
+            // If even 1 worker fails, we have a critical system error.
+            // Log and return a pool with 0 workers (effectively disabling it)
+            // rather than panicking in production.
+            eprintln!("CRITICAL: Failed to create thumbnail worker pool fallback");
+            Self {
+                handles: Vec::new(),
+                sender: mpsc::channel().0,
+            }
+        })
     }
 }
 

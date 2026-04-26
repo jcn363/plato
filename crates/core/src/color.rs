@@ -116,7 +116,10 @@ fn rgb_to_grayscale_scalar(red: u8, green: u8, blue: u8) -> u8 {
 /// Returns an error if rgb_data length is not a multiple of 3
 pub fn rgb_to_grayscale_bulk(rgb_data: &[u8]) -> Result<Vec<u8>, Error> {
     if !rgb_data.len().is_multiple_of(3) {
-        bail!("RGB data length must be a multiple of 3, got {}", rgb_data.len());
+        bail!(
+            "RGB data length must be a multiple of 3, got {}",
+            rgb_data.len()
+        );
     }
     let len = rgb_data.len() / 3;
     let mut result = Vec::with_capacity(len);

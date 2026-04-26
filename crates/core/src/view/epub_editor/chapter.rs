@@ -133,7 +133,13 @@ pub fn handle_export_chapter(
         let chapter_title = &editor.core.chapters[index].title;
         let safe_title: String = chapter_title
             .chars()
-            .map(|c| if c.is_alphanumeric() || c == ' ' { c } else { '_' })
+            .map(|c| {
+                if c.is_alphanumeric() || c == ' ' {
+                    c
+                } else {
+                    '_'
+                }
+            })
             .collect();
         let file_name = format!("chapter_{}_{}.txt", index, safe_title.trim());
         let dest = exports_path.join(&file_name);
@@ -250,7 +256,11 @@ pub fn handle_list_images(
         .collect::<FxHashSet<_>>()
         .len();
     let notif = Notification::new(
-        format!("Found {} images across {} chapters", images.len(), chapter_count),
+        format!(
+            "Found {} images across {} chapters",
+            images.len(),
+            chapter_count
+        ),
         hub,
         rq,
         context,
@@ -273,7 +283,11 @@ pub fn handle_list_css(
         .collect::<FxHashSet<_>>()
         .len();
     let notif = Notification::new(
-        format!("Found {} CSS files across {} chapters", css_files.len(), chapter_count),
+        format!(
+            "Found {} CSS files across {} chapters",
+            css_files.len(),
+            chapter_count
+        ),
         hub,
         rq,
         context,

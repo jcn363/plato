@@ -58,12 +58,12 @@ mod features;
 mod interface;
 mod library;
 mod manager;
+mod opds;
 mod preset;
 mod reading;
 mod theme;
 mod thumbnail;
 mod tools;
-mod opds;
 
 use crate::validation::{validate_finite_f32, validate_range, validate_string_length};
 use anyhow::{bail, Context, Error};
@@ -83,10 +83,10 @@ pub use features::*;
 pub use interface::*;
 pub use library::*;
 pub use manager::{load_settings, save_settings, ConfigManager};
+pub use opds::*;
 pub use reading::*;
 pub use thumbnail::*;
 pub use tools::*;
-pub use opds::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, validator::Validate)]
 #[serde(default, rename_all = "kebab-case")]

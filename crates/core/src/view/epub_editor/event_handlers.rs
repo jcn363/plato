@@ -360,15 +360,15 @@ fn handle_submit_rename_chapter(
                 super::helpers::show_edit_view(editor, index, hub, rq, context);
                 let notif = Notification::new(
                     format!("Chapter renamed to \"{}\".", new_title),
-                    hub, rq, context,
+                    hub,
+                    rq,
+                    context,
                 );
                 editor.children.push(Box::new(notif) as Box<dyn View>);
             }
             Err(e) => {
-                let notif = Notification::new(
-                    format!("Error renaming chapter: {}", e),
-                    hub, rq, context,
-                );
+                let notif =
+                    Notification::new(format!("Error renaming chapter: {}", e), hub, rq, context);
                 editor.children.push(Box::new(notif) as Box<dyn View>);
             }
         }
@@ -398,15 +398,15 @@ fn handle_select_import_file(
                         "Imported content into \"{}\"",
                         editor.core.chapters[index].title
                     ),
-                    hub, rq, context,
+                    hub,
+                    rq,
+                    context,
                 );
                 editor.children.push(Box::new(notif) as Box<dyn View>);
             }
             Err(e) => {
-                let notif = Notification::new(
-                    format!("Error importing chapter: {}", e),
-                    hub, rq, context,
-                );
+                let notif =
+                    Notification::new(format!("Error importing chapter: {}", e), hub, rq, context);
                 editor.children.push(Box::new(notif) as Box<dyn View>);
             }
         }
