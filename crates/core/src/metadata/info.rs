@@ -5,6 +5,8 @@ use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
+use super::reading_stats::ReadingStatistics;
+
 use crate::document::SimpleTocEntry;
 use crate::helpers::datetime_format;
 
@@ -58,6 +60,9 @@ pub struct Info {
     pub manual_order: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reading_time_seconds: Option<u64>,
+    /// Reading statistics for progress tracking
+    #[serde(skip_serializing)]
+    pub reading_stats: ReadingStatistics,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -183,6 +188,7 @@ impl Default for Info {
             added: Local::now().naive_local(),
             manual_order: None,
             reading_time_seconds: None,
+            reading_stats: ReadingStatistics::default(),
         }
     }
 }
