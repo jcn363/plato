@@ -180,6 +180,13 @@ pub fn check_network_and_sync(
                 remote_path,
                 &library_path.join(".reading-states"),
             )?;
+            sync_settings_with_webdav(
+                url,
+                username,
+                password,
+                remote_path,
+                &library_path.join("settings.json"),
+            )?;
         }
         crate::settings::CloudSyncMethod::KoboCloud => {
             let device_id = get_device_id();
@@ -500,6 +507,71 @@ pub fn sync_reading_progress_with_webdav(
         }
     }
     Ok(())
+}
+
+pub fn sync_settings_with_webdav(
+    url: &str,
+    username: Option<&str>,
+    password: Option<&str>,
+    remote_base: &str,
+    local_settings_path: &std::path::Path,
+) -> Result<(), Error> {
+    if !local_settings_path.exists() {
+        return Ok(());
+    }
+
+    let remote_settings_file = format!("{}/settings.json", remote_base.trim_end_matches('/'));
+
+    // Fetch remote settings
+    let remote_content = fetch_remote_file(url, username, password, &remote_settings_file);
+    
+    // Merge settings (last write wins for most settings, but preserve user preferences)
+    let local_content = std::fs::read_to_string(local_settings_path).unwrap_or_default();
+    
+    if let Ok(remote) = remote_content {
+        let merged = merge_settings(&local_content, &remote);
+        std::fs::write(local_settings_path, &merged)?;
+    }
+
+    // Upload merged settings
+    upload_to_webdav(url, username, password, local_settings_path, &remote_settings_file)?;
+
+    Ok(())
+}
+
+fn merge_settings(local: &str, remote: &str) -> String {
+    let local_val: serde_json::Value =
+        serde_json::from_str(local).unwrap_or(serde_json::Value::Null);
+    let remote_val: serde_json::Value =
+        serde_json::from_str(remote).unwrap_or(serde_json::Value::Null);
+
+    // For settings, we prefer local values (last write wins on this device)
+    // but sync reading position and progress from remote
+    if let (Some(local_obj), Some(remote_obj)) = (local_val.as_object(), remote_val.as_object()) {
+        let mut merged = local_obj.clone();
+        
+        // Sync reading-related fields from remote
+        if let Some(remote_reader) = remote_obj.get("reader") {
+            if let Some(local_reader) = merged.get_mut("reader") {
+                if let (Some(remote_reader_obj), Some(local_reader_obj)) = (
+                    remote_reader.as_object(),
+                    local_reader.as_object_mut()
+                ) {
+                    // Sync current_page and finished status
+                    if let Some(current_page) = remote_reader_obj.get("current_page") {
+                        local_reader_obj.insert("current_page".to_string(), current_page.clone());
+                    }
+                    if let Some(finished) = remote_reader_obj.get("finished") {
+                        local_reader_obj.insert("finished".to_string(), finished.clone());
+                    }
+                }
+            }
+        }
+
+        serde_json::to_string_pretty(&merged).unwrap_or_else(|_| local.to_string())
+    } else {
+        local.to_string()
+    }
 }
 
 fn fetch_kobocloud_sync_status(device_id: &str) -> Result<serde_json::Value, Error> {
