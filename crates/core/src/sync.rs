@@ -1,4 +1,3 @@
-#[allow(unused_imports)]
 use crate::log_info;
 use crate::settings::BackgroundSyncSettings;
 use anyhow::{format_err, Context, Error};
@@ -41,10 +40,10 @@ impl BackgroundSync {
         false
     }
 
-    #[allow(unused_variables)]
-    fn run_connman_command(action: &str) -> Result<(), Error> {
+    fn run_connman_command(_action: &str) -> Result<(), Error> {
         #[cfg(target_os = "linux")]
         {
+            let action = _action;
             Command::new("sh")
                 .arg("-c")
                 .arg(format!("connmanctl {} wifi", action))
@@ -53,7 +52,7 @@ impl BackgroundSync {
         }
         #[cfg(target_os = "ios")]
         {
-            // iOS manages WiFi automatically
+            // iOS manages WiFi automatically, _action is intentionally unused
         }
         Ok(())
     }

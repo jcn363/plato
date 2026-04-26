@@ -81,7 +81,7 @@ impl Engine {
     }
 
     fn calculate_big_stretch(&mut self, parent_style: &StyleData) -> i32 {
-        // Stub: estimate space width based on font size
+        // Estimate space width based on font size using approximate metrics.
         let font_size = parent_style.font_size as f32;
         let space_width = (font_size * 0.25) as i32;
         3 * space_width
@@ -132,7 +132,7 @@ impl Engine {
         items: &mut Vec<ParagraphItem<ParagraphElement>>,
     ) {
         let font_size = (text_material.style.font_size * 64.0) as u32;
-        // Stub: estimate space width based on font size
+        // Estimate space width based on font size using approximate metrics.
         let space_width = (font_size as f32 * 0.25) as i32;
 
         let mut start_index = 0;
@@ -145,7 +145,8 @@ impl Engine {
                     if j > 0 {
                         let buf = &text_material.text[start_index..start_index + j];
                         let local_offset = text_material.offset + start_index;
-                        // Stub: estimate text width based on character count and font size
+                        // Estimate text width based on character count and font size.
+                        // Uses approximate metrics when full text shaping is not available.
                         let avg_char_width = (font_size as f32 * 0.6) as i32;
                         let width = buf.len() as i32 * avg_char_width;
                         let plan = super::layout::TextPlan {

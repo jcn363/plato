@@ -150,8 +150,9 @@ impl Framebuffer for IOSFramebuffer {
     }
 
     fn save(&self, _path: &str) -> Result<(), anyhow::Error> {
-        // Write PNG via Pixmap or stub with Ok(())
-        // For now, stub with Ok(())
+        // PNG export not implemented for iOS platform.
+        // iOS uses Metal for rendering, and PNG export would require
+        // additional Metal texture readback implementation.
         Ok(())
     }
 

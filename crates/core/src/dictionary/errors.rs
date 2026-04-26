@@ -56,12 +56,9 @@ impl ::std::fmt::Display for DictError {
                     enough <tab>-separated columns found, expected at least 3",
                 lnum
             ),
-            DictError::InvalidFileFormat(ref explanation, ref path) => write!(
-                f,
-                "{}{}",
-                path.as_deref().unwrap_or(""),
-                explanation
-            ),
+            DictError::InvalidFileFormat(ref explanation, ref path) => {
+                write!(f, "{}{}", path.as_deref().unwrap_or(""), explanation)
+            }
         }
     }
 }

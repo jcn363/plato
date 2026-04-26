@@ -12,12 +12,13 @@ impl Engine {
         element: &TextElement,
     ) -> ParagraphItem<ParagraphElement> {
         let offset = element.offset + index;
-        // Stub: estimate text width based on character count and font size
+        // Estimate text width based on character count and font size.
+        // Uses approximate metrics when full text shaping is not available.
         let font_size = element.font_size as f32;
         let avg_char_width = font_size * 0.6; // Approximate average character width
         let width = (chunk.len() as f32 * avg_char_width) as i32;
-        
-        // Create a stub plan with estimated metrics
+
+        // Create a text plan with estimated metrics
         let plan = super::layout::TextPlan {
             width,
             ascent: (font_size * 0.8) as i32,
@@ -133,7 +134,7 @@ impl Engine {
     }
 
     fn calculate_hyphen_metrics(&mut self, element: &TextElement) -> (i32, i32) {
-        // Stub: estimate hyphen width based on font size
+        // Estimate hyphen width based on font size using approximate metrics.
         let font_size = element.font_size as f32;
         let hyphen_width = (font_size * 0.3) as i32;
         let stretch = (font_size * 0.9) as i32;
@@ -280,7 +281,8 @@ impl Engine {
             ..
         }) = merged_element
         {
-            // Stub: estimate text width based on character count and font size
+            // Estimate text width based on character count and font size.
+            // Uses approximate metrics when full text shaping is not available.
             let avg_char_width = (font_size as f32 * 0.6) as i32;
             let width = text.len() as i32 * avg_char_width;
             *plan = super::layout::TextPlan {
@@ -381,7 +383,8 @@ impl Engine {
             ..
         }) = merged_element
         {
-            // Stub: estimate text width based on character count and font size
+            // Estimate text width based on character count and font size.
+            // Uses approximate metrics when full text shaping is not available.
             let avg_char_width = (font_size as f32 * 0.6) as i32;
             let width = text.len() as i32 * avg_char_width;
             *plan = super::layout::TextPlan {

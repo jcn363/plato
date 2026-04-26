@@ -147,8 +147,9 @@ impl Framebuffer for AndroidFramebuffer {
     }
 
     fn save(&self, _path: &str) -> Result<(), anyhow::Error> {
-        // Write PNG via Pixmap or stub with Ok(())
-        // For now, stub with Ok(())
+        // PNG export not implemented for Android platform.
+        // Android uses ANativeWindow for display, which doesn't provide direct
+        // framebuffer readback suitable for PNG export.
         Ok(())
     }
 

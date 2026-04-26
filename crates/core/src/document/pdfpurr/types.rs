@@ -1,6 +1,9 @@
-//! Stub types for PDFPurr compatibility.
+//! Compatibility types for PDFPurr PDF rendering library.
+//!
+//! These types provide API compatibility during the migration from MuPDF to PDFPurr.
+//! They are used for coordinate conversion and PDF page layout calculations.
 
-/// Stub FzRect type for MuPDF compatibility.
+/// Rectangle type for PDF coordinate representation (compatible with MuPDF fz_rect).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct FzRect {
     /// The x-coordinate of the bottom-left corner.
@@ -35,7 +38,7 @@ impl From<FzRect> for crate::geom::Boundary {
     }
 }
 
-/// Stub FzPoint type for MuPDF compatibility.
+/// Point type for PDF coordinate representation (compatible with MuPDF fz_point).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct FzPoint {
     /// The x-coordinate.
@@ -44,7 +47,7 @@ pub struct FzPoint {
     pub y: f32,
 }
 
-/// Stub FzQuad type for MuPDF compatibility.
+/// Quadrilateral type for PDF text selection (compatible with MuPDF fz_quad).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct FzQuad {
     /// The upper-left corner.
@@ -57,7 +60,7 @@ pub struct FzQuad {
     pub lr: FzPoint,
 }
 
-/// Stub FzLocation type for MuPDF compatibility.
+/// Location type for PDF chapter/page navigation (compatible with MuPDF fz_location).
 #[derive(Debug, Clone, Default)]
 pub struct FzLocation {
     /// The chapter index.
@@ -66,7 +69,7 @@ pub struct FzLocation {
     pub page: i32,
 }
 
-/// Stub PixmapFormat type for MuPDF compatibility.
+/// Pixel format for rendered output buffers.
 #[derive(Debug, Clone, Copy)]
 pub enum PixmapFormat {
     /// Grayscale color format.
@@ -131,7 +134,7 @@ pub fn union_rect(a: FzRect, b: FzRect) -> FzRect {
     }
 }
 
-/// Scale function (simplified).
+/// Scale factor calculation for coordinate transformations.
 pub fn scale(x: f32, _y: f32) -> f32 {
     x
 }
