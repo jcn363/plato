@@ -421,10 +421,6 @@ impl View for CoverEditorView {
     }
 }
 
-impl Drop for CoverEditorView {
-    fn drop(&mut self) {}
-}
-
 #[cfg(test)]
 #[path = "cover_editor_tests.rs"]
 mod cover_editor_tests;
