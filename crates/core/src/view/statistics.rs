@@ -3,6 +3,7 @@ use crate::context::Context;
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::{halves, Rectangle};
+use crate::metadata::ReadingStatistics;
 use crate::settings::LibraryStatistics;
 use crate::unit::scale_by_dpi;
 use crate::view::filler::Filler;
@@ -18,6 +19,7 @@ pub struct StatisticsView {
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
     _statistics: LibraryStatistics,
+    reading_stats: ReadingStatistics,
 }
 
 impl StatisticsView {
@@ -26,6 +28,7 @@ impl StatisticsView {
         let (small_height, thickness, small_thickness, big_thickness) =
             Self::calculate_layout_params();
         let statistics = context.library.compute_statistics();
+        let reading_stats = ReadingStatistics::new();
 
         let mut children = Vec::new();
 
@@ -44,6 +47,7 @@ impl StatisticsView {
             small_height,
             big_thickness,
             &statistics,
+            &reading_stats,
         );
 
         rq.add(RenderData::new(id, rect, UpdateMode::Full));
@@ -53,6 +57,7 @@ impl StatisticsView {
             rect,
             children,
             _statistics: statistics,
+            reading_stats,
         }
     }
 
@@ -111,9 +116,10 @@ impl StatisticsView {
         small_height: i32,
         big_thickness: i32,
         statistics: &LibraryStatistics,
+        reading_stats: &ReadingStatistics,
     ) {
         let content_start = rect.min.y + small_height + big_thickness + thickness;
-        let stats_text = Self::format_statistics(statistics);
+        let stats_text = Self::format_statistics(statistics, reading_stats);
         let stats_label = Label::new(
             rect![
                 rect.min.x + thickness,
@@ -127,10 +133,16 @@ impl StatisticsView {
         children.push(Box::new(stats_label) as Box<dyn View>);
     }
 
-    fn format_statistics(stats: &LibraryStatistics) -> String {
+    fn format_statistics(stats: &LibraryStatistics, reading_stats: &ReadingStatistics) -> String {
         let total_time = Duration::from_secs(stats.total_reading_time);
         let hours = total_time.as_secs() / 3600;
         let minutes = (total_time.as_secs() % 3600) / 60;
+
+        let ppm = reading_stats.pages_per_minute();
+        let wpm = reading_stats.words_per_minute();
+        let reading_time = Duration::from_secs(reading_stats.total_reading_time_seconds);
+        let reading_hours = reading_time.as_secs() / 3600;
+        let reading_minutes = (reading_time.as_secs() % 3600) / 60;
 
         format!(
             "Library Statistics\n\n\
@@ -139,14 +151,24 @@ impl StatisticsView {
             Reading Time: {}h {}m\n\
             Current Streak: {} days\n\
             Longest Streak: {} days\n\
-            Average Progress: {:.0}%",
+            Average Progress: {:.0}%\n\n\
+            Reading Speed\n\n\
+            Pages/Minute: {:.1}\n\
+            Words/Minute: {:.0}\n\
+            Total Reading Time: {}h {}m\n\
+            Reading Streak: {} days",
             stats.total_books,
             stats.finished_books,
             hours,
             minutes,
             stats.current_streak,
             stats.longest_streak,
-            stats.average_progress * 100.0
+            stats.average_progress * 100.0,
+            ppm,
+            wpm,
+            reading_hours,
+            reading_minutes,
+            reading_stats.reading_streak_days
         )
     }
 }
