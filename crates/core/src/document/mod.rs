@@ -79,7 +79,8 @@
 
 pub mod buffer_pool;
 pub mod cache;
-pub mod djvu;
+pub mod diff;
+mod djvu;
 pub mod epub;
 pub mod html;
 pub mod pdf;

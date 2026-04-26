@@ -193,6 +193,10 @@ Max: 30MB, 500 pages. Keep battery charged."
                 "📖 Booklet Printing".to_string(),
                 EntryId::PdfManipulate(file_path.clone(), "booklet".to_string()),
             ),
+            EntryKind::Command(
+                "🔍 Compare Documents".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "compare".to_string()),
+            ),
         ]);
 
         let menu = crate::view::menu::Menu::new(

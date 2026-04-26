@@ -76,6 +76,15 @@ pub fn process_manipulation(
             let output = file_path.with_extension("booklet.pdf");
             manipulator.reorder_pages_for_booklet(file_path, &output)
         }
+        "compare" => {
+            // For now, this is a placeholder - actual comparison would require
+            // selecting a second file and extracting text from both documents
+            // This is a complex feature that would need UI for file selection
+            bus.push_back(Event::Render(
+                "⚠️ Document comparison requires second file selection. Feature in progress.".to_string(),
+            ));
+            Ok(file_path.to_path_buf())
+        }
         _ => Err(format_err!("Unknown action")),
     };
 
