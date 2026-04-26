@@ -204,12 +204,16 @@ impl HomeInputExt for Home {
                 self.toggle_library_menu(None, hub, rq, context);
                 true
             }
+            Event::ToggleNear(ViewId::CollectionsMenu, _rect) => {
+                self.toggle_collections_menu(None, hub, rq, context);
+                true
+            }
             Event::Close(ViewId::AddressBar) => {
                 self.toggle_address_bar(Some(false), hub, rq, context);
                 true
             }
             Event::Close(ViewId::SearchBar) => {
-                self.toggle_search_bar(Some(false), false, hub, rq, context);
+                self.toggle_address_bar(Some(false), hub, rq, context);
                 true
             }
             Event::Close(ViewId::SortMenu) => {

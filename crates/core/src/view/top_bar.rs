@@ -46,6 +46,7 @@ impl TopBar {
         Self::add_clock_and_title(&mut children, rect, side, title, context);
         Self::add_battery_widget(&mut children, rect, side, context);
         children.push(Self::create_frontlight_icon(rect, side, context));
+        children.push(Self::create_collections_icon(rect, side));
         let theme_indicator = Self::create_theme_indicator(rect, side, context);
         children.push(Self::create_menu_icon(rect, side));
 
@@ -112,8 +113,17 @@ impl TopBar {
         };
         Box::new(Icon::new(
             name,
-            rect![rect.max - pt!(2 * side, side), rect.max - pt!(side, 0)],
+            rect![rect.max - pt!(3 * side, side), rect.max - pt!(2 * side, 0)],
             Event::Show(ViewId::Frontlight),
+        ))
+    }
+
+    fn create_collections_icon(rect: Rectangle, side: i32) -> Box<dyn View> {
+        let collections_rect = rect![rect.max - pt!(2 * side, side), rect.max - pt!(side, 0)];
+        Box::new(Icon::new(
+            "folder",
+            collections_rect,
+            Event::ToggleNear(ViewId::CollectionsMenu, collections_rect),
         ))
     }
 
