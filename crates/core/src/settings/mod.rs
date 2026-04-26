@@ -147,6 +147,48 @@ pub struct Settings {
     pub cloud_sync: CloudSyncSettings,
     pub thumbnail: ThumbnailSettings,
     pub opds: OpdsSettings,
+    pub accessibility: AccessibilitySettings,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct AccessibilitySettings {
+    /// High contrast mode
+    pub high_contrast: bool,
+    /// Letter spacing (em units)
+    pub letter_spacing: f32,
+    /// Word spacing (em units)
+    pub word_spacing: f32,
+    /// Line height multiplier
+    pub line_height: f32,
+    /// Large text mode scale factor
+    pub large_text_scale: f32,
+    /// Focus mode enabled
+    pub focus_mode: bool,
+    /// Color blindness mode (none, deuteranopia, protanopia, tritanopia)
+    pub color_blindness_mode: String,
+    /// Dyslexic-friendly font
+    pub dyslexic_font: bool,
+}
+
+impl AccessibilitySettings {
+    pub fn validate(&self) -> Result<(), Error> {
+        validate_finite_f32(self.letter_spacing, "letter_spacing", 0.0, 1.0)?;
+        validate_finite_f32(self.word_spacing, "word_spacing", 0.0, 2.0)?;
+        validate_finite_f32(self.line_height, "line_height", 0.5, 3.0)?;
+        validate_finite_f32(self.large_text_scale, "large_text_scale", 1.0, 3.0)?;
+        
+        // Validate color_blindness_mode is one of the allowed values
+        let valid_modes = ["none", "deuteranopia", "protanopia", "tritanopia"];
+        if !valid_modes.contains(&self.color_blindness_mode.as_str()) {
+            bail!(
+                "color_blindness_mode must be one of: {}",
+                valid_modes.join(", ")
+            );
+        }
+        
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -436,6 +478,7 @@ impl Default for Settings {
             cloud_sync: CloudSyncSettings::default(),
             thumbnail: ThumbnailSettings::default(),
             opds: OpdsSettings::default(),
+            accessibility: AccessibilitySettings::default(),
         }
     }
 }
@@ -526,6 +569,9 @@ impl Settings {
         self.opds
             .validate()
             .context("opds settings validation failed")?;
+        self.accessibility
+            .validate()
+            .context("accessibility settings validation failed")?;
 
         // Validate all library settings
         for (i, lib) in self.libraries.iter().enumerate() {
