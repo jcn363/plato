@@ -30,7 +30,7 @@ use super::xml::XmlExt;
 use crate::color::BLACK;
 use crate::document::pdf::PdfOpener;
 use crate::document::{Document, Location};
-use crate::font::{FontFamily, FontOpener};
+use crate::font::{FontFamily, FontOpener, RenderPlan};
 use crate::framebuffer::{Framebuffer, Pixmap};
 use crate::geom::{Edge, Point, Rectangle, Vec2};
 use crate::helpers::decode_entities;
@@ -275,7 +275,7 @@ impl EngineMethods for super::Engine {
                         if let Some(last) = inlines.last_mut() {
                             match last {
                                 InlineMaterial::Text(text_elem) => {
-                                    text_elem.link = Some(href.clone());
+                                    text_elem.uri = Some(href.clone());
                                 }
                                 _ => {}
                             }
@@ -387,14 +387,23 @@ impl EngineMethods for super::Engine {
     fn box_from_chunk(
         &mut self,
         chunk: &str,
-        index: usize,
+        offset: usize,
         element: &TextElement,
     ) -> ParagraphItem<ParagraphElement> {
         ParagraphItem::Box(ParagraphElement::Text(TextElement {
-            index,
+            offset,
+            language: element.language.clone(),
+            text: chunk.to_string(),
+            plan: element.plan.clone(),
+            font_features: element.font_features.clone(),
+            font_kind: element.font_kind,
+            font_style: element.font_style,
+            font_weight: element.font_weight,
+            font_size: element.font_size,
+            letter_spacing: element.letter_spacing,
+            vertical_align: element.vertical_align,
+            color: element.color,
             uri: element.uri.clone(),
-            link: element.link.clone(),
-            style: element.style.clone(),
         }))
     }
 
@@ -411,14 +420,14 @@ impl EngineMethods for super::Engine {
         for item in items {
             match item {
                 ParagraphItem::Box(ParagraphElement::Text(text_elem)) => {
-                    let text = &strings[text_elem.index];
+                    let text = &strings[text_elem.offset];
                     let hyphenated = dictionary.hyphenate(text, style.language.as_deref());
 
                     for (i, chunk) in hyphenated.into_iter().enumerate() {
                         if i > 0 {
-                            hyph_indices.push([text_elem.index, i]);
+                            hyph_indices.push([text_elem.offset, i]);
                         }
-                        hyph_items.push(self.box_from_chunk(&chunk, text_elem.index, &text_elem));
+                        hyph_items.push(self.box_from_chunk(&chunk, text_elem.offset, &text_elem));
                     }
                 }
                 _ => hyph_items.push(item),
