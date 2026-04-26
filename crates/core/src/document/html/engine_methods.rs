@@ -220,10 +220,11 @@ impl EngineMethods for super::Engine {
             NodeData::Text(ref text_data) => {
                 if !text_data.text.trim().is_empty() {
                     strings.push(text_data.text.clone());
+                    let offset = strings.len() - 1;
                     inlines.push(InlineMaterial::Text(TextElement {
-                        offset: strings.len() - 1,
+                        offset,
                         language: None,
-                        text: strings.last().expect("strings should have at least one element").clone(),
+                        text: strings[offset].clone(),
                         plan: RenderPlan::default(),
                         font_features: None,
                         font_kind: parent_style.font_kind,

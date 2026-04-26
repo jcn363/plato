@@ -16,6 +16,11 @@
       "sourceType": "github",
       "computedHash": "e21044ae7496fc285f1df9ff3fb518a3a20bea6f5216c1f59f4987e12c769a0a"
     },
+    "documentation-writer": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "ee53d65b163cd7eb953a930c95841cfe398cc2c0bd24c06508bbaa07c432be35"
+    },
     "enhance-prompt": {
       "source": "google-labs-code/stitch-skills",
       "sourceType": "github",
@@ -56,15 +61,35 @@
       "sourceType": "github",
       "computedHash": "7db385e4c5370e5a7fca9704a1361b056e4504ea6a03924bb86f33a4f00b5c73"
     },
+    "humanizer-zh": {
+      "source": "op7418/humanizer-zh",
+      "sourceType": "github",
+      "computedHash": "7bd195e3bcdcc24f078dfd4e3b3e37e8ac321c36f410a41241fc4175eab1825a"
+    },
     "impeccable": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "computedHash": "bd24f9b2f67dfdac55f76a85877ce302fe75d6204d2b329d3d05342904abf336"
     },
+    "refactor": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "87789a786b96f99ba0680e89345a975106e10e7db1071c7cdc2e76d507c449d6"
+    },
+    "release-skills": {
+      "source": "jimliu/baoyu-skills",
+      "sourceType": "github",
+      "computedHash": "5fdca1057d7d1db721dd7051be3f0297d216e397c37a1884b0cab18dc32a4604"
+    },
     "self-improving-agent": {
       "source": "charon-fan/agent-playbook",
       "sourceType": "github",
       "computedHash": "5b95ba0530d21f79cf01f7d593463812e7702b1358dd89d259b8073cf6012349"
+    },
+    "swiftui-expert-skill": {
+      "source": "avdlee/swiftui-agent-skill",
+      "sourceType": "github",
+      "computedHash": "84aa533bdca25a02ce35738619121d203d55eb8ff2892535c150bd9ee85fda30"
     },
     "systematic-debugging": {
       "source": "obra/superpowers",

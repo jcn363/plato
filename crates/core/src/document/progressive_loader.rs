@@ -305,7 +305,11 @@ impl Default for ProgressiveLoaderOptions {
 }
 
 pub fn open_progressive(path: &Path) -> Result<ProgressiveDocLoader, Error> {
-    let metadata = std::fs::metadata(path)?;
+    if path.as_os_str().is_empty() {
+        bail!("Path cannot be empty");
+    }
+    let metadata = std::fs::metadata(path)
+        .with_context(|| format!("Cannot access file at {}", path.display()))?;
     let file_size_mb = metadata.len() / (1024 * 1024);
 
     if file_size_mb > 100 {
@@ -319,6 +323,9 @@ pub fn open_progressive(path: &Path) -> Result<ProgressiveDocLoader, Error> {
 }
 
 pub fn optimize_for_kobo(path: &Path) -> Result<ProgressiveDocLoader, Error> {
+    if path.as_os_str().is_empty() {
+        bail!("Path cannot be empty");
+    }
     let loader = ProgressiveDocLoader::new(path)?;
 
     if !loader.is_linearized() {

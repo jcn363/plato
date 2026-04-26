@@ -444,6 +444,9 @@ pub fn url_path_encode(s: &str) -> String {
 
 /// Decode a URL path component
 pub fn url_path_decode(s: &str) -> Result<String, Error> {
+    if s.is_empty() {
+        return Ok(String::new());
+    }
     url_decode(s)
 }
 

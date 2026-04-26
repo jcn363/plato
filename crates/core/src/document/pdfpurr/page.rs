@@ -157,6 +157,11 @@ impl<'a> Page<'a> {
         }
     }
 
+    fn fallback_black_color() -> tiny_skia::PremultipliedColorU8 {
+        tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255)
+            .expect("black color (0, 0, 0, 255) is always valid")
+    }
+
     pub fn render_pixmap(
         &self,
         _matrix: f32,
@@ -193,15 +198,9 @@ impl<'a> Page<'a> {
                     tiny_skia::PremultipliedColorU8::from_rgba(
                         chunk[0], chunk[1], chunk[2], chunk[3],
                     )
-                    .unwrap_or_else(|| {
-                        // Fallback to black (0, 0, 0, 255) - always valid
-                        tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255)
-                            .expect("black color (0, 0, 0, 255) is always valid")
-                    })
+                    .unwrap_or_else(Self::fallback_black_color)
                 } else {
-                    // Fallback to black (0, 0, 0, 255) - always valid
-                    tiny_skia::PremultipliedColorU8::from_rgba(0, 0, 0, 255)
-                        .expect("black color (0, 0, 0, 255) is always valid")
+                    Self::fallback_black_color()
                 }
             })
             .collect();
