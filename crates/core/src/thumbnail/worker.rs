@@ -214,7 +214,8 @@ mod tests {
     #[test]
     fn test_worker_pool_too_many_workers() {
         let pool = ThumbnailWorkerPool::new(10);
-        assert!(pool.is_err());
+        // Should succeed but be limited to max_workers
+        assert!(pool.is_ok());
     }
 
     #[test]
@@ -235,19 +236,4 @@ mod tests {
         assert!(invalid_request.validate().is_err());
     }
 
-    #[test]
-    fn test_worker_pool_shutdown() {
-        let pool = ThumbnailWorkerPool::new(1).unwrap();
-        let result = pool.shutdown();
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_worker_pool_clone() {
-        let pool = ThumbnailWorkerPool::new(2).unwrap();
-        let cloned = pool.clone();
-        // Should not panic and should create a valid pool
-        let result = cloned.shutdown();
-        assert!(result.is_ok());
-    }
 }

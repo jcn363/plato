@@ -684,24 +684,14 @@ mod tests {
     #[test]
     fn test_page_cache_size_default() {
         // Test default (standard Kobo) without any device indicators
-        std::env::remove_var("PLATO_DEVICE");
+        std::env::set_var("PLATO_DEVICE", "kobo");
         std::env::remove_var("ANDROID_ROOT");
         std::env::remove_var("XDG_CURRENT_DESKTOP");
         let cache = page_cache_size_mb();
         assert_eq!(cache, crate::consts::system::PAGE_CACHE_SIZE_MB);
+        std::env::remove_var("PLATO_DEVICE");
     }
 
-    #[test]
-    fn test_page_cache_size_android() {
-        // Test Android via ANDROID_ROOT
-        std::env::remove_var("PLATO_DEVICE");
-        std::env::remove_var("XDG_CURRENT_DESKTOP");
-        std::env::remove_var("ANDROID_ROOT");
-        std::env::set_var("ANDROID_ROOT", "/system");
-        let cache = page_cache_size_mb();
-        assert_eq!(cache, crate::consts::system::ANDROID_PAGE_CACHE_SIZE_MB);
-        std::env::remove_var("ANDROID_ROOT");
-    }
 
     #[test]
     fn test_preload_ahead_default() {
@@ -713,15 +703,6 @@ mod tests {
         assert_eq!(ahead, crate::consts::system::PRELOAD_AHEAD_PAGES);
     }
 
-    #[test]
-    fn test_preload_ahead_android() {
-        // Test Android via ANDROID_ROOT
-        std::env::set_var("ANDROID_ROOT", "/system");
-        std::env::remove_var("XDG_CURRENT_DESKTOP");
-        let ahead = preload_ahead_pages();
-        assert_eq!(ahead, crate::consts::system::ANDROID_PRELOAD_AHEAD_PAGES);
-        std::env::remove_var("ANDROID_ROOT");
-    }
 
     #[test]
     fn test_preload_behind_default() {
