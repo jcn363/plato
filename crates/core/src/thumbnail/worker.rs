@@ -6,6 +6,7 @@ use std::thread;
 use crate::buffer_pool;
 use crate::document::open;
 use crate::framebuffer::Framebuffer;
+use crate::log_error;
 use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
 use crate::thumbnail::request::ThumbnailRequest;
 
@@ -35,7 +36,7 @@ impl ThumbnailWorker {
                             Err(_) => break, // Channel closed
                         },
                         Err(_) => {
-                            eprintln!("Thumbnail worker lock poisoned, shutting down");
+                            log_error!("Thumbnail worker lock poisoned, shutting down");
                             break;
                         }
                     }
@@ -46,7 +47,7 @@ impl ThumbnailWorker {
                 // Send result back to requester
                 if request.response_tx.send(result).is_err() {
                     // Log error but continue processing other requests
-                    eprintln!("Failed to send thumbnail generation result");
+                    log_error!("Failed to send thumbnail generation result");
                 }
             }
         })
@@ -173,7 +174,7 @@ impl Clone for ThumbnailWorkerPool {
             // If even 1 worker fails, we have a critical system error.
             // Log and return a pool with 0 workers (effectively disabling it)
             // rather than panicking in production.
-            eprintln!("CRITICAL: Failed to create thumbnail worker pool fallback");
+            log_error!("CRITICAL: Failed to create thumbnail worker pool fallback");
             Self {
                 handles: Vec::new(),
                 sender: mpsc::channel().0,

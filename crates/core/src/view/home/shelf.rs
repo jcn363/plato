@@ -6,6 +6,7 @@ use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::divide;
 use crate::geom::{halves, CycleDir, Dir, Rectangle};
 use crate::gesture::GestureEvent;
+use crate::log_error;
 use crate::metadata::Info;
 use crate::settings::{FirstColumn, SecondColumn};
 use crate::theme;
@@ -167,7 +168,7 @@ impl Shelf {
             Ok(Some(path)) => Some(path),
             Ok(None) => Some(PathBuf::default()),
             Err(e) => {
-                eprintln!("Thumbnail request failed for {}: {:?}", path.display(), e);
+                log_error!("Thumbnail request failed for {}: {:?}", path.display(), e);
                 Some(PathBuf::default())
             }
         }

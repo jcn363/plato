@@ -1,3 +1,4 @@
+use crate::log_warn;
 use crate::metadata::sorter;
 use crate::metadata::{Info, ReaderInfo, SimpleStatus, SortMethod};
 use crate::settings::LibraryMode;
@@ -17,7 +18,7 @@ impl Library {
         }
         let mut threshold = threshold.unwrap_or(0.7);
         if !(0.0..=1.0).contains(&threshold) {
-            eprintln!("Fuzzy search threshold must be between 0.0 and 1.0, using default 0.7");
+            log_warn!("Fuzzy search threshold must be between 0.0 and 1.0, using default 0.7");
             threshold = 0.7;
         }
         let query_lower = query.to_lowercase();

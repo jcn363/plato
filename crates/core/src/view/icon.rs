@@ -8,6 +8,7 @@ use crate::framebuffer::{Framebuffer, Pixmap, UpdateMode};
 use crate::geom::{CornerSpec, Rectangle};
 use crate::gesture::GestureEvent;
 use crate::input::{DeviceEvent, FingerStatus};
+use crate::log_warn;
 use crate::theme;
 use crate::unit::scale_by_dpi_raw;
 use rustc_hash::FxHashMap;
@@ -79,7 +80,7 @@ pub static ICONS_PIXMAPS: LazyLock<FxHashMap<&'static str, Pixmap>> = LazyLock::
         if let Some(pixmap) = pixmap {
             m.insert(name, pixmap);
         } else {
-            eprintln!("Warning: failed to load icon at {}", path.display());
+            log_warn!("Failed to load icon at {}", path.display());
             // Insert a dummy empty pixmap to avoid panics in render()
             m.insert(name, Pixmap::empty(1, 1, 1));
         }

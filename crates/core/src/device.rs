@@ -1,4 +1,5 @@
 use crate::input::TouchProto;
+use crate::log_warn;
 use std::env;
 use std::fmt;
 use std::sync::LazyLock;
@@ -126,10 +127,10 @@ pub enum FrontlightKind {
 impl KoboDevice {
     pub fn new(product: &str, model_number: &str) -> KoboDevice {
         if product.is_empty() {
-            eprintln!("KoboDevice::new called with empty product string, using default");
+            log_warn!("KoboDevice::new called with empty product string, using default");
         }
         if model_number.is_empty() {
-            eprintln!("KoboDevice::new called with empty model_number string, using default");
+            log_warn!("KoboDevice::new called with empty model_number string, using default");
         }
         match product {
             "kraken" => Self::create_device(Model::Glo, TouchProto::Single, (758, 1024), 212),

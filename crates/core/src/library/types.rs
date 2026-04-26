@@ -13,6 +13,7 @@
 //! - `indexmap` - For ordered collections (IndexMap)
 
 use crate::helpers::{load_json, Fingerprint, Fp};
+use crate::log_error;
 use crate::metadata::{Info, ReaderInfo, SortMethod};
 use crate::settings::{ImportSettings, LibraryMode};
 use anyhow::{bail, Error};
@@ -136,13 +137,13 @@ impl Library {
                 .and_then(|v| Fp::from_str(v).ok())
             {
                 if let Ok(reader_info) =
-                    load_json(path).map_err(|e| eprintln!("Can't load reading state: {:#}.", e))
+                    load_json(path).map_err(|e| log_error!("Can't load reading state: {:#}.", e))
                 {
                     if mode == LibraryMode::Database {
                         if let Some(info) = db.get_mut(&fp) {
                             info.reader = Some(reader_info);
                         } else {
-                            eprintln!("Unknown fingerprint: {}.", fp);
+                            log_error!("Unknown fingerprint: {}.", fp);
                         }
                     } else {
                         reading_states.insert(fp, reader_info);
