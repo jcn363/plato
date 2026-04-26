@@ -106,6 +106,7 @@ pub mod clock;
 pub mod cloud_dialog;
 pub mod common;
 pub mod cover_editor;
+pub mod create_collection_dialog;
 pub mod dialog;
 pub mod dictionary;
 pub mod email_dialog;

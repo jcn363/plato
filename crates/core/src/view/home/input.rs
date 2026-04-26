@@ -17,6 +17,7 @@ use crate::log_error;
 use crate::metadata::{sort, BookQuery};
 use crate::view::common::locate;
 use crate::view::common::{toggle_battery_menu, toggle_clock_menu, toggle_main_menu};
+use crate::view::create_collection_dialog::CreateCollectionDialog;
 use crate::view::notification::Notification;
 use crate::view::search_bar::SearchBar;
 use crate::view::top_bar::TopBar;
@@ -155,11 +156,19 @@ impl HomeInputExt for Home {
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }
+            Event::Show(ViewId::CreateCollectionDialog) => {
+                let dialog = CreateCollectionDialog::new(context);
+                self.children.push(Box::new(dialog) as Box<dyn View>);
+                hub.send(Event::Focus(Some(ViewId::CreateCollectionDialog))).ok();
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
             Event::Close(ViewId::AboutDialog)
             | Event::Close(ViewId::ShareDialog)
             | Event::Close(ViewId::EmailDialog)
             | Event::Close(ViewId::CloudDialog)
-            | Event::Close(ViewId::SystemInfo) => {
+            | Event::Close(ViewId::SystemInfo)
+            | Event::Close(ViewId::CreateCollectionDialog) => {
                 // Remove dialog from children
                 self.children.retain(|child| {
                     let view_id = child.view_id();
@@ -168,6 +177,7 @@ impl HomeInputExt for Home {
                         && view_id != Some(ViewId::EmailDialog)
                         && view_id != Some(ViewId::CloudDialog)
                         && view_id != Some(ViewId::SystemInfo)
+                        && view_id != Some(ViewId::CreateCollectionDialog)
                 });
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
@@ -362,12 +372,24 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Select(EntryId::CreateCollection) => {
-                self.handle_collections_menu_event(
-                    evt,
-                    hub,
-                    rq,
-                    context,
-                );
+                // Check if this is from the dialog (get collection name from dialog)
+                if let Some(dialog) = self.children.iter().find(|c| c.view_id() == Some(ViewId::CreateCollectionDialog)) {
+                    if let Some(dialog) = dialog.downcast_ref::<CreateCollectionDialog>() {
+                        let name = dialog.get_collection_name().to_string();
+                        if !name.trim().is_empty() {
+                            self.create_collection(name, None, hub, rq, context);
+                            hub.send(Event::Close(ViewId::CreateCollectionDialog)).ok();
+                        }
+                    }
+                } else {
+                    // From menu - show dialog
+                    self.handle_collections_menu_event(
+                        evt,
+                        hub,
+                        rq,
+                        context,
+                    );
+                }
                 true
             }
             Event::Select(EntryId::SetStatus(ref path, status)) => {
