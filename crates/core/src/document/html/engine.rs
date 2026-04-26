@@ -203,7 +203,10 @@ impl Engine {
         clippy::too_many_arguments,
         reason = "Recursive helper requires same parameters as parent for layout traversal"
     )]
-    #[allow(clippy::only_used_in_recursion, reason = "Parameters loop_context and resource_fetcher are passed through in recursive calls")]
+    #[allow(
+        clippy::only_used_in_recursion,
+        reason = "Parameters loop_context and resource_fetcher are passed through in recursive calls"
+    )]
     fn build_display_list_recursive(
         &mut self,
         node: NodeRef,

@@ -212,7 +212,10 @@ fn detect_mobile_system_dark_mode() -> bool {
     }
 
     // Fallback to time-based detection for other cases
-    #[allow(unreachable_code, reason = "Platform-specific early returns make this unreachable in practice, but kept as fallback")]
+    #[allow(
+        unreachable_code,
+        reason = "Platform-specific early returns make this unreachable in practice, but kept as fallback"
+    )]
     false
 }
 
