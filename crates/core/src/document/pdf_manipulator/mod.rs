@@ -346,6 +346,109 @@ impl PdfManipulator {
         Ok(output_path.to_path_buf())
     }
 
+    /// Reorder pages for booklet printing (2-up imposition)
+    /// Pages are arranged so that when printed double-sided and folded, they form a booklet
+    pub fn reorder_pages_for_booklet(
+        &mut self,
+        input_path: &Path,
+        output_path: &Path,
+    ) -> Result<PathBuf, Error> {
+        use lopdf::Document;
+        use std::fs::File;
+        use std::io::Cursor;
+        use std::io::Write;
+
+        log_info!("Reordering pages for booklet printing");
+
+        // Load the PDF document using lopdf
+        let doc = Document::load(input_path)
+            .map_err(|e| format_err!("Failed to load PDF with lopdf: {}", e))?;
+
+        // Get pages map
+        let pages_map = doc.get_pages();
+        let page_ids: Vec<_> = pages_map.values().collect();
+        let total_pages = page_ids.len();
+
+        // Calculate booklet imposition order
+        let booklet_order = calculate_booklet_order(total_pages);
+
+        // Collect pages in booklet order
+        let mut pages_in_order = Vec::new();
+        for (from, _to) in &booklet_order {
+            let from_index = from - 1; // Convert to 0-indexed
+            if from_index < page_ids.len() {
+                if let Some(page_id) = page_ids.get(from_index) {
+                    let page_object = doc
+                        .get_object(**page_id)
+                        .map_err(|e| format_err!("Failed to get page object: {}", e))?;
+                    pages_in_order.push(page_object.clone());
+                }
+            }
+        }
+
+        // Create a new document with reordered pages
+        let mut new_doc = Document::with_version("1.4");
+        for page_object in pages_in_order {
+            new_doc.add_object(page_object);
+        }
+
+        // Save the new document to bytes
+        let mut buffer = Cursor::new(Vec::new());
+        new_doc
+            .save_to(&mut buffer)
+            .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
+        let bytes = buffer.into_inner();
+
+        let mut file = File::create(output_path)
+            .map_err(|e| format_err!("Failed to create output file: {}", e))?;
+        file.write_all(&bytes)
+            .map_err(|e| format_err!("Failed to write output file: {}", e))?;
+
+        log_info!(
+            "Successfully reordered pages for booklet and saved to: {:?}",
+            output_path
+        );
+        Ok(output_path.to_path_buf())
+    }
+}
+
+/// Calculate the page order for booklet printing (2-up imposition)
+/// Returns a vector of (from_page, to_page) tuples
+fn calculate_booklet_order(total_pages: usize) -> Vec<(usize, usize)> {
+    let mut order = Vec::new();
+    
+    // Pad to multiple of 4 (signature size)
+    let padded_pages = ((total_pages + 3) / 4) * 4;
+    
+    // Calculate booklet imposition
+    // For each signature (4 pages), the order is:
+    // Front side: last page with first page
+    // Back side: second page with second-to-last page
+    for i in (0..padded_pages).step_by(4) {
+        let page1 = i + 1; // First page of signature
+        let page2 = i + 2; // Second page of signature
+        let page3 = padded_pages - i; // Last page of signature
+        let page4 = padded_pages - i - 1; // Second-to-last page of signature
+        
+        // Front of sheet: page3 with page1
+        if page3 <= total_pages && page1 <= total_pages {
+            order.push((page3, page1));
+        } else if page1 <= total_pages {
+            order.push((page1, page1)); // Blank page for page3
+        }
+        
+        // Back of sheet: page2 with page4
+        if page2 <= total_pages && page4 <= total_pages {
+            order.push((page2, page4));
+        } else if page2 <= total_pages {
+            order.push((page2, page2)); // Blank page for page4
+        }
+    }
+    
+    order
+}
+
+impl PdfManipulator {
     /// Merge multiple PDFs into a single file
     pub fn merge_pdfs(&mut self, inputs: &[&Path], output_path: &Path) -> Result<PathBuf, Error> {
         use lopdf::Document;

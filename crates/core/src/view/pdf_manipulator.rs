@@ -189,6 +189,10 @@ Max: 30MB, 500 pages. Keep battery charged."
                 "📥 Import from XFDF".to_string(),
                 EntryId::PdfManipulate(file_path.clone(), "import_xfdf".to_string()),
             ),
+            EntryKind::Command(
+                "📖 Booklet Printing".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "booklet".to_string()),
+            ),
         ]);
 
         let menu = crate::view::menu::Menu::new(

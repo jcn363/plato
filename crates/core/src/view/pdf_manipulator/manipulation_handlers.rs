@@ -72,6 +72,10 @@ pub fn process_manipulation(
             handle_import_xfdf(file_path, bus)?;
             return Ok(());
         }
+        "booklet" => {
+            let output = file_path.with_extension("booklet.pdf");
+            manipulator.reorder_pages_for_booklet(file_path, &output)
+        }
         _ => Err(format_err!("Unknown action")),
     };
 
