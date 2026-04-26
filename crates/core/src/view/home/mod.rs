@@ -60,6 +60,7 @@ mod updates;
 
 // Re-export types from home_core for public API
 pub use self::home_core::{BookMenuData, Fetcher, Home, TRASH_DIRNAME};
+pub use self::ui_toggles::collections_toggle::HomeCollectionsExt;
 
 pub use self::address_bar::AddressBar;
 pub use self::book::Book;
@@ -205,6 +206,8 @@ impl Home {
             drag_source_index: None,
             drag_target_index: None,
             is_dragging: false,
+            current_collection_id: None,
+            library: None,
             keyboard: None,
             address_bar: None,
             navigation_bar: None,
@@ -214,6 +217,7 @@ impl Home {
             book_menu: None,
             library_menu: None,
             settings_menu: None,
+            collections_menu: None,
             shelf: None,
             book_view: None,
             directory_view: None,

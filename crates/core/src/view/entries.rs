@@ -147,6 +147,10 @@ pub enum EntryId {
     SaveSettings,
     OpenSettingsEditor,
     ToggleDualPage,
+    AllBooks,
+    Collection(String),
+    CreateCollection,
+    DeleteCollection(String),
     ToggleSleepCover,
     CycleFinishedAction,
     CycleLanguage,
@@ -362,6 +366,10 @@ impl EntryId {
             EntryId::HighlightColor(_) => "HighlightColor",
             EntryId::OpenOpds(_) => "OpenOpds",
             EntryId::DownloadOpds(_) => "DownloadOpds",
+            EntryId::AllBooks => "AllBooks",
+            EntryId::Collection(_) => "Collection",
+            EntryId::CreateCollection => "CreateCollection",
+            EntryId::DeleteCollection(_) => "DeleteCollection",
         }
     }
 }

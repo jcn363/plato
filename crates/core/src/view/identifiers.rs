@@ -102,6 +102,8 @@ pub enum ViewId {
     Shelf(usize),
     BookView,
     Opds,
+    CollectionsMenu,
+    CreateCollectionDialog,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

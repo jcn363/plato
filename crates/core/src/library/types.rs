@@ -36,6 +36,7 @@ pub use crate::consts::library::{
     FAT32_EPOCH_FILENAME, METADATA_FILENAME, READING_STATES_DIRNAME, THUMBNAIL_PREVIEWS_DIRNAME,
 };
 
+#[derive(Debug)]
 pub struct Library {
     pub home: PathBuf,
     pub mode: LibraryMode,

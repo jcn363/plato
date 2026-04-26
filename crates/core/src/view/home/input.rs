@@ -24,6 +24,7 @@ use crate::view::{Bus, EntryId, Event, Hub, RenderData, RenderQueue, View, ViewI
 use rand_core::Rng;
 
 use super::Home;
+use super::HomeCollectionsExt;
 
 pub trait HomeInputExt {
     fn handle_event_impl(
@@ -219,6 +220,10 @@ impl HomeInputExt for Home {
                 self.toggle_library_menu(Some(false), hub, rq, context);
                 true
             }
+            Event::Close(ViewId::CollectionsMenu) => {
+                self.toggle_collections_menu(Some(false), hub, rq, context);
+                true
+            }
             Event::Close(ViewId::MainMenu) => {
                 toggle_main_menu(self, Rectangle::default(), Some(false), rq, context);
                 true
@@ -332,6 +337,33 @@ impl HomeInputExt for Home {
             }
             Event::FetcherAddDocument(_, ref info) => {
                 self.add_document(*info.clone(), hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::AllBooks) => {
+                self.handle_collections_menu_event(
+                    &Event::Select(EntryId::AllBooks),
+                    hub,
+                    rq,
+                    context,
+                );
+                true
+            }
+            Event::Select(EntryId::Collection(_)) => {
+                self.handle_collections_menu_event(
+                    evt,
+                    hub,
+                    rq,
+                    context,
+                );
+                true
+            }
+            Event::Select(EntryId::CreateCollection) => {
+                self.handle_collections_menu_event(
+                    evt,
+                    hub,
+                    rq,
+                    context,
+                );
                 true
             }
             Event::Select(EntryId::SetStatus(ref path, status)) => {

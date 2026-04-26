@@ -53,6 +53,9 @@ pub struct Home {
     pub drag_source_index: Option<usize>,
     pub drag_target_index: Option<usize>,
     pub is_dragging: bool,
+    // Collection management
+    pub current_collection_id: Option<String>,
+    pub library: Option<crate::library::Library>,
     // UI toggle fields for modularized components
     pub keyboard: Option<Box<dyn View>>,
     pub address_bar: Option<Box<dyn View>>,
@@ -63,6 +66,7 @@ pub struct Home {
     pub book_menu: Option<Box<dyn View>>,
     pub library_menu: Option<Box<dyn View>>,
     pub settings_menu: Option<Box<dyn View>>,
+    pub collections_menu: Option<Box<dyn View>>,
     pub shelf: Option<Box<dyn View>>,
     pub book_view: Option<Box<dyn View>>,
     pub directory_view: Option<Box<dyn View>>,
