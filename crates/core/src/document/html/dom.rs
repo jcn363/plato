@@ -8,7 +8,8 @@ pub const WRAPPER_TAG_NAME: &str = "anonymous";
 pub enum NodeData {
     Root,
     Wrapper(usize),
-    Element(ElementData),
+    /// Boxed to reduce enum size - ElementData contains multiple String fields and HashMap
+    Element(Box<ElementData>),
     Text(TextData),
     Whitespace(TextData),
 }
@@ -85,8 +86,8 @@ impl NodeData {
     fn offset(&self) -> usize {
         match *self {
             NodeData::Text(TextData { offset, .. })
-            | NodeData::Whitespace(TextData { offset, .. })
-            | NodeData::Element(ElementData { offset, .. }) => offset,
+            | NodeData::Whitespace(TextData { offset, .. }) => offset,
+            NodeData::Element(ref e) => e.offset,
             NodeData::Wrapper(offset) => offset,
             NodeData::Root => 0,
         }
@@ -101,12 +102,12 @@ pub struct TextData {
 
 pub fn element(name: &str, offset: usize, attributes: Attributes) -> NodeData {
     let colon = name.find(':');
-    NodeData::Element(ElementData {
+    NodeData::Element(Box::new(ElementData {
         offset,
         name: name[colon.map(|index| index + 1).unwrap_or(0)..].to_string(),
         qualified_name: colon.map(|_| name.to_string()),
         attributes,
-    })
+    }))
 }
 
 pub fn text(text: &str, offset: usize) -> NodeData {
@@ -377,7 +378,7 @@ impl<'a> NodeRef<'a> {
 
     pub fn is_inline(&self) -> bool {
         match &self.node.data {
-            NodeData::Element(e) => !e.is_block(),
+            NodeData::Element(ref e) => !e.is_block(),
             NodeData::Text(..) => true,
             _ => false,
         }
@@ -385,7 +386,7 @@ impl<'a> NodeRef<'a> {
 
     pub fn is_block(&self) -> bool {
         match &self.node.data {
-            NodeData::Element(e) => e.is_block(),
+            NodeData::Element(ref e) => e.is_block(),
             NodeData::Wrapper(..) | NodeData::Root => true,
             _ => false,
         }
@@ -415,25 +416,23 @@ impl<'a> NodeRef<'a> {
     }
 
     pub fn tag_name(&self) -> Option<&'a str> {
-        match self.node.data {
-            NodeData::Element(ElementData { ref name, .. }) => Some(name),
+        match &self.node.data {
+            NodeData::Element(ref e) => Some(&e.name),
             NodeData::Wrapper(..) => Some(WRAPPER_TAG_NAME),
             _ => None,
         }
     }
 
     pub fn tag_qualified_name(&self) -> Option<&'a str> {
-        match self.node.data {
-            NodeData::Element(ElementData {
-                ref qualified_name, ..
-            }) => qualified_name.as_deref(),
+        match &self.node.data {
+            NodeData::Element(ref e) => e.qualified_name.as_deref(),
             _ => None,
         }
     }
 
     pub fn attributes(&self) -> Option<&'a Attributes> {
-        match self.node.data {
-            NodeData::Element(ElementData { ref attributes, .. }) => Some(attributes),
+        match &self.node.data {
+            NodeData::Element(ref e) => Some(&e.attributes),
             _ => None,
         }
     }

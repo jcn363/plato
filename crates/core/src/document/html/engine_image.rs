@@ -23,13 +23,10 @@ impl Engine {
         inlines: &mut Vec<InlineMaterial>,
         markers: &mut Vec<usize>,
     ) {
-        if let super::dom::NodeData::Element(super::dom::ElementData {
-            offset,
-            name,
-            attributes,
-            ..
-        }) = node.data()
-        {
+        if let super::dom::NodeData::Element(ref element_data) = node.data() {
+            let offset = element_data.offset;
+            let name = &element_data.name;
+            let attributes = &element_data.attributes;
             let props = specified_values(node, stylesheet);
 
             match name.as_ref() {

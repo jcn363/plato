@@ -94,6 +94,16 @@ cargo test overlaping --target x86_64-unknown-linux-gnu
 
 Tests use standard Rust `#[cfg(test)]` / `#[test]` attributes. See the [Test Segregation](#test-segregation) section for placement rules.
 
+### Test Performance Requirements
+
+**Mandatory rule:** Tests must complete quickly; slow tests are a sign of poor test design.
+
+- **60-second threshold** — Any test running longer than 60 seconds must be either:
+  - Rewritten from scratch with better performance characteristics
+  - Removed entirely if it cannot be made fast (indicates a design flaw or unnecessary scope)
+- **Fast feedback loops** — Unit tests should complete in milliseconds; integration tests should complete in seconds
+- **Parallel test execution** — Structure tests to allow `cargo test` to run them in parallel without conflicts
+
 ## Code Style
 
 ### Formatting
@@ -360,6 +370,7 @@ When facing multiple compilation errors, resolve in this order:
 **Mandatory rule:** Stay focused, validate incrementally, and prefer composition.
 
 - **One task at a time** — avoid concurrent operations to maintain focus and reliability
+- **Only one opened CLI at a time** — avoid running multiple terminal sessions simultaneously; maintain a single terminal context to prevent resource conflicts and state confusion
 - **Decompose incrementally** — break complex tasks into manageable steps with frequent validation
 - **Ask questions** — if you have any questions or doubts, don't hesitate to ask. It's better to clarify requirements than to make incorrect assumptions
 - **Seek input** — when facing architectural decisions or unclear requirements, ask for direction before proceeding
@@ -373,6 +384,10 @@ When facing multiple compilation errors, resolve in this order:
 
 1. **Incremental verification** — After each code change, compile for the primary target (ARM Kobo) immediately
 2. **Zero-tolerance policy** — Treat warnings as errors; never introduce new warnings into the codebase
+
+   - **Warnings as errors** — Configure all builds to fail on warnings (`-D warnings`); warnings indicate potential bugs and must be resolved, not suppressed
+   - **No warning suppression without justification** — Never use `#[allow(...)]` or `#[warn(...)]` attributes without a documented reason; fix the underlying issue instead
+
 3. **Full build verification** — Before considering any task complete, run a clean build:
 
    ```bash
@@ -406,6 +421,7 @@ When facing multiple compilation errors, resolve in this order:
 - **Eliminate dead code** — Remove unused functions, imports, fields, and modules immediately; never leave dead code for later
 - **Zero dead code without justification - All `#[allow(dead_code)]` attributes must be accompanied by a comment explaining the future use; if no justification exists, remove the code immediately
 - **No backward compatibility** — Do not add code to support old APIs, deprecated patterns, or legacy behavior unless explicitly required
+- **Replace stubs and TODOs** — Replace all stubs, placeholders, TODO comments, and incomplete implementations with proper, production-ready code; do not leave temporary workarounds or unimplemented!() macros in the codebase
 - **Project containment** — All created or used files and directories must be located inside the project root directory (`~/Desktop/plato`); never create or access files outside the project workspace
 - **Git ignore protection** — Do not modify the `.gitignore` file without explicit user permission
 

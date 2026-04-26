@@ -307,7 +307,7 @@ impl Engine {
                 }
             }
 
-            NodeData::Element(_) => {
+            NodeData::Element(..) => {
                 // Handle block-level elements
                 if style.display == Display::Block {
                     // Move to new line for block elements

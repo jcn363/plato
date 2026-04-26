@@ -24,12 +24,10 @@ impl Engine {
         inlines: &mut Vec<InlineMaterial>,
     ) {
         match node.data() {
-            super::dom::NodeData::Element(super::dom::ElementData {
-                offset,
-                name,
-                attributes,
-                ..
-            }) => {
+            super::dom::NodeData::Element(ref element_data) => {
+                let offset = element_data.offset;
+                let name = &element_data.name;
+                let attributes = &element_data.attributes;
                 let mut style = StyleData::default();
                 let props = specified_values(node, stylesheet);
 
@@ -46,8 +44,8 @@ impl Engine {
 
                 self.parse_element_styles(&mut style, &props, parent_style);
                 self.handle_element_specifics(
-                    &name,
-                    &attributes,
+                    name,
+                    attributes,
                     &props,
                     &mut style,
                     parent_style,
