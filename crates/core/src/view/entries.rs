@@ -151,6 +151,8 @@ pub enum EntryId {
     Collection(String),
     CreateCollection,
     DeleteCollection(String),
+    AddToCollection,
+    RemoveFromCollection,
     ToggleSleepCover,
     CycleFinishedAction,
     CycleLanguage,
@@ -370,6 +372,8 @@ impl EntryId {
             EntryId::Collection(_) => "Collection",
             EntryId::CreateCollection => "CreateCollection",
             EntryId::DeleteCollection(_) => "DeleteCollection",
+            EntryId::AddToCollection => "AddToCollection",
+            EntryId::RemoveFromCollection => "RemoveFromCollection",
         }
     }
 }

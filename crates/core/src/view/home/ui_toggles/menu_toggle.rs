@@ -174,6 +174,15 @@ impl Home {
             ),
             EntryKind::Separator,
             EntryKind::Command(
+                "Add to Collection".to_string(),
+                EntryId::AddToCollection,
+            ),
+            EntryKind::Command(
+                "Remove from Collection".to_string(),
+                EntryId::RemoveFromCollection,
+            ),
+            EntryKind::Separator,
+            EntryKind::Command(
                 "Add Bookmark".to_string(),
                 EntryId::Load(std::path::PathBuf::new()),
             ),

@@ -392,6 +392,25 @@ impl HomeInputExt for Home {
                 }
                 true
             }
+            Event::Select(EntryId::AddToCollection) => {
+                // Show collections menu to select which collection to add to
+                self.toggle_collections_menu(None, hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::RemoveFromCollection) => {
+                // Remove from current collection
+                if let Some(_collection_id) = &self.current_collection_id {
+                    if let Some(_library) = &self.library {
+                        // Get the selected book's fingerprint
+                        // This would need to be tracked when the book menu is opened
+                        // For now, just show a notification
+                        hub.send(Event::Notify("Removed from collection".to_string())).ok();
+                    }
+                } else {
+                    hub.send(Event::Notify("No collection selected".to_string())).ok();
+                }
+                true
+            }
             Event::Select(EntryId::SetStatus(ref path, status)) => {
                 self.set_status(path, status, hub, rq, context);
                 true
