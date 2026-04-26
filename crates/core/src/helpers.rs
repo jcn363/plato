@@ -328,21 +328,20 @@ impl IsHidden for DirEntry {
     fn is_hidden(&self) -> bool {
         self.file_name()
             .to_str()
-            .map(|s| s.starts_with('.'))
-            .unwrap_or(false)
+            .is_some_and(|s| s.starts_with('.'))
     }
 }
 
 /// Convert a number to English words using septem
 /// Returns the number as words (e.g., 42 -> "forty-two")
 pub fn number_to_words(n: u64) -> String {
-    format!("{}", n) // Simplified implementation - septem API needs investigation
+    format!("{}", n) // TODO: Simplified implementation - septem API needs investigation
 }
 
 /// Convert text containing numbers to words using septem
 /// Finds numbers in the text and converts them to words
 pub fn text_to_words(text: &str) -> String {
-    text.to_string() // Simplified implementation - septem API needs investigation
+    text.to_string() // TODO: Simplified implementation - septem API needs investigation
 }
 
 /// Compress data using BZIP2 algorithm

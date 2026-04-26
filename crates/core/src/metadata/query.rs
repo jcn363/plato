@@ -171,22 +171,17 @@ impl BookQuery {
     }
 
     fn matches_free_field(&self, info: &Info) -> bool {
-        self.free.as_ref().map(|re| {
+        self.free.as_ref().is_none_or(|re| {
             re.is_match(&info.title)
                 || re.is_match(&info.subtitle)
                 || re.is_match(&info.author)
                 || re.is_match(&info.series)
-                || info
-                    .file
-                    .path
-                    .to_str()
-                    .map(|s| re.is_match(s))
-                    .unwrap_or(false)
-        }) != Some(false)
+                || info.file.path.to_str().is_some_and(|s| re.is_match(s))
+        })
     }
 
     fn matches_text_field(&self, field: &Option<Regex>, value: &str) -> bool {
-        field.as_ref().map(|re| re.is_match(value)) != Some(false)
+        field.as_ref().is_none_or(|re| re.is_match(value))
     }
 
     fn matches_status_field(
@@ -197,20 +192,16 @@ impl BookQuery {
     ) -> bool {
         field
             .as_ref()
-            .map(|eq| info.simple_status().eq(&expected_status) == *eq)
-            != Some(false)
+            .is_none_or(|eq| info.simple_status().eq(&expected_status) == *eq)
     }
 
     fn matches_reader_field<F>(&self, field: &Option<bool>, info: &Info, check: F) -> bool
     where
         F: FnOnce(&crate::metadata::info::ReaderInfo) -> bool,
     {
-        field.as_ref().map(|eq| {
-            info.reader
-                .as_ref()
-                .map(|r| check(r) == *eq)
-                .unwrap_or(false)
-        }) != Some(false)
+        field
+            .as_ref()
+            .is_none_or(|eq| info.reader.as_ref().is_some_and(|r| check(r) == *eq))
     }
 
     fn matches_date_field<F>(
@@ -224,12 +215,11 @@ impl BookQuery {
     {
         field
             .as_ref()
-            .map(|(eq, date)| get_date(info).gt(date) == *eq)
-            != Some(false)
+            .is_none_or(|(eq, date)| get_date(info).gt(date) == *eq)
     }
 
     #[inline]
     pub fn is_simple_match(&self, text: &str) -> bool {
-        self.free.as_ref().map(|q| q.is_match(text)).unwrap_or(true)
+        self.free.as_ref().is_none_or(|q| q.is_match(text))
     }
 }

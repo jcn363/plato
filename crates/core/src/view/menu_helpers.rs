@@ -17,10 +17,7 @@ pub fn toggle_menu_vec<F>(
 ) where
     F: FnOnce(&mut Context) -> Menu,
 {
-    if let Some(index) = children
-        .iter()
-        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
-    {
+    if let Some(index) = children.iter().position(|c| c.view_id() == Some(id)) {
         if let Some(true) = enable {
             return;
         }
@@ -75,11 +72,7 @@ pub fn toggle_menu_with<F>(
 ) where
     F: FnOnce() -> Menu,
 {
-    if let Some(index) = view
-        .children()
-        .iter()
-        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
-    {
+    if let Some(index) = view.children().iter().position(|c| c.view_id() == Some(id)) {
         if let Some(true) = enable {
             return;
         }
@@ -132,11 +125,7 @@ pub fn toggle_menu_ctx<F>(
 ) where
     F: FnOnce(&mut Context) -> Menu,
 {
-    if let Some(index) = view
-        .children()
-        .iter()
-        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
-    {
+    if let Some(index) = view.children().iter().position(|c| c.view_id() == Some(id)) {
         if let Some(true) = enable {
             return;
         }
@@ -192,11 +181,7 @@ pub fn toggle_menu_item<F, T>(
 ) where
     F: FnOnce(&mut Context, &T) -> Menu,
 {
-    if let Some(index) = view
-        .children()
-        .iter()
-        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
-    {
+    if let Some(index) = view.children().iter().position(|c| c.view_id() == Some(id)) {
         if let Some(true) = enable {
             return;
         }
@@ -247,11 +232,7 @@ pub fn toggle_menu_self<F>(
 ) where
     F: FnOnce(&mut Context) -> Menu,
 {
-    if let Some(index) = view
-        .children()
-        .iter()
-        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
-    {
+    if let Some(index) = view.children().iter().position(|c| c.view_id() == Some(id)) {
         if let Some(true) = enable {
             return;
         }
@@ -272,11 +253,7 @@ pub fn toggle_menu_self<F>(
 ///
 /// This is a utility for event handlers that need to close a specific view.
 pub fn remove_view_by_id(view: &mut dyn View, id: ViewId, rq: &mut RenderQueue) -> bool {
-    if let Some(index) = view
-        .children()
-        .iter()
-        .position(|c| c.view_id().map(|i| i == id).unwrap_or(false))
-    {
+    if let Some(index) = view.children().iter().position(|c| c.view_id() == Some(id)) {
         let rect = overlapping_rectangle(view.child(index));
         rq.add(RenderData::expose(rect, UpdateMode::Gui));
         view.children_mut().remove(index);
