@@ -128,11 +128,12 @@ pub fn whitespace(text: &str, offset: usize) -> NodeData {
 pub struct NodeId(NonZeroUsize);
 
 impl NodeId {
+    #[inline]
     pub fn from_index(n: usize) -> Self {
-        // SAFETY: n + 1 is always non-zero since n is a valid index.
-        NodeId(unsafe { NonZeroUsize::new_unchecked(n + 1) })
+        NodeId(NonZeroUsize::new(n + 1).expect("node index overflow"))
     }
 
+    #[inline]
     pub fn to_index(self) -> usize {
         self.0.get() - 1
     }
@@ -192,15 +193,17 @@ impl XmlTree {
         Self::default()
     }
 
+    #[inline]
     fn node(&self, id: NodeId) -> &Node {
         // SAFETY: NodeId is always created via NodeId::from_index() which ensures:
         // 1. The index is within bounds of the nodes vector (nodes are only added via push)
-        // 2. The index + 1 is non-zero (guaranteed by NonZeroUsize::new_unchecked)
+        // 2. The index + 1 is non-zero (guaranteed by NonZeroUsize)
         // 3. The index is never invalidated (nodes are never removed from the vector)
         // This is a performance optimization to avoid bounds checking in hot DOM traversal paths.
         unsafe { self.nodes.get_unchecked(id.to_index()) }
     }
 
+    #[inline]
     fn node_mut(&mut self, id: NodeId) -> &mut Node {
         // SAFETY: Same invariants as node() - NodeId is guaranteed to be a valid index.
         // Mutable access is safe because:
@@ -406,12 +409,13 @@ impl<'a> NodeRef<'a> {
 
     pub fn text(&self) -> String {
         self.node.data.text().map(String::from).unwrap_or_else(|| {
-            self.descendants()
-                .filter_map(|n| n.node.data.text())
-                .fold(String::new(), |mut a, b| {
-                    a.push_str(b);
-                    a
-                })
+            let mut result = String::with_capacity(1024);
+            for n in self.descendants() {
+                if let Some(text) = n.node.data.text() {
+                    result.push_str(text);
+                }
+            }
+            result
         })
     }
 
