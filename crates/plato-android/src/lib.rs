@@ -213,25 +213,28 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
             if let DeviceEvent::Finger { id, time, status, position } = event {
                 match status {
                     plato_core::input::FingerStatus::Down => {
-                        let mut contacts = contacts_clone.lock().unwrap();
-                        contacts.insert(id, plato_core::gesture::TouchState {
-                            time,
-                            held: true,
-                            positions: vec![position],
-                        });
+                        if let Ok(mut contacts) = contacts_clone.lock() {
+                            contacts.insert(id, plato_core::gesture::TouchState {
+                                time,
+                                held: true,
+                                positions: vec![position],
+                            });
+                        }
                     }
                     plato_core::input::FingerStatus::Motion => {
-                        let mut contacts = contacts_clone.lock().unwrap();
-                        if let Some(state) = contacts.get_mut(&id) {
-                            state.positions.push(position);
+                        if let Ok(mut contacts) = contacts_clone.lock() {
+                            if let Some(state) = contacts.get_mut(&id) {
+                                state.positions.push(position);
+                            }
                         }
                     }
                     plato_core::input::FingerStatus::Up => {
-                        let mut contacts = contacts_clone.lock().unwrap();
-                        contacts.remove(&id);
-                        let _ = gesture_tx_clone.send(plato_core::view::Event::Gesture(
-                            plato_core::gesture::GestureEvent::Tap(position)
-                        ));
+                        if let Ok(mut contacts) = contacts_clone.lock() {
+                            contacts.remove(&id);
+                            let _ = gesture_tx_clone.send(plato_core::view::Event::Gesture(
+                                plato_core::gesture::GestureEvent::Tap(position)
+                            ));
+                        }
                     }
                     _ => {}
                 }
