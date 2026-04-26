@@ -14,7 +14,7 @@
 
 use crate::helpers::{load_json, Fingerprint, Fp};
 use crate::log_error;
-use crate::metadata::{Info, ReaderInfo, SortMethod};
+use crate::metadata::{Info, ReaderInfo, SearchIndex, SortMethod};
 use crate::settings::{ImportSettings, LibraryMode};
 use anyhow::{bail, Error};
 use dashmap::DashMap;
@@ -51,6 +51,8 @@ pub struct Library {
     pub import_settings: ImportSettings,
     /// Concurrent cache for fast lookups during indexing
     pub concurrent_cache: Arc<DashMap<String, Info>>,
+    /// Full-text search index for document content
+    pub search_index: SearchIndex,
 }
 
 impl Library {
@@ -81,6 +83,7 @@ impl Library {
             show_hidden: false,
             import_settings,
             concurrent_cache: Arc::new(DashMap::new()),
+            search_index: SearchIndex::new(),
         })
     }
 
