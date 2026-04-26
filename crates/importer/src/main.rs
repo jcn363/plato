@@ -84,20 +84,23 @@ fn main() -> Result<(), Error> {
     let library_path = Path::new(&matches.free[0]);
 
     let mut import_settings = ImportSettings {
-        metadata_kinds: ["epub"].iter().map(|k| k.to_string()).collect(),
+        metadata_kinds: ["epub"]
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect(),
         ..Default::default()
     };
 
     if let Some(allowed_kinds) = matches
         .opt_str("k")
-        .map(|v| v.split(',').map(|k| k.to_string()).collect())
+        .map(|v| v.split(',').map(std::string::ToString::to_string).collect())
     {
         import_settings.allowed_kinds = allowed_kinds;
     }
 
     if let Some(metadata_kinds) = matches
         .opt_str("e")
-        .map(|v| v.split(',').map(|k| k.to_string()).collect())
+        .map(|v| v.split(',').map(std::string::ToString::to_string).collect())
     {
         import_settings.metadata_kinds = metadata_kinds;
     }

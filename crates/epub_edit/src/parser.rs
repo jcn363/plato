@@ -12,23 +12,22 @@ use zip::ZipArchive;
 use crate::types::EpubChapter;
 
 static TITLE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:title[^>]*>([^<]+)</dc:title>"#).expect("invalid regex"));
-static AUTHOR_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"<dc:creator[^>]*>([^<]+)</dc:creator>"#).expect("invalid regex")
-});
+    LazyLock::new(|| Regex::new(r"<dc:title[^>]*>([^<]+)</dc:title>").expect("invalid regex"));
+static AUTHOR_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"<dc:creator[^>]*>([^<]+)</dc:creator>").expect("invalid regex"));
 static LANGUAGE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"<dc:language[^>]*>([^<]+)</dc:language>"#).expect("invalid regex")
+    Regex::new(r"<dc:language[^>]*>([^<]+)</dc:language>").expect("invalid regex")
 });
 static IDENTIFIER_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"<dc:identifier[^>]*>([^<]+)</dc:identifier>"#).expect("invalid regex")
+    Regex::new(r"<dc:identifier[^>]*>([^<]+)</dc:identifier>").expect("invalid regex")
 });
 static PUBLISHER_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"<dc:publisher[^>]*>([^<]+)</dc:publisher>"#).expect("invalid regex")
+    Regex::new(r"<dc:publisher[^>]*>([^<]+)</dc:publisher>").expect("invalid regex")
 });
 static DATE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<dc:date[^>]*>([^<]+)</dc:date>"#).expect("invalid regex"));
+    LazyLock::new(|| Regex::new(r"<dc:date[^>]*>([^<]+)</dc:date>").expect("invalid regex"));
 static DESCRIPTION_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"<dc:description[^>]*>([^<]+)</dc:description>"#).expect("invalid regex")
+    Regex::new(r"<dc:description[^>]*>([^<]+)</dc:description>").expect("invalid regex")
 });
 static ROOTFILE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).expect("invalid regex"));
@@ -57,7 +56,7 @@ pub fn extract_epub(epub_path: &Path, temp_dir: &Path) -> Result<()> {
         // Prevent zip slip: reject entries containing path traversal components
         let name = file.name();
         if name.contains("..") || name.starts_with('/') || name.starts_with('\\') {
-            return Err(format_err!("Zip entry contains path traversal: {}", name));
+            return Err(format_err!("Zip entry contains path traversal: {name}"));
         }
 
         let outpath = temp_dir.join(name);
@@ -96,16 +95,13 @@ pub fn parse_metadata(temp_dir: &Path) -> Result<(String, String)> {
     let container_content = fs::read_to_string(&container_path)?;
 
     if let Some(caps) = ROOTFILE_RE.captures(&container_content) {
-        let opf_path = caps
-            .get(1)
-            .map(|m| m.as_str())
-            .unwrap_or("OEBPS/content.opf");
+        let opf_path = caps.get(1).map_or("OEBPS/content.opf", |m| m.as_str());
         let opf_full_path = temp_dir.join(opf_path);
 
         if opf_full_path.exists() {
             Ok((opf_path.to_string(), fs::read_to_string(&opf_full_path)?))
         } else {
-            Err(format_err!("OPF file not found at {}", opf_path))
+            Err(format_err!("OPF file not found at {opf_path}"))
         }
     } else {
         Err(format_err!("Could not find rootfile in container.xml"))
@@ -131,8 +127,7 @@ pub fn parse_opf_metadata(opf_content: &str) -> crate::types::EpubMetadata {
     if let Some(caps) = LANGUAGE_RE.captures(opf_content) {
         metadata.language = caps
             .get(1)
-            .map(|m| m.as_str().to_string())
-            .unwrap_or_else(|| "en".to_string());
+            .map_or_else(|| "en".to_string(), |m| m.as_str().to_string());
     }
     if let Some(caps) = IDENTIFIER_RE.captures(opf_content) {
         metadata.identifier = caps
@@ -168,16 +163,13 @@ pub fn parse_content(temp_dir: &Path) -> Result<(String, String)> {
     let container_content = fs::read_to_string(&container_path)?;
 
     if let Some(caps) = ROOTFILE_RE.captures(&container_content) {
-        let opf_path = caps
-            .get(1)
-            .map(|m| m.as_str())
-            .unwrap_or("OEBPS/content.opf");
+        let opf_path = caps.get(1).map_or("OEBPS/content.opf", |m| m.as_str());
         let opf_full_path = temp_dir.join(opf_path);
 
         if opf_full_path.exists() {
             Ok((opf_path.to_string(), fs::read_to_string(&opf_full_path)?))
         } else {
-            Err(format_err!("OPF file not found at {}", opf_path))
+            Err(format_err!("OPF file not found at {opf_path}"))
         }
     } else {
         Err(format_err!("Could not find rootfile in container.xml"))

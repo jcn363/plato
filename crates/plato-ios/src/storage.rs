@@ -37,7 +37,7 @@ pub fn ios_library_path() -> String {
 
     // Fallback: derive from process home directory
     if let Ok(home) = std::env::var("HOME") {
-        format!("{}/Documents", home)
+        format!("{home}/Documents")
     } else {
         // Last resort fallback (should not happen on real iOS)
         "/var/mobile/Containers/Data/Application/Library".to_string()
@@ -54,7 +54,7 @@ pub fn ios_settings_path() -> String {
 
     // Fallback: derive from process home directory
     if let Ok(home) = std::env::var("HOME") {
-        format!("{}/Library", home)
+        format!("{home}/Library")
     } else {
         // Last resort fallback (should not happen on real iOS)
         "/var/mobile/Containers/Data/Application/Library".to_string()
@@ -63,6 +63,7 @@ pub fn ios_settings_path() -> String {
 
 /// Get the cache directory for iOS
 /// This would typically be in the app's Caches directory
+#[must_use]
 pub fn ios_cache_path() -> String {
     // For MVP, use a placeholder
     // In production, this would be obtained from Swift via:
@@ -71,7 +72,8 @@ pub fn ios_cache_path() -> String {
 }
 
 /// Get the temporary directory for iOS
-/// This would typically be NSTemporaryDirectory()
+/// This would typically be `NSTemporaryDirectory()`
+#[must_use]
 pub fn ios_temp_path() -> String {
     // For MVP, use a placeholder
     // In production, this would be obtained from Swift via NSTemporaryDirectory()
@@ -79,18 +81,21 @@ pub fn ios_temp_path() -> String {
 }
 
 /// Resolve a path relative to the library directory
+#[must_use]
 pub fn resolve_library_path(relative: &str) -> PathBuf {
     let base = ios_library_path();
     PathBuf::from(base).join(relative)
 }
 
 /// Resolve a path relative to the settings directory
+#[must_use]
 pub fn resolve_settings_path(relative: &str) -> PathBuf {
     let base = ios_settings_path();
     PathBuf::from(base).join(relative)
 }
 
 /// Resolve a path relative to the cache directory
+#[must_use]
 pub fn resolve_cache_path(relative: &str) -> PathBuf {
     let base = ios_cache_path();
     PathBuf::from(base).join(relative)

@@ -15,7 +15,7 @@ static LINK_RE: LazyLock<Regex> = LazyLock::new(|| {
 static MEDIA_TYPE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"media=["']([^"']*)["']"#).expect("invalid regex"));
 static STYLE_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<style[^>]*>(.*?)</style>"#).expect("invalid regex"));
+    LazyLock::new(|| Regex::new(r"<style[^>]*>(.*?)</style>").expect("invalid regex"));
 use std::fs;
 use std::path::Path;
 
@@ -177,7 +177,7 @@ impl EpubEditorCore {
         toc.push_str("<nav epub:type=\"toc\">\n");
         toc.push_str("  <ol>\n");
 
-        for chapter in self.chapters.iter() {
+        for chapter in &self.chapters {
             toc.push_str(&format!(
                 "    <li><a href=\"{}\">{}</a></li>\n",
                 chapter.href, chapter.title
@@ -251,7 +251,7 @@ impl EpubEditorCore {
                 css_files.push(CSSInfo {
                     chapter_index: index,
                     chapter_title: chapter.title.clone(),
-                    href: format!("inline-style-{}", index),
+                    href: format!("inline-style-{index}"),
                     media_type: Some("inline".to_string()),
                 });
             }

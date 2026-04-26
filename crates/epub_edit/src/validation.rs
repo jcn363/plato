@@ -208,10 +208,9 @@ impl EpubEditorCore {
                                 chapter_title: chapter.title.clone(),
                                 issue_type: "HTML Structure".to_string(),
                                 message: format!(
-                                    "Mismatched tags: expected </{}>, found </{}>",
-                                    tag, closing_tag
+                                    "Mismatched tags: expected </{tag}>, found </{closing_tag}>"
                                 ),
-                                location: Some(format!("Position {}", pos)),
+                                location: Some(format!("Position {pos}")),
                             });
                         }
                     }
@@ -232,8 +231,8 @@ impl EpubEditorCore {
                     chapter_index: index,
                     chapter_title: chapter.title.clone(),
                     issue_type: "HTML Structure".to_string(),
-                    message: format!("Unclosed tag: <{}>", tag),
-                    location: Some(format!("Position {}", pos)),
+                    message: format!("Unclosed tag: <{tag}>"),
+                    location: Some(format!("Position {pos}")),
                 });
             }
         }
@@ -253,7 +252,7 @@ impl EpubEditorCore {
                         chapter_index: index,
                         chapter_title: chapter.title.clone(),
                         issue_type: "Broken Link".to_string(),
-                        message: format!("Empty or invalid href: {}", href),
+                        message: format!("Empty or invalid href: {href}"),
                         location: Some(format!("Position {}", href_match.start())),
                     });
                 }
@@ -275,7 +274,7 @@ impl EpubEditorCore {
                         chapter_index: index,
                         chapter_title: chapter.title.clone(),
                         issue_type: "External Image".to_string(),
-                        message: format!("External image reference: {}", src),
+                        message: format!("External image reference: {src}"),
                         location: Some(format!("Position {}", src_match.start())),
                     });
                 }

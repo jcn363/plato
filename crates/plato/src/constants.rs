@@ -37,13 +37,13 @@ pub const POWER_INPUTS: [&str; 3] = [
 pub const KOBO_UPDATE_BUNDLE: &str = "/mnt/onboard/.kobo/KoboRoot.tgz";
 
 /// Clock refresh interval.
-pub const CLOCK_REFRESH_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
+pub const CLOCK_REFRESH_INTERVAL: std::time::Duration = std::time::Duration::from_mins(1);
 
 /// Battery refresh interval.
 pub const BATTERY_REFRESH_INTERVAL: std::time::Duration = std::time::Duration::from_secs(299);
 
 /// Auto suspend refresh interval.
-pub const AUTO_SUSPEND_REFRESH_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
+pub const AUTO_SUSPEND_REFRESH_INTERVAL: std::time::Duration = std::time::Duration::from_mins(1);
 
 /// Suspend wait delay.
 pub const SUSPEND_WAIT_DELAY: std::time::Duration = std::time::Duration::from_secs(15);

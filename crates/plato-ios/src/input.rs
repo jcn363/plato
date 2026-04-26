@@ -11,7 +11,7 @@ use plato_core::input::{DeviceEvent, FingerStatus};
 use std::sync::mpsc::Sender;
 use std::time::SystemTime;
 
-/// Translate a UITouch event into Plato DeviceEvent::Finger events
+/// Translate a `UITouch` event into Plato `DeviceEvent::Finger` events
 /// This is called from Swift when touch events occur
 pub fn translate_touch_event(
     finger_id: i32,
@@ -43,13 +43,14 @@ pub fn translate_touch_event(
 
     // Send the event to the gesture processor
     if let Err(e) = tx.send(device_event) {
-        log::error!("Failed to send finger event: {}", e);
+        log::error!("Failed to send finger event: {e}");
     }
 }
 
 /// Translate a gesture recognizer event
 /// For MVP, we handle basic tap gestures
 #[allow(dead_code)] // Reserved for future iOS gesture recognizer integration (UIGestureRecognizer for pinch, tap)
+#[must_use]
 pub fn translate_gesture_event(
     gesture_type: i32, // 0=Tap, 1=Pinch, etc.
     x: f32,

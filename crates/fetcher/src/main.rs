@@ -98,7 +98,7 @@ fn update_token(client: &Client, session: &mut Session, settings: &Settings) -> 
                 .ok_or_else(|| format_err!("missing access token"))?,
             valid_until: body
                 .get("expires_in")
-                .and_then(|v| v.as_i64())
+                .and_then(plato_core::serde_json::Value::as_i64)
                 .map(|d| Utc::now() + Duration::seconds(d))
                 .ok_or_else(|| format_err!("missing expires in"))?,
         };
@@ -109,7 +109,7 @@ fn update_token(client: &Client, session: &mut Session, settings: &Settings) -> 
             .and_then(JsonValue::as_str)
             .or_else(|| status.canonical_reason())
             .unwrap_or_else(|| status.as_str());
-        Err(format_err!("failed to authentificate: {}", err_desc))
+        Err(format_err!("failed to authentificate: {err_desc}"))
     }
 }
 
@@ -142,27 +142,27 @@ fn main() -> Result<(), Error> {
         .ok_or_else(|| format_err!("missing argument: online status"))
         .and_then(|v| v.parse::<bool>().map_err(Into::into))?;
     let settings = load_toml::<Settings, _>(SETTINGS_PATH)
-        .with_context(|| format!("can't load settings from {}", SETTINGS_PATH))?;
+        .with_context(|| format!("can't load settings from {SETTINGS_PATH}"))?;
     let mut session = load_json::<Session, _>(SESSION_PATH).unwrap_or_default();
 
     if !online {
-        if !wifi {
-            let event = json!({
-                "type": "notify",
-                "message": "Establishing a network connection.",
-            });
-            println!("{}", event);
-            let event = json!({
-                "type": "setWifi",
-                "enable": true,
-            });
-            println!("{}", event);
-        } else {
+        if wifi {
             let event = json!({
                 "type": "notify",
                 "message": "Waiting for the network to come up.",
             });
-            println!("{}", event);
+            println!("{event}");
+        } else {
+            let event = json!({
+                "type": "notify",
+                "message": "Establishing a network connection.",
+            });
+            println!("{event}");
+            let event = json!({
+                "type": "setWifi",
+                "enable": true,
+            });
+            println!("{event}");
         }
         let mut line = String::new();
         io::stdin().read_line(&mut line)?;
@@ -222,7 +222,7 @@ fn main() -> Result<(), Error> {
             "query": format!("'F 'O {}", session.last_opened),
             "sortBy": ("opened", false),
         });
-        println!("{}", event);
+        println!("{event}");
 
         let mut line = String::new();
         io::stdin().read_line(&mut line)?;
@@ -238,14 +238,14 @@ fn main() -> Result<(), Error> {
                     format!(
                         "Found {} finished article{}.",
                         results.len(),
-                        if results.len() != 1 { "s" } else { "" }
+                        if results.len() == 1 { "" } else { "s" }
                     )
                 };
                 let event = json!({
                     "type": "notify",
                     "message": &message,
                 });
-                println!("{}", event);
+                println!("{event}");
 
                 for entry in results {
                     if sigterm.load(Ordering::Relaxed) {
@@ -297,8 +297,8 @@ fn main() -> Result<(), Error> {
                                 "type": "removeDocument",
                                 "path": path,
                             });
-                            println!("{}", event);
-                            session.removals_count = session.removals_count.wrapping_add(1)
+                            println!("{event}");
+                            session.removals_count = session.removals_count.wrapping_add(1);
                         }
                     }
 
@@ -316,7 +316,7 @@ fn main() -> Result<(), Error> {
                             format!(
                                 "Marked {} finished article{} as read.",
                                 archivals_count,
-                                if archivals_count != 1 { "s" } else { "" }
+                                if archivals_count == 1 { "" } else { "s" }
                             )
                         } else {
                             "No finished articles marked as read.".to_string()
@@ -325,7 +325,7 @@ fn main() -> Result<(), Error> {
                             "type": "notify",
                             "message": &message,
                         });
-                        println!("{}", event);
+                        println!("{event}");
                     }
 
                     if settings.remove_finished {
@@ -335,7 +335,7 @@ fn main() -> Result<(), Error> {
                             format!(
                                 "Removed {} finished article{}.",
                                 removals_count,
-                                if removals_count != 1 { "s" } else { "" }
+                                if removals_count == 1 { "" } else { "s" }
                             )
                         } else {
                             "No finished articles removed.".to_string()
@@ -344,7 +344,7 @@ fn main() -> Result<(), Error> {
                             "type": "notify",
                             "message": &message,
                         });
-                        println!("{}", event);
+                        println!("{event}");
                     }
                 }
             }
@@ -382,26 +382,30 @@ fn main() -> Result<(), Error> {
 
         if entries.get("total").is_none() {
             break;
-        } else {
-            if page == 1 {
-                let total = entries.get("total").and_then(|v| v.as_u64()).unwrap_or(0);
-                let message = if total == 0 {
-                    "No new articles.".to_string()
-                } else {
-                    format!(
-                        "Found {} new article{}.",
-                        total,
-                        if total != 1 { "s" } else { "" }
-                    )
-                };
-                let event = json!({
-                    "type": "notify",
-                    "message": &message,
-                });
-                println!("{}", event);
-                if total > 0 {
-                    pages_count = entries.get("pages").and_then(|v| v.as_u64()).unwrap_or(1);
-                }
+        } else if page == 1 {
+            let total = entries
+                .get("total")
+                .and_then(plato_core::serde_json::Value::as_u64)
+                .unwrap_or(0);
+            let message = if total == 0 {
+                "No new articles.".to_string()
+            } else {
+                format!(
+                    "Found {} new article{}.",
+                    total,
+                    if total == 1 { "" } else { "s" }
+                )
+            };
+            let event = json!({
+                "type": "notify",
+                "message": &message,
+            });
+            println!("{event}");
+            if total > 0 {
+                pages_count = entries
+                    .get("pages")
+                    .and_then(plato_core::serde_json::Value::as_u64)
+                    .unwrap_or(1);
             }
         }
 
@@ -451,7 +455,7 @@ fn main() -> Result<(), Error> {
                     .unwrap_or_default();
 
                 let author = match (!published_by.is_empty(), !domain_name.is_empty()) {
-                    (true, true) => format!("{} ({})", published_by, domain_name),
+                    (true, true) => format!("{published_by} ({domain_name})"),
                     (true, false) => published_by,
                     _ => domain_name,
                 };
@@ -473,7 +477,7 @@ fn main() -> Result<(), Error> {
 
                 session.since = updated_at.timestamp();
 
-                let epub_path = save_path.join(&format!("{}.epub", id));
+                let epub_path = save_path.join(&format!("{id}.epub"));
                 if epub_path.exists() {
                     continue;
                 }
@@ -522,7 +526,7 @@ fn main() -> Result<(), Error> {
                         "info": &info,
                     });
 
-                    println!("{}", event);
+                    println!("{event}");
                 }
             }
         }
@@ -542,7 +546,7 @@ fn main() -> Result<(), Error> {
             format!(
                 "Downloaded {} article{}.",
                 downloads_count,
-                if downloads_count != 1 { "s" } else { "" }
+                if downloads_count == 1 { "" } else { "s" }
             )
         } else {
             "No articles downloaded.".to_string()
@@ -551,7 +555,7 @@ fn main() -> Result<(), Error> {
             "type": "notify",
             "message": &message,
         });
-        println!("{}", event);
+        println!("{event}");
     }
 
     if !wifi {
@@ -559,7 +563,7 @@ fn main() -> Result<(), Error> {
             "type": "setWifi",
             "enable": false,
         });
-        println!("{}", event);
+        println!("{event}");
     }
 
     save_json(&session, SESSION_PATH).context("can't save session")?;

@@ -98,24 +98,29 @@ pub fn build_context(fb: Box<dyn Framebuffer>) -> Result<Context, Error> {
 
     let levels = settings.frontlight_levels;
     let frontlight: Box<dyn Frontlight> = match CURRENT_DEVICE.frontlight_kind() {
-        FrontlightKind::Standard => StandardFrontlight::new(levels.intensity)
-            .map(|fl| Box::new(fl) as Box<dyn Frontlight>)
-            .unwrap_or_else(|_| {
+        FrontlightKind::Standard => StandardFrontlight::new(levels.intensity).map_or_else(
+            |_| {
                 log_warn!("Warning: Standard frontlight unavailable, using no-op fallback");
                 Box::new(levels) as Box<dyn Frontlight>
-            }),
+            },
+            |fl| Box::new(fl) as Box<dyn Frontlight>,
+        ),
         FrontlightKind::Natural => NaturalFrontlight::new(levels.intensity, levels.warmth)
-            .map(|fl| Box::new(fl) as Box<dyn Frontlight>)
-            .unwrap_or_else(|_| {
-                log_warn!("Warning: Natural frontlight unavailable, using no-op fallback");
-                Box::new(levels) as Box<dyn Frontlight>
-            }),
+            .map_or_else(
+                |_| {
+                    log_warn!("Warning: Natural frontlight unavailable, using no-op fallback");
+                    Box::new(levels) as Box<dyn Frontlight>
+                },
+                |fl| Box::new(fl) as Box<dyn Frontlight>,
+            ),
         FrontlightKind::Premixed => PremixedFrontlight::new(levels.intensity, levels.warmth)
-            .map(|fl| Box::new(fl) as Box<dyn Frontlight>)
-            .unwrap_or_else(|_| {
-                log_warn!("Warning: Premixed frontlight unavailable, using no-op fallback");
-                Box::new(levels) as Box<dyn Frontlight>
-            }),
+            .map_or_else(
+                |_| {
+                    log_warn!("Warning: Premixed frontlight unavailable, using no-op fallback");
+                    Box::new(levels) as Box<dyn Frontlight>
+                },
+                |fl| Box::new(fl) as Box<dyn Frontlight>,
+            ),
         _ => {
             log_warn!("Warning: Unknown frontlight kind, using no-op fallback");
             Box::new(levels) as Box<dyn Frontlight>
@@ -177,7 +182,7 @@ pub fn power_off(
         .ok();
 }
 
-/// Enable or disable WiFi.
+/// Enable or disable `WiFi`.
 pub fn set_wifi(enable: bool, context: &mut Context) {
     if context.settings.wifi == enable {
         return;

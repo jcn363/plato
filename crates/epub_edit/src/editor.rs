@@ -37,7 +37,7 @@ pub struct EpubEditorCore {
 }
 
 impl EpubEditorCore {
-    /// Creates a new EpubEditorCore instance from an EPUB file path.
+    /// Creates a new `EpubEditorCore` instance from an EPUB file path.
     ///
     /// # Errors
     ///
@@ -353,10 +353,7 @@ impl EpubEditorCore {
             regex::Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).expect("Invalid rootfile regex");
 
         if let Some(caps) = rootfile_regex.captures(&container_content) {
-            let opf_path = caps
-                .get(1)
-                .map(|m| m.as_str())
-                .unwrap_or("OEBPS/content.opf");
+            let opf_path = caps.get(1).map_or("OEBPS/content.opf", |m| m.as_str());
             let opf_full_path = self.temp_dir.join(opf_path);
 
             if opf_full_path.exists() {
@@ -395,10 +392,10 @@ impl EpubEditorCore {
     ///
     /// Returns an error if creating the regex pattern for the field tag fails.
     fn update_opf_field(&self, content: &str, tag: &str, value: &str) -> Result<String> {
-        let regex_str = format!(r#"<{}[^>]*>[^<]*</{}>"#, tag, tag);
-        let regex = regex::Regex::new(&regex_str)
-            .map_err(|e| anyhow::format_err!("Invalid regex: {}", e))?;
-        let replace_str = format!("<{}>{}</{}>", tag, value, tag);
+        let regex_str = format!(r"<{tag}[^>]*>[^<]*</{tag}>");
+        let regex =
+            regex::Regex::new(&regex_str).map_err(|e| anyhow::format_err!("Invalid regex: {e}"))?;
+        let replace_str = format!("<{tag}>{value}</{tag}>");
         Ok(regex.replace(content, &replace_str).to_string())
     }
 
@@ -542,10 +539,7 @@ impl EpubEditorCore {
         // Simple heuristic: if we have headings, use them to build a new TOC
         let mut toc_html = String::from("<nav epub:type=\"toc\">\n  <ol>\n");
         for (_level, title, href) in new_toc {
-            toc_html.push_str(&format!(
-                "    <li><a href=\"{}\">{}</a></li>\n",
-                href, title
-            ));
+            toc_html.push_str(&format!("    <li><a href=\"{href}\">{title}</a></li>\n"));
         }
         toc_html.push_str("  </ol>\n</nav>");
 
@@ -562,8 +556,7 @@ impl EpubEditorCore {
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
              <html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\">\n\
              <head><title>Table of Contents</title></head>\n\
-             <body>{}</body>\n</html>",
-            content
+             <body>{content}</body>\n</html>"
         );
         fs::write(toc_path, html).context("Failed to write nav.xhtml")?;
         Ok(())
@@ -606,10 +599,7 @@ impl EpubEditorCore {
             regex::Regex::new(r#"rootfile[^"]*"?([^"]+)"?"#).expect("Invalid rootfile regex");
 
         if let Some(caps) = rootfile_regex.captures(&container_content) {
-            let opf_path = caps
-                .get(1)
-                .map(|m| m.as_str())
-                .unwrap_or("OEBPS/content.opf");
+            let opf_path = caps.get(1).map_or("OEBPS/content.opf", |m| m.as_str());
             let opf_full_path = self.temp_dir.join(opf_path);
 
             if opf_full_path.exists() {
@@ -630,15 +620,13 @@ impl EpubEditorCore {
 
                 for tag in &junk_tags {
                     let re_str = format!(
-                        r#"(?i)<meta[^>]*name="[^"]*{}[^"]*"[^>]*content="[^"]*"[^>]*/>"#,
-                        tag
+                        r#"(?i)<meta[^>]*name="[^"]*{tag}[^"]*"[^>]*content="[^"]*"[^>]*/>"#
                     );
                     let re = regex::Regex::new(&re_str).unwrap();
                     opf_content = re.replace_all(&opf_content, "").to_string();
 
                     let re_str_alt = format!(
-                        r#"(?i)<meta[^>]*content="[^"]*"[^>]*name="[^"]*{}[^"]*"[^>]*/>"#,
-                        tag
+                        r#"(?i)<meta[^>]*content="[^"]*"[^>]*name="[^"]*{tag}[^"]*"[^>]*/>"#
                     );
                     let re_alt = regex::Regex::new(&re_str_alt).unwrap();
                     opf_content = re_alt.replace_all(&opf_content, "").to_string();

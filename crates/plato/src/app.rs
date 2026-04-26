@@ -44,10 +44,10 @@ pub fn run() -> Result<(), Error> {
     let inactive_since = Instant::now();
     let exit_status = ExitStatus::Quit;
 
-    let mut fb: Box<dyn Framebuffer> = if CURRENT_DEVICE.mark() != 8 {
-        Box::new(KoboFramebuffer1::new(FB_DEVICE).context("can't create framebuffer")?)
-    } else {
+    let mut fb: Box<dyn Framebuffer> = if CURRENT_DEVICE.mark() == 8 {
         Box::new(KoboFramebuffer2::new(FB_DEVICE).context("can't create framebuffer")?)
+    } else {
+        Box::new(KoboFramebuffer1::new(FB_DEVICE).context("can't create framebuffer")?)
     };
 
     let initial_rotation = CURRENT_DEVICE.transformed_rotation(fb.rotation());

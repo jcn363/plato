@@ -222,12 +222,8 @@ pub fn handle_device_event(
                 .output()
                 .map(|o| String::from_utf8_lossy(&o.stdout).trim_end().to_string())
                 .unwrap_or_default();
-            let notif = Notification::new(
-                format!("Network is up ({}, {}).", ip, essid),
-                tx,
-                rq,
-                context,
-            );
+            let notif =
+                Notification::new(format!("Network is up ({ip}, {essid})."), tx, rq, context);
             context.flags.insert(DeviceFlags::ONLINE);
             view.children_mut().push(Box::new(notif) as Box<dyn View>);
             if view.is::<plato_core::view::home::Home>() {
@@ -320,7 +316,7 @@ pub fn handle_device_event(
                             "Can't set current directory to {}: {:#}.",
                             ctx.current_dir.display(),
                             e
-                        )
+                        );
                     })
                     .ok();
                 let path = Path::new(SETTINGS_PATH);
@@ -390,7 +386,7 @@ pub fn handle_device_event(
             }
 
             if view.is::<RotationValues>() {
-                println!("Gyro rotation: {}", n);
+                println!("Gyro rotation: {n}");
             }
 
             if let Some(rotation_lock) = context.settings.rotation_lock {
@@ -445,8 +441,7 @@ pub fn handle_launch(
             ref query,
             ref language,
         } => Dictionary::new(context.fb.rect(), query, language, tx, rq, context)
-            .map(|v| Some(Box::new(v) as Box<dyn View>))
-            .unwrap_or(None),
+            .map_or(None, |v| Some(Box::new(v) as Box<dyn View>)),
         AppCmd::EpubEditor { ref path, chapter } => {
             EpubEditor::new(context.fb.rect(), path.clone(), chapter, tx, rq, context)
                 .map(|v| Box::new(v) as Box<dyn View>)
@@ -495,8 +490,7 @@ pub fn handle_launch(
         }
         AppCmd::Opds { ref url } => {
             let url = url
-                .as_ref()
-                .cloned()
+                .clone()
                 .unwrap_or_else(|| context.settings.opds.catalogs[0].url.clone());
             Some(Box::new(OpdsView::new(context.fb.rect(), url, context)) as Box<dyn View>)
         }

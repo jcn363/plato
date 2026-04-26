@@ -221,7 +221,7 @@ impl EpubEditorCore {
     ///
     /// # Returns
     ///
-    /// A vector of (chapter_index, matches) tuples for chapters containing matches.
+    /// A vector of (`chapter_index`, matches) tuples for chapters containing matches.
     #[must_use]
     pub fn search_all_chapters(
         &self,

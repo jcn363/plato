@@ -29,7 +29,7 @@ pub struct IOSFramebuffer {
 }
 
 impl IOSFramebuffer {
-    /// Create a new IOSFramebuffer with the given dimensions
+    /// Create a new `IOSFramebuffer` with the given dimensions
     pub fn new(width: u32, height: u32) -> Result<Self> {
         // Allocate buffer for pixel data
         let buffer_size = (width * height) as usize;
@@ -51,12 +51,14 @@ impl IOSFramebuffer {
 
     /// Get a pointer to the buffer for Metal texture upload
     /// Returns (pointer, width, height) for Swift to use
+    #[must_use]
     pub fn buffer_ptr(&self) -> (*const u8, u32, u32) {
-        (self.buffer.as_ptr() as *const u8, self.width, self.height)
+        (self.buffer.as_ptr().cast::<u8>(), self.width, self.height)
     }
 
     /// Get the buffer as RGBA8888 format for Metal
     /// This converts from Plato's Color format to RGBA8888
+    #[must_use]
     pub fn rgba8888_buffer(&self) -> Vec<u8> {
         let mut rgba = Vec::with_capacity(self.buffer.len() * 4);
         for color in &self.buffer {
@@ -297,34 +299,28 @@ impl Framebuffer for GlobalFramebuffer {
     }
 
     fn width(&self) -> u32 {
-        unsafe { crate::get_framebuffer().map(|fb| fb.width()).unwrap_or(0) }
+        unsafe { crate::get_framebuffer().map_or(0, plato_core::framebuffer::Framebuffer::width) }
     }
 
     fn height(&self) -> u32 {
-        unsafe { crate::get_framebuffer().map(|fb| fb.height()).unwrap_or(0) }
+        unsafe { crate::get_framebuffer().map_or(0, plato_core::framebuffer::Framebuffer::height) }
     }
 
     fn monochrome(&self) -> bool {
         unsafe {
-            crate::get_framebuffer()
-                .map(|fb| fb.monochrome())
-                .unwrap_or(false)
+            crate::get_framebuffer().is_some_and(plato_core::framebuffer::Framebuffer::monochrome)
         }
     }
 
     fn dithered(&self) -> bool {
         unsafe {
-            crate::get_framebuffer()
-                .map(|fb| fb.dithered())
-                .unwrap_or(false)
+            crate::get_framebuffer().is_some_and(plato_core::framebuffer::Framebuffer::dithered)
         }
     }
 
     fn inverted(&self) -> bool {
         unsafe {
-            crate::get_framebuffer()
-                .map(|fb| fb.inverted())
-                .unwrap_or(false)
+            crate::get_framebuffer().is_some_and(plato_core::framebuffer::Framebuffer::inverted)
         }
     }
 }

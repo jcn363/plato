@@ -45,13 +45,13 @@ fn preview_metadata(meta: &EpubMetadata) -> String {
     preview.push_str(&format!("Language: {}\n", meta.language));
     preview.push_str(&format!("Identifier: {}\n", meta.identifier));
     if let Some(ref p) = meta.publisher {
-        preview.push_str(&format!("Publisher: {}\n", p));
+        preview.push_str(&format!("Publisher: {p}\n"));
     }
     if let Some(ref d) = meta.date {
-        preview.push_str(&format!("Date: {}\n", d));
+        preview.push_str(&format!("Date: {d}\n"));
     }
     if let Some(ref d) = meta.description {
-        preview.push_str(&format!("Description: {}\n", d));
+        preview.push_str(&format!("Description: {d}\n"));
     }
     preview
 }
@@ -64,7 +64,7 @@ fn main() -> io::Result<()> {
         .unwrap_or_else(|| "/mnt/onboard".to_string());
 
     println!("EPUB Editor for Plato (using shared core)");
-    println!("Library path: {}", library_path);
+    println!("Library path: {library_path}");
     println!();
 
     let mut current_editor: Option<EpubEditorCore> = None;
@@ -80,7 +80,7 @@ fn main() -> io::Result<()> {
 
         match choice {
             "1" => {
-                println!("\nEPUB files in {}:", library_path);
+                println!("\nEPUB files in {library_path}:");
                 match list_epubs(&library_path) {
                     Ok(epubs) => {
                         for (i, epub) in epubs.iter().enumerate() {
@@ -94,7 +94,7 @@ fn main() -> io::Result<()> {
                             println!("No EPUB files found.");
                         }
                     }
-                    Err(e) => println!("Error listing EPUBs: {}", e),
+                    Err(e) => println!("Error listing EPUBs: {e}"),
                 }
                 println!();
             }
@@ -109,9 +109,9 @@ fn main() -> io::Result<()> {
                     match EpubEditorCore::new(path) {
                         Ok(editor) => {
                             current_editor = Some(editor);
-                            println!("Opened: {}", path);
+                            println!("Opened: {path}");
                         }
-                        Err(e) => println!("Error opening EPUB: {}", e),
+                        Err(e) => println!("Error opening EPUB: {e}"),
                     }
                 } else {
                     println!("Error: Invalid file path.");
@@ -200,7 +200,7 @@ fn main() -> io::Result<()> {
                             let chapter = &editor.chapters[index - 1];
                             println!("\n=== Chapter {}: {} ===", index, chapter.title);
                             let preview = chapter.content.chars().take(500).collect::<String>();
-                            println!("{}\n...[truncated]", preview);
+                            println!("{preview}\n...[truncated]");
 
                             print!("Edit content? (y/n): ");
                             io::stdout().flush()?;
@@ -228,7 +228,7 @@ fn main() -> io::Result<()> {
                                         if let Err(e) =
                                             editor.update_chapter(index - 1, new_content)
                                         {
-                                            println!("Error updating chapter: {}", e);
+                                            println!("Error updating chapter: {e}");
                                         } else {
                                             println!("Chapter updated.");
                                         }
@@ -267,7 +267,7 @@ fn main() -> io::Result<()> {
                     match editor.undo() {
                         Ok(true) => println!("Undo successful."),
                         Ok(false) => println!("Nothing to undo."),
-                        Err(e) => println!("Error during undo: {}", e),
+                        Err(e) => println!("Error during undo: {e}"),
                     }
                 } else {
                     println!("Error: No EPUB file open.");
@@ -279,7 +279,7 @@ fn main() -> io::Result<()> {
                     match editor.redo() {
                         Ok(true) => println!("Redo successful."),
                         Ok(false) => println!("Nothing to redo."),
-                        Err(e) => println!("Error during redo: {}", e),
+                        Err(e) => println!("Error during redo: {e}"),
                     }
                 } else {
                     println!("Error: No EPUB file open.");
@@ -289,8 +289,8 @@ fn main() -> io::Result<()> {
             "10" => {
                 if let Some(ref mut editor) = current_editor {
                     match editor.save() {
-                        Ok(_) => println!("EPUB saved successfully."),
-                        Err(e) => println!("Error saving EPUB: {}", e),
+                        Ok(()) => println!("EPUB saved successfully."),
+                        Err(e) => println!("Error saving EPUB: {e}"),
                     }
                 } else {
                     println!("Error: No EPUB file open.");
@@ -307,8 +307,8 @@ fn main() -> io::Result<()> {
 
                     println!("Optimizing images...");
                     match editor.optimize_images(max_dim) {
-                        Ok(count) => println!("Optimized {} images.", count),
-                        Err(e) => println!("Error optimizing images: {}", e),
+                        Ok(count) => println!("Optimized {count} images."),
+                        Err(e) => println!("Error optimizing images: {e}"),
                     }
                 } else {
                     println!("Error: No EPUB file open.");
@@ -319,8 +319,8 @@ fn main() -> io::Result<()> {
                 if let Some(ref mut editor) = current_editor {
                     println!("Sanitizing CSS...");
                     match editor.sanitize_css() {
-                        Ok(count) => println!("Sanitized CSS in {} locations.", count),
-                        Err(e) => println!("Error sanitizing CSS: {}", e),
+                        Ok(count) => println!("Sanitized CSS in {count} locations."),
+                        Err(e) => println!("Error sanitizing CSS: {e}"),
                     }
                 } else {
                     println!("Error: No EPUB file open.");
@@ -333,7 +333,7 @@ fn main() -> io::Result<()> {
                     match editor.recover_toc() {
                         Ok(true) => println!("TOC recovered/updated."),
                         Ok(false) => println!("No changes needed or no headings found."),
-                        Err(e) => println!("Error recovering TOC: {}", e),
+                        Err(e) => println!("Error recovering TOC: {e}"),
                     }
                 } else {
                     println!("Error: No EPUB file open.");
@@ -344,8 +344,8 @@ fn main() -> io::Result<()> {
                 if let Some(ref mut editor) = current_editor {
                     println!("Minifying HTML...");
                     match editor.minify_html() {
-                        Ok(count) => println!("Minified HTML in {} chapters.", count),
-                        Err(e) => println!("Error minifying HTML: {}", e),
+                        Ok(count) => println!("Minified HTML in {count} chapters."),
+                        Err(e) => println!("Error minifying HTML: {e}"),
                     }
                 } else {
                     println!("Error: No EPUB file open.");
@@ -357,7 +357,7 @@ fn main() -> io::Result<()> {
                     println!("Scrubbing metadata...");
                     match editor.scrub_metadata() {
                         Ok(_count) => println!("Metadata scrubbed successfully."),
-                        Err(e) => println!("Error scrubbing metadata: {}", e),
+                        Err(e) => println!("Error scrubbing metadata: {e}"),
                     }
                 } else {
                     println!("Error: No EPUB file open.");

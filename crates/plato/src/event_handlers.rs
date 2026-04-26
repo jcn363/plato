@@ -372,10 +372,10 @@ pub(crate) fn handle_screenshot_event(
     rq: &mut RenderQueue,
 ) {
     let name = Local::now().format("screenshot-%Y%m%d_%H%M%S.png");
-    let screenshot_path = format!("./{}", name);
+    let screenshot_path = format!("./{name}");
     let msg = match context.fb.save(&screenshot_path) {
-        Err(e) => format!("{}", e),
-        Ok(_) => format!("Saved {}.", name),
+        Err(e) => format!("{e}"),
+        Ok(()) => format!("Saved {name}."),
     };
     let notif = Notification::new(msg, tx, rq, context);
     view.children_mut().push(Box::new(notif) as Box<dyn View>);

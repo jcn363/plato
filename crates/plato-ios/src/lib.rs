@@ -97,6 +97,7 @@ static mut FRAMEBUFFER: Option<framebuffer::IOSFramebuffer> = None;
 /// This function accesses global static mutable state and must only be called
 /// from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
+#[must_use]
 pub unsafe fn get_framebuffer_mut() -> Option<&'static mut framebuffer::IOSFramebuffer> {
     FRAMEBUFFER.as_mut()
 }
@@ -107,6 +108,7 @@ pub unsafe fn get_framebuffer_mut() -> Option<&'static mut framebuffer::IOSFrame
 /// This function accesses global static mutable state and must only be called
 /// from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
+#[must_use]
 pub unsafe fn get_framebuffer() -> Option<&'static framebuffer::IOSFramebuffer> {
     FRAMEBUFFER.as_ref()
 }
@@ -154,8 +156,7 @@ static mut SEGMENTS: Option<TouchSegments> = None;
 pub unsafe extern "C" fn plato_get_context() -> *mut Context {
     CONTEXT
         .as_mut()
-        .map(|c| c as *mut Context)
-        .unwrap_or(std::ptr::null_mut())
+        .map_or(std::ptr::null_mut(), std::ptr::from_mut::<Context>)
 }
 
 /// Initialize the Plato iOS library
@@ -189,22 +190,18 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     let library_path = storage::ios_library_path();
     let settings_path = storage::ios_settings_path();
 
-    log::info!("Library path: {:?}", library_path);
-    log::info!("Settings path: {:?}", settings_path);
+    log::info!("Library path: {library_path:?}");
+    log::info!("Settings path: {settings_path:?}");
 
     // Create required directories before initialization
     if let Err(e) = std::fs::create_dir_all(&library_path) {
-        log::error!("Failed to create library directory {}: {}", library_path, e);
+        log::error!("Failed to create library directory {library_path}: {e}");
         return false;
     }
 
     let settings_dir = Path::new(&settings_path);
     if let Err(e) = std::fs::create_dir_all(settings_dir) {
-        log::error!(
-            "Failed to create settings directory {}: {}",
-            settings_path,
-            e
-        );
+        log::error!("Failed to create settings directory {settings_path}: {e}");
         return false;
     }
 
@@ -226,7 +223,7 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     let fb = match framebuffer::IOSFramebuffer::new(width, height) {
         Ok(fb) => fb,
         Err(e) => {
-            log::error!("Failed to create framebuffer: {}", e);
+            log::error!("Failed to create framebuffer: {e}");
             return false;
         }
     };
@@ -245,7 +242,7 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
         match load_toml::<Settings, _>(&settings_path) {
             Ok(s) => s,
             Err(e) => {
-                log::error!("Failed to load settings: {}", e);
+                log::error!("Failed to load settings: {e}");
                 Settings::default()
             }
         }
@@ -277,7 +274,7 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     let library = match Library::new(&library_settings.path, library_settings.mode) {
         Ok(lib) => lib,
         Err(e) => {
-            log::error!("Failed to load library: {}", e);
+            log::error!("Failed to load library: {e}");
             return false;
         }
     };
@@ -286,7 +283,7 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     let fonts = match Fonts::load() {
         Ok(f) => f,
         Err(e) => {
-            log::error!("Failed to load fonts: {}", e);
+            log::error!("Failed to load fonts: {e}");
             return false;
         }
     };
@@ -346,7 +343,7 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
             log::info!("Home view initialized successfully");
         }
         Err(e) => {
-            log::error!("Failed to create Home view: {}", e);
+            log::error!("Failed to create Home view: {e}");
             return false;
         }
     }
@@ -364,13 +361,13 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_resize(width: u32, height: u32) -> bool {
-    log::info!("Resizing framebuffer to {}x{}", width, height);
+    log::info!("Resizing framebuffer to {width}x{height}");
 
     // Create new framebuffer with new dimensions
     let new_fb = match framebuffer::IOSFramebuffer::new(width, height) {
         Ok(fb) => fb,
         Err(e) => {
-            log::error!("Failed to create new framebuffer: {}", e);
+            log::error!("Failed to create new framebuffer: {e}");
             return false;
         }
     };
@@ -400,7 +397,7 @@ pub unsafe extern "C" fn plato_resize(width: u32, height: u32) -> bool {
                 true
             }
             Err(e) => {
-                log::error!("Failed to recreate view after resize: {}", e);
+                log::error!("Failed to recreate view after resize: {e}");
                 false
             }
         }
@@ -414,14 +411,14 @@ pub unsafe extern "C" fn plato_resize(width: u32, height: u32) -> bool {
 /// Called from Swift when touch down occurs
 ///
 /// # Safety
-/// This function accesses global static state (EVENT_TX) and must only be
+/// This function accesses global static state (`EVENT_TX`) and must only be
 /// called from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_touch_down(id: i32, x: i32, y: i32) {
     if let Some(ref tx) = EVENT_TX {
         crate::input::translate_touch_event(id, x as f32, y as f32, 0, tx);
-        log::debug!("Touch down at ({}, {}) with id {}", x, y, id);
+        log::debug!("Touch down at ({x}, {y}) with id {id}");
     }
 }
 
@@ -429,14 +426,14 @@ pub unsafe extern "C" fn plato_touch_down(id: i32, x: i32, y: i32) {
 /// Called from Swift when touch move occurs
 ///
 /// # Safety
-/// This function accesses global static state (EVENT_TX) and must only be
+/// This function accesses global static state (`EVENT_TX`) and must only be
 /// called from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_touch_move(id: i32, x: i32, y: i32) {
     if let Some(ref tx) = EVENT_TX {
         crate::input::translate_touch_event(id, x as f32, y as f32, 1, tx);
-        log::debug!("Touch move at ({}, {}) with id {}", x, y, id);
+        log::debug!("Touch move at ({x}, {y}) with id {id}");
     }
 }
 
@@ -444,14 +441,14 @@ pub unsafe extern "C" fn plato_touch_move(id: i32, x: i32, y: i32) {
 /// Called from Swift when touch up occurs
 ///
 /// # Safety
-/// This function accesses global static state (EVENT_TX) and must only be
+/// This function accesses global static state (`EVENT_TX`) and must only be
 /// called from the main thread after `plato_init` has been called.
 #[cfg(feature = "ios")]
 #[no_mangle]
 pub unsafe extern "C" fn plato_touch_up(id: i32, x: i32, y: i32) {
     if let Some(ref tx) = EVENT_TX {
         crate::input::translate_touch_event(id, x as f32, y as f32, 2, tx);
-        log::debug!("Touch up at ({}, {}) with id {}", x, y, id);
+        log::debug!("Touch up at ({x}, {y}) with id {id}");
     }
 }
 
@@ -526,11 +523,7 @@ pub unsafe extern "C" fn plato_render(buffer_ptr: *mut u8, len: usize) -> bool {
             // Validate buffer size matches framebuffer dimensions
             let expected_len = fb.width() * fb.height() * 4;
             if len != expected_len as usize {
-                log::error!(
-                    "Buffer size mismatch: expected {} bytes, got {} bytes",
-                    expected_len,
-                    len
-                );
+                log::error!("Buffer size mismatch: expected {expected_len} bytes, got {len} bytes");
                 return false;
             }
             fb.fill_rgba_buffer(buffer);
