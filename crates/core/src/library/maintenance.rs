@@ -168,6 +168,12 @@ impl Library {
                 .ok();
             self.has_db_changed = false;
         }
+
+        // Save collections
+        self.collections
+            .save(self.home.join("collections.json"))
+            .map_err(|e| log_error!("Can't save collections: {:#}.", e))
+            .ok();
     }
 
     pub fn is_database_empty(&self) -> Option<bool> {

@@ -14,7 +14,7 @@
 
 use crate::helpers::{load_json, Fingerprint, Fp};
 use crate::log_error;
-use crate::metadata::{Info, ReaderInfo, SearchIndex, SortMethod};
+use crate::metadata::{Collections, Info, ReaderInfo, SearchIndex, SortMethod};
 use crate::settings::{ImportSettings, LibraryMode};
 use anyhow::{bail, Error};
 use dashmap::DashMap;
@@ -53,6 +53,8 @@ pub struct Library {
     pub concurrent_cache: Arc<DashMap<String, Info>>,
     /// Full-text search index for document content
     pub search_index: SearchIndex,
+    /// Collection management
+    pub collections: Collections,
 }
 
 impl Library {
@@ -84,6 +86,7 @@ impl Library {
             import_settings,
             concurrent_cache: Arc::new(DashMap::new()),
             search_index: SearchIndex::new(),
+            collections: Self::load_collections(&home),
         })
     }
 
@@ -94,6 +97,11 @@ impl Library {
             }
         }
         Ok(())
+    }
+
+    fn load_collections<P: AsRef<Path>>(home: P) -> Collections {
+        let path = home.as_ref().join("collections.json");
+        Collections::load(path).unwrap_or_default()
     }
 
     fn load_database<P: AsRef<Path>>(
