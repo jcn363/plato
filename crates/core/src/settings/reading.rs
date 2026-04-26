@@ -134,6 +134,8 @@ pub struct CssOverrides {
     pub font_family: Option<String>,
     pub font_size: Option<f32>,
     pub line_height: Option<f32>,
+    pub letter_spacing: Option<f32>,
+    pub word_spacing: Option<f32>,
     pub margin_top: Option<i32>,
     pub margin_bottom: Option<i32>,
     pub margin_left: Option<i32>,
@@ -157,6 +159,16 @@ impl CssOverrides {
         // Validate line height if set (0.5 to 3.0 is reasonable)
         if let Some(height) = self.line_height {
             validate_finite_f32(height, "css_overrides.line_height", 0.5, 3.0)?;
+        }
+
+        // Validate letter spacing if set (0.0 to 1.0 em is reasonable)
+        if let Some(spacing) = self.letter_spacing {
+            validate_finite_f32(spacing, "css_overrides.letter_spacing", 0.0, 1.0)?;
+        }
+
+        // Validate word spacing if set (0.0 to 2.0 em is reasonable)
+        if let Some(spacing) = self.word_spacing {
+            validate_finite_f32(spacing, "css_overrides.word_spacing", 0.0, 2.0)?;
         }
 
         // Validate margins if set (0 to 100 pixels is reasonable)

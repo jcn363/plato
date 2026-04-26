@@ -174,6 +174,92 @@ pub fn build_rows(
 
     y += small_height;
 
+    let label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "Line Height".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(label) as Box<dyn View>);
+
+    let line_height_text = format!("{:.1}", settings.reader.line_height);
+    let ctrl_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let toggle = Button::new(
+        ctrl_rect,
+        Event::Select(EntryId::IncreaseLineHeight),
+        line_height_text,
+    );
+    children.push(Box::new(toggle) as Box<dyn View>);
+
+    y += small_height;
+
+    let label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "Letter Spacing".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(label) as Box<dyn View>);
+
+    let letter_spacing = settings.reader.css_overrides.letter_spacing.unwrap_or(0.0);
+    let spacing_text = format!("{:.1}", letter_spacing);
+    let ctrl_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let toggle = Button::new(
+        ctrl_rect,
+        Event::Select(EntryId::IncreaseLetterSpacing),
+        spacing_text,
+    );
+    children.push(Box::new(toggle) as Box<dyn View>);
+
+    y += small_height;
+
+    let label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "Word Spacing".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(label) as Box<dyn View>);
+
+    let word_spacing = settings.reader.css_overrides.word_spacing.unwrap_or(0.0);
+    let spacing_text = format!("{:.1}", word_spacing);
+    let ctrl_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let toggle = Button::new(
+        ctrl_rect,
+        Event::Select(EntryId::IncreaseWordSpacing),
+        spacing_text,
+    );
+    children.push(Box::new(toggle) as Box<dyn View>);
+
+    y += small_height;
+
     (children, y)
 }
 
@@ -265,6 +351,70 @@ pub fn handle_event(
                     .to_string(),
                     rq,
                 );
+            }
+            true
+        }
+        Event::Select(EntryId::IncreaseLineHeight) => {
+            context.settings.reader.line_height = (context.settings.reader.line_height + 0.1).min(3.0);
+            let new_text = format!("{:.1}", context.settings.reader.line_height);
+            if let Some(btn) = children[offset + 11].downcast_mut::<Button>() {
+                btn.update(new_text, rq);
+            }
+            true
+        }
+        Event::Select(EntryId::DecreaseLineHeight) => {
+            context.settings.reader.line_height = (context.settings.reader.line_height - 0.1).max(0.5);
+            let new_text = format!("{:.1}", context.settings.reader.line_height);
+            if let Some(btn) = children[offset + 11].downcast_mut::<Button>() {
+                btn.update(new_text, rq);
+            }
+            true
+        }
+        Event::Select(EntryId::IncreaseLetterSpacing) => {
+            let current = context.settings.reader.css_overrides.letter_spacing.unwrap_or(0.0);
+            let new_value = (current + 0.1).min(1.0);
+            context.settings.reader.css_overrides.letter_spacing = Some(new_value);
+            let new_text = format!("{:.1}", new_value);
+            if let Some(btn) = children[offset + 13].downcast_mut::<Button>() {
+                btn.update(new_text, rq);
+            }
+            true
+        }
+        Event::Select(EntryId::DecreaseLetterSpacing) => {
+            let current = context.settings.reader.css_overrides.letter_spacing.unwrap_or(0.0);
+            let new_value = (current - 0.1).max(0.0);
+            context.settings.reader.css_overrides.letter_spacing = if new_value == 0.0 {
+                None
+            } else {
+                Some(new_value)
+            };
+            let new_text = format!("{:.1}", new_value);
+            if let Some(btn) = children[offset + 13].downcast_mut::<Button>() {
+                btn.update(new_text, rq);
+            }
+            true
+        }
+        Event::Select(EntryId::IncreaseWordSpacing) => {
+            let current = context.settings.reader.css_overrides.word_spacing.unwrap_or(0.0);
+            let new_value = (current + 0.1).min(2.0);
+            context.settings.reader.css_overrides.word_spacing = Some(new_value);
+            let new_text = format!("{:.1}", new_value);
+            if let Some(btn) = children[offset + 15].downcast_mut::<Button>() {
+                btn.update(new_text, rq);
+            }
+            true
+        }
+        Event::Select(EntryId::DecreaseWordSpacing) => {
+            let current = context.settings.reader.css_overrides.word_spacing.unwrap_or(0.0);
+            let new_value = (current - 0.1).max(0.0);
+            context.settings.reader.css_overrides.word_spacing = if new_value == 0.0 {
+                None
+            } else {
+                Some(new_value)
+            };
+            let new_text = format!("{:.1}", new_value);
+            if let Some(btn) = children[offset + 15].downcast_mut::<Button>() {
+                btn.update(new_text, rq);
             }
             true
         }
