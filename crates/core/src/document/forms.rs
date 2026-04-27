@@ -18,7 +18,7 @@
 #![cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
 
 use anyhow::{bail, Context, Error};
-use lopdf::{Dictionary, Document};
+use lopdf::{Dictionary, Document, Object};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -359,23 +359,68 @@ pub struct FormExporter;
 
 impl FormExporter {
     /// Export form values to a new PDF file
-    /// 
-    /// Note: This is a placeholder implementation. Full PDF modification with lopdf
-    /// requires more complex handling of the AcroForm structure. For now, this returns
-    /// the form values which can be used by the caller to construct a filled PDF.
     pub fn export_to_pdf(
-        _input_path: &Path,
-        _output_path: &Path,
-        _values: &FormValues,
+        input_path: &Path,
+        output_path: &Path,
+        values: &FormValues,
     ) -> Result<(), Error> {
-        // TODO: Implement proper PDF form field modification
-        // This requires:
-        // 1. Getting mutable access to the AcroForm dictionary
-        // 2. Updating field values in the correct format
-        // 3. Handling appearance streams for form fields
-        // 
-        // For now, we return an error indicating this is not yet implemented
-        bail!("PDF form field export not yet implemented - requires lopdf AcroForm modification")
+        let mut doc = Document::load(input_path)
+            .with_context(|| format!("Failed to load PDF: {}", input_path.display()))?;
+
+        // Get the AcroForm dictionary
+        let catalog = doc.catalog()
+            .context("Failed to get catalog")?;
+        
+        let acroform = catalog.get(b"AcroForm")
+            .ok()
+            .and_then(|obj| obj.as_dict().ok())
+            .context("No AcroForm found in PDF")?;
+
+        // Get the Fields array
+        let fields_array = acroform.get(b"Fields")
+            .ok()
+            .and_then(|obj| obj.as_array().ok())
+            .context("No Fields array found in AcroForm")?;
+
+        // Collect field IDs and their values to update
+        let mut field_updates: Vec<((u32, u16), String)> = Vec::new();
+        
+        for field_obj in fields_array {
+            if let Ok(field_dict) = field_obj.as_dict() {
+                if let Ok(name_obj) = field_dict.get(b"T") {
+                    if let Ok(name_bytes) = name_obj.as_str() {
+                        let name = std::str::from_utf8(name_bytes)
+                            .unwrap_or_default()
+                            .to_string();
+                        
+                        if let Some(value) = values.get(&name) {
+                            if let Ok(field_id) = field_obj.as_reference() {
+                                field_updates.push((field_id, value.clone()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Update field values using the document's object map
+        for (field_id, value) in field_updates {
+            if let Some(obj) = doc.objects.get_mut(&field_id) {
+                if let Ok(field_dict) = obj.as_dict_mut() {
+                    let value_obj = Object::String(
+                        value.clone().into_bytes(),
+                        lopdf::StringFormat::Literal
+                    );
+                    field_dict.set(b"V", value_obj);
+                }
+            }
+        }
+
+        // Save the modified PDF
+        doc.save(output_path)
+            .with_context(|| format!("Failed to save PDF: {}", output_path.display()))?;
+
+        Ok(())
     }
 
     /// Get form values as a serializable format

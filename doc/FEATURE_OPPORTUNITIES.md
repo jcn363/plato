@@ -554,7 +554,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 - ✅ Backend: Form value storage and serialization
 - ✅ UI: Form input components (forms view with field list display)
 - ✅ Integration: PDF viewer form UI overlay (menu entry added)
-- ⏳ Export: PDF form field value export (requires lopdf AcroForm modification)
+- ✅ Export: PDF form field value export (lopdf AcroForm modification)
 
 ---
 
