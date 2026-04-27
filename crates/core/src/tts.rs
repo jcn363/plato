@@ -20,9 +20,10 @@ use anyhow::{Error, Result};
 use serde::{Deserialize, Serialize};
 
 /// TTS playback state
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum TtsState {
     /// TTS is idle (not speaking)
+    #[default]
     Idle,
     /// TTS is currently speaking
     Speaking,
@@ -32,12 +33,6 @@ pub enum TtsState {
     Initializing,
     /// TTS engine encountered an error
     Error,
-}
-
-impl Default for TtsState {
-    fn default() -> Self {
-        TtsState::Idle
-    }
 }
 
 /// Options for TTS utterance

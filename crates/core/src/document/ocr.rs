@@ -31,7 +31,8 @@ impl OcrManager {
         let config = pdfpurr::ocr::OcrConfig::default();
         doc.ocr_page(page_num, &engine, &config)?;
         // After OCR, extract the text from the page
-        let text = doc.extract_page_text(page_num)
+        let text = doc
+            .extract_page_text(page_num)
             .map_err(|e| anyhow::anyhow!("Failed to extract text: {}", e))?;
         Ok(text)
     }

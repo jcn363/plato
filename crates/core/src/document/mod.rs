@@ -93,12 +93,12 @@ mod pdfpurr;
 mod progressive_loader;
 pub mod sysinfo;
 
+#[cfg(feature = "ocr")]
+pub mod ocr;
 #[cfg(target_os = "linux")]
 pub mod signatures;
 #[cfg(target_os = "linux")]
 pub mod validation;
-#[cfg(feature = "ocr")]
-pub mod ocr;
 
 #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
 pub mod forms;

@@ -574,13 +574,33 @@ impl EntryId {
             EntryId::ValidatePdfX(_, _) => "ValidatePdfX",
             #[cfg(all(feature = "ocr", target_os = "linux"))]
             EntryId::OcrDocument(_) => "OcrDocument",
-            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))]
+            #[cfg(any(
+                target_os = "android",
+                target_os = "linux",
+                target_os = "macos",
+                target_os = "windows"
+            ))]
             EntryId::TtsPlay => "TtsPlay",
-            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))]
+            #[cfg(any(
+                target_os = "android",
+                target_os = "linux",
+                target_os = "macos",
+                target_os = "windows"
+            ))]
             EntryId::TtsPause => "TtsPause",
-            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))]
+            #[cfg(any(
+                target_os = "android",
+                target_os = "linux",
+                target_os = "macos",
+                target_os = "windows"
+            ))]
             EntryId::TtsStop => "TtsStop",
-            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))]
+            #[cfg(any(
+                target_os = "android",
+                target_os = "linux",
+                target_os = "macos",
+                target_os = "windows"
+            ))]
             EntryId::TtsSetRate(_) => "TtsSetRate",
             EntryId::AllBooks => "AllBooks",
             EntryId::Collection(_) => "Collection",

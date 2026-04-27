@@ -158,11 +158,7 @@ impl PdfAValidator {
         let mut result = ValidationResult::new(standard);
 
         // Use PDFPurr's built-in PDF/A validation
-        let pdfpurr_level = match level {
-            PdfALevel::A1b => PdfPurrALevel::A1b,
-            PdfALevel::A2b => PdfPurrALevel::A2b,
-            PdfALevel::A3b => PdfPurrALevel::A3b,
-        };
+        let pdfpurr_level = pdfpurr::PdfALevel::from(level);
 
         let report = doc.validate_pdfa(pdfpurr_level);
 
@@ -231,11 +227,7 @@ impl PdfXValidator {
         let mut result = ValidationResult::new(standard);
 
         // Use PDFPurr's built-in PDF/X validation
-        let pdfpurr_level = match level {
-            PdfXLevel::X1a => PdfPurrXLevel::X1a,
-            PdfXLevel::X3 => PdfPurrXLevel::X3,
-            PdfXLevel::X4 => PdfPurrXLevel::X4,
-        };
+        let pdfpurr_level = pdfpurr::PdfXLevel::from(level);
 
         let report = doc.validate_pdfx(pdfpurr_level);
 
@@ -357,5 +349,26 @@ mod tests {
 
         assert!(result.summary().contains("not compliant"));
         assert!(result.summary().contains("1 critical"));
+    }
+}
+
+// From implementations to convert validation types to pdfpurr types
+impl From<PdfALevel> for pdfpurr::PdfALevel {
+    fn from(level: PdfALevel) -> Self {
+        match level {
+            PdfALevel::A1b => pdfpurr::PdfALevel::A1b,
+            PdfALevel::A2b => pdfpurr::PdfALevel::A2b,
+            PdfALevel::A3b => pdfpurr::PdfALevel::A3b,
+        }
+    }
+}
+
+impl From<PdfXLevel> for pdfpurr::PdfXLevel {
+    fn from(level: PdfXLevel) -> Self {
+        match level {
+            PdfXLevel::X1a => pdfpurr::PdfXLevel::X1a,
+            PdfXLevel::X3 => pdfpurr::PdfXLevel::X3,
+            PdfXLevel::X4 => pdfpurr::PdfXLevel::X4,
+        }
     }
 }
