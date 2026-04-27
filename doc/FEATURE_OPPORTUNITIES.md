@@ -1,6 +1,6 @@
 # Feature Opportunities
 
-> **Last Updated**: 2026-04-26
+> **Last Updated**: 2026-04-27
 > **Related Documents**: [NOT_IMPLEMENTED.md](./NOT_IMPLEMENTED.md) | [IMPLEMENTED_FEATURES.md](./IMPLEMENTED_FEATURES.md) | [PDF_FEATURES.md](./PDF_FEATURES.md) | [AGENTS.md](../AGENTS.md)
 
 This document identifies potential new features and enhancements for Plato, prioritized by value, implementation effort, and alignment with the project's mission to optimize the e-reader experience on Kobo devices.
@@ -9,7 +9,7 @@ This document identifies potential new features and enhancements for Plato, prio
 
 **Current State**:
 
-- 53 features implemented in the last 12 months
+- 60 features implemented in the last 12 months
 - Pure Rust migration complete (no C dependencies)
 - All files AGENTS.md compliant (under 1,000 lines)
 - Comprehensive PDF manipulation (PDFPurr + lopdf)
@@ -183,6 +183,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 7/10 (High)
 **User Value**: High
 **Implementation Effort**: High
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Integrate with Calibre's Content Server for wireless book transfer and metadata management.
 
@@ -214,6 +215,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 6/10 (Medium to High)
 **User Value**: Moderate
 **Implementation Effort**: High
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Convert EPUB documents to PDF format for sharing or printing.
 
@@ -337,6 +339,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 8/10 (High)
 **User Value**: Moderate
 **Implementation Effort**: High
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Integrate with Goodreads API for book discovery, reviews, and reading tracking.
 
@@ -366,6 +369,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 7/10 (High)
 **User Value**: Moderate
 **Implementation Effort**: High
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Integrate with Pocket or Instapaper for article saving and reading.
 
@@ -393,6 +397,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 8/10 (High)
 **User Value**: Moderate
 **Implementation Effort**: High
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Integrate with cloud storage providers (Dropbox, Google Drive, OneDrive) for file sync.
 
@@ -423,6 +428,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 6/10 (Medium to High)
 **User Value**: Low
 **Implementation Effort**: High
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Compare two versions of a document and show differences.
 
@@ -451,6 +457,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 4/10 (Medium)
 **User Value**: Low
 **Implementation Effort**: Moderate
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Reorder PDF pages for booklet printing (2-up, foldable).
 
