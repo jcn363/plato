@@ -88,42 +88,22 @@ cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings
 
 ---
 
-## 🔧 Additional Setup (Optional)
+##  Build Status
 
-### Cross-Compilation Verification
-
-Verify ARM builds for Kobo devices:
-
-```bash
-./build.sh arm skip --no-clippy --no-fmt
-```
-
-### CI/CD Integration
-
-Consider GitHub Actions for:
-- ARM cross-compilation
-- clippy and fmt checks
-
----
-
-## 📊 Build Status Summary
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Rust Toolchain | ✅ | 1.93.0, all targets |
-| Native Dependencies | ✅ | Pure Rust (no C libs) |
-| PDF Rendering | ✅ | PDFPurr 0.4.0 |
-| PDF Manipulation | ✅ | lopdf |
-| ARM Build | ✅ | Successfully builds for Kobo |
-| Unit Tests | ✅ | No C libraries needed |
-| Clippy | ✅ | Passes |
-| Formatting | ✅ | rustfmt.toml configured |
+| Component           | Status  | Notes                        |
+|---------------------|---------|------------------------------|
+| Rust Toolchain      | ✅      | 1.93.0, all targets          |
+| Native Dependencies | ✅      | Pure Rust (no C libs)        |
+| PDF Rendering       | ✅      | PDFPurr 0.4.0                |
+| PDF Manipulation    | ✅      | lopdf                        |
+| ARM Build           | ✅      | Successfully builds for Kobo |
+| Unit Tests          | ✅      | No C libraries needed        |
+| Clippy              | ✅      | Passes                       |
+| Formatting          | ✅      | rustfmt.toml configured      |
 
 ---
 
 ## 📚 Project Structure
-
-The Plato workspace consists of:
 
 | Crate         | Purpose                                                |
 |---------------|--------------------------------------------------------|
@@ -136,17 +116,8 @@ The Plato workspace consists of:
 
 ---
 
-## 🎯 Development Workflow
+## 🎯 Quick Workflow
 
-For day-to-day development:
-
-1. **Make changes** to source code
-2. **Run `cargo fmt`** to maintain code style
-3. **Check compilation**: `cargo check --target x86_64-unknown-linux-gnu`
-4. **Run clippy**: `cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings`
-5. **Commit changes** with descriptive messages
-6. **Test on device/emulator** when functionality changes
-
----
-
-*Last updated: 2026-04-27*
+1. Make changes → `cargo fmt` → `cargo check --target x86_64-unknown-linux-gnu`
+2. `cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings`
+3. Commit with descriptive messages
