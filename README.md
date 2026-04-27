@@ -152,7 +152,7 @@ cargo test --target x86_64-unknown-linux-gnu
 
 The project has migrated to pure Rust libraries, eliminating all C dependencies:
 
-- **Compression/parsing**: `bzip2`, `html5ever`, `openjp2`, `hayro-jbig2`, `djvu-rs`
+- **Compression/parsing**: `bzip2`, `html5ever`, `justjp2`, `hayro-jbig2`, `djvu-rs`
 - **Font stack**: `skrifa`, `rustybuzz`, `ab_glyph` (replaces FreeType + HarfBuzz)
 - **PDF rendering**: `pdfpurr` (pure Rust, replaces MuPDF)
 

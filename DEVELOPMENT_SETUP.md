@@ -31,7 +31,7 @@ The Plato project has been successfully set up for development on this machine. 
 - **Cross-compilation**: ✅ ARM toolchains configured in `.cargo/config.toml`
 - **Build profiles**: ✅ Custom profiles for ARM, ARM64, and embedded targets
 - **Pure Rust libraries**:
-  - `bzip2`, `html5ever`, `openjp2`, `hayro-jbig2`, `djvu-rs` - Rust compression/parsing
+  - `bzip2`, `html5ever`, `justjp2`, `hayro-jbig2`, `djvu-rs` - Rust compression/parsing
   - `skrifa`, `rustybuzz`, `ab_glyph` - Rust font stack (replaces FreeType + HarfBuzz)
   - `pdfpurr` - Pure Rust PDF (replaces MuPDF)
 

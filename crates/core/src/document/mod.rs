@@ -83,6 +83,7 @@
 
 pub mod buffer_pool;
 pub mod cache;
+mod comic;
 pub mod diff;
 mod djvu;
 pub mod epub;
@@ -117,6 +118,7 @@ use serde::{Deserialize, Serialize};
 use unicode_normalization::char::is_combining_mark;
 use unicode_normalization::UnicodeNormalization;
 
+use self::comic::ComicDocument;
 use self::djvu::DjvuDocument;
 use self::epub::EpubDocument;
 use self::html::HtmlDocument;
@@ -455,6 +457,16 @@ pub fn open<P: AsRef<Path>>(path: P) -> Option<Box<dyn Document>> {
             .map_err(|e| {
                 log_error!(
                     "Failed to open DJVU {}: {}. Please check the file is not corrupted.",
+                    path.as_ref().display(),
+                    e
+                )
+            })
+            .map(|d| Box::new(d) as Box<dyn Document>)
+            .ok(),
+        "cbz" | "cbr" => ComicDocument::new(&path)
+            .map_err(|e| {
+                log_error!(
+                    "Failed to open comic archive {}: {}. Please check the file is not corrupted.",
                     path.as_ref().display(),
                     e
                 )

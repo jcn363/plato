@@ -1,25 +1,27 @@
 # Format Support for Plato
 
-> **Last Updated**: 2026-04-22
+> **Last Updated**: 2026-04-27
 > **Related Documents**: [PDF_FEATURES.md](./PDF_FEATURES.md) | [BUILD.md](./BUILD.md)
 
 This document catalogs the document and image format support in Plato, detailing implementation status, technical decisions, and dependencies.
 
 ## Quick Reference
 
- | Format Type | Format          | Status          | Library/Crate  | Notes                               |
- |-------------|-----------------|-----------------|----------------|-------------------------------------|
- | Document    | PDF             | ✅ Implemented  | PDFPurr, lopdf | Full PDF rendering and manipulation |
- | Document    | EPUB            | ✅ Implemented  | Custom         | HTML/CSS rendering engine           |
- | Document    | HTML            | ✅ Implemented  | Custom         | HTML/CSS rendering engine           |
- | Document    | DJVU            | ✅ Implemented  | djvu-rs        | Basic page navigation               |
- | Image       | PNG             | ✅ Implemented  | image crate    | Standard format support             |
- | Image       | JPEG            | ✅ Implemented  | image crate    | Standard format support             |
- | Image       | GIF             | ✅ Implemented  | image crate    | Standard format support             |
- | Image       | BMP             | ✅ Implemented  | image crate    | Standard format support             |
- | Image       | WebP            | ✅ Implemented  | image crate    | Standard format support             |
- | Image       | TGA             | ✅ Implemented  | image crate    | Standard format support             |
- | Image       | JPEG 2000 (JP2) | 🚧 Placeholder  | openjp2        | Requires openjp2 integration        |
+ | Format Type | Format          | Status         | Library/Crate  | Notes                               |
+ |-------------|-----------------|----------------|----------------|-------------------------------------|
+ | Document    | PDF             | ✅ Implemented | PDFPurr, lopdf | Full PDF rendering and manipulation |
+ | Document    | EPUB            | ✅ Implemented | Custom         | HTML/CSS rendering engine           |
+ | Document    | HTML            | ✅ Implemented | Custom         | HTML/CSS rendering engine           |
+ | Document    | DJVU            | ✅ Implemented | djvu-rs        | Basic page navigation               |
+ | Document    | CBZ             | ✅ Implemented | zip crate      | Comic book ZIP archives             |
+ | Document    | CBR             | 🚧 Planned     | unrar          | Comic book RAR archives (planned)   |
+ | Image       | PNG             | ✅ Implemented | image crate    | Standard format support             |
+ | Image       | JPEG            | ✅ Implemented | image crate    | Standard format support             |
+ | Image       | GIF             | ✅ Implemented | image crate    | Standard format support             |
+ | Image       | BMP             | ✅ Implemented | image crate    | Standard format support             |
+ | Image       | WebP            | ✅ Implemented | image crate    | Standard format support             |
+ | Image       | TGA             | ✅ Implemented | image crate    | Standard format support             |
+ | Image       | JPEG 2000 (JP2) | ✅ Implemented | justjp2        | Pure Rust JPEG 2000 decoder         |
 
 ## Document Formats
 
@@ -107,6 +109,42 @@ let dims = doc.dims(0)?;
 - Hyperlink support
 - Metadata extraction
 
+### CBZ
+
+**Status**: ✅ IMPLEMENTED - Comic book ZIP archive support
+
+**Implementation Details**:
+
+- Module: `document/comic.rs`
+- Library: `zip` crate (already available in workspace)
+- Format: ZIP archives containing image files (PNG, JPEG, GIF, BMP, WebP)
+- Features: Page navigation, image rendering, alphabetical page ordering
+
+**File Extensions**: `.cbz`, `.zip`
+
+**Usage Example**:
+
+```rust
+use plato_core::document::ComicDocument;
+
+let doc = ComicDocument::new(&path)?;
+let page_count = doc.pages_count();
+let dims = doc.dims(0)?;
+```
+
+**Current Limitations**:
+
+- CBR (RAR) format not yet supported (requires additional RAR library)
+- No text layer extraction (images only)
+- No table of contents support
+- Fixed page dimensions (no reflow)
+
+**Future Enhancements**:
+
+- CBR (RAR) archive support
+- Metadata extraction from ComicInfo.xml
+- Thumbnail generation for cover display
+
 ## Image Formats
 
 ### Standard Formats
@@ -139,24 +177,25 @@ let rgba = img.to_rgba8();
 
 ### JPEG 2000 (JP2)
 
-**Status**: 🚧 PLACEHOLDER - Module created, requires openjp2 integration
+**Status**: ✅ IMPLEMENTED - Full JPEG 2000 support via justjp2
 
 **Implementation Details**:
 
 - Module: `image_formats/jp2.rs`
-- Library: `openjp2` (Rust bindings for OpenJPEG)
-- Current Status: Placeholder implementation
-- Reason: The `image` crate does not have a `jp2` feature, so direct JPEG 2000 support requires the `openjp2` crate
+- Library: `justjp2` (Pure Rust JPEG 2000 encoder and decoder)
+- Features: Decode JPEG 2000 images, convert to DynamicImage, support for JP2, JPX, and J2K formats
+- Auto-detection: Automatically detects JP2 vs J2K file formats
 
-**Current Limitations**:
+**Current Capabilities**:
 
-- Decoding not yet implemented (returns error)
-- Requires openjp2 integration for full functionality
-- File detection works (is_jp2 function)
+- Decode JPEG 2000 images from file
+- Convert to standard image formats (RGB, RGBA, Grayscale)
+- Handle different color spaces (1, 3, or 4 components)
+- File format detection by extension
 
 **Dependencies**:
 
-- `openjp2` - Rust bindings for OpenJPEG library (already in Cargo.toml)
+- `justjp2` - Pure Rust JPEG 2000 encoder and decoder
 
 **File Extensions**: `.jp2`, `.jpx`, `.j2k`
 
@@ -169,12 +208,6 @@ if is_jp2(&path) {
     let image = load_jp2(&path)?;
 }
 ```
-
-**Future Work**:
-
-- Integrate openjp2::decode for JPEG 2000 decoding
-- Convert decoded data to DynamicImage for rendering
-- Add to image loading workflow in cover_editor.rs and framebuffer/image.rs
 
 ## Technical Architecture
 
@@ -191,22 +224,23 @@ Document Open → file_kind() → Format Dispatch
 **Image Processing Stack**:
 
 ```text
-Image Open → Format Detection → Image Crate
-                              ├─→ PNG, JPEG, GIF, etc. (supported)
-                              └─→ JP2 (placeholder, requires openjp2)
+Image Open → Format Detection → Image Crate / justjp2
+                              ├─→ PNG, JPEG, GIF, etc. (supported via image crate)
+                              └─→ JP2, JPX, J2K (supported via justjp2)
 ```
 
 **Dependencies**:
 
-| Feature          | Dependency | Purpose                         |
-|------------------|------------|---------------------------------|
-| PDF Rendering    | pdfpurr    | Pure Rust PDF rendering         |
-| PDF Manipulation | lopdf      | Pure Rust PDF operations        |
-| DJVU Support     | djvu-rs    | Rust bindings for DjVuLibre     |
-| JPEG 2000        | openjp2    | Rust bindings for OpenJPEG      |
-| Standard Images  | image      | Rust image processing library   |
-| Compression      | bzip2      | BZIP2 compression/decompression |
-| XML Processing   | quick-xml  | Enhanced XML parsing            |
+| Feature          | Dependency | Purpose                             |
+|------------------|------------|-------------------------------------|
+| PDF Rendering    | pdfpurr    | Pure Rust PDF rendering             |
+| PDF Manipulation | lopdf      | Pure Rust PDF operations            |
+| DJVU Support     | djvu-rs    | Rust bindings for DjVuLibre         |
+| JPEG 2000        | openjp2    | Rust bindings for OpenJPEG          |
+| Standard Images  | image      | Rust image processing library       |
+| CBZ Archives     | zip        | ZIP archive support                 |
+| Compression      | bzip2      | BZIP2 compression/decompression     |
+| XML Processing   | quick-xml  | Enhanced XML parsing                |
 
 ## Design Philosophy
 
@@ -220,7 +254,7 @@ Image Open → Format Detection → Image Crate
 
 Potential formats for future implementation:
 
-1. **CBZ/CBR** - Comic book archives (ZIP/RAR based)
+1. **CBR** - Comic book RAR archives (RAR library needed)
 2. **MOBI** - Mobipocket format (via PDFPurr conversion)
 3. **FB2** - FictionBook format (XML-based)
 4. **DOCX** - Word documents (via pandoc conversion)
