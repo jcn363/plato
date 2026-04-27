@@ -115,10 +115,18 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
+        let manga_mode = context.settings.reader.manga_mode;
         match self.view_port.zoom_mode {
             ZoomMode::FitToPage | ZoomMode::FitToWidth | ZoomMode::Fit(_) => match dir {
-                Dir::West => self.go_to_neighbor(CycleDir::Next, hub, rq, context),
-                Dir::East => self.go_to_neighbor(CycleDir::Previous, hub, rq, context),
+                // In manga mode, reverse the navigation direction (right-to-left reading)
+                Dir::West => {
+                    let dir = if manga_mode { CycleDir::Previous } else { CycleDir::Next };
+                    self.go_to_neighbor(dir, hub, rq, context)
+                }
+                Dir::East => {
+                    let dir = if manga_mode { CycleDir::Next } else { CycleDir::Previous };
+                    self.go_to_neighbor(dir, hub, rq, context)
+                }
                 Dir::South | Dir::North => {
                     self.vertical_scroll(start.y - end.y, hub, rq, context);
                 }
@@ -142,17 +150,21 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
+        let manga_mode = context.settings.reader.manga_mode;
         match dir {
+            // In manga mode, reverse the navigation direction (right-to-left reading)
             Dir::West => {
+                let dir = if manga_mode { CycleDir::Next } else { CycleDir::Previous };
                 if self.search.is_none() {
-                    self.go_to_chapter(CycleDir::Previous, hub, rq, context);
+                    self.go_to_chapter(dir, hub, rq, context);
                 } else {
                     self.go_to_results_page(0, hub, rq, context);
                 }
             }
             Dir::East => {
+                let dir = if manga_mode { CycleDir::Previous } else { CycleDir::Next };
                 if self.search.is_none() {
-                    self.go_to_chapter(CycleDir::Next, hub, rq, context);
+                    self.go_to_chapter(dir, hub, rq, context);
                 } else if let Some(ref search) = self.search {
                     let last_page = search.highlights.len() - 1;
                     self.go_to_results_page(last_page, hub, rq, context);
@@ -177,9 +189,17 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
+        let manga_mode = context.settings.reader.manga_mode;
         match dir {
-            DiagDir::NorthWest => self.go_to_bookmark(CycleDir::Previous, hub, rq, context),
-            DiagDir::NorthEast => self.go_to_bookmark(CycleDir::Next, hub, rq, context),
+            // In manga mode, reverse the navigation direction (right-to-left reading)
+            DiagDir::NorthWest => {
+                let dir = if manga_mode { CycleDir::Next } else { CycleDir::Previous };
+                self.go_to_bookmark(dir, hub, rq, context)
+            }
+            DiagDir::NorthEast => {
+                let dir = if manga_mode { CycleDir::Previous } else { CycleDir::Next };
+                self.go_to_bookmark(dir, hub, rq, context)
+            }
             DiagDir::SouthEast => match context.settings.reader.bottom_right_gesture {
                 BottomRightGestureAction::ToggleDithered => {
                     hub.send(Event::Select(crate::view::EntryId::ToggleDithered))
@@ -222,11 +242,17 @@ impl Reader {
         rq: &mut RenderQueue,
         context: &mut Context,
     ) -> bool {
+        let manga_mode = context.settings.reader.manga_mode;
         match dir {
+            // In manga mode, reverse the navigation direction (right-to-left reading)
             DiagDir::NorthWest => {
-                self.go_to_annotation(CycleDir::Previous, hub, rq, context);
+                let dir = if manga_mode { CycleDir::Next } else { CycleDir::Previous };
+                self.go_to_annotation(dir, hub, rq, context);
             }
-            DiagDir::NorthEast => self.go_to_annotation(CycleDir::Next, hub, rq, context),
+            DiagDir::NorthEast => {
+                let dir = if manga_mode { CycleDir::Previous } else { CycleDir::Next };
+                self.go_to_annotation(dir, hub, rq, context)
+            }
             _ => (),
         }
         true

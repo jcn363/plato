@@ -16,23 +16,25 @@ The current source tree is a Cargo workspace with these crates:
 - `crates/epub_editor` for the `epub_editor` CLI tool (maintenance mode - for power users and development only)
 - `crates/plato-android` for Android support (experimental, excluded from workspace)
 
-Documentation:
+## Documentation
 
 - [Installation and configuration guide](doc/GUIDE.md)
 - [User manual](doc/MANUAL.md)
 - [Build instructions](doc/BUILD.md)
-- [Not implemented features](doc/NOT_IMPLEMENTED.md)
-- [OCR and TTS notes](doc/OCR_TTS.md)
-- [Article fetcher documentation](doc/ARTICLE_FETCHER.md)
-- [Hooks documentation](doc/HOOKS.md)
-- [Library documentation](doc/LIBRARY.md)
+- [Supported formats](doc/FORMAT_SUPPORT.md)
 - [PDF features](doc/PDF_FEATURES.md)
 - [EPUB Editor features](doc/EPUB_EDITOR.md)
-- [Navigation documentation](doc/NAVIGATION.md)
 - [OPDS Catalog](doc/OPDS_CATALOG.md)
 - [Theme System](doc/THEME_AWARE.md)
-- [Recently Implemented Features](doc/IMPLEMENTED_FEATURES.md)
-- [Rust Best Practices](rust-best-practices.md) - Coding standards and guidelines for Rust development
+- [Navigation](doc/NAVIGATION.md)
+- [Hooks](doc/HOOKS.md)
+- [Library management](doc/LIBRARY.md)
+- [Article fetcher](doc/ARTICLE_FETCHER.md)
+- [OCR and TTS](doc/OCR_TTS.md)
+- [Implemented features](doc/IMPLEMENTED_FEATURES.md)
+- [Not implemented features](doc/NOT_IMPLEMENTED.md)
+- [AI Generation Persistence](doc/AI_GENERATION_PERSISTENCE.md)
+- [Rust Best Practices](rust-best-practices.md)
 
 ## Supported firmwares
 
@@ -83,7 +85,8 @@ None currently.
 
 - ePUB through the built-in renderer.
 - HTML and HTM through the built-in HTML renderer.
-- PDF, CBZ, FB2, FBZ, MOBI, XPS, OXPS, and TXT via PDFPurr (pure Rust PDF library).
+- PDF via PDFPurr (pure Rust PDF library).
+- DJVU via djvu-rs (Rust bindings for DjVuLibre).
 
 ## Features
 
@@ -106,7 +109,7 @@ None currently.
 - **AArch64 (ARM64)** - Added support for newer Kobo devices (Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
 - **Error Handling** - Improved robustness with proper error handling instead of `unwrap()`; further reduced unwrap/expect in sync, HTML parsing, and fetcher crates
 - **Memory** - Optimized string building with pre-allocated buffers, fixed memory availability detection, reduced thumbnail memory by 75% (grayscale instead of RGBA), fixed Pixmap OOM panics, optimized pixmap creation to avoid double allocation
-- PDF - Added auto-crop margins feature for scanned documents, PDF/A detection, annotation reading and export, interactive redaction region definition UI, and PDF merging functionality. **Note:** These features are implemented and stable.
+- **PDF Tools** - Auto-crop margins for scanned documents, PDF/A detection, annotation reading/export, interactive redaction UI, and PDF merging
 - **Rendering** - Added minimum font size support for better readability
 - **ePUB** - Enhanced HTML engine with improved font handling, image optimization (grayscale/resize), and automated TOC recovery
 - **CSS** - Full CSS support including border, background, text-transform, text-decoration, tab-size
@@ -129,11 +132,11 @@ cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
 # Build for host (development/testing)
 cargo build --target x86_64-unknown-linux-gnu -p plato
 
-# Full build with native dependencies (downloads libs + MuPDF)
+# Full build with formatting and linting
 ./build.sh
 
-# Full build with options (e.g., skip clean, use specific target/method)
-./build.sh --no-clean arm skip
+# Build without cleaning (faster for incremental builds)
+./build.sh --no-clean arm
 
 # Create distribution bundle
 ./dist.sh [arm|arm64]

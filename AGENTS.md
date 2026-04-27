@@ -4,7 +4,23 @@ This file provides guidance for AI coding agents working in the Plato codebase.
 
 You are an elite AI technical analyst and senior developer. You are operating in the year 2026. You have access to the internet and an advanced reasoning engine. You are relentless in your pursuit of accuracy and have a straightforward approach.
 
-## 🛠️ YOUR TOOLKIT (FOR STRICT USE ONLY)
+## Table of Contents
+
+- [Your Toolkit](#your-toolkit-️-for-strict-use-only)
+- [Project Structure](#project-structure)
+- [Build & Run Commands](#build--run-commands)
+- [Testing](#testing)
+- [Code Style](#code-style)
+- [Automation](#automation)
+- [Error Handling Process](#error-handling-process)
+- [Task Discipline](#task-discipline)
+- [Build Verification](#build-verification)
+- [Architecture Notes](#architecture-notes)
+- [Recent Architecture Improvements](#recent-architecture-improvements)
+- [Skill Coordination](#skill-coordination-for-rust--local-first-development)
+- [Communication](#communication)
+
+## YOUR TOOLKIT 🛠️ (FOR STRICT USE ONLY)
 
 1. **Web Search**: Use `mcp0_web_search_exa` to search for real-world data, up-to-date documentation, or physical/mathematical constants. NEVER make up data if you can look it up.
 2. **Web Fetch**: Use `mcp0_web_fetch_exa` or `mcp1_fetch` to visit URLs and extract full text or code. Do not respond with links alone.
@@ -31,7 +47,7 @@ You are an elite AI technical analyst and senior developer. You are operating in
 - **Batch independent operations**: Use parallel tool calls only for independent operations on different files
 - **Tool priority**: MCP tools > direct file operations > terminal commands
 
-NO FILLER. Do not start with greetings or polite phrases. Get straight to the analysis or the action.
+**Communication style**: Direct and technical. No filler phrases — get straight to analysis and action.
 
 ## Project Structure
 
@@ -185,32 +201,36 @@ where
 
 ### Performance
 
-- Use `#[inline]` on hot-path small functions (pixel operations, geometry math, device checks)
-- Use `FxHashMap`/`FxHashSet` from `fxhash` instead of std `HashMap` for non-cryptographic use
-- Pre-allocate buffers with `String::with_capacity` when size is known or can be estimated
-- Prefer `Cow<str>` for conditional string ownership to avoid unnecessary clones
-- Implement thread-local buffer pools for temporary work (thumbnail generation, document parsing)
-- Use `std::sync::LazyLock` for global buffer management
-- Ensure iterator adapters are fused where possible
-- Collect into pre-allocated vectors using `Vec::with_capacity`
-- Use `Rc` for shared immutable data
-- Use `Arc` for data accessed across threads
-- Review all `Clone` implementations to avoid deep copies
-- Validate shared data before creating references
+#### Memory & Allocation
+
+- Pre-allocate with `String::with_capacity()` and `Vec::with_capacity()` when size is predictable
+- Use `Cow<str>` for conditional string ownership to avoid unnecessary clones
 - Use `smallvec::SmallVec` for vectors that usually hold 0-2 elements
+- Use `Box` for large data structures to avoid stack overflow on embedded devices
+- Implement thread-local buffer pools for temporary work (thumbnails, parsing)
+- Use `std::sync::LazyLock` for global buffer management
+
+#### Data Structures
+
+- Use `FxHashMap`/`FxHashSet` from `fxhash` instead of std collections for non-cryptographic use
 - Prefer `BTreeMap`/`BTreeSet` for ordered collections
 - Use `IndexMap` for insertion-order preservation
-- Define data structure choices in module-level constants
-- Validate data structure capacity and constraints
-- Reduce unnecessary cloning in hot paths
-- Optimize string operations
-- Optimize library search and filtering
-- Optimize large library performance
-- Optimize file I/O operations
-- Optimize memory layout
-- Async thumbnail generation
-- Reduce lock contention
-- Do not use Rayon for data parallelism. Focus on algorithmic improvements and caching instead
+- Use `Rc` for shared immutable data (single-threaded)
+- Use `Arc` for data accessed across threads
+- Review all `Clone` implementations to avoid deep copies
+
+#### Hot Paths
+
+- Use `#[inline]` on small functions called frequently (pixel ops, geometry math)
+- Reduce unnecessary cloning in loops
+- Ensure iterator adapters are fused where possible
+- Avoid intermediate `.collect()` calls in iterator chains
+
+#### Concurrency
+
+- Reduce lock contention — keep critical sections minimal
+- Do not use Rayon for data parallelism — prefer algorithmic improvements
+- Document `Send`/`Sync` bounds for async code
 
 ### Memory Safety
 
@@ -708,6 +728,121 @@ match battery.capacity() {
     Err(BatteryError::CapacityReadError(msg)) => { /* ... */ }
     Err(e) => { /* ... */ }
 }
+```
+
+## Skill Coordination for Rust + Local-First Development
+
+The following skills are optimized for Rust development and local-first architecture. They work together as a coordinated system:
+
+### Core Rust Skills
+
+| Skill                       | Purpose        | Use When                                                 |
+|-----------------------------|----------------|----------------------------------------------------------|
+| `rust-engineer`             | Implementation | Writing new Rust code, designing traits, error handling  |
+| `rust-best-practices`       | Code quality   | Reviewing code, ensuring idiomatic patterns              |
+| `rust-async-patterns`       | Concurrency    | async/await, tokio, channels, concurrent data structures |
+| `rust-testing`              | Verification   | Writing tests, test organization, mocking                |
+| `rust-mcp-server-generator` | Tool building  | Creating MCP servers in Rust                             |
+
+### Workflow Skills (Rust-Optimized)
+
+| Skill                    | Purpose              | Key Rust/Local Adaptations                              |
+|--------------------------|----------------------|---------------------------------------------------------|
+| `dev`                    | Development workflow | Uses `cargo check/build/test`, SQLite for local state   |
+| `dev-plan`               | Planning             | PRD format with Rust module hierarchy, local file paths |
+| `dev-resume`             | Session recovery     | Resumes from `.dev/` with Rust project structure        |
+| `dev-story`              | Story implementation | Integrates with GDD + ADR for Rust game dev             |
+| `code-review-excellence` | Code review          | Includes `cargo clippy`, ownership, lifetime checks     |
+
+### Feature Skills (Local-First Adapted)
+
+| Skill                | Cloud-Native       | Local-First Equivalent                                             |
+|----------------------|--------------------|--------------------------------------------------------------------|
+| `ai-features`        | Vercel Blob, Redis | SQLite + local filesystem (see `doc/AI_GENERATION_PERSISTENCE.md`) |
+| `real-time-features` | WebSockets, SSE    | `tokio::sync::broadcast`, IPC, file watchers                       |
+
+### Local-First Principles
+
+When using skills for this codebase, always prefer local equivalents:
+
+```text
+PostgreSQL   → SQLite (rusqlite)
+Redis        → SQLite cache table OR in-memory LRU
+Vercel Blob  → Local filesystem (std::fs)
+WebSockets   → tokio::sync::broadcast OR file-based IPC
+SSE          → File watchers (notify crate) OR polling
+```
+
+### Cross-Skill Integration Patterns
+
+#### Pattern 1: AI Feature with Local Persistence
+
+```rust
+// From ai-features skill + ai-generation-persistence.md
+use nanoid::nanoid;
+use rusqlite::Connection;
+
+let id = nanoid!(10);
+// Save to SQLite BEFORE calling LLM
+sqlite.execute("INSERT INTO generations ...", params![id, ...])?;
+// Call LLM
+let result = call_llm(prompt).await?;
+// Update with result
+sqlite.execute("UPDATE generations SET result = ? ...", params![result, id])?;
+```
+
+#### Pattern 2: Real-Time without WebSockets
+
+```rust
+// From real-time-features skill (local variant)
+use tokio::sync::broadcast;
+use notify::{Watcher, RecursiveMode};
+
+// In-process broadcast (no network)
+let (tx, _rx) = broadcast::channel(100);
+
+// File system watcher for external events
+let mut watcher = notify::recommended_watcher(move |res| {
+    tx.send(res).ok();
+})?;
+watcher.watch(Path::new("/data"), RecursiveMode::NonRecursive)?;
+```
+
+#### Pattern 3: Code Review with Rust Checks
+
+```markdown
+From code-review-excellence skill (Rust additions):
+- Run `cargo clippy -- -D warnings` before review
+- Check ownership: unnecessary clones, borrowing opportunities
+- Check lifetimes: explicit annotations where needed
+- Check errors: proper ? usage, context with `.with_context()`
+- Check tests: `#[cfg(test)]` modules, test file naming
+```
+
+### Skill Selection Decision Tree
+
+```text
+Task Type → Recommended Skill(s)
+─────────────────────────────────
+New feature → /dev-plan → /rust-engineer → /rust-testing
+Bug fix     → /systematic-debugging → /rust-engineer
+Refactor    → /refactor + /rust-best-practices
+Code review → /code-review-excellence + /rust-best-practices
+AI feature  → /ai-features (local variant) + /rust-engineer
+Real-time   → /real-time-features (local variant) + /rust-async-patterns
+```
+
+### Skill Configuration Overrides
+
+When invoking skills, use these project-specific settings:
+
+```yaml
+# In skill invocations or .dev/ configuration
+database: "sqlite"        # Not postgres
+storage: "local"          # Not cloud/blob
+async_runtime: "tokio"   # Standard for Rust
+error_handling: "anyhow"  # For binaries
+error_library: "thiserror" # For libraries
 ```
 
 ## Communication

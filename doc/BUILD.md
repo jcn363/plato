@@ -31,7 +31,6 @@ rustup target add aarch64-unknown-linux-gnu
 rustup target add x86_64-unknown-linux-gnu
 ```
 
-
 ## Build Phase
 
 ```bash
@@ -41,9 +40,10 @@ rustup target add x86_64-unknown-linux-gnu
 This script will:
 
 1. Check for required tools (cargo, rustc, cross-compiler)
-2. Handle thirdparty libraries (download or build)
-3. Ensure necessary symlinks are in the library directory
-4. Run `cargo fmt` and `cargo clippy --workspace` (with target-specific exclusions)
+2. Run `cargo fmt` and `cargo clippy --workspace` (with target-specific exclusions)
+3. Build the project using Cargo
+
+Note: The project uses pure Rust libraries. No external C dependencies are required.
 
 ### Common Options
 
@@ -54,21 +54,19 @@ This script will:
 
 ### Target
 
-- `arm` (default), `arm64`, `host`
+- `arm` (default): Build for 32-bit ARM Kobo devices
+- `arm64`: Build for 64-bit ARM Kobo devices (Libra 2, Sage, Clara 2E, etc.)
+- `host`: Build for development machine (x86_64)
 
-### Method
+### Method (Legacy - No longer used)
 
-- `fast` (default): Download pre-compiled libraries
-- `slow`: Build libraries from source
-- `skip`: Use existing libraries
+The `fast`, `slow`, and `skip` methods are legacy options kept for compatibility. Since the project now uses pure Rust libraries (PDFPurr for PDF rendering, lopdf for PDF manipulation), no external library downloads or builds are required.
 
 Example:
 
 ```bash
-./build.sh --no-clean arm skip
+./build.sh --no-clean arm
 ```
-
-PDF rendering is now handled by PDFPurr, a pure Rust library, so no MuPDF wrapper is required. PDF manipulation features (delete, rotate, extract, merge, reorder pages, redaction, resource extraction, and annotations) are implemented using lopdf, another pure Rust library.
 
 ## Alternative Build Commands
 

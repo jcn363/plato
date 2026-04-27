@@ -402,6 +402,33 @@ impl View for Reader {
                 self.handle_back(hub, rq, context);
                 true
             }
+            // In manga mode, reverse the navigation direction for bottom bar buttons
+            Event::Page(dir) => {
+                let manga_mode = context.settings.reader.manga_mode;
+                let actual_dir = if manga_mode {
+                    match dir {
+                        CycleDir::Next => CycleDir::Previous,
+                        CycleDir::Previous => CycleDir::Next,
+                    }
+                } else {
+                    *dir
+                };
+                self.go_to_neighbor(actual_dir, hub, rq, context);
+                true
+            }
+            Event::Chapter(dir) => {
+                let manga_mode = context.settings.reader.manga_mode;
+                let actual_dir = if manga_mode {
+                    match dir {
+                        CycleDir::Next => CycleDir::Previous,
+                        CycleDir::Previous => CycleDir::Next,
+                    }
+                } else {
+                    *dir
+                };
+                self.go_to_chapter(actual_dir, hub, rq, context);
+                true
+            }
             _ => false,
         }
     }
