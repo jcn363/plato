@@ -70,5 +70,9 @@ tiny-skia = "0.12.0"
 lopdf = "0.40.0"
 hex = "0.4.3"
 
+# Cryptographic operations for digital signatures (Linux only)
+[target.'cfg(target_os = "linux")'.dependencies]
+ring = "0.17.14"
+
 [dev-dependencies]
 tempfile = "3.27.0"

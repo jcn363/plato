@@ -2344,6 +2344,7 @@ dependencies = [
  "rand_xoshiro",
  "regex",
  "reqwest",
+ "ring",
  "rustc-hash 2.1.2",
  "rustybuzz",
  "septem",
