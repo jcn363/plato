@@ -1,6 +1,6 @@
 # Format Support for Plato
 
-> **Last Updated**: 2026-04-27
+> **Last Updated**: 2026-04-27 (CBR support added)
 > **Related Documents**: [PDF_FEATURES.md](./PDF_FEATURES.md) | [BUILD.md](./BUILD.md)
 
 This document catalogs the document and image format support in Plato, detailing implementation status, technical decisions, and dependencies.
@@ -14,7 +14,7 @@ This document catalogs the document and image format support in Plato, detailing
  | Document    | HTML            | ✅ Implemented | Custom         | HTML/CSS rendering engine           |
  | Document    | DJVU            | ✅ Implemented | djvu-rs        | Basic page navigation               |
  | Document    | CBZ             | ✅ Implemented | zip crate      | Comic book ZIP archives             |
- | Document    | CBR             | 🚧 Planned     | unrar          | Comic book RAR archives (planned)   |
+ | Document    | CBR             | ✅ Implemented | unrar          | Comic book RAR archives             |
  | Image       | PNG             | ✅ Implemented | image crate    | Standard format support             |
  | Image       | JPEG            | ✅ Implemented | image crate    | Standard format support             |
  | Image       | GIF             | ✅ Implemented | image crate    | Standard format support             |
@@ -109,18 +109,18 @@ let dims = doc.dims(0)?;
 - Hyperlink support
 - Metadata extraction
 
-### CBZ
+### CBZ/CBR
 
-**Status**: ✅ IMPLEMENTED - Comic book ZIP archive support
+**Status**: ✅ IMPLEMENTED - Comic book archive support
 
 **Implementation Details**:
 
 - Module: `document/comic.rs`
-- Library: `zip` crate (already available in workspace)
-- Format: ZIP archives containing image files (PNG, JPEG, GIF, BMP, WebP)
+- Library: `zip` crate (CBZ), `unrar` crate (CBR)
+- Format: ZIP/RAR archives containing image files (PNG, JPEG, GIF, BMP, WebP)
 - Features: Page navigation, image rendering, alphabetical page ordering
 
-**File Extensions**: `.cbz`, `.zip`
+**File Extensions**: `.cbz`, `.zip`, `.cbr`, `.rar`
 
 **Usage Example**:
 
@@ -134,14 +134,13 @@ let dims = doc.dims(0)?;
 
 **Current Limitations**:
 
-- CBR (RAR) format not yet supported (requires additional RAR library)
 - No text layer extraction (images only)
 - No table of contents support
 - Fixed page dimensions (no reflow)
+- Encrypted/password-protected archives not supported
 
 **Future Enhancements**:
 
-- CBR (RAR) archive support
 - Metadata extraction from ComicInfo.xml
 - Thumbnail generation for cover display
 
@@ -238,7 +237,7 @@ Image Open → Format Detection → Image Crate / justjp2
 | DJVU Support     | djvu-rs    | Rust bindings for DjVuLibre         |
 | JPEG 2000        | openjp2    | Rust bindings for OpenJPEG          |
 | Standard Images  | image      | Rust image processing library       |
-| CBZ Archives     | zip        | ZIP archive support                 |
+| CBZ/CBR Archives | zip, unrar | ZIP/RAR archive support             |
 | Compression      | bzip2      | BZIP2 compression/decompression     |
 | XML Processing   | quick-xml  | Enhanced XML parsing                |
 
@@ -254,10 +253,9 @@ Image Open → Format Detection → Image Crate / justjp2
 
 Potential formats for future implementation:
 
-1. **CBR** - Comic book RAR archives (RAR library needed)
-2. **MOBI** - Mobipocket format (via PDFPurr conversion)
-3. **FB2** - FictionBook format (XML-based)
-4. **DOCX** - Word documents (via pandoc conversion)
-5. **TIFF** - Tagged Image File Format (via image crate or libtiff)
+1. **MOBI** - Mobipocket format (via PDFPurr conversion)
+2. **FB2** - FictionBook format (XML-based)
+3. **DOCX** - Word documents (via pandoc conversion)
+4. **TIFF** - Tagged Image File Format (via image crate or libtiff)
 
 Priority should be based on user demand and implementation complexity.

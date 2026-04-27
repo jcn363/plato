@@ -63,6 +63,7 @@ html5ever = "0.39.0"
 justjp2 = "0.1.1"
 hayro-jbig2 = "0.3.0"
 djvu-rs = "0.13.0"
+unrar = "0.5.8"
 
 # Rust-native font stack (replaces FreeType + HarfBuzz)
 skrifa = "0.42.1"

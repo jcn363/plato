@@ -2,7 +2,7 @@
 //!
 //! Provides support for comic book archive formats:
 //! - CBZ: ZIP archive containing images
-//! - CBR: RAR archive containing images (supported if unrar is available)
+//! - CBR: RAR archive containing images
 //!
 //! Images are sorted alphabetically and displayed as pages.
 
@@ -38,7 +38,7 @@ impl ComicDocument {
 
         match ext.as_str() {
             "cbz" | "zip" => Self::open_cbz(path),
-            "cbr" => Err(format_err!("CBR (RAR) format not yet implemented. Convert to CBZ or use PDF.")),
+            "cbr" | "rar" => Self::open_cbr(path),
             _ => Err(format_err!("Unsupported comic archive format: {}", ext)),
         }
     }
@@ -83,6 +83,70 @@ impl ComicDocument {
                 dims.push((img.width() as f32, img.height() as f32));
             } else {
                 dims.push((800.0, 1200.0)); // Default fallback dimensions
+            }
+            pages.push(data);
+        }
+
+        Ok(ComicDocument {
+            pages,
+            page_count,
+            current_page: 0,
+            dims,
+        })
+    }
+
+    /// Open a CBR (RAR) archive
+    fn open_cbr(path: &Path) -> Result<Self, Error> {
+        let archive = unrar::Archive::new(path)
+            .open_for_processing()
+            .map_err(|e| format_err!("can't open CBR archive: {:?}", e))?;
+
+        let mut image_entries: Vec<(String, Vec<u8>)> = Vec::new();
+
+        // Process archive entries sequentially
+        let mut cursor = archive;
+        loop {
+            // Read header to get file info
+            let (header, cursor_after_header) = match cursor.read_header() {
+                Ok((h, c)) => (h, c),
+                Err(_) => break, // No more entries
+            };
+
+            let filename = header.filename.to_lowercase();
+
+            if Self::is_image_file(&filename) {
+                // Process file to read into memory
+                let (data, cursor_after_file) = cursor_after_header
+                    .read()
+                    .map_err(|e| format_err!("can't read CBR entry: {:?}", e))?;
+                image_entries.push((filename, data));
+                cursor = cursor_after_file;
+            } else {
+                // Skip non-image files
+                let (_, cursor_after_skip) = cursor_after_header
+                    .skip()
+                    .map_err(|e| format_err!("can't skip CBR entry: {:?}", e))?;
+                cursor = cursor_after_skip;
+            }
+        }
+
+        // Sort by filename for proper page ordering
+        image_entries.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let page_count = image_entries.len();
+        if page_count == 0 {
+            return Err(format_err!("No images found in CBR archive"));
+        }
+
+        // Get dimensions for each page
+        let mut dims = Vec::with_capacity(page_count);
+        let mut pages = Vec::with_capacity(page_count);
+
+        for (_, data) in image_entries {
+            if let Ok(img) = image::load_from_memory(&data) {
+                dims.push((img.width() as f32, img.height() as f32));
+            } else {
+                dims.push((800.0, 1200.0)); // Default fallback
             }
             pages.push(data);
         }
