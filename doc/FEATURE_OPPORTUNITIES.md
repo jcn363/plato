@@ -583,7 +583,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 #### Digital Signatures
 
 **Kobo Status**: ❌ Excluded (no secure key storage, no use case)
-**Desktop Status**: ✅ **Implemented**
+**Desktop Status**: ✅ **Implemented (SHA256-based)**
 
 **Why Feasible on Desktop:**
 
@@ -605,13 +605,16 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 - ✅ PDF: PDF signature metadata embedding with lopdf
 - ✅ Verification: Signature metadata extraction and verification
 - ✅ Certificate: Certificate listing and import (simplified implementation)
+- ⏳ PKCS#7/CMS: Full PKCS#7/CMS signature generation (deferred - requires complex certificate handling)
 
 **Notes**:
 
 - Current implementation uses SHA256 hash-based signatures for demonstration
-- Full PKCS#7/CMS signature generation can be added in future for standards compliance
+- Full PKCS#7/CMS signature generation requires proper certificate management infrastructure
+- The `cms` crate is available but requires complex certificate chain handling
 - System keyring integration (secret-service) is available but not currently used due to dependency complexity
 - Certificate chain validation is simplified for the initial implementation
+- To implement full PKCS#7/CMS, proper certificate loading from files/keyring and chain validation is needed
 
 ---
 

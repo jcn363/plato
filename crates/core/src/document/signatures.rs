@@ -57,7 +57,9 @@ pub struct SignatureManager;
 impl SignatureManager {
     /// Sign a PDF document with a digital signature
     ///
-    /// This implementation uses ring for cryptographic operations.
+    /// This implementation uses ring for SHA256 hashing and stores signature metadata.
+    /// Full PKCS#7/CMS signature generation requires complex certificate handling
+    /// and is deferred for future implementation when proper certificate management is available.
     pub fn sign_pdf(
         input_path: &Path,
         output_path: &Path,
@@ -71,11 +73,9 @@ impl SignatureManager {
         let pdf_data = fs::read(input_path)
             .with_context(|| format!("Failed to read PDF: {}", input_path.display()))?;
 
-        // Generate a hash signature using ring (SHA256 for demonstration)
-        // In production, this would use the private key from the certificate
-        // and create a proper PKCS#7/CMS signature
+        // Generate SHA256 hash of the PDF
         let digest = digest::digest(&digest::SHA256, &pdf_data);
-        let _signature = digest.as_ref();
+        let signature_data = digest.as_ref();
 
         // Create signature metadata
         let timestamp = SystemTime::now()
@@ -85,7 +85,7 @@ impl SignatureManager {
             .unwrap_or_default()
             .to_rfc3339();
 
-        let signature_id = format!("sig_{}", hex::encode(digest.as_ref()));
+        let signature_id = format!("sha256_sig_{}", hex::encode(digest.as_ref()));
 
         let digital_signature = DigitalSignature {
             id: signature_id.clone(),
@@ -111,6 +111,9 @@ impl SignatureManager {
             ("Signer", lopdf::Object::String(certificate.subject.as_bytes().to_vec(), lopdf::StringFormat::Literal)),
             ("Timestamp", lopdf::Object::String(timestamp_str.as_bytes().to_vec(), lopdf::StringFormat::Literal)),
             ("CertificateFingerprint", lopdf::Object::String(certificate.fingerprint.as_bytes().to_vec(), lopdf::StringFormat::Literal)),
+            ("SignatureFormat", lopdf::Object::String(b"SHA256/Ring".to_vec(), lopdf::StringFormat::Literal)),
+            ("SignatureAlgorithm", lopdf::Object::String(b"SHA256".to_vec(), lopdf::StringFormat::Literal)),
+            ("SignatureData", lopdf::Object::String(hex::encode(signature_data).as_bytes().to_vec(), lopdf::StringFormat::Literal)),
         ]);
         
         // Get mutable reference to catalog and set signature
