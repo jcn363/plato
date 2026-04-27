@@ -9,7 +9,7 @@ This document identifies potential new features and enhancements for Plato, prio
 
 **Current State**:
 
-- 62 features implemented in the last 12 months
+- ✅ **All 15 features implemented** (P1: 5, P2: 5, P3: 5)
 - Pure Rust migration complete (no C dependencies)
 - All files AGENTS.md compliant (under 1,000 lines)
 - Comprehensive PDF manipulation (PDFPurr + lopdf)
@@ -61,6 +61,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 4/10 (Medium)
 **User Value**: High
 **Implementation Effort**: Moderate
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Allow users to organize books into collections, folders, or custom categories.
 
@@ -91,6 +92,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 2/10 (Low)
 **User Value**: High
 **Implementation Effort**: Low
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Visualize reading progress with statistics, time estimates, and progress tracking.
 
@@ -153,6 +155,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 2/10 (Low)
 **User Value**: High
 **Implementation Effort**: Low
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Enhanced accessibility features for users with visual impairments or reading difficulties.
 
@@ -249,6 +252,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 2/10 (Low)
 **User Value**: Moderate
 **Implementation Effort**: Low
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Add more sorting options to library view beyond current defaults.
 
@@ -281,6 +285,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 4/10 (Medium)
 **User Value**: Moderate
 **Implementation Effort**: Moderate
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Allow users to customize touch gestures for common actions.
 
@@ -311,6 +316,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 2/10 (Low)
 **User Value**: Moderate
 **Implementation Effort**: Low
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Fine-grained controls for text spacing and line height in reader view.
 
