@@ -92,6 +92,8 @@ pub enum ViewId {
     PdfProgress,
     RedactPdf,
     MergePdf,
+    #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+    FormsField(u16),
     MessageNotif(Id),
     SubMenu(u8),
     SettingsMenu,

@@ -552,16 +552,17 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 
 - ✅ Backend: Form field parsing (FormField, FormParser, FormValues)
 - ✅ Backend: Form value storage and serialization
-- ✅ UI: Form input components (forms view with field list display)
+- ✅ UI: Form input components (text fields, checkboxes, radio buttons, dropdowns, lists, signatures, buttons)
 - ✅ Integration: PDF viewer form UI overlay (menu entry added)
 - ✅ Export: PDF form field value export (lopdf AcroForm modification)
+- ✅ Interactive: Form field value editing and save functionality
 
 ---
 
 #### JavaScript Integration
 
-**Kobo Status**: Excluded (e-ink limitations, memory constraints)
-**Mobile/Desktop Status**: **Low Priority (Still Complex)**
+**Kobo Status**: ❌ Excluded (e-ink limitations, memory constraints)
+**Mobile/Desktop Status**: **Low Priority (Still Complex)** ❌ Excluded (virtually nonexistent)
 
 **Why Feasible but Low Priority:**
 
