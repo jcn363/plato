@@ -40,7 +40,10 @@ pub trait HomeCollectionsExt {
         context: &mut Context,
     );
     fn get_current_collection(&self) -> Option<Collection>;
-    fn filter_by_collection(&self, fingerprints: Vec<crate::helpers::Fp>) -> Vec<crate::helpers::Fp>;
+    fn filter_by_collection(
+        &self,
+        fingerprints: Vec<crate::helpers::Fp>,
+    ) -> Vec<crate::helpers::Fp>;
     fn hide_collections_menu(&mut self, rq: &mut RenderQueue, context: &mut Context);
     fn show_collections_menu(&mut self, rq: &mut RenderQueue, context: &mut Context);
     fn calculate_collections_menu_rect(&self, context: &Context) -> Rectangle;
@@ -257,7 +260,8 @@ impl HomeCollectionsExt for Home {
             };
 
             if library.collections.add(collection).is_ok() {
-                hub.send(Event::Notify("Collection created".to_string())).ok();
+                hub.send(Event::Notify("Collection created".to_string()))
+                    .ok();
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
             }
         }
@@ -277,7 +281,8 @@ impl HomeCollectionsExt for Home {
                 if self.current_collection_id.as_ref() == Some(&id) {
                     self.current_collection_id = None;
                 }
-                hub.send(Event::Notify("Collection deleted".to_string())).ok();
+                hub.send(Event::Notify("Collection deleted".to_string()))
+                    .ok();
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
             }
         }
@@ -297,7 +302,10 @@ impl HomeCollectionsExt for Home {
     }
 
     /// Filter books by current collection
-    fn filter_by_collection(&self, fingerprints: Vec<crate::helpers::Fp>) -> Vec<crate::helpers::Fp> {
+    fn filter_by_collection(
+        &self,
+        fingerprints: Vec<crate::helpers::Fp>,
+    ) -> Vec<crate::helpers::Fp> {
         if let Some(collection) = self.get_current_collection() {
             if let Some(_rules) = &collection.rules {
                 // Smart collection - filter by rules
@@ -306,7 +314,9 @@ impl HomeCollectionsExt for Home {
                         .into_iter()
                         .filter(|fp| {
                             if let Some(info) = library.db.get(fp) {
-                                library.collections.matches_smart_collection(&collection.id, info)
+                                library
+                                    .collections
+                                    .matches_smart_collection(&collection.id, info)
                             } else {
                                 false
                             }

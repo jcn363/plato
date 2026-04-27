@@ -69,8 +69,12 @@ impl SignatureManager {
         home.push(CERT_STORAGE_DIR);
 
         // Create directory if it doesn't exist
-        std::fs::create_dir_all(&home)
-            .with_context(|| format!("Failed to create certificate storage directory: {}", home.display()))?;
+        std::fs::create_dir_all(&home).with_context(|| {
+            format!(
+                "Failed to create certificate storage directory: {}",
+                home.display()
+            )
+        })?;
 
         Ok(home)
     }
@@ -86,13 +90,18 @@ impl SignatureManager {
                 let (label, der_bytes) = der::pem::decode_vec(pem_str.as_bytes())
                     .map_err(|e| anyhow::format_err!("Failed to parse PEM: {}", e))?;
                 if label != "CERTIFICATE" {
-                    return Err(anyhow::format_err!("Expected CERTIFICATE label, got: {}", label));
+                    return Err(anyhow::format_err!(
+                        "Expected CERTIFICATE label, got: {}",
+                        label
+                    ));
                 }
-                X509Certificate::from_der(&der_bytes)
-                    .map_err(|e| anyhow::format_err!("Failed to parse certificate from PEM: {}", e))?
+                X509Certificate::from_der(&der_bytes).map_err(|e| {
+                    anyhow::format_err!("Failed to parse certificate from PEM: {}", e)
+                })?
             } else {
-                X509Certificate::from_der(cert_data)
-                    .map_err(|e| anyhow::format_err!("Failed to parse certificate from DER: {}", e))?
+                X509Certificate::from_der(cert_data).map_err(|e| {
+                    anyhow::format_err!("Failed to parse certificate from DER: {}", e)
+                })?
             }
         } else {
             X509Certificate::from_der(cert_data)
@@ -101,7 +110,8 @@ impl SignatureManager {
 
         let subject = cert.tbs_certificate.subject.to_string();
         let issuer = cert.tbs_certificate.issuer.to_string();
-        let fingerprint = hex::encode(ring::digest::digest(&ring::digest::SHA256, cert_data).as_ref());
+        let fingerprint =
+            hex::encode(ring::digest::digest(&ring::digest::SHA256, cert_data).as_ref());
         let valid_from = cert.tbs_certificate.validity.not_before.to_string();
         let valid_until = cert.tbs_certificate.validity.not_after.to_string();
 
@@ -152,9 +162,7 @@ impl SignatureManager {
         let signature_data = digest.as_ref();
 
         // Create signature metadata
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)?
-            .as_secs();
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
         let timestamp_str = chrono::DateTime::from_timestamp(timestamp as i64, 0)
             .unwrap_or_default()
             .to_rfc3339();
@@ -175,25 +183,66 @@ impl SignatureManager {
             .with_context(|| format!("Failed to load PDF: {}", input_path.display()))?;
 
         // Get the catalog object ID
-        let catalog_id = doc.trailer.get(b"Root")
+        let catalog_id = doc
+            .trailer
+            .get(b"Root")
             .and_then(|obj| obj.as_reference())
             .context("Failed to get catalog ID")?;
 
         // Add signature metadata as a custom entry
         let signature_metadata = lopdf::Dictionary::from_iter(vec![
-            ("SignatureId", lopdf::Object::String(signature_id.as_bytes().to_vec(), lopdf::StringFormat::Literal)),
-            ("Signer", lopdf::Object::String(certificate.subject.as_bytes().to_vec(), lopdf::StringFormat::Literal)),
-            ("Timestamp", lopdf::Object::String(timestamp_str.as_bytes().to_vec(), lopdf::StringFormat::Literal)),
-            ("CertificateFingerprint", lopdf::Object::String(certificate.fingerprint.as_bytes().to_vec(), lopdf::StringFormat::Literal)),
-            ("SignatureFormat", lopdf::Object::String(b"SHA256/Ring".to_vec(), lopdf::StringFormat::Literal)),
-            ("SignatureAlgorithm", lopdf::Object::String(b"SHA256".to_vec(), lopdf::StringFormat::Literal)),
-            ("SignatureData", lopdf::Object::String(hex::encode(signature_data).as_bytes().to_vec(), lopdf::StringFormat::Literal)),
+            (
+                "SignatureId",
+                lopdf::Object::String(
+                    signature_id.as_bytes().to_vec(),
+                    lopdf::StringFormat::Literal,
+                ),
+            ),
+            (
+                "Signer",
+                lopdf::Object::String(
+                    certificate.subject.as_bytes().to_vec(),
+                    lopdf::StringFormat::Literal,
+                ),
+            ),
+            (
+                "Timestamp",
+                lopdf::Object::String(
+                    timestamp_str.as_bytes().to_vec(),
+                    lopdf::StringFormat::Literal,
+                ),
+            ),
+            (
+                "CertificateFingerprint",
+                lopdf::Object::String(
+                    certificate.fingerprint.as_bytes().to_vec(),
+                    lopdf::StringFormat::Literal,
+                ),
+            ),
+            (
+                "SignatureFormat",
+                lopdf::Object::String(b"SHA256/Ring".to_vec(), lopdf::StringFormat::Literal),
+            ),
+            (
+                "SignatureAlgorithm",
+                lopdf::Object::String(b"SHA256".to_vec(), lopdf::StringFormat::Literal),
+            ),
+            (
+                "SignatureData",
+                lopdf::Object::String(
+                    hex::encode(signature_data).as_bytes().to_vec(),
+                    lopdf::StringFormat::Literal,
+                ),
+            ),
         ]);
 
         // Get mutable reference to catalog and set signature
         if let Some(obj) = doc.objects.get_mut(&catalog_id) {
             if let Ok(dict) = obj.as_dict_mut() {
-                dict.set("PlatoSignature", lopdf::Object::Dictionary(signature_metadata));
+                dict.set(
+                    "PlatoSignature",
+                    lopdf::Object::Dictionary(signature_metadata),
+                );
             }
         }
 
@@ -209,33 +258,36 @@ impl SignatureManager {
         let doc = lopdf::Document::load(pdf_path)
             .with_context(|| format!("Failed to load PDF: {}", pdf_path.display()))?;
 
-        let catalog = doc.catalog()
-            .context("Failed to get catalog")?;
+        let catalog = doc.catalog().context("Failed to get catalog")?;
 
         let mut signatures = Vec::new();
 
         // Check for Plato signature metadata
         if let Ok(signature_obj) = catalog.get(b"PlatoSignature") {
             if let Ok(signature_dict) = signature_obj.as_dict() {
-                let signature_id = signature_dict.get(b"SignatureId")
+                let signature_id = signature_dict
+                    .get(b"SignatureId")
                     .ok()
                     .and_then(|o| o.as_str().ok())
                     .and_then(|s| std::str::from_utf8(s).ok())
                     .unwrap_or("unknown");
 
-                let signer = signature_dict.get(b"Signer")
+                let signer = signature_dict
+                    .get(b"Signer")
                     .ok()
                     .and_then(|o| o.as_str().ok())
                     .and_then(|s| std::str::from_utf8(s).ok())
                     .unwrap_or("unknown");
 
-                let timestamp = signature_dict.get(b"Timestamp")
+                let timestamp = signature_dict
+                    .get(b"Timestamp")
                     .ok()
                     .and_then(|o| o.as_str().ok())
                     .and_then(|s| std::str::from_utf8(s).ok())
                     .unwrap_or("unknown");
 
-                let fingerprint = signature_dict.get(b"CertificateFingerprint")
+                let fingerprint = signature_dict
+                    .get(b"CertificateFingerprint")
                     .ok()
                     .and_then(|o| o.as_str().ok())
                     .and_then(|s| std::str::from_utf8(s).ok())
@@ -261,16 +313,21 @@ impl SignatureManager {
         let mut certificates = Vec::new();
 
         // Read all .pem and .der files from storage
-        let entries = std::fs::read_dir(&storage_dir)
-            .with_context(|| format!("Failed to read certificate storage directory: {}", storage_dir.display()))?;
+        let entries = std::fs::read_dir(&storage_dir).with_context(|| {
+            format!(
+                "Failed to read certificate storage directory: {}",
+                storage_dir.display()
+            )
+        })?;
 
         for entry in entries {
-            let entry = entry
-                .with_context(|| format!("Failed to read directory entry"))?;
+            let entry = entry.with_context(|| format!("Failed to read directory entry"))?;
             let path = entry.path();
 
             // Only process certificate files
-            if path.extension().map_or(false, |ext| ext == "pem" || ext == "der" || ext == "crt" || ext == "cer") {
+            if path.extension().map_or(false, |ext| {
+                ext == "pem" || ext == "der" || ext == "crt" || ext == "cer"
+            }) {
                 match Self::import_certificate(&path) {
                     Ok(cert) => certificates.push(cert),
                     Err(e) => {
@@ -320,8 +377,12 @@ impl SignatureManager {
         let cert_storage_path = storage_dir.join(&cert_filename);
 
         // Copy certificate to storage (use PEM format for consistency)
-        fs::write(&cert_storage_path, &cert_data)
-            .with_context(|| format!("Failed to store certificate: {}", cert_storage_path.display()))?;
+        fs::write(&cert_storage_path, &cert_data).with_context(|| {
+            format!(
+                "Failed to store certificate: {}",
+                cert_storage_path.display()
+            )
+        })?;
 
         Ok(certificate)
     }

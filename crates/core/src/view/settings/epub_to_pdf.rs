@@ -241,7 +241,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseEpubPdfMarginTop) => {
-            context.settings.epub_to_pdf.margin_top = (context.settings.epub_to_pdf.margin_top + 5.0).min(50.0);
+            context.settings.epub_to_pdf.margin_top =
+                (context.settings.epub_to_pdf.margin_top + 5.0).min(50.0);
             let new_text = format!("{:.1}", context.settings.epub_to_pdf.margin_top);
             if let Some(btn) = children[offset + 3].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -249,7 +250,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseEpubPdfMarginTop) => {
-            context.settings.epub_to_pdf.margin_top = (context.settings.epub_to_pdf.margin_top - 5.0).max(0.0);
+            context.settings.epub_to_pdf.margin_top =
+                (context.settings.epub_to_pdf.margin_top - 5.0).max(0.0);
             let new_text = format!("{:.1}", context.settings.epub_to_pdf.margin_top);
             if let Some(btn) = children[offset + 3].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -257,7 +259,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseEpubPdfMarginBottom) => {
-            context.settings.epub_to_pdf.margin_bottom = (context.settings.epub_to_pdf.margin_bottom + 5.0).min(50.0);
+            context.settings.epub_to_pdf.margin_bottom =
+                (context.settings.epub_to_pdf.margin_bottom + 5.0).min(50.0);
             let new_text = format!("{:.1}", context.settings.epub_to_pdf.margin_bottom);
             if let Some(btn) = children[offset + 5].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -265,7 +268,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseEpubPdfMarginBottom) => {
-            context.settings.epub_to_pdf.margin_bottom = (context.settings.epub_to_pdf.margin_bottom - 5.0).max(0.0);
+            context.settings.epub_to_pdf.margin_bottom =
+                (context.settings.epub_to_pdf.margin_bottom - 5.0).max(0.0);
             let new_text = format!("{:.1}", context.settings.epub_to_pdf.margin_bottom);
             if let Some(btn) = children[offset + 5].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -273,7 +277,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseEpubPdfMarginLeft) => {
-            context.settings.epub_to_pdf.margin_left = (context.settings.epub_to_pdf.margin_left + 5.0).min(50.0);
+            context.settings.epub_to_pdf.margin_left =
+                (context.settings.epub_to_pdf.margin_left + 5.0).min(50.0);
             let new_text = format!("{:.1}", context.settings.epub_to_pdf.margin_left);
             if let Some(btn) = children[offset + 7].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -281,7 +286,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseEpubPdfMarginLeft) => {
-            context.settings.epub_to_pdf.margin_left = (context.settings.epub_to_pdf.margin_left - 5.0).max(0.0);
+            context.settings.epub_to_pdf.margin_left =
+                (context.settings.epub_to_pdf.margin_left - 5.0).max(0.0);
             let new_text = format!("{:.1}", context.settings.epub_to_pdf.margin_left);
             if let Some(btn) = children[offset + 7].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -289,7 +295,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseEpubPdfMarginRight) => {
-            context.settings.epub_to_pdf.margin_right = (context.settings.epub_to_pdf.margin_right + 5.0).min(50.0);
+            context.settings.epub_to_pdf.margin_right =
+                (context.settings.epub_to_pdf.margin_right + 5.0).min(50.0);
             let new_text = format!("{:.1}", context.settings.epub_to_pdf.margin_right);
             if let Some(btn) = children[offset + 9].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -297,7 +304,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseEpubPdfMarginRight) => {
-            context.settings.epub_to_pdf.margin_right = (context.settings.epub_to_pdf.margin_right - 5.0).max(0.0);
+            context.settings.epub_to_pdf.margin_right =
+                (context.settings.epub_to_pdf.margin_right - 5.0).max(0.0);
             let new_text = format!("{:.1}", context.settings.epub_to_pdf.margin_right);
             if let Some(btn) = children[offset + 9].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -320,7 +328,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseEpubPdfImageQuality) => {
-            context.settings.epub_to_pdf.image_quality = (context.settings.epub_to_pdf.image_quality + 10).min(100);
+            context.settings.epub_to_pdf.image_quality =
+                (context.settings.epub_to_pdf.image_quality + 10).min(100);
             let new_text = format!("{}", context.settings.epub_to_pdf.image_quality);
             if let Some(btn) = children[offset + 13].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -328,7 +337,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseEpubPdfImageQuality) => {
-            context.settings.epub_to_pdf.image_quality = (context.settings.epub_to_pdf.image_quality - 10).max(10);
+            context.settings.epub_to_pdf.image_quality =
+                (context.settings.epub_to_pdf.image_quality - 10).max(10);
             let new_text = format!("{}", context.settings.epub_to_pdf.image_quality);
             if let Some(btn) = children[offset + 13].downcast_mut::<Button>() {
                 btn.update(new_text, rq);

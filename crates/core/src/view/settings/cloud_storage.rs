@@ -237,7 +237,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::ToggleCloudStorageSyncProgress) => {
-            context.settings.cloud_storage.sync_progress = !context.settings.cloud_storage.sync_progress;
+            context.settings.cloud_storage.sync_progress =
+                !context.settings.cloud_storage.sync_progress;
             if let Some(btn) = children[offset + 9].downcast_mut::<Button>() {
                 btn.update(
                     if context.settings.cloud_storage.sync_progress {
@@ -252,7 +253,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::ToggleCloudStorageSyncAnnotations) => {
-            context.settings.cloud_storage.sync_annotations = !context.settings.cloud_storage.sync_annotations;
+            context.settings.cloud_storage.sync_annotations =
+                !context.settings.cloud_storage.sync_annotations;
             if let Some(btn) = children[offset + 11].downcast_mut::<Button>() {
                 btn.update(
                     if context.settings.cloud_storage.sync_annotations {

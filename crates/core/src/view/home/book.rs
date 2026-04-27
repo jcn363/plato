@@ -340,9 +340,14 @@ impl View for Book {
         // Time to finish estimate
         if let Some(reader_info) = &self.info.reader {
             if !reader_info.finished && reader_info.pages_count > 0 {
-                let remaining_pages = reader_info.pages_count.saturating_sub(reader_info.current_page);
-                let time_to_finish = self.info.reading_stats.estimate_time_to_finish(remaining_pages);
-                
+                let remaining_pages = reader_info
+                    .pages_count
+                    .saturating_sub(reader_info.current_page);
+                let time_to_finish = self
+                    .info
+                    .reading_stats
+                    .estimate_time_to_finish(remaining_pages);
+
                 if time_to_finish > 0 {
                     let duration = Duration::from_secs(time_to_finish);
                     let time_str = if duration.as_secs() >= 3600 {
@@ -352,7 +357,7 @@ impl View for Book {
                         let minutes = duration.as_secs() / 60;
                         format!("{}m left", minutes)
                     };
-                    
+
                     let font = font_from_style(fonts, &MD_SIZE, dpi);
                     let plan = font.plan(&time_str, None, None);
                     let pt = pt!(
@@ -363,10 +368,10 @@ impl View for Book {
                 }
 
                 // Progress percentage
-                let progress = self.info.reading_stats.progress_percentage(
-                    reader_info.current_page,
-                    reader_info.pages_count
-                );
+                let progress = self
+                    .info
+                    .reading_stats
+                    .progress_percentage(reader_info.current_page, reader_info.pages_count);
                 let progress_str = format!("{:.0}%", progress);
                 let font = font_from_style(fonts, &MD_SIZE, dpi);
                 let plan = font.plan(&progress_str, None, None);

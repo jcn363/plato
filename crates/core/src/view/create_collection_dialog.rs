@@ -6,8 +6,8 @@
 
 use super::button::Button;
 use super::label::Label;
-use super::{Align, Bus, EntryId, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
 use super::BORDER_RADIUS_MEDIUM;
+use super::{Align, Bus, EntryId, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
 use crate::color;
 use crate::context::Context;
 use crate::font::{font_from_style, Fonts, NORMAL_STYLE};
@@ -154,7 +154,11 @@ impl View for CreateCollectionDialog {
                 true
             }
             Event::Gesture(GestureEvent::Tap(center)) if self.rect.includes(*center) => {
-                if let Some(index) = self.children.iter().position(|c| c.rect().includes(*center)) {
+                if let Some(index) = self
+                    .children
+                    .iter()
+                    .position(|c| c.rect().includes(*center))
+                {
                     self.children[index].handle_event(event, hub, bus, rq, context);
                 }
                 true
@@ -179,11 +183,7 @@ impl View for CreateCollectionDialog {
         let dpi = crate::unit::get_device_dpi();
         let border_radius = scale_by_dpi(BORDER_RADIUS_MEDIUM, dpi) as i32;
         let corners = CornerSpec::Uniform(border_radius);
-        fb.draw_rounded_rectangle(
-            &rect,
-            &corners,
-            color::WHITE,
-        );
+        fb.draw_rounded_rectangle(&rect, &corners, color::WHITE);
         for child in self.children.iter() {
             let child_rect = child.rect();
             if let Some(intersection) = rect.intersection(child_rect) {

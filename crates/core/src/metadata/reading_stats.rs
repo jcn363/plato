@@ -135,11 +135,11 @@ impl ReadingStatistics {
     /// Update reading streak
     fn update_reading_streak(&mut self) {
         let today = Local::now().naive_local().date();
-        
+
         if let Some(last_date) = self.last_reading_date {
             let last_date_naive = last_date.date();
             let days_diff = (today - last_date_naive).num_days();
-            
+
             if days_diff == 0 {
                 // Same day, streak continues
             } else if days_diff == 1 {
@@ -188,7 +188,7 @@ mod reading_stats_tests {
     fn test_record_page_turn() {
         let mut stats = ReadingStatistics::new();
         stats.record_page_turn(1, 300);
-        
+
         assert_eq!(stats.total_pages_read, 1);
         assert!(stats.last_reading_date.is_some());
     }
@@ -226,7 +226,7 @@ mod reading_stats_tests {
     #[test]
     fn test_prune_old_history() {
         let mut stats = ReadingStatistics::new();
-        
+
         // Add some page turns
         let old_date = Local::now().naive_local() - chrono::Duration::days(10);
         let event = PageTurnEvent {
@@ -235,9 +235,9 @@ mod reading_stats_tests {
             session_duration_seconds: 60,
         };
         stats.page_turns.insert(old_date, event);
-        
+
         stats.prune_old_history(7);
-        
+
         assert!(stats.page_turns.is_empty());
     }
 
@@ -245,7 +245,7 @@ mod reading_stats_tests {
     fn test_from_reader_info() {
         let mut reader_info = ReaderInfo::default();
         reader_info.reading_time_seconds = 3600; // 1 hour
-        
+
         let stats = ReadingStatistics::from_reader_info(&reader_info);
         assert_eq!(stats.total_reading_time_seconds, 3600);
     }

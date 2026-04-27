@@ -79,9 +79,9 @@ This document explains the implementation status and constraints for Optical Cha
 
 ### Implementation Status
 
-**Desktop**: ❌ **Not Recommended** (outside core mission)
-**Android**: ✅ **Recommended for Implementation** (platform has TTS support)
-**Kobo**: ❌ **Not Recommended** (no audio subsystem, hardware limitations)
+**Desktop**: ✅ **Implemented** (via `tts` crate using system TTS)
+**Android**: ✅ **Implemented** (via Android TextToSpeech API)
+**Kobo**: ❌ **Not Available** (no audio subsystem, hardware limitations)
 
 ### Why Not Implemented on Kobo
 
@@ -100,59 +100,66 @@ This document explains the implementation status and constraints for Optical Cha
 
 5. **E-ink Display Context**: E-readers are primarily designed for silent, visual reading. Adding TTS would deviate from the core use case and add complexity without significant benefit to the target user base.
 
-### Android Implementation Plan
+### Implementation Details
 
-**Why Feasible on Android:**
+**Android Implementation:**
+- Uses Android's `TextToSpeech` API via JNI (Java Native Interface)
+- Located in `crates/core/src/tts_android.rs`
+- Supports: play, stop, rate adjustment
+- UI integration in `crates/core/src/view/tts.rs`
 
-- Android has built-in TTS engine (TextToSpeech API)
-- No additional dependencies required
-- Platform-native accessibility integration
-- Consistent with Android app ecosystem
+**Desktop Implementation:**
+- Uses the `tts` crate for cross-platform TTS
+- Linux: speech-dispatcher
+- macOS: AVSpeechSynthesizer
+- Windows: SAPI5
+- Located in `crates/core/src/tts_desktop.rs`
 
-**Implementation Strategy:**
+**UI Features:**
+- Play/Pause/Stop controls
+- Speed slider (0.5x to 2.0x)
+- Status indicator
+- Only shown on supported platforms
 
-1. **Use Android's TextToSpeech API**:
-   - Leverage Android's built-in TTS engine
-   - Support multiple languages via system TTS
-   - Handle TTS initialization and callbacks
-   - Implement play/pause/stop controls
+**Usage:**
+```rust
+use plato_core::tts::{TtsEngine, TtsOptions, create_tts_engine};
 
-2. **UI Integration**:
-   - Add TTS button to reader view
-   - Show reading progress
-   - Allow speed adjustment
-   - Support text selection for TTS
+let mut tts = create_tts_engine()?;
+tts.initialize()?;
+tts.speak("Hello, world!", TtsOptions::default())?;
+```
 
-3. **Accessibility**:
-   - Integrate with Android's accessibility framework
-   - Support screen reader compatibility
-   - Provide proper focus management
-
-**Implementation Cost**: 4/10 (Low-Medium) - Android provides TTS API, need UI integration
-
-**User Value**: Moderate - Accessibility feature for visually impaired users
+**Feature Flag:**
+Enable TTS with the `tts` feature in `Cargo.toml`:
+```toml
+plato-core = { path = "../core", features = ["tts"] }
+```
 
 ### Implementation Verdict
 
-**Kobo**: Not recommended due to no audio subsystem, hardware limitations, and better alternatives.
+**Kobo**: Not available due to no audio subsystem, hardware limitations, and better alternatives.
 
-**Desktop**: Not recommended - outside core mission, better served by system TTS tools.
+**Desktop**: ✅ **Implemented** - Uses system TTS via `tts` crate.
 
-**Android**: Recommended implementation using Android's built-in TextToSpeech API.
+**Android**: ✅ **Implemented** - Uses Android's built-in TextToSpeech API via JNI.
 
 ## Summary
 
 **OCR Implementation:**
+
 - **Kobo**: Not recommended due to hardware limitations (256MB RAM, 1GHz CPU), battery drain, and better alternatives.
 - **Desktop**: Recommended implementation using PDFPurr's OCR capabilities (Tesseract, Windows OCR, ocrs engines).
 - **Android**: Recommended implementation using Tesseract Android library with background processing.
 
 **TTS Implementation:**
+
 - **Kobo**: Not recommended due to no audio subsystem, hardware limitations, and better alternatives.
 - **Desktop**: Not recommended - outside core mission, better served by system TTS tools.
 - **Android**: Recommended implementation using Android's built-in TextToSpeech API.
 
 Both OCR and TTS are omitted on Kobo because they:
+
 - Require significant hardware resources
 - Are outside Plato's core mission of document reading on e-readers
 - Have limited use cases for the typical e-reader user

@@ -13,7 +13,8 @@ This document identifies potential new features and enhancements for Plato, prio
 - Pure Rust migration complete (no C dependencies)
 - All files AGENTS.md compliant (under 1,000 lines)
 - Comprehensive PDF manipulation (PDFPurr + lopdf)
-- 6 features explicitly excluded by design (OCR, TTS, JavaScript, etc.)
+- ✅ **TTS implemented** for Mobile/Desktop (Android, Linux, macOS, Windows)
+- 5 features excluded by design (OCR, JavaScript, Forms, Signatures, PDF/A-X)
 
 **Implementation Priorities**:
 
@@ -496,17 +497,19 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 #### Text-to-Speech (TTS)
 
 **Kobo Status**: ❌ Excluded (no audio subsystem)
-**Mobile/Desktop Status**: ✅ **Recommended for Implementation**
+**Mobile/Desktop Status**: ✅ **Implemented**
 
-**Why Feasible on Mobile/Desktop:**
+**Implementation Details:**
 
-- **Android**: Native `TextToSpeech` API available
-- **iOS**: Native `AVSpeechSynthesizer` available
-- **Linux**: espeak/piper available via system audio
+- **Android**: Native `TextToSpeech` API via JNI (crates/core/src/tts_android.rs)
+- **iOS**: Native `AVSpeechSynthesizer` available (can be added similarly)
+- **Linux**: speech-dispatcher via `tts` crate (crates/core/src/tts_desktop.rs)
+- **macOS**: AVSpeechSynthesizer via `tts` crate
+- **Windows**: SAPI5 via `tts` crate
 - Full audio hardware support on all platforms
-- No memory/CPU constraints
+- UI controls: Play/Pause/Stop, speed slider (0.5x-2.0x)
 
-**Implementation Cost**: 3/10 (Low) - Use platform-native APIs
+**Implementation Cost**: 3/10 (Low) - Uses platform-native APIs
 
 **User Value**: High - Accessibility feature for visually impaired users
 
@@ -677,8 +680,9 @@ The following features are explicitly not recommended based on existing document
 
 ### Text-to-Speech (TTS) (for Mobile/Desktop only)
 
-- **Status**: Excluded by design (see `doc/OCR_TTS.md`)
-- **Reason**: No audio subsystem on Kobo devices, outside core mission
+- **Status**: ✅ **Implemented** (see `doc/OCR_TTS.md`)
+- **Implementation**: Uses `tts` crate on Desktop, Android TextToSpeech API via JNI on Android
+- **Not available on Kobo**: No audio hardware support on e-readers
 
 ### JavaScript Integration (NOT RECOMMENDED)
 

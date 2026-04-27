@@ -29,7 +29,11 @@ pub fn build_rows(
     );
     children.push(Box::new(label) as Box<dyn View>);
 
-    let key_text = settings.pocket.consumer_key.as_ref().map_or("Not Set".to_string(), |k| k.clone());
+    let key_text = settings
+        .pocket
+        .consumer_key
+        .as_ref()
+        .map_or("Not Set".to_string(), |k| k.clone());
     let ctrl_rect = rect![
         rect.min.x + max_label_width + 2 * padding,
         y,
@@ -216,7 +220,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::TogglePocketArchiveAfterReading) => {
-            context.settings.pocket.archive_after_reading = !context.settings.pocket.archive_after_reading;
+            context.settings.pocket.archive_after_reading =
+                !context.settings.pocket.archive_after_reading;
             if let Some(btn) = children[offset + 9].downcast_mut::<Button>() {
                 btn.update(
                     if context.settings.pocket.archive_after_reading {

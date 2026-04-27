@@ -6,7 +6,9 @@
 #![cfg(target_os = "linux")]
 
 use crate::context::Context;
-use crate::document::validation::{PdfALevel, PdfAValidator, PdfXLevel, PdfXValidator, ValidationResult};
+use crate::document::validation::{
+    PdfALevel, PdfAValidator, PdfXLevel, PdfXValidator, ValidationResult,
+};
 use crate::font::Fonts;
 use crate::geom::Rectangle;
 use std::path::{Path, PathBuf};
@@ -30,6 +32,8 @@ pub struct ValidationView {
     children: Vec<Box<dyn View>>,
     pdf_path: PathBuf,
     validation_result: Option<ValidationResult>,
+    #[cfg(feature = "ocr")]
+    ocr_result: Option<String>,
 }
 
 impl ValidationView {
@@ -42,7 +46,8 @@ impl ValidationView {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
 
-        let top_bar_height = scale_by_dpi(SMALL_BAR_HEIGHT, context.fonts.sans_serif.regular.dpi) as i32;
+        let top_bar_height =
+            scale_by_dpi(SMALL_BAR_HEIGHT, context.fonts.sans_serif.regular.dpi) as i32;
         let content_y = rect.min.y + top_bar_height + THICKNESS_MEDIUM as i32;
 
         // Top bar
@@ -69,7 +74,10 @@ impl ValidationView {
                 rect.max.x - PADDING,
                 y + BUTTON_HEIGHT
             ],
-            format!("Document: {}", pdf_path.file_name().unwrap_or_default().to_string_lossy()),
+            format!(
+                "Document: {}",
+                pdf_path.file_name().unwrap_or_default().to_string_lossy()
+            ),
             Align::Left(0),
         );
         children.push(Box::new(doc_label) as Box<dyn View>);
@@ -149,12 +157,45 @@ impl ValidationView {
             y += BUTTON_HEIGHT + BUTTON_SPACING;
         }
 
+        #[cfg(feature = "ocr")]
+        {
+            // OCR section
+            y += BUTTON_SPACING;
+            let ocr_header = Label::new(
+                rect![
+                    rect.min.x + PADDING,
+                    y,
+                    rect.max.x - PADDING,
+                    y + BUTTON_HEIGHT
+                ],
+                "OCR (Text Extraction from Scanned PDFs)".to_string(),
+                Align::Left(0),
+            );
+            children.push(Box::new(ocr_header) as Box<dyn View>);
+            y += BUTTON_HEIGHT + BUTTON_SPACING;
+
+            let ocr_btn = Button::new(
+                rect![
+                    rect.min.x + PADDING,
+                    y,
+                    rect.min.x + PADDING + 200,
+                    y + BUTTON_HEIGHT
+                ],
+                Event::Select(EntryId::OcrDocument(pdf_path.to_path_buf())),
+                "OCR Current Page".to_string(),
+            );
+            children.push(Box::new(ocr_btn) as Box<dyn View>);
+            y += BUTTON_HEIGHT + BUTTON_SPACING;
+        }
+
         Ok(ValidationView {
             id,
             rect,
             children,
             pdf_path: pdf_path.to_path_buf(),
             validation_result: None,
+            #[cfg(feature = "ocr")]
+            ocr_result: None,
         })
     }
 
@@ -166,9 +207,26 @@ impl ValidationView {
     }
 
     pub fn validate_pdfx(&mut self, level: PdfXLevel) -> Result<(), Error> {
-        let pdf_data = std::fs::read(&self.pdf_path)?;
+        let pdf_data = std::fs::read(&self.pdf_path)
+            .map_err(|e| anyhow::format_err!("Failed to read PDF: {}", e))?;
+
         let result = PdfXValidator::validate(&pdf_data, level)?;
         self.validation_result = Some(result);
+        Ok(())
+    }
+
+    #[cfg(feature = "ocr")]
+    pub fn ocr_page(&mut self) -> Result<(), Error> {
+        use crate::document::ocr::OcrManager;
+
+        let ocr_manager = OcrManager::new();
+        let current_page = 0; // TODO: Get actual current page
+        let text = ocr_manager
+            .ocr_page(&self.pdf_path, current_page)
+            .map_err(|e| anyhow::format_err!("Failed to OCR page: {}", e))?;
+
+        // Store OCR result
+        self.ocr_result = Some(text);
         Ok(())
     }
 
@@ -189,7 +247,12 @@ impl View for ValidationView {
         false
     }
 
-    fn render(&self, _fb: &mut dyn crate::framebuffer::Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
+    fn render(
+        &self,
+        _fb: &mut dyn crate::framebuffer::Framebuffer,
+        _rect: Rectangle,
+        _fonts: &mut Fonts,
+    ) {
         // Rendering is handled by children
     }
 

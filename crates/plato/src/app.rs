@@ -546,6 +546,34 @@ pub fn run() -> Result<(), Error> {
                     }
                 }
             }
+            #[cfg(all(feature = "ocr", target_os = "linux"))]
+            Event::Select(EntryId::OcrDocument(ref path)) => {
+                match plato_core::view::validation::ValidationView::new(
+                    context.fb.rect(),
+                    path,
+                    &mut rq,
+                    &mut context,
+                ) {
+                    Ok(mut validation_view) => {
+                        if let Err(e) = validation_view.ocr_page() {
+                            log_error!("Failed to OCR page: {}", e);
+                        }
+                        goto_view(
+                            Box::new(validation_view),
+                            &mut view,
+                            &mut history,
+                            context.display.rotation,
+                            context.fb.monochrome(),
+                            context.fb.dithered(),
+                            &mut rq,
+                            &mut context,
+                        );
+                    }
+                    Err(e) => {
+                        log_error!("Failed to open PDF Validation: {}", e);
+                    }
+                }
+            }
             Event::Back => {
                 if handle_back_event(
                     &mut view,

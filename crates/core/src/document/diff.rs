@@ -1,5 +1,5 @@
 //! Document comparison and diff view functionality
-//! 
+//!
 //! This module provides tools for comparing two documents and displaying differences.
 
 use anyhow::{format_err, Error};
@@ -30,10 +30,7 @@ pub struct DiffResult {
 }
 
 /// Compare two text documents and return their differences
-pub fn compare_documents(
-    file1: &Path,
-    file2: &Path,
-) -> Result<DiffResult, Error> {
+pub fn compare_documents(file1: &Path, file2: &Path) -> Result<DiffResult, Error> {
     let text1 = std::fs::read_to_string(file1)
         .map_err(|e| format_err!("Failed to read file {:?}: {}", file1, e))?;
     let text2 = std::fs::read_to_string(file2)
@@ -43,10 +40,19 @@ pub fn compare_documents(
     let lines2: Vec<&str> = text2.lines().collect();
 
     let changes = compute_diff(&lines1, &lines2);
-    
-    let added_count = changes.iter().filter(|c| matches!(c, DiffChange::Added(_))).count();
-    let removed_count = changes.iter().filter(|c| matches!(c, DiffChange::Removed(_))).count();
-    let unchanged_count = changes.iter().filter(|c| matches!(c, DiffChange::Unchanged(_))).count();
+
+    let added_count = changes
+        .iter()
+        .filter(|c| matches!(c, DiffChange::Added(_)))
+        .count();
+    let removed_count = changes
+        .iter()
+        .filter(|c| matches!(c, DiffChange::Removed(_)))
+        .count();
+    let unchanged_count = changes
+        .iter()
+        .filter(|c| matches!(c, DiffChange::Unchanged(_)))
+        .count();
 
     Ok(DiffResult {
         changes,
@@ -138,7 +144,9 @@ mod tests {
         let lines1 = vec!["line1", "line2"];
         let lines2 = vec!["line1", "line2", "line3"];
         let changes = compute_diff(&lines1, &lines2);
-        assert!(changes.iter().any(|c| matches!(c, DiffChange::Added(s) if s == "line3")));
+        assert!(changes
+            .iter()
+            .any(|c| matches!(c, DiffChange::Added(s) if s == "line3")));
     }
 
     #[test]
@@ -146,6 +154,8 @@ mod tests {
         let lines1 = vec!["line1", "line2", "line3"];
         let lines2 = vec!["line1", "line2"];
         let changes = compute_diff(&lines1, &lines2);
-        assert!(changes.iter().any(|c| matches!(c, DiffChange::Removed(s) if s == "line3")));
+        assert!(changes
+            .iter()
+            .any(|c| matches!(c, DiffChange::Removed(s) if s == "line3")));
     }
 }

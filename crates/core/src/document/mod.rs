@@ -28,6 +28,8 @@
 //! - **sysinfo.rs**: System information HTML generator
 //! - **forms.rs**: PDF forms handling for mobile/desktop platforms (AcroForm parsing, form field values)
 //! - **signatures.rs**: Digital signatures for PDF documents on desktop platforms (certificate management, signing, verification)
+//! - **validation.rs**: PDF/A and PDF/X validation for desktop platforms (standards compliance checking)
+//! - **ocr.rs**: OCR for scanned PDFs on desktop and Android platforms (text extraction from images)
 //!
 //! ## Module Hierarchy
 //!
@@ -88,11 +90,15 @@ pub mod html;
 pub mod pdf;
 pub mod pdf_manipulator;
 mod pdfpurr;
-#[cfg(target_os = "linux")]
-pub mod signatures;
-pub mod validation;
 mod progressive_loader;
 pub mod sysinfo;
+
+#[cfg(target_os = "linux")]
+pub mod signatures;
+#[cfg(target_os = "linux")]
+pub mod validation;
+#[cfg(feature = "ocr")]
+pub mod ocr;
 
 #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
 pub mod forms;

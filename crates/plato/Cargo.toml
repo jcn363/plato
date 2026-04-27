@@ -10,4 +10,4 @@ name = "plato"
 path = "src/main.rs"
 
 [dependencies]
-plato-core = { path = "../core" }
+plato-core = { path = "../core", features = ["ocr"] }

@@ -164,20 +164,12 @@ impl Collections {
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         // Ensure parent directory exists
         if let Some(parent) = path.as_ref().parent() {
-            fs::create_dir_all(parent).with_context(|| {
-                format!(
-                    "Failed to create directory {}",
-                    parent.display()
-                )
-            })?;
+            fs::create_dir_all(parent)
+                .with_context(|| format!("Failed to create directory {}", parent.display()))?;
         }
 
-        save_json(self, path.as_ref()).with_context(|| {
-            format!(
-                "Failed to save collections to {}",
-                path.as_ref().display()
-            )
-        })
+        save_json(self, path.as_ref())
+            .with_context(|| format!("Failed to save collections to {}", path.as_ref().display()))
     }
 
     /// Generate a unique ID for a new collection
@@ -191,7 +183,11 @@ impl Collections {
     }
 
     /// Check if a book matches smart collection rules
-    pub fn matches_smart_collection(&self, collection_id: &str, info: &crate::metadata::Info) -> bool {
+    pub fn matches_smart_collection(
+        &self,
+        collection_id: &str,
+        info: &crate::metadata::Info,
+    ) -> bool {
         let Some(collection) = self.get(collection_id) else {
             return false;
         };
@@ -362,27 +358,31 @@ mod collections_tests {
     fn test_collections_top_level() {
         let mut collections = Collections::new();
 
-        collections.add(Collection {
-            id: "parent".to_string(),
-            name: "Parent".to_string(),
-            parent_id: None,
-            color: None,
-            icon: None,
-            rules: None,
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            modified_at: "2024-01-01T00:00:00Z".to_string(),
-        }).unwrap();
+        collections
+            .add(Collection {
+                id: "parent".to_string(),
+                name: "Parent".to_string(),
+                parent_id: None,
+                color: None,
+                icon: None,
+                rules: None,
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+                modified_at: "2024-01-01T00:00:00Z".to_string(),
+            })
+            .unwrap();
 
-        collections.add(Collection {
-            id: "child".to_string(),
-            name: "Child".to_string(),
-            parent_id: Some("parent".to_string()),
-            color: None,
-            icon: None,
-            rules: None,
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            modified_at: "2024-01-01T00:00:00Z".to_string(),
-        }).unwrap();
+        collections
+            .add(Collection {
+                id: "child".to_string(),
+                name: "Child".to_string(),
+                parent_id: Some("parent".to_string()),
+                color: None,
+                icon: None,
+                rules: None,
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+                modified_at: "2024-01-01T00:00:00Z".to_string(),
+            })
+            .unwrap();
 
         let top_level = collections.top_level();
         assert_eq!(top_level.len(), 1);
@@ -393,38 +393,44 @@ mod collections_tests {
     fn test_collections_children() {
         let mut collections = Collections::new();
 
-        collections.add(Collection {
-            id: "parent".to_string(),
-            name: "Parent".to_string(),
-            parent_id: None,
-            color: None,
-            icon: None,
-            rules: None,
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            modified_at: "2024-01-01T00:00:00Z".to_string(),
-        }).unwrap();
+        collections
+            .add(Collection {
+                id: "parent".to_string(),
+                name: "Parent".to_string(),
+                parent_id: None,
+                color: None,
+                icon: None,
+                rules: None,
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+                modified_at: "2024-01-01T00:00:00Z".to_string(),
+            })
+            .unwrap();
 
-        collections.add(Collection {
-            id: "child1".to_string(),
-            name: "Child 1".to_string(),
-            parent_id: Some("parent".to_string()),
-            color: None,
-            icon: None,
-            rules: None,
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            modified_at: "2024-01-01T00:00:00Z".to_string(),
-        }).unwrap();
+        collections
+            .add(Collection {
+                id: "child1".to_string(),
+                name: "Child 1".to_string(),
+                parent_id: Some("parent".to_string()),
+                color: None,
+                icon: None,
+                rules: None,
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+                modified_at: "2024-01-01T00:00:00Z".to_string(),
+            })
+            .unwrap();
 
-        collections.add(Collection {
-            id: "child2".to_string(),
-            name: "Child 2".to_string(),
-            parent_id: Some("parent".to_string()),
-            color: None,
-            icon: None,
-            rules: None,
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            modified_at: "2024-01-01T00:00:00Z".to_string(),
-        }).unwrap();
+        collections
+            .add(Collection {
+                id: "child2".to_string(),
+                name: "Child 2".to_string(),
+                parent_id: Some("parent".to_string()),
+                color: None,
+                icon: None,
+                rules: None,
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+                modified_at: "2024-01-01T00:00:00Z".to_string(),
+            })
+            .unwrap();
 
         let children = collections.children("parent");
         assert_eq!(children.len(), 2);
@@ -434,16 +440,18 @@ mod collections_tests {
     fn test_collections_clear() {
         let mut collections = Collections::new();
 
-        collections.add(Collection {
-            id: "test_id".to_string(),
-            name: "Test Collection".to_string(),
-            parent_id: None,
-            color: None,
-            icon: None,
-            rules: None,
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            modified_at: "2024-01-01T00:00:00Z".to_string(),
-        }).unwrap();
+        collections
+            .add(Collection {
+                id: "test_id".to_string(),
+                name: "Test Collection".to_string(),
+                parent_id: None,
+                color: None,
+                icon: None,
+                rules: None,
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+                modified_at: "2024-01-01T00:00:00Z".to_string(),
+            })
+            .unwrap();
 
         collections.clear();
         assert!(collections.is_empty());
@@ -453,16 +461,18 @@ mod collections_tests {
     fn test_collections_save_load() {
         let mut collections = Collections::new();
 
-        collections.add(Collection {
-            id: "test_id".to_string(),
-            name: "Test Collection".to_string(),
-            parent_id: None,
-            color: Some("#FF0000".to_string()),
-            icon: Some("folder".to_string()),
-            rules: None,
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            modified_at: "2024-01-01T00:00:00Z".to_string(),
-        }).unwrap();
+        collections
+            .add(Collection {
+                id: "test_id".to_string(),
+                name: "Test Collection".to_string(),
+                parent_id: None,
+                color: Some("#FF0000".to_string()),
+                icon: Some("folder".to_string()),
+                rules: None,
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+                modified_at: "2024-01-01T00:00:00Z".to_string(),
+            })
+            .unwrap();
 
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
@@ -504,19 +514,21 @@ mod collections_tests {
     fn test_matches_smart_collection_reading_status() {
         let mut collections = Collections::new();
 
-        collections.add(Collection {
-            id: "reading".to_string(),
-            name: "Reading".to_string(),
-            parent_id: None,
-            color: None,
-            icon: None,
-            rules: Some(SmartCollectionRules {
-                reading_status: Some("reading".to_string()),
-                ..Default::default()
-            }),
-            created_at: "2024-01-01T00:00:00Z".to_string(),
-            modified_at: "2024-01-01T00:00:00Z".to_string(),
-        }).unwrap();
+        collections
+            .add(Collection {
+                id: "reading".to_string(),
+                name: "Reading".to_string(),
+                parent_id: None,
+                color: None,
+                icon: None,
+                rules: Some(SmartCollectionRules {
+                    reading_status: Some("reading".to_string()),
+                    ..Default::default()
+                }),
+                created_at: "2024-01-01T00:00:00Z".to_string(),
+                modified_at: "2024-01-01T00:00:00Z".to_string(),
+            })
+            .unwrap();
 
         let mut info = crate::metadata::Info::default();
         info.reader = Some(crate::metadata::ReaderInfo::default());

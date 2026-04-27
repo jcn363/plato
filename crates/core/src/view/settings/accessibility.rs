@@ -118,7 +118,8 @@ pub fn handle_event(
 ) -> bool {
     match *evt {
         Event::Select(EntryId::ToggleHighContrast) => {
-            context.settings.accessibility.high_contrast = !context.settings.accessibility.high_contrast;
+            context.settings.accessibility.high_contrast =
+                !context.settings.accessibility.high_contrast;
             if let Some(btn) = children[offset + 1].downcast_mut::<Button>() {
                 btn.update(
                     if context.settings.accessibility.high_contrast {
@@ -133,7 +134,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseLetterSpacing) => {
-            context.settings.accessibility.letter_spacing = (context.settings.accessibility.letter_spacing + 0.1).min(1.0);
+            context.settings.accessibility.letter_spacing =
+                (context.settings.accessibility.letter_spacing + 0.1).min(1.0);
             let new_text = format!("{:.1}", context.settings.accessibility.letter_spacing);
             if let Some(btn) = children[offset + 3].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -141,7 +143,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseLetterSpacing) => {
-            context.settings.accessibility.letter_spacing = (context.settings.accessibility.letter_spacing - 0.1).max(0.0);
+            context.settings.accessibility.letter_spacing =
+                (context.settings.accessibility.letter_spacing - 0.1).max(0.0);
             let new_text = format!("{:.1}", context.settings.accessibility.letter_spacing);
             if let Some(btn) = children[offset + 3].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -149,7 +152,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseLineHeight) => {
-            context.settings.accessibility.line_height = (context.settings.accessibility.line_height + 0.1).min(3.0);
+            context.settings.accessibility.line_height =
+                (context.settings.accessibility.line_height + 0.1).min(3.0);
             let new_text = format!("{:.1}", context.settings.accessibility.line_height);
             if let Some(btn) = children[offset + 5].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -157,7 +161,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseLineHeight) => {
-            context.settings.accessibility.line_height = (context.settings.accessibility.line_height - 0.1).max(0.5);
+            context.settings.accessibility.line_height =
+                (context.settings.accessibility.line_height - 0.1).max(0.5);
             let new_text = format!("{:.1}", context.settings.accessibility.line_height);
             if let Some(btn) = children[offset + 5].downcast_mut::<Button>() {
                 btn.update(new_text, rq);

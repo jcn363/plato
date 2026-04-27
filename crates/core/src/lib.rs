@@ -44,6 +44,16 @@ pub mod update;
 pub mod validation;
 pub mod view;
 
+// TTS module - available on supported platforms (Android, Desktop)
+// Not available on Kobo e-readers (no audio hardware)
+pub mod tts;
+
+#[cfg(feature = "tts")]
+pub mod tts_desktop;
+
+#[cfg(all(feature = "tts", target_os = "android"))]
+pub mod tts_android;
+
 pub use reading_time::{
     estimate_from_page_count, estimate_from_word_count, format_duration, ReadingSpeed,
 };

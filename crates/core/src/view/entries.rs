@@ -52,7 +52,7 @@ impl EntryKind {
 
 use crate::document::validation::{PdfALevel, PdfXLevel};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EntryId {
     About,
     SystemInfo,
@@ -126,6 +126,37 @@ pub enum EntryId {
     ValidatePdfA(PathBuf, PdfALevel),
     #[cfg(target_os = "linux")]
     ValidatePdfX(PathBuf, PdfXLevel),
+    #[cfg(all(feature = "ocr", target_os = "linux"))]
+    OcrDocument(PathBuf),
+    // TTS EntryIds (Android and Desktop only)
+    #[cfg(any(
+        target_os = "android",
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "windows"
+    ))]
+    TtsPlay,
+    #[cfg(any(
+        target_os = "android",
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "windows"
+    ))]
+    TtsPause,
+    #[cfg(any(
+        target_os = "android",
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "windows"
+    ))]
+    TtsStop,
+    #[cfg(any(
+        target_os = "android",
+        target_os = "linux",
+        target_os = "macos",
+        target_os = "windows"
+    ))]
+    TtsSetRate(f32),
     AdjustSelection,
     Annotations,
     Bookmarks,
@@ -541,6 +572,16 @@ impl EntryId {
             EntryId::ValidatePdfA(_, _) => "ValidatePdfA",
             #[cfg(target_os = "linux")]
             EntryId::ValidatePdfX(_, _) => "ValidatePdfX",
+            #[cfg(all(feature = "ocr", target_os = "linux"))]
+            EntryId::OcrDocument(_) => "OcrDocument",
+            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))]
+            EntryId::TtsPlay => "TtsPlay",
+            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))]
+            EntryId::TtsPause => "TtsPause",
+            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))]
+            EntryId::TtsStop => "TtsStop",
+            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos", target_os = "windows"))]
+            EntryId::TtsSetRate(_) => "TtsSetRate",
             EntryId::AllBooks => "AllBooks",
             EntryId::Collection(_) => "Collection",
             EntryId::CreateCollection => "CreateCollection",

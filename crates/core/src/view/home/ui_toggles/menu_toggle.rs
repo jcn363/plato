@@ -128,7 +128,7 @@ impl Home {
     /// Create sort menu
     fn create_sort_menu(&self, rect: Rectangle, context: &mut Context) -> Menu {
         let reverse_text = if self.reverse_order { "↓" } else { "↑" };
-        
+
         let entries = vec![
             EntryKind::Command(
                 format!("Reverse Order {}", reverse_text),
@@ -264,10 +264,7 @@ impl Home {
                 EntryId::Remove(std::path::PathBuf::new()),
             ),
             EntryKind::Separator,
-            EntryKind::Command(
-                "Add to Collection".to_string(),
-                EntryId::AddToCollection,
-            ),
+            EntryKind::Command("Add to Collection".to_string(), EntryId::AddToCollection),
             EntryKind::Command(
                 "Remove from Collection".to_string(),
                 EntryId::RemoveFromCollection,

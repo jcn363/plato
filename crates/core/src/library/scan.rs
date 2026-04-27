@@ -1,4 +1,4 @@
-use crate::document::{file_kind, epub::EpubDocument, pdf::PdfOpener};
+use crate::document::{epub::EpubDocument, file_kind, pdf::PdfOpener};
 use crate::helpers::{walkdir_visible, Fingerprint, Fp, IsHidden};
 use crate::log_info;
 use crate::metadata::BookQuery;
@@ -316,12 +316,16 @@ impl Library {
         match info.file.kind.as_str() {
             "epub" => {
                 if let Ok(mut doc) = EpubDocument::new(&path) {
-                    let _ = self.search_index.index_document(doc_id.clone(), &info, &mut doc);
+                    let _ = self
+                        .search_index
+                        .index_document(doc_id.clone(), &info, &mut doc);
                 }
             }
             "pdf" => {
                 if let Some(mut opener) = PdfOpener::new().and_then(|o| o.open(&path)) {
-                    let _ = self.search_index.index_document(doc_id.clone(), &info, &mut opener);
+                    let _ = self
+                        .search_index
+                        .index_document(doc_id.clone(), &info, &mut opener);
                 }
             }
             _ => {

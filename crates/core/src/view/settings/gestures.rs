@@ -144,7 +144,7 @@ pub fn handle_event(
             };
             *action = cycle_gesture_action(*action);
             let new_text = gesture_action_label(*action);
-            
+
             let index = match gesture_name.as_str() {
                 "Swipe Left" => 1,
                 "Swipe Right" => 3,
@@ -154,7 +154,7 @@ pub fn handle_event(
                 "Long Press" => 11,
                 _ => return false,
             };
-            
+
             if let Some(btn) = children[offset + index].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
             }

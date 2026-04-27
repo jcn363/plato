@@ -355,7 +355,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseLineHeight) => {
-            context.settings.reader.line_height = (context.settings.reader.line_height + 0.1).min(3.0);
+            context.settings.reader.line_height =
+                (context.settings.reader.line_height + 0.1).min(3.0);
             let new_text = format!("{:.1}", context.settings.reader.line_height);
             if let Some(btn) = children[offset + 11].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -363,7 +364,8 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseLineHeight) => {
-            context.settings.reader.line_height = (context.settings.reader.line_height - 0.1).max(0.5);
+            context.settings.reader.line_height =
+                (context.settings.reader.line_height - 0.1).max(0.5);
             let new_text = format!("{:.1}", context.settings.reader.line_height);
             if let Some(btn) = children[offset + 11].downcast_mut::<Button>() {
                 btn.update(new_text, rq);
@@ -371,7 +373,12 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseLetterSpacing) => {
-            let current = context.settings.reader.css_overrides.letter_spacing.unwrap_or(0.0);
+            let current = context
+                .settings
+                .reader
+                .css_overrides
+                .letter_spacing
+                .unwrap_or(0.0);
             let new_value = (current + 0.1).min(1.0);
             context.settings.reader.css_overrides.letter_spacing = Some(new_value);
             let new_text = format!("{:.1}", new_value);
@@ -381,7 +388,12 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseLetterSpacing) => {
-            let current = context.settings.reader.css_overrides.letter_spacing.unwrap_or(0.0);
+            let current = context
+                .settings
+                .reader
+                .css_overrides
+                .letter_spacing
+                .unwrap_or(0.0);
             let new_value = (current - 0.1).max(0.0);
             context.settings.reader.css_overrides.letter_spacing = if new_value == 0.0 {
                 None
@@ -395,7 +407,12 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::IncreaseWordSpacing) => {
-            let current = context.settings.reader.css_overrides.word_spacing.unwrap_or(0.0);
+            let current = context
+                .settings
+                .reader
+                .css_overrides
+                .word_spacing
+                .unwrap_or(0.0);
             let new_value = (current + 0.1).min(2.0);
             context.settings.reader.css_overrides.word_spacing = Some(new_value);
             let new_text = format!("{:.1}", new_value);
@@ -405,7 +422,12 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::DecreaseWordSpacing) => {
-            let current = context.settings.reader.css_overrides.word_spacing.unwrap_or(0.0);
+            let current = context
+                .settings
+                .reader
+                .css_overrides
+                .word_spacing
+                .unwrap_or(0.0);
             let new_value = (current - 0.1).max(0.0);
             context.settings.reader.css_overrides.word_spacing = if new_value == 0.0 {
                 None

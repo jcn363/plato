@@ -1,4 +1,3 @@
-use crate::view::{Align, Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 use crate::color::background;
 use crate::context::Context;
 use crate::font::Fonts;
@@ -9,6 +8,7 @@ use crate::input::DeviceEvent;
 use crate::unit::scale_by_dpi;
 use crate::view::button::Button;
 use crate::view::label::Label;
+use crate::view::{Align, Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
 
 #[derive(Debug)]
 pub struct SearchMenu {
@@ -28,7 +28,12 @@ impl SearchMenu {
 
         // Title
         let title = Label::new(
-            rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height],
+            rect![
+                rect.min.x + padding,
+                y,
+                rect.max.x - padding,
+                y + small_height
+            ],
             "Advanced Search".to_string(),
             Align::Left(padding),
         );
@@ -49,11 +54,7 @@ impl SearchMenu {
             children.push(Box::new(label) as Box<dyn View>);
 
             let button_rect = rect![rect.min.x + 160, y, rect.max.x - padding, y + small_height];
-            let button = Button::new(
-                button_rect,
-                Event::Select(entry_id),
-                "Add".to_string(),
-            );
+            let button = Button::new(button_rect, Event::Select(entry_id), "Add".to_string());
             children.push(Box::new(button) as Box<dyn View>);
             y += small_height;
         }
@@ -72,18 +73,19 @@ impl SearchMenu {
             children.push(Box::new(label) as Box<dyn View>);
 
             let button_rect = rect![rect.min.x + 160, y, rect.max.x - padding, y + small_height];
-            let button = Button::new(
-                button_rect,
-                Event::Select(entry_id),
-                "Off".to_string(),
-            );
+            let button = Button::new(button_rect, Event::Select(entry_id), "Off".to_string());
             children.push(Box::new(button) as Box<dyn View>);
             y += small_height;
         }
 
         // Clear button
         y += padding;
-        let clear_rect = rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height];
+        let clear_rect = rect![
+            rect.min.x + padding,
+            y,
+            rect.max.x - padding,
+            y + small_height
+        ];
         let clear = Button::new(
             clear_rect,
             Event::Select(EntryId::ClearSearchFilters),
@@ -91,11 +93,7 @@ impl SearchMenu {
         );
         children.push(Box::new(clear) as Box<dyn View>);
 
-        SearchMenu {
-            id,
-            rect,
-            children,
-        }
+        SearchMenu { id, rect, children }
     }
 }
 
@@ -124,10 +122,7 @@ impl View for SearchMenu {
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
-        fb.draw_rectangle(
-            &rect,
-            background(crate::theme::is_dark_mode()),
-        );
+        fb.draw_rectangle(&rect, background(crate::theme::is_dark_mode()));
         for child in self.children.iter() {
             let child_rect = child.rect();
             if let Some(intersection) = rect.intersection(child_rect) {

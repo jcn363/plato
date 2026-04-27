@@ -80,15 +80,18 @@ impl FormField {
         _doc: &Document,
     ) -> Result<Self, Error> {
         let field_type = Self::parse_field_type(dict)?;
-        let label = dict.get(b"TU")
+        let label = dict
+            .get(b"TU")
             .ok()
             .and_then(|obj| obj.as_str().ok())
             .map(|s| std::str::from_utf8(s).unwrap_or_default().to_string());
-        let default_value = dict.get(b"DV")
+        let default_value = dict
+            .get(b"DV")
             .ok()
             .and_then(|obj| obj.as_str().ok())
             .map(|s| std::str::from_utf8(s).unwrap_or_default().to_string());
-        let flags = dict.get(b"Ff")
+        let flags = dict
+            .get(b"Ff")
             .ok()
             .and_then(|obj| obj.as_i64().ok())
             .unwrap_or(0) as u32;
@@ -160,7 +163,10 @@ impl FormField {
                                 }
                             }
                             b"Sig" => Ok(FormFieldType::Signature),
-                            _ => bail!("Unknown field type: {:?}", std::str::from_utf8(ft).unwrap_or_default()),
+                            _ => bail!(
+                                "Unknown field type: {:?}",
+                                std::str::from_utf8(ft).unwrap_or_default()
+                            ),
                         };
                     }
                 }
@@ -179,7 +185,7 @@ impl FormField {
     /// Parse options for dropdown/radio fields
     fn parse_options(dict: &Dictionary) -> Result<Vec<String>, Error> {
         let mut options = Vec::new();
-        
+
         if let Ok(opt_obj) = dict.get(b"Opt") {
             if let Ok(opt_array) = opt_obj.as_array() {
                 for item in opt_array {
@@ -189,14 +195,16 @@ impl FormField {
                         // Option may be a dict with display value and export value
                         if let Ok(display_obj) = opt_dict.get(b"") {
                             if let Ok(display) = display_obj.as_str() {
-                                options.push(std::str::from_utf8(display).unwrap_or_default().to_string());
+                                options.push(
+                                    std::str::from_utf8(display).unwrap_or_default().to_string(),
+                                );
                             }
                         }
                     }
                 }
             }
         }
-        
+
         Ok(options)
     }
 
@@ -250,16 +258,17 @@ impl FormParser {
         let mut fields = Vec::new();
 
         // Get the AcroForm dictionary
-        let catalog = doc.catalog()
-            .context("Failed to get catalog")?;
-        
-        let acroform = catalog.get(b"AcroForm")
+        let catalog = doc.catalog().context("Failed to get catalog")?;
+
+        let acroform = catalog
+            .get(b"AcroForm")
             .ok()
             .and_then(|obj| obj.as_dict().ok())
             .context("No AcroForm found in PDF")?;
 
         // Get the Fields array
-        let fields_array = acroform.get(b"Fields")
+        let fields_array = acroform
+            .get(b"Fields")
             .ok()
             .and_then(|obj| obj.as_array().ok())
             .context("No Fields array found in AcroForm")?;
@@ -268,7 +277,8 @@ impl FormParser {
         for field_obj in fields_array {
             if let Ok(field_dict) = field_obj.as_dict() {
                 // Get field name
-                let name = field_dict.get(b"T")
+                let name = field_dict
+                    .get(b"T")
                     .ok()
                     .and_then(|obj| obj.as_str().ok())
                     .map(|s| std::str::from_utf8(s).unwrap_or_default().to_string())
@@ -368,23 +378,24 @@ impl FormExporter {
             .with_context(|| format!("Failed to load PDF: {}", input_path.display()))?;
 
         // Get the AcroForm dictionary
-        let catalog = doc.catalog()
-            .context("Failed to get catalog")?;
-        
-        let acroform = catalog.get(b"AcroForm")
+        let catalog = doc.catalog().context("Failed to get catalog")?;
+
+        let acroform = catalog
+            .get(b"AcroForm")
             .ok()
             .and_then(|obj| obj.as_dict().ok())
             .context("No AcroForm found in PDF")?;
 
         // Get the Fields array
-        let fields_array = acroform.get(b"Fields")
+        let fields_array = acroform
+            .get(b"Fields")
             .ok()
             .and_then(|obj| obj.as_array().ok())
             .context("No Fields array found in AcroForm")?;
 
         // Collect field IDs and their values to update
         let mut field_updates: Vec<((u32, u16), String)> = Vec::new();
-        
+
         for field_obj in fields_array {
             if let Ok(field_dict) = field_obj.as_dict() {
                 if let Ok(name_obj) = field_dict.get(b"T") {
@@ -392,7 +403,7 @@ impl FormExporter {
                         let name = std::str::from_utf8(name_bytes)
                             .unwrap_or_default()
                             .to_string();
-                        
+
                         if let Some(value) = values.get(&name) {
                             if let Ok(field_id) = field_obj.as_reference() {
                                 field_updates.push((field_id, value.clone()));
@@ -407,10 +418,8 @@ impl FormExporter {
         for (field_id, value) in field_updates {
             if let Some(obj) = doc.objects.get_mut(&field_id) {
                 if let Ok(field_dict) = obj.as_dict_mut() {
-                    let value_obj = Object::String(
-                        value.clone().into_bytes(),
-                        lopdf::StringFormat::Literal
-                    );
+                    let value_obj =
+                        Object::String(value.clone().into_bytes(), lopdf::StringFormat::Literal);
                     field_dict.set(b"V", value_obj);
                 }
             }
@@ -425,8 +434,7 @@ impl FormExporter {
 
     /// Get form values as a serializable format
     pub fn export_values(values: &FormValues) -> Result<String, Error> {
-        serde_json::to_string_pretty(values)
-            .context("Failed to serialize form values")
+        serde_json::to_string_pretty(values).context("Failed to serialize form values")
     }
 }
 

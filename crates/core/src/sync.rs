@@ -524,17 +524,23 @@ pub fn sync_settings_with_webdav(
 
     // Fetch remote settings
     let remote_content = fetch_remote_file(url, username, password, &remote_settings_file);
-    
+
     // Merge settings (last write wins for most settings, but preserve user preferences)
     let local_content = std::fs::read_to_string(local_settings_path).unwrap_or_default();
-    
+
     if let Ok(remote) = remote_content {
         let merged = merge_settings(&local_content, &remote);
         std::fs::write(local_settings_path, &merged)?;
     }
 
     // Upload merged settings
-    upload_to_webdav(url, username, password, local_settings_path, &remote_settings_file)?;
+    upload_to_webdav(
+        url,
+        username,
+        password,
+        local_settings_path,
+        &remote_settings_file,
+    )?;
 
     Ok(())
 }
@@ -549,14 +555,13 @@ fn merge_settings(local: &str, remote: &str) -> String {
     // but sync reading position and progress from remote
     if let (Some(local_obj), Some(remote_obj)) = (local_val.as_object(), remote_val.as_object()) {
         let mut merged = local_obj.clone();
-        
+
         // Sync reading-related fields from remote
         if let Some(remote_reader) = remote_obj.get("reader") {
             if let Some(local_reader) = merged.get_mut("reader") {
-                if let (Some(remote_reader_obj), Some(local_reader_obj)) = (
-                    remote_reader.as_object(),
-                    local_reader.as_object_mut()
-                ) {
+                if let (Some(remote_reader_obj), Some(local_reader_obj)) =
+                    (remote_reader.as_object(), local_reader.as_object_mut())
+                {
                     // Sync current_page and finished status
                     if let Some(current_page) = remote_reader_obj.get("current_page") {
                         local_reader_obj.insert("current_page".to_string(), current_page.clone());

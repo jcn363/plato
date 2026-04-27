@@ -9,8 +9,8 @@ mod text;
 mod types;
 
 pub use types::{
-    rect_from_quad, union_rect, FzPoint, FzQuad, FzRect, PdfPurrPixmap,
-    PixmapFormat, FZ_PAGE_BLOCK_IMAGE,
+    rect_from_quad, union_rect, FzPoint, FzQuad, FzRect, PdfPurrPixmap, PixmapFormat,
+    FZ_PAGE_BLOCK_IMAGE,
 };
 
 pub use outline::{Link, Outline};

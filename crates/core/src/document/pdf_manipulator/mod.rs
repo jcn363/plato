@@ -416,10 +416,10 @@ impl PdfManipulator {
 /// Returns a vector of (from_page, to_page) tuples
 fn calculate_booklet_order(total_pages: usize) -> Vec<(usize, usize)> {
     let mut order = Vec::new();
-    
+
     // Pad to multiple of 4 (signature size)
     let padded_pages = ((total_pages + 3) / 4) * 4;
-    
+
     // Calculate booklet imposition
     // For each signature (4 pages), the order is:
     // Front side: last page with first page
@@ -429,14 +429,14 @@ fn calculate_booklet_order(total_pages: usize) -> Vec<(usize, usize)> {
         let page2 = i + 2; // Second page of signature
         let page3 = padded_pages - i; // Last page of signature
         let page4 = padded_pages - i - 1; // Second-to-last page of signature
-        
+
         // Front of sheet: page3 with page1
         if page3 <= total_pages && page1 <= total_pages {
             order.push((page3, page1));
         } else if page1 <= total_pages {
             order.push((page1, page1)); // Blank page for page3
         }
-        
+
         // Back of sheet: page2 with page4
         if page2 <= total_pages && page4 <= total_pages {
             order.push((page2, page4));
@@ -444,7 +444,7 @@ fn calculate_booklet_order(total_pages: usize) -> Vec<(usize, usize)> {
             order.push((page2, page2)); // Blank page for page4
         }
     }
-    
+
     order
 }
 

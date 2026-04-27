@@ -81,7 +81,8 @@ pub fn process_manipulation(
             // selecting a second file and extracting text from both documents
             // This is a complex feature that would need UI for file selection
             bus.push_back(Event::Render(
-                "⚠️ Document comparison requires second file selection. Feature in progress.".to_string(),
+                "⚠️ Document comparison requires second file selection. Feature in progress."
+                    .to_string(),
             ));
             Ok(file_path.to_path_buf())
         }

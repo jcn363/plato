@@ -6,7 +6,7 @@
 #![cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
 
 use crate::context::Context;
-use crate::document::forms::{FormField, FormFieldType, FormParser, FormValues, FormExporter};
+use crate::document::forms::{FormExporter, FormField, FormFieldType, FormParser, FormValues};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
@@ -49,8 +49,7 @@ impl FormsView {
         let thickness = scale_by_dpi(THICKNESS_MEDIUM, dpi) as i32;
 
         // Parse form fields from PDF
-        let form_fields = FormParser::parse_document(pdf_path)
-            .unwrap_or_default();
+        let form_fields = FormParser::parse_document(pdf_path).unwrap_or_default();
 
         let form_values = FormValues::new();
 
@@ -87,7 +86,8 @@ impl FormsView {
             // Show form fields with interactive components
             let mut y = content_y;
             for (i, field) in form_fields.iter().enumerate() {
-                let field_label = format!("{}: {}", 
+                let field_label = format!(
+                    "{}: {}",
                     field.label.as_ref().unwrap_or(&field.name),
                     if field.required { "*" } else { "" }
                 );
@@ -129,7 +129,11 @@ impl FormsView {
                                 y + BUTTON_HEIGHT
                             ],
                             Event::Select(EntryId::ToggleCheckbox(field.name.clone())),
-                            if is_checked { "☑️ Checked".to_string() } else { "☐ Unchecked".to_string() },
+                            if is_checked {
+                                "☑️ Checked".to_string()
+                            } else {
+                                "☐ Unchecked".to_string()
+                            },
                         );
                         children.push(Box::new(checkbox_btn) as Box<dyn View>);
                         y += BUTTON_HEIGHT + BUTTON_SPACING;
@@ -264,12 +268,13 @@ impl View for FormsView {
     ) -> bool {
         match event {
             Event::Select(EntryId::ToggleCheckbox(field_name)) => {
-                let new_value = if let Some(field) = self.form_fields.iter().find(|f| &f.name == field_name) {
-                    let current = field.value.as_ref().map(|v| v == "true").unwrap_or(false);
-                    format!("{}", !current)
-                } else {
-                    "true".to_string()
-                };
+                let new_value =
+                    if let Some(field) = self.form_fields.iter().find(|f| &f.name == field_name) {
+                        let current = field.value.as_ref().map(|v| v == "true").unwrap_or(false);
+                        format!("{}", !current)
+                    } else {
+                        "true".to_string()
+                    };
                 self.set_field_value(field_name, new_value);
                 return true;
             }
@@ -295,7 +300,10 @@ impl View for FormsView {
                 let output_path = self.pdf_path.with_extension("_filled.pdf");
                 match FormExporter::export_to_pdf(&self.pdf_path, &output_path, &self.form_values) {
                     Ok(_) => {
-                        bus.push_back(Event::Notify(format!("Form saved to: {}", output_path.display())));
+                        bus.push_back(Event::Notify(format!(
+                            "Form saved to: {}",
+                            output_path.display()
+                        )));
                     }
                     Err(e) => {
                         bus.push_back(Event::Notify(format!("Failed to save form: {}", e)));
@@ -312,7 +320,13 @@ impl View for FormsView {
         // Rendering handled by children
     }
 
-    fn resize(&mut self, rect: Rectangle, _hub: &Hub, _rq: &mut RenderQueue, _context: &mut Context) {
+    fn resize(
+        &mut self,
+        rect: Rectangle,
+        _hub: &Hub,
+        _rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
         self.rect = rect;
     }
 

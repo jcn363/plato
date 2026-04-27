@@ -159,7 +159,8 @@ impl HomeInputExt for Home {
             Event::Show(ViewId::CreateCollectionDialog) => {
                 let dialog = CreateCollectionDialog::new(context);
                 self.children.push(Box::new(dialog) as Box<dyn View>);
-                hub.send(Event::Focus(Some(ViewId::CreateCollectionDialog))).ok();
+                hub.send(Event::Focus(Some(ViewId::CreateCollectionDialog)))
+                    .ok();
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }
@@ -414,17 +415,16 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Select(EntryId::Collection(_)) => {
-                self.handle_collections_menu_event(
-                    evt,
-                    hub,
-                    rq,
-                    context,
-                );
+                self.handle_collections_menu_event(evt, hub, rq, context);
                 true
             }
             Event::Select(EntryId::CreateCollection) => {
                 // Check if this is from the dialog (get collection name from dialog)
-                if let Some(dialog) = self.children.iter().find(|c| c.view_id() == Some(ViewId::CreateCollectionDialog)) {
+                if let Some(dialog) = self
+                    .children
+                    .iter()
+                    .find(|c| c.view_id() == Some(ViewId::CreateCollectionDialog))
+                {
                     if let Some(dialog) = dialog.downcast_ref::<CreateCollectionDialog>() {
                         let name = dialog.get_collection_name().to_string();
                         if !name.trim().is_empty() {
@@ -434,12 +434,7 @@ impl HomeInputExt for Home {
                     }
                 } else {
                     // From menu - show dialog
-                    self.handle_collections_menu_event(
-                        evt,
-                        hub,
-                        rq,
-                        context,
-                    );
+                    self.handle_collections_menu_event(evt, hub, rq, context);
                 }
                 true
             }
@@ -455,10 +450,12 @@ impl HomeInputExt for Home {
                         // Get the selected book's fingerprint
                         // This would need to be tracked when the book menu is opened
                         // For now, just show a notification
-                        hub.send(Event::Notify("Removed from collection".to_string())).ok();
+                        hub.send(Event::Notify("Removed from collection".to_string()))
+                            .ok();
                     }
                 } else {
-                    hub.send(Event::Notify("No collection selected".to_string())).ok();
+                    hub.send(Event::Notify("No collection selected".to_string()))
+                        .ok();
                 }
                 true
             }

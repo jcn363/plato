@@ -339,26 +339,12 @@ impl View for SettingsEditor {
             return true;
         }
 
-        if gestures::handle_event(
-            evt,
-            &mut self.children,
-            gestures_offset,
-            bus,
-            rq,
-            context,
-        ) {
+        if gestures::handle_event(evt, &mut self.children, gestures_offset, bus, rq, context) {
             self.dirty = true;
             return true;
         }
 
-        if calibre::handle_event(
-            evt,
-            &mut self.children,
-            calibre_offset,
-            bus,
-            rq,
-            context,
-        ) {
+        if calibre::handle_event(evt, &mut self.children, calibre_offset, bus, rq, context) {
             self.dirty = true;
             return true;
         }
@@ -375,26 +361,12 @@ impl View for SettingsEditor {
             return true;
         }
 
-        if goodreads::handle_event(
-            evt,
-            &mut self.children,
-            goodreads_offset,
-            bus,
-            rq,
-            context,
-        ) {
+        if goodreads::handle_event(evt, &mut self.children, goodreads_offset, bus, rq, context) {
             self.dirty = true;
             return true;
         }
 
-        if pocket::handle_event(
-            evt,
-            &mut self.children,
-            pocket_offset,
-            bus,
-            rq,
-            context,
-        ) {
+        if pocket::handle_event(evt, &mut self.children, pocket_offset, bus, rq, context) {
             self.dirty = true;
             return true;
         }
@@ -411,14 +383,7 @@ impl View for SettingsEditor {
             return true;
         }
 
-        if sync::handle_event(
-            evt,
-            &mut self.children,
-            sync_offset,
-            bus,
-            rq,
-            context,
-        ) {
+        if sync::handle_event(evt, &mut self.children, sync_offset, bus, rq, context) {
             self.dirty = true;
             return true;
         }

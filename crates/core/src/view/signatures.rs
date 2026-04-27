@@ -44,7 +44,8 @@ impl SignaturesView {
         let id = ID_FEEDER.next();
         let mut children = Vec::new();
 
-        let top_bar_height = scale_by_dpi(SMALL_BAR_HEIGHT, context.fonts.sans_serif.regular.dpi) as i32;
+        let top_bar_height =
+            scale_by_dpi(SMALL_BAR_HEIGHT, context.fonts.sans_serif.regular.dpi) as i32;
         let content_y = rect.min.y + top_bar_height + THICKNESS_MEDIUM as i32;
 
         // Top bar
@@ -62,8 +63,7 @@ impl SignaturesView {
         children.push(Box::new(top_bar) as Box<dyn View>);
 
         // Load available certificates
-        let certificates = SignatureManager::list_certificates()
-            .unwrap_or_default();
+        let certificates = SignatureManager::list_certificates().unwrap_or_default();
 
         let mut y = content_y;
 
@@ -109,11 +109,9 @@ impl SignaturesView {
             y += BUTTON_HEIGHT + BUTTON_SPACING;
 
             for (i, cert) in certificates.iter().enumerate() {
-                let cert_label = format!("{} - {} ({} to {})", 
-                    cert.subject,
-                    cert.issuer,
-                    cert.valid_from,
-                    cert.valid_until
+                let cert_label = format!(
+                    "{} - {} ({} to {})",
+                    cert.subject, cert.issuer, cert.valid_from, cert.valid_until
                 );
                 let cert_btn = Button::new(
                     rect![
@@ -186,8 +184,10 @@ impl View for SignaturesView {
         match event {
             Event::Select(EntryId::SelectCertificate(index)) => {
                 self.selected_certificate = Some(*index);
-                bus.push_back(Event::Notify(format!("Selected certificate: {}", 
-                    self.certificates[*index].subject)));
+                bus.push_back(Event::Notify(format!(
+                    "Selected certificate: {}",
+                    self.certificates[*index].subject
+                )));
                 return true;
             }
             Event::Select(EntryId::SignDocument(_)) => {
@@ -196,14 +196,19 @@ impl View for SignaturesView {
                     let output_path = self.pdf_path.with_extension("_signed.pdf");
                     match SignatureManager::sign_pdf(&self.pdf_path, &output_path, cert) {
                         Ok(signature) => {
-                            bus.push_back(Event::Notify(format!("Document signed by: {}", signature.signer_name)));
+                            bus.push_back(Event::Notify(format!(
+                                "Document signed by: {}",
+                                signature.signer_name
+                            )));
                         }
                         Err(e) => {
                             bus.push_back(Event::Notify(format!("Failed to sign document: {}", e)));
                         }
                     }
                 } else {
-                    bus.push_back(Event::Notify("Please select a certificate first".to_string()));
+                    bus.push_back(Event::Notify(
+                        "Please select a certificate first".to_string(),
+                    ));
                 }
                 return true;
             }
@@ -211,9 +216,14 @@ impl View for SignaturesView {
                 match SignatureManager::verify_signature(&self.pdf_path) {
                     Ok(signatures) => {
                         if signatures.is_empty() {
-                            bus.push_back(Event::Notify("No signatures found in document".to_string()));
+                            bus.push_back(Event::Notify(
+                                "No signatures found in document".to_string(),
+                            ));
                         } else {
-                            bus.push_back(Event::Notify(format!("Found {} signature(s)", signatures.len())));
+                            bus.push_back(Event::Notify(format!(
+                                "Found {} signature(s)",
+                                signatures.len()
+                            )));
                         }
                     }
                     Err(e) => {
@@ -223,7 +233,9 @@ impl View for SignaturesView {
                 return true;
             }
             Event::Select(EntryId::ImportCertificate) => {
-                bus.push_back(Event::Notify("Certificate import not yet implemented".to_string()));
+                bus.push_back(Event::Notify(
+                    "Certificate import not yet implemented".to_string(),
+                ));
                 return true;
             }
             _ => {}
@@ -235,7 +247,13 @@ impl View for SignaturesView {
         // Rendering handled by children
     }
 
-    fn resize(&mut self, rect: Rectangle, _hub: &Hub, _rq: &mut RenderQueue, _context: &mut Context) {
+    fn resize(
+        &mut self,
+        rect: Rectangle,
+        _hub: &Hub,
+        _rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) {
         self.rect = rect;
     }
 

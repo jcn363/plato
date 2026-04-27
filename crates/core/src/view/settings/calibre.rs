@@ -93,7 +93,11 @@ pub fn build_rows(
     );
     children.push(Box::new(label) as Box<dyn View>);
 
-    let username_text = settings.calibre.username.as_ref().map_or("None".to_string(), |u| u.clone());
+    let username_text = settings
+        .calibre
+        .username
+        .as_ref()
+        .map_or("None".to_string(), |u| u.clone());
     let ctrl_rect = rect![
         rect.min.x + max_label_width + 2 * padding,
         y,

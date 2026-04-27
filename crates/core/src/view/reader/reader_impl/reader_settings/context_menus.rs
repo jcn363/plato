@@ -274,15 +274,24 @@ pub(crate) fn toggle_title_menu(
                     vec![
                         EntryKind::Command(
                             "PDF/A-1b".to_string(),
-                            EntryId::ValidatePdfA(path.clone().into(), crate::document::validation::PdfALevel::A1b),
+                            EntryId::ValidatePdfA(
+                                path.clone().into(),
+                                crate::document::validation::PdfALevel::A1b,
+                            ),
                         ),
                         EntryKind::Command(
                             "PDF/A-2b".to_string(),
-                            EntryId::ValidatePdfA(path.clone().into(), crate::document::validation::PdfALevel::A2b),
+                            EntryId::ValidatePdfA(
+                                path.clone().into(),
+                                crate::document::validation::PdfALevel::A2b,
+                            ),
                         ),
                         EntryKind::Command(
                             "PDF/A-3b".to_string(),
-                            EntryId::ValidatePdfA(path.clone().into(), crate::document::validation::PdfALevel::A3b),
+                            EntryId::ValidatePdfA(
+                                path.clone().into(),
+                                crate::document::validation::PdfALevel::A3b,
+                            ),
                         ),
                     ],
                 ));
@@ -294,15 +303,24 @@ pub(crate) fn toggle_title_menu(
                     vec![
                         EntryKind::Command(
                             "PDF/X-1a".to_string(),
-                            EntryId::ValidatePdfX(path.clone().into(), crate::document::validation::PdfXLevel::X1a),
+                            EntryId::ValidatePdfX(
+                                path.clone().into(),
+                                crate::document::validation::PdfXLevel::X1a,
+                            ),
                         ),
                         EntryKind::Command(
                             "PDF/X-3".to_string(),
-                            EntryId::ValidatePdfX(path.clone().into(), crate::document::validation::PdfXLevel::X3),
+                            EntryId::ValidatePdfX(
+                                path.clone().into(),
+                                crate::document::validation::PdfXLevel::X3,
+                            ),
                         ),
                         EntryKind::Command(
                             "PDF/X-4".to_string(),
-                            EntryId::ValidatePdfX(path.clone().into(), crate::document::validation::PdfXLevel::X4),
+                            EntryId::ValidatePdfX(
+                                path.clone().into(),
+                                crate::document::validation::PdfXLevel::X4,
+                            ),
                         ),
                     ],
                 ));

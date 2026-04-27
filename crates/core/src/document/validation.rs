@@ -185,11 +185,7 @@ impl PdfAValidator {
 
     /// Validate against all PDF/A levels and return the best match
     pub fn validate_all(pdf_data: &[u8]) -> Result<Vec<ValidationResult>> {
-        let levels = [
-            PdfALevel::A1b,
-            PdfALevel::A2b,
-            PdfALevel::A3b,
-        ];
+        let levels = [PdfALevel::A1b, PdfALevel::A2b, PdfALevel::A3b];
 
         let mut results = Vec::new();
         for level in levels {
@@ -262,11 +258,7 @@ impl PdfXValidator {
 
     /// Validate against all PDF/X levels and return the best match
     pub fn validate_all(pdf_data: &[u8]) -> Result<Vec<ValidationResult>> {
-        let levels = [
-            PdfXLevel::X1a,
-            PdfXLevel::X3,
-            PdfXLevel::X4,
-        ];
+        let levels = [PdfXLevel::X1a, PdfXLevel::X3, PdfXLevel::X4];
 
         let mut results = Vec::new();
         for level in levels {
