@@ -58,6 +58,7 @@ use super::super::Home;
 
 /// Collections toggle configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct CollectionsToggleConfig {
     pub show_collections: bool,
     pub allow_nested: bool,
@@ -76,6 +77,7 @@ impl Default for CollectionsToggleConfig {
 
 /// Collections toggle state
 #[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
 pub struct CollectionsToggleState {
     pub visible: bool,
     pub active: bool,

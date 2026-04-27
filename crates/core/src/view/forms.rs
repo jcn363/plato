@@ -32,7 +32,7 @@ pub struct FormsView {
     children: Vec<Box<dyn View>>,
     form_fields: Vec<FormField>,
     form_values: FormValues,
-    current_field_index: usize,
+    _current_field_index: usize,
     pdf_path: PathBuf,
 }
 
@@ -235,7 +235,7 @@ impl FormsView {
             children,
             form_fields,
             form_values,
-            current_field_index: 0,
+            _current_field_index: 0,
             pdf_path: pdf_path.to_path_buf(),
         })
     }

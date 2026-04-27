@@ -19,7 +19,7 @@ pub struct StatisticsView {
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
     _statistics: LibraryStatistics,
-    reading_stats: ReadingStatistics,
+    _reading_stats: ReadingStatistics,
 }
 
 impl StatisticsView {
@@ -57,7 +57,7 @@ impl StatisticsView {
             rect,
             children,
             _statistics: statistics,
-            reading_stats,
+            _reading_stats: reading_stats,
         }
     }
 

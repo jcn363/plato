@@ -26,7 +26,7 @@ pub struct CreateCollectionDialog {
     id: Id,
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
-    view_id: ViewId,
+    _view_id: ViewId,
     will_close: bool,
     collection_name: String,
 }
@@ -102,7 +102,7 @@ impl CreateCollectionDialog {
             id,
             rect,
             children,
-            view_id,
+            _view_id: view_id,
             will_close: false,
             collection_name: String::new(),
         }

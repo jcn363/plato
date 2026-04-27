@@ -25,7 +25,7 @@ pub struct DjvuDocument {
     /// The underlying DJVU document from djvu-rs
     inner: Option<djvu_rs::DjVuDocument>,
     /// Document path
-    path: String,
+    _path: String,
 }
 
 impl DjvuDocument {
@@ -55,13 +55,8 @@ impl DjvuDocument {
 
         Ok(Self {
             inner: Some(inner),
-            path: path.to_string_lossy().to_string(),
+            _path: path.to_string_lossy().to_string(),
         })
-    }
-
-    /// Get the document path
-    pub fn path(&self) -> &str {
-        &self.path
     }
 }
 
