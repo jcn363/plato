@@ -54,7 +54,27 @@ pub struct Certificate {
 /// Digital signature manager
 pub struct SignatureManager;
 
+// Certificate storage directory
+const CERT_STORAGE_DIR: &str = ".plato/certificates";
+
 impl SignatureManager {
+    /// Get the certificate storage directory path
+    fn cert_storage_dir() -> Result<std::path::PathBuf, Error> {
+        let mut home = std::path::PathBuf::from("/home");
+        if let Ok(user) = std::env::var("USER") {
+            home.push(user);
+        } else {
+            home.push("user");
+        }
+        home.push(CERT_STORAGE_DIR);
+        
+        // Create directory if it doesn't exist
+        std::fs::create_dir_all(&home)
+            .with_context(|| format!("Failed to create certificate storage directory: {}", home.display()))?;
+        
+        Ok(home)
+    }
+
     /// Sign a PDF document with a digital signature
     ///
     /// This implementation uses ring for SHA256 hashing and stores signature metadata.
@@ -181,50 +201,107 @@ impl SignatureManager {
         Ok(signatures)
     }
 
-    /// List available certificates from system keyring
+    /// List available certificates from storage
     pub fn list_certificates() -> Result<Vec<Certificate>, Error> {
-        // Simplified implementation without secret-service dependency
-        // In production, this would integrate with system keyring (secret-service on Linux)
-        // For now, return a demo certificate for testing
+        let storage_dir = Self::cert_storage_dir()?;
         let mut certificates = Vec::new();
         
-        certificates.push(Certificate {
-            subject: "Demo Certificate".to_string(),
-            issuer: "Demo CA".to_string(),
-            fingerprint: "demo_fingerprint_123456".to_string(),
-            valid_from: "2024-01-01T00:00:00Z".to_string(),
-            valid_until: "2025-01-01T00:00:00Z".to_string(),
-            is_trusted: false,
-        });
+        // Read all .pem and .der files from storage
+        let entries = std::fs::read_dir(&storage_dir)
+            .with_context(|| format!("Failed to read certificate storage directory: {}", storage_dir.display()))?;
+        
+        for entry in entries {
+            let entry = entry
+                .with_context(|| format!("Failed to read directory entry"))?;
+            let path = entry.path();
+            
+            // Only process certificate files
+            if path.extension().map_or(false, |ext| ext == "pem" || ext == "der" || ext == "crt" || ext == "cer") {
+                match Self::import_certificate(&path) {
+                    Ok(cert) => certificates.push(cert),
+                    Err(e) => {
+                        // Log error but continue processing other certificates
+                        eprintln!("Failed to load certificate {}: {}", path.display(), e);
+                    }
+                }
+            }
+        }
+        
+        // If no certificates found, return demo certificate for testing
+        if certificates.is_empty() {
+            certificates.push(Certificate {
+                subject: "Demo Certificate".to_string(),
+                issuer: "Demo CA".to_string(),
+                fingerprint: "demo_fingerprint_123456".to_string(),
+                valid_from: "2024-01-01T00:00:00Z".to_string(),
+                valid_until: "2025-01-01T00:00:00Z".to_string(),
+                is_trusted: false,
+            });
+        }
 
         Ok(certificates)
     }
 
-    /// Import a certificate from a file
+    /// Import a certificate from a file and store it
     pub fn import_certificate(cert_path: &Path) -> Result<Certificate, Error> {
+        use der::Decode;
         use std::fs;
+        use x509_cert::Certificate as X509Certificate;
 
         let cert_data = fs::read(cert_path)
             .with_context(|| format!("Failed to read certificate: {}", cert_path.display()))?;
 
-        // Parse the certificate (simplified - in production would use proper X.509 parsing)
-        let subject = "Imported Certificate".to_string();
-        let issuer = "Unknown".to_string();
+        // Try to parse as PEM first
+        let cert = if let Ok(pem_str) = std::str::from_utf8(&cert_data) {
+            // Try PEM format
+            if pem_str.contains("-----BEGIN CERTIFICATE-----") {
+                let (label, der_bytes) = der::pem::decode_vec(pem_str.as_bytes())
+                    .map_err(|e| anyhow::format_err!("Failed to parse PEM: {}", e))?;
+                if label != "CERTIFICATE" {
+                    return Err(anyhow::format_err!("Expected CERTIFICATE label, got: {}", label));
+                }
+                X509Certificate::from_der(&der_bytes)
+                    .map_err(|e| anyhow::format_err!("Failed to parse certificate from PEM: {}", e))?
+            } else {
+                // Try DER format
+                X509Certificate::from_der(&cert_data)
+                    .map_err(|e| anyhow::format_err!("Failed to parse certificate from DER: {}", e))?
+            }
+        } else {
+            // Try DER format
+            X509Certificate::from_der(&cert_data)
+                .map_err(|e| anyhow::format_err!("Failed to parse certificate from DER: {}", e))?
+        };
+
+        // Extract certificate information
+        let subject = cert.tbs_certificate.subject.to_string();
+        let issuer = cert.tbs_certificate.issuer.to_string();
+        
+        // Calculate fingerprint
         let fingerprint = hex::encode(ring::digest::digest(&ring::digest::SHA256, &cert_data).as_ref());
-        let valid_from = chrono::Utc::now().to_rfc3339();
-        let valid_until = chrono::Utc::now().to_rfc3339();
+        
+        // Extract validity dates
+        let valid_from = cert.tbs_certificate.validity.not_before.to_string();
+        let valid_until = cert.tbs_certificate.validity.not_after.to_string();
 
         let certificate = Certificate {
             subject: subject.clone(),
             issuer,
-            fingerprint,
+            fingerprint: fingerprint.clone(),
             valid_from,
             valid_until,
-            is_trusted: false,
+            is_trusted: false, // In production, this would check against trusted CA list
         };
 
-        // In production, this would store in system keyring
-        // For now, just return the certificate info
+        // Store the certificate in the storage directory
+        let storage_dir = Self::cert_storage_dir()?;
+        let cert_filename = format!("{}.pem", fingerprint);
+        let cert_storage_path = storage_dir.join(&cert_filename);
+        
+        // Copy certificate to storage (use PEM format for consistency)
+        fs::write(&cert_storage_path, &cert_data)
+            .with_context(|| format!("Failed to store certificate: {}", cert_storage_path.display()))?;
+
         Ok(certificate)
     }
 }

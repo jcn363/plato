@@ -72,7 +72,9 @@ hex = "0.4.3"
 
 # Cryptographic operations for digital signatures (Linux only)
 [target.'cfg(target_os = "linux")'.dependencies]
-ring = "0.17.14"
+ring = "0.17.8"
+x509-cert = "0.2"
+der = { version = "0.7", features = ["pem", "std"] }
 
 [dev-dependencies]
 tempfile = "3.27.0"

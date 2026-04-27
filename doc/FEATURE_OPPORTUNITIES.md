@@ -583,7 +583,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 #### Digital Signatures
 
 **Kobo Status**: ❌ Excluded (no secure key storage, no use case)
-**Desktop Status**: ✅ **Implemented (SHA256-based)**
+**Desktop Status**: ✅ **Implemented (SHA256-based with Certificate Management)**
 
 **Why Feasible on Desktop:**
 
@@ -604,16 +604,22 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 - ✅ Crypto: SHA256 hash-based signature generation using ring library
 - ✅ PDF: PDF signature metadata embedding with lopdf
 - ✅ Verification: Signature metadata extraction and verification
-- ✅ Certificate: Certificate listing and import (simplified implementation)
+- ✅ Certificate: Certificate management infrastructure with x509-cert parsing
+- ✅ Storage: Certificate storage in ~/.plato/certificates directory
+- ✅ Loading: PEM/DER certificate file parsing and import
 - ⏳ PKCS#7/CMS: Full PKCS#7/CMS signature generation (deferred - requires complex certificate handling)
+- ⏳ Chain Validation: Certificate chain validation (deferred - requires trusted CA infrastructure)
 
 **Notes**:
 
 - Current implementation uses SHA256 hash-based signatures for demonstration
-- Full PKCS#7/CMS signature generation requires proper certificate management infrastructure
+- Certificate management infrastructure is now in place with x509-cert parsing
+- Certificates are stored in ~/.plato/certificates with fingerprint-based filenames
+- Supports PEM and DER certificate formats
+- Full PKCS#7/CMS signature generation requires proper certificate chain handling
 - The `cms` crate is available but requires complex certificate chain handling
 - System keyring integration (secret-service) is available but not currently used due to dependency complexity
-- Certificate chain validation is simplified for the initial implementation
+- Certificate chain validation requires trusted CA infrastructure
 - To implement full PKCS#7/CMS, proper certificate loading from files/keyring and chain validation is needed
 
 ---
