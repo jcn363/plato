@@ -87,12 +87,13 @@ None currently.
 - HTML and HTM through the built-in HTML renderer.
 - PDF via PDFPurr (pure Rust PDF library).
 - DJVU via djvu-rs (Rust bindings for DjVuLibre).
+- CBZ/CBR comic book archives (ZIP/RAR with images).
 
 ## Features
 
 - Built-in home screen, reader, dictionary, calculator, sketch, statistics, EPUB editor, cover editor, and PDF tools views.
 - Configurable libraries, hooks, Wi-Fi scripts, dictionaries, CSS overrides, hyphenation bounds, and keyboard layouts.
-- Reading features including annotations, highlights, bookmarks, search, table of contents, page naming, margin cropping, and fit-to-width reading.
+- Reading features including annotations, highlights, bookmarks, search, table of contents, page naming, margin cropping, fit-to-width reading, and manga mode (right-to-left navigation).
 - Theme and display controls including inversion, dark/theme modes, frontlight integration, rotation, and dithering controls.
 - Library features including metadata extraction, thumbnail previews, batch delete/move, removable-storage import, and article fetching hooks.
 - Sync and extension infrastructure including WebDAV sync, KoboCloud sync, shell/python plugin triggers, and plugin network permission checks.
