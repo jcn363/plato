@@ -103,12 +103,14 @@ This document explains the implementation status and constraints for Optical Cha
 ### Implementation Details
 
 **Android Implementation:**
+
 - Uses Android's `TextToSpeech` API via JNI (Java Native Interface)
 - Located in `crates/core/src/tts_android.rs`
 - Supports: play, stop, rate adjustment
 - UI integration in `crates/core/src/view/tts.rs`
 
 **Desktop Implementation:**
+
 - Uses the `tts` crate for cross-platform TTS
 - Linux: speech-dispatcher
 - macOS: AVSpeechSynthesizer
@@ -116,12 +118,14 @@ This document explains the implementation status and constraints for Optical Cha
 - Located in `crates/core/src/tts_desktop.rs`
 
 **UI Features:**
+
 - Play/Pause/Stop controls
 - Speed slider (0.5x to 2.0x)
 - Status indicator
 - Only shown on supported platforms
 
 **Usage:**
+
 ```rust
 use plato_core::tts::{TtsEngine, TtsOptions, create_tts_engine};
 
@@ -132,6 +136,7 @@ tts.speak("Hello, world!", TtsOptions::default())?;
 
 **Feature Flag:**
 Enable TTS with the `tts` feature in `Cargo.toml`:
+
 ```toml
 plato-core = { path = "../core", features = ["tts"] }
 ```

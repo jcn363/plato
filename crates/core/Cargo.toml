@@ -47,14 +47,14 @@ uuid = { version = "1.23.1", features = ["v4", "serde"] }
 reqwest = { version = "0.13.2", default-features = false, features = ["blocking", "json", "rustls"] }
 quick-xml = "0.39.2"
 epub_edit = { path = "../epub_edit" }
-lru = "0.17.0"
+lru = "0.18.0"
 dashmap = "6.1.0"
 smallvec = { version = "1.15.1", features = ["serde"] }
 dirs-next = "2.0.0"
 
 # TTS dependencies (optional, enabled via 'tts' feature)
-tts = { version = "0.26.0", optional = true }
-jni = { version = "0.21.1", optional = true }
+tts = { version = "0.26.3", optional = true }
+jni = { version = "0.22.4", optional = true }
 ndk-context = { version = "0.1.1", optional = true }
 
 # Pure Rust compression and image libraries (replaces C libraries)
@@ -84,7 +84,7 @@ tts = ["dep:tts", "dep:jni", "dep:ndk-context"]
 [target.'cfg(target_os = "linux")'.dependencies]
 ring = "0.17.14"
 x509-cert = "0.2.5"
-der = { version = "0.7", features = ["pem", "std"] }
+der = { version = "0.8.0", features = ["pem", "std"] }
 
 [dev-dependencies]
 tempfile = "3.27.0"
