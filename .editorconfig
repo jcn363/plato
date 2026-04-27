@@ -1,0 +1,52 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+# Rust files: 4 spaces (matches rustfmt.toml)
+[*.rs]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# CSS files: tab indentation (existing project style)
+[*.css]
+indent_style = tab
+
+# JSON files: 2 spaces (existing project style)
+[*.{json,json5}]
+indent_style = space
+indent_size = 2
+
+# TOML files: 2 spaces (common convention)
+[*.toml]
+indent_style = space
+indent_size = 2
+
+# YAML files: 2 spaces
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Shell scripts: 4 spaces
+[*.sh]
+indent_style = space
+indent_size = 4
+
+# Markdown: 2 spaces
+[*.md]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = false
+
+# HTML/XML: 2 spaces
+[*.{html,xml,xhtml}]
+indent_style = space
+indent_size = 2
