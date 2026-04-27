@@ -11,6 +11,7 @@ mod pocket;
 mod reading;
 mod reading_advanced;
 mod security;
+mod sync;
 
 use super::button::Button;
 use super::icon::Icon;
@@ -239,6 +240,17 @@ impl SettingsEditor {
         children.append(&mut cloud_storage_children);
         y_pos = y;
 
+        let (mut sync_children, y) = sync::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut sync_children);
+        y_pos = y;
+
         let button_height = x_height * 3;
         let button_width = window_width - 2 * padding;
         let save_rect = rect![
@@ -286,6 +298,7 @@ impl View for SettingsEditor {
         let goodreads_offset = epub_to_pdf_offset + goodreads::CHILD_COUNT;
         let pocket_offset = goodreads_offset + pocket::CHILD_COUNT;
         let cloud_storage_offset = pocket_offset + cloud_storage::CHILD_COUNT;
+        let sync_offset = cloud_storage_offset + sync::CHILD_COUNT;
 
         if display::handle_event(evt, &mut self.children, display_offset, bus, rq, context) {
             self.dirty = true;
@@ -390,6 +403,18 @@ impl View for SettingsEditor {
             evt,
             &mut self.children,
             cloud_storage_offset,
+            bus,
+            rq,
+            context,
+        ) {
+            self.dirty = true;
+            return true;
+        }
+
+        if sync::handle_event(
+            evt,
+            &mut self.children,
+            sync_offset,
             bus,
             rq,
             context,

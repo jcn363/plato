@@ -9,7 +9,7 @@ This document identifies potential new features and enhancements for Plato, prio
 
 **Current State**:
 
-- 61 features implemented in the last 12 months
+- 62 features implemented in the last 12 months
 - Pure Rust migration complete (no C dependencies)
 - All files AGENTS.md compliant (under 1,000 lines)
 - Comprehensive PDF manipulation (PDFPurr + lopdf)
@@ -118,13 +118,14 @@ This document identifies potential new features and enhancements for Plato, prio
 
 ### 4. Cross-Device Reading Position Sync
 
-**Estimated Cost**: 5/10 (Medium)
+**Estimated Cost**: 6/10 (Medium to High)
 **User Value**: High
-**Implementation Effort**: Moderate
+**Implementation Effort**: High
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
-**Description**: Enhance existing WebDAV/KoboCloud sync to include reading position, highlights, and annotations across devices.
+**Description**: Synchronize reading position, highlights, and annotations across multiple devices (e.g., Kobo, Android, iOS).
 
-**Proposed Features**:
+**Features**:
 
 - Sync reading position (page, location) across devices
 - Sync highlights and annotations
