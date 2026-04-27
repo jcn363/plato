@@ -26,6 +26,7 @@
 //! - **pdf_manipulator/**: PDF manipulation tools (page deletion, rotation, extraction, merging, annotations, redaction, resource extraction)
 //! - **progressive_loader/**: Progressive PDF loading for large documents loading with caching
 //! - **sysinfo.rs**: System information HTML generator
+//! - **forms.rs**: PDF forms handling for mobile/desktop platforms (AcroForm parsing, form field values)
 //!
 //! ## Module Hierarchy
 //!
@@ -88,6 +89,9 @@ pub mod pdf_manipulator;
 pub mod pdfpurr;
 pub mod progressive_loader;
 pub mod sysinfo;
+
+#[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+pub mod forms;
 
 #[cfg(test)]
 mod document_tests;

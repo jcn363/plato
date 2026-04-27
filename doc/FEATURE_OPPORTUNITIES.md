@@ -499,6 +499,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 **Mobile/Desktop Status**: ✅ **Recommended for Implementation**
 
 **Why Feasible on Mobile/Desktop:**
+
 - **Android**: Native `TextToSpeech` API available
 - **iOS**: Native `AVSpeechSynthesizer` available
 - **Linux**: espeak/piper available via system audio
@@ -517,6 +518,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 **Mobile/Desktop Status**: ✅ **Recommended for Implementation**
 
 **Why Feasible on Mobile/Desktop:**
+
 - **Android/iOS**: Tesseract mobile libraries available
 - **Linux**: Tesseract easily available via package manager
 - Better CPU/RAM on mobile/desktop devices
@@ -532,10 +534,11 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 
 #### Interactive PDF Forms
 
-**Kobo Status**: ❌ Excluded (poor e-ink UX for text input)
-**Mobile/Desktop Status**: ✅ **Feasible for Implementation**
+**Kobo Status**: Excluded (poor e-ink UX for text input)
+**Mobile/Desktop Status**: **Backend Implemented, UI Pending**
 
 **Why Feasible on Mobile/Desktop:**
+
 - **Mobile**: Touch keyboards, better input methods
 - **Desktop**: Full keyboard/mouse support
 - LCD/OLED displays better for form layouts
@@ -545,14 +548,22 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 
 **User Value**: Moderate - Forms rare in e-books (<0.01%) but useful for government/legal documents
 
+**Implementation Status**:
+- Backend: Form field parsing (FormField, FormParser, FormValues)
+- Backend: Form value storage and serialization
+- UI: Form input components (text fields, checkboxes, dropdowns)
+- Integration: PDF viewer form UI overlay
+- Export: PDF form field value export (requires lopdf AcroForm modification)
+
 ---
 
 #### JavaScript Integration
 
-**Kobo Status**: ❌ Excluded (e-ink limitations, memory constraints)
-**Mobile/Desktop Status**: ⚠️ **Low Priority (Still Complex)**
+**Kobo Status**: Excluded (e-ink limitations, memory constraints)
+**Mobile/Desktop Status**: **Low Priority (Still Complex)**
 
 **Why Feasible but Low Priority:**
+
 - **Mobile/Desktop**: QuickJS/V8 integration possible
 - Better displays for interactive content
 - More RAM available
@@ -573,6 +584,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 **Desktop Status**: ✅ **Recommended for Desktop Implementation**
 
 **Why Feasible on Desktop:**
+
 - Secure key storage available (keyring, TPM)
 - Document signing workflows are desktop-centric
 - Crypto libraries (OpenSSL/mbedTLS) available
@@ -590,6 +602,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 **Desktop Status**: ✅ **Recommended for Desktop Implementation**
 
 **Why Feasible on Desktop:**
+
 - Desktop is where document validation actually happens
 - No hardware constraints
 - Can leverage existing validation libraries
@@ -605,32 +618,32 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 
 The following features are explicitly not recommended based on existing documentation and design decisions:
 
-### OCR for Scanned PDFs
+### OCR for Scanned PDFs (for Mobile/Desktop only)
 
 - **Status**: Excluded by design (see `doc/OCR_TTS.md`)
 - **Reason**: Hardware limitations (256MB RAM, 1GHz CPU), no OCR library in PDFPurr, battery impact, better handled on desktop
 
-### Text-to-Speech (TTS)
+### Text-to-Speech (TTS) (for Mobile/Desktop only)
 
 - **Status**: Excluded by design (see `doc/OCR_TTS.md`)
 - **Reason**: No audio subsystem on Kobo devices, outside core mission
 
-### JavaScript Integration
+### JavaScript Integration (NOT RECOMMENDED)
 
 - **Status**: Excluded by design (see `doc/PDF_FEATURES.md`)
 - **Reason**: JavaScript in PDFs virtually nonexistent (<0.1%), e-ink limitations, memory constraints
 
-### Interactive PDF Forms
+### Interactive PDF Forms (for Mobile/Desktop only)
 
 - **Status**: Excluded by design (see `doc/PDF_FEATURES.md`)
 - **Reason**: Forms rare in e-books (<0.01%), poor e-ink UX for text input, users fill forms on desktop
 
-### Digital Signatures
+### Digital Signatures (for Desktop only)
 
 - **Status**: Excluded by design (see `doc/PDF_FEATURES.md`)
 - **Reason**: No use case on e-readers, security concerns (no secure key storage), PDF libraries cannot create signatures
 
-### PDF/A and PDF/X Validation
+### PDF/A and PDF/X Validation (for Desktop only)
 
 - **Status**: Excluded by design (see `doc/PDF_FEATURES.md`)
 - **Reason**: No use case on e-readers, users need desktop software for validation
