@@ -487,6 +487,120 @@ This document identifies potential new features and enhancements for Plato, prio
 
 ---
 
+## Platform-Specific Implementation
+
+The following features are excluded for Kobo e-readers due to hardware constraints, but are feasible for mobile (Android/iOS) and desktop (Linux) platforms:
+
+### High Priority (Clear Value, Feasible)
+
+#### Text-to-Speech (TTS)
+
+**Kobo Status**: ❌ Excluded (no audio subsystem)
+**Mobile/Desktop Status**: ✅ **Recommended for Implementation**
+
+**Why Feasible on Mobile/Desktop:**
+- **Android**: Native `TextToSpeech` API available
+- **iOS**: Native `AVSpeechSynthesizer` available
+- **Linux**: espeak/piper available via system audio
+- Full audio hardware support on all platforms
+- No memory/CPU constraints
+
+**Implementation Cost**: 3/10 (Low) - Use platform-native APIs
+
+**User Value**: High - Accessibility feature for visually impaired users
+
+---
+
+#### OCR for Scanned PDFs
+
+**Kobo Status**: ❌ Excluded (256MB RAM, 1GHz CPU too slow)
+**Mobile/Desktop Status**: ✅ **Recommended for Implementation**
+
+**Why Feasible on Mobile/Desktop:**
+- **Android/iOS**: Tesseract mobile libraries available
+- **Linux**: Tesseract easily available via package manager
+- Better CPU/RAM on mobile/desktop devices
+- Battery impact less critical on plugged-in desktop
+
+**Implementation Cost**: 4/10 (Medium) - Tesseract integration (~20MB library)
+
+**User Value**: High - Enables reading of scanned documents
+
+---
+
+### Medium Priority (Feasible but Niche)
+
+#### Interactive PDF Forms
+
+**Kobo Status**: ❌ Excluded (poor e-ink UX for text input)
+**Mobile/Desktop Status**: ✅ **Feasible for Implementation**
+
+**Why Feasible on Mobile/Desktop:**
+- **Mobile**: Touch keyboards, better input methods
+- **Desktop**: Full keyboard/mouse support
+- LCD/OLED displays better for form layouts
+- Signature fields feasible with touch/digitizer
+
+**Implementation Cost**: 4/10 (Medium) - Form UI component needed
+
+**User Value**: Moderate - Forms rare in e-books (<0.01%) but useful for government/legal documents
+
+---
+
+#### JavaScript Integration
+
+**Kobo Status**: ❌ Excluded (e-ink limitations, memory constraints)
+**Mobile/Desktop Status**: ⚠️ **Low Priority (Still Complex)**
+
+**Why Feasible but Low Priority:**
+- **Mobile/Desktop**: QuickJS/V8 integration possible
+- Better displays for interactive content
+- More RAM available
+- **BUT**: JavaScript in PDFs is virtually nonexistent (<0.1% of e-books)
+- High implementation cost (5/10) for minimal benefit
+
+**Implementation Cost**: 5/10 (Medium) - JavaScript engine integration
+
+**User Value**: Low - JS in PDFs extremely rare in consumer content
+
+---
+
+### Desktop-Only Priority
+
+#### Digital Signatures
+
+**Kobo Status**: ❌ Excluded (no secure key storage, no use case)
+**Desktop Status**: ✅ **Recommended for Desktop Implementation**
+
+**Why Feasible on Desktop:**
+- Secure key storage available (keyring, TPM)
+- Document signing workflows are desktop-centric
+- Crypto libraries (OpenSSL/mbedTLS) available
+- Certificate management infrastructure exists
+
+**Implementation Cost**: 6/10 (Medium-High) - Security infrastructure needed
+
+**User Value**: Moderate - Legal/business document workflows
+
+---
+
+#### PDF/A and PDF/X Validation
+
+**Kobo Status**: ❌ Excluded (no use case on e-readers)
+**Desktop Status**: ✅ **Recommended for Desktop Implementation**
+
+**Why Feasible on Desktop:**
+- Desktop is where document validation actually happens
+- No hardware constraints
+- Can leverage existing validation libraries
+- Technical implementation easy (3/10 cost)
+
+**Implementation Cost**: 3/10 (Low) - Basic conformance detection
+
+**User Value**: Low-Moderate - Niche use case for archivists/printing professionals
+
+---
+
 ## Not Recommended (By Design)
 
 The following features are explicitly not recommended based on existing documentation and design decisions:
