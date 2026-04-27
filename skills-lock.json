@@ -1,6 +1,16 @@
 {
   "version": 1,
   "skills": {
+    "Mobile Device Management": {
+      "source": "hack23/homepage",
+      "sourceType": "github",
+      "computedHash": "f0e2435a34211ab3818cf1b2c5c570a2ca360f1c374efc2f0b383dec3e2e39e0"
+    },
+    "OpenCode SDK Development": {
+      "source": "hhopkins95/ai-systems",
+      "sourceType": "github",
+      "computedHash": "70a28cdac9cadbfa31aca6fdb3c9835a6984278f1c0dfaa3bc196434211ca28c"
+    },
     "Skill Development": {
       "source": "anthropics/claude-code",
       "sourceType": "github",
@@ -10,6 +20,16 @@
       "source": "addyosmani/web-quality-skills",
       "sourceType": "github",
       "computedHash": "6462f04969f59f771150e6410e6a11fa397f2934be0b51e8650f495feed1e28d"
+    },
+    "agent-md-refactor": {
+      "source": "cachemoney/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "51c53259bba830ebad6741b2ab69d213d5a4d02835f7f27925a0e4e93515fc22"
+    },
+    "ai-features": {
+      "source": "whawkinsiv/claude-code-skills",
+      "sourceType": "github",
+      "computedHash": "30f1070dc62f9e6d8415defd5eb58c15d7fe3b8e759054bb2bd84ca0fcab82d4"
     },
     "apple-appstore-reviewer": {
       "source": "github/awesome-copilot",
@@ -41,6 +61,31 @@
       "sourceType": "github",
       "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
     },
+    "debugging-tauri-apps": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "computedHash": "fbc8c3ecac07c458f3fe3177668dd52489218b64e0b6af5b016dc057d6295ff3"
+    },
+    "dev": {
+      "source": "cexll/myclaude",
+      "sourceType": "github",
+      "computedHash": "309f3e1561891891036f464653fed8a90c8084b1d53afe18011f7c119ea93ddf"
+    },
+    "dev-plan": {
+      "source": "andreaserradev-gbj/dev-workflow",
+      "sourceType": "github",
+      "computedHash": "5290f94782249ace025b22e3aa58a9522ec8e42400e105ce5aeb2db74e63e0ae"
+    },
+    "dev-resume": {
+      "source": "andreaserradev-gbj/dev-workflow",
+      "sourceType": "github",
+      "computedHash": "4eb073369aed21e553ca31af4701433453cfb5b99ef4a97e589332d9d26105fa"
+    },
+    "dev-story": {
+      "source": "donchitos/claude-code-game-studios",
+      "sourceType": "github",
+      "computedHash": "dfd9fc79a70f46de5b6dc16cf5546f78c896a329bbdb57cc047aef283660e2a9"
+    },
     "dispatching-parallel-agents": {
       "source": "obra/superpowers",
       "sourceType": "github",
@@ -50,6 +95,11 @@
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "computedHash": "ee53d65b163cd7eb953a930c95841cfe398cc2c0bd24c06508bbaa07c432be35"
+    },
+    "engineering-features-for-machine-learning": {
+      "source": "jeremylongshore/claude-code-plugins-plus-skills",
+      "sourceType": "github",
+      "computedHash": "d8384e24d9c1d3756489cb8ad124cd6001e0835795055d171e441d95f93c3c95"
     },
     "enhance-prompt": {
       "source": "google-labs-code/stitch-skills",
@@ -101,6 +151,11 @@
       "sourceType": "github",
       "computedHash": "bd24f9b2f67dfdac55f76a85877ce302fe75d6204d2b329d3d05342904abf336"
     },
+    "install-md": {
+      "source": "basecamp/dev-skills",
+      "sourceType": "github",
+      "computedHash": "98b83efc631419b16000710c0eec4a9d0c5e727e9d6b847606247b758e2b5b6e"
+    },
     "interface-design": {
       "source": "dammyjay93/interface-design",
       "sourceType": "github",
@@ -126,15 +181,55 @@
       "sourceType": "github",
       "computedHash": "3902f919488d8ddc983e157bbcd5f16b739b84eeaab57002bf52b7f9601ed6ad"
     },
+    "opencode-config": {
+      "source": "igorwarzocha/opencode-workflows",
+      "sourceType": "github",
+      "computedHash": "8fb524fccd8c36a76f45e8e479cc54652c42f4804ec8f1e4db5005b1d8c4d8f6"
+    },
+    "opencode-controller": {
+      "source": "sundial-org/awesome-openclaw-skills",
+      "sourceType": "github",
+      "computedHash": "a87b4231698e292c00815dd068778db097c8f06850e3482d5bfa8a575a31803b"
+    },
+    "opencode-conversation-analysis": {
+      "source": "connorads/dotfiles",
+      "sourceType": "github",
+      "computedHash": "fcfd2e64c453be1e0eabd88ea4b28e9b86e7da9cbb126fd779fd8683ba7c6d7e"
+    },
+    "opencode-memory": {
+      "source": "carson2222/skills",
+      "sourceType": "github",
+      "computedHash": "44bf74bee43b7b2f49946258be9253faa603dc726054fcc54481a10ca5b34435"
+    },
+    "opencode-primitives": {
+      "source": "different-ai/openwork",
+      "sourceType": "github",
+      "computedHash": "73c8d2f0bb3fc056d3797fb3a83671cc2278eda66424cc76447564f26bce594f"
+    },
     "planning-with-files": {
       "source": "othmanadi/planning-with-files",
       "sourceType": "github",
       "computedHash": "93522d6989e542f4670d9d7a347b2e0013c46935845d599a15fafd77643b9d42"
     },
+    "prioritize-features": {
+      "source": "phuryn/pm-skills",
+      "sourceType": "github",
+      "computedHash": "0cd2f0bf0a1440b12aec601470c30d86dafd1bb0f8a507d7caced94f4bc8a2f8"
+    },
+    "proactive-self-improving-agent": {
+      "source": "yanhongxi-openclaw/proactive-self-improving-agent",
+      "sourceType": "github",
+      "computedHash": "222b091845df24469f3ecf63b1a24c5e88df0ac7e05565f656573a1413e3f280"
+    },
     "prompt-engineering-patterns": {
       "source": "wshobson/agents",
       "sourceType": "github",
       "computedHash": "4a8810c06525c95fd9370fdb3311d969fc89a53a196fe500b5b4f8529b21c9a7"
+    },
+    "real-time-features": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "computedHash": "efb5110ef5d6e8361c483faa0b2debb4280d4281636cee5c9227e4ed824d4627"
     },
     "refactor": {
       "source": "github/awesome-copilot",
@@ -176,10 +271,20 @@
       "sourceType": "github",
       "computedHash": "8f6cab4bcbdc5bd8c19f179e893ca5d502604a03e4e443bd27ba7c3a88a93add"
     },
+    "self-improvement": {
+      "source": "pskoett/self-improving-agent",
+      "sourceType": "github",
+      "computedHash": "c65cf7663412a7db22615c6486e887d4b113d3f8266ad2fa8c829387694aaeeb"
+    },
     "self-improving-agent": {
       "source": "charon-fan/agent-playbook",
       "sourceType": "github",
       "computedHash": "5b95ba0530d21f79cf01f7d593463812e7702b1358dd89d259b8073cf6012349"
+    },
+    "self-learning": {
+      "source": "philschmid/self-learning-skill",
+      "sourceType": "github",
+      "computedHash": "554f37953a7806ec8866880a585f31e86185542eecd79c1536c55e26218e24ab"
     },
     "swift-concurrency": {
       "source": "avdlee/swift-concurrency-agent-skill",
@@ -205,6 +310,16 @@
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
       "computedHash": "0a413bf988d06481f69bb81df2070741c3ba12dd9f1be2706d57f259c905992d"
+    },
+    "ui-ux-pro-max-skill": {
+      "source": "nguyenphiikhanh/netro",
+      "sourceType": "github",
+      "computedHash": "602fef23961bc16579463d0629433d70f337c54fa674267fea0bad1abba9e53f"
+    },
+    "uiux-design": {
+      "source": "thesaifalitai/claude-setup",
+      "sourceType": "github",
+      "computedHash": "3e4cec5b4980328e2e2b019284a78c2b0baef94e717c6b8a1e9b92f6cd04a8c9"
     },
     "using-superpowers": {
       "source": "obra/superpowers",

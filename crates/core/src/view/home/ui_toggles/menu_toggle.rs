@@ -55,6 +55,23 @@ impl Home {
         }
     }
 
+    /// Toggle search menu visibility
+    pub fn toggle_search_menu(
+        &mut self,
+        rect: Rectangle,
+        enable: Option<bool>,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        let should_enable = enable.unwrap_or(self.search_menu.is_none());
+
+        if should_enable {
+            self.show_search_menu(rect, rq, context);
+        } else {
+            self.hide_search_menu(rq, context);
+        }
+    }
+
     /// Show sort menu
     fn show_sort_menu(&mut self, rect: Rectangle, rq: &mut RenderQueue, context: &mut Context) {
         if self.sort_menu.is_some() {
@@ -76,6 +93,33 @@ impl Home {
         }
 
         self.sort_menu = None;
+        self.focus = None;
+
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    }
+
+    /// Show search menu
+    fn show_search_menu(&mut self, rect: Rectangle, rq: &mut RenderQueue, context: &mut Context) {
+        if self.search_menu.is_some() {
+            return;
+        }
+
+        use super::super::search_menu::SearchMenu;
+        let menu = SearchMenu::new(rect, context);
+
+        self.search_menu = Some(Box::new(menu) as Box<dyn View>);
+        self.focus = Some(ViewId::SearchMenu);
+
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    }
+
+    /// Hide search menu
+    fn hide_search_menu(&mut self, rq: &mut RenderQueue, _context: &mut Context) {
+        if self.search_menu.is_none() {
+            return;
+        }
+
+        self.search_menu = None;
         self.focus = None;
 
         rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
@@ -290,6 +334,10 @@ impl Home {
         match event {
             Event::Close(ViewId::SortMenu) => {
                 self.hide_sort_menu(rq, context);
+                true
+            }
+            Event::Close(ViewId::SearchMenu) => {
+                self.hide_search_menu(rq, context);
                 true
             }
             Event::Close(ViewId::BookMenu) => {

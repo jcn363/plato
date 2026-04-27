@@ -190,6 +190,10 @@ impl HomeInputExt for Home {
                 self.toggle_search_bar(None, false, hub, rq, context);
                 true
             }
+            Event::ToggleNear(ViewId::SearchMenu, rect) => {
+                self.toggle_search_menu(rect, None, rq, context);
+                true
+            }
             Event::ToggleNear(ViewId::TitleMenu, rect) => {
                 self.toggle_sort_menu(rect, None, rq, context);
                 true
@@ -224,6 +228,10 @@ impl HomeInputExt for Home {
             }
             Event::Close(ViewId::SearchBar) => {
                 self.toggle_address_bar(Some(false), hub, rq, context);
+                true
+            }
+            Event::Close(ViewId::SearchMenu) => {
+                self.toggle_search_menu(Rectangle::default(), Some(false), rq, context);
                 true
             }
             Event::Close(ViewId::SortMenu) => {
@@ -294,6 +302,44 @@ impl HomeInputExt for Home {
             }
             Event::Select(EntryId::Flush) => {
                 self.flush(context);
+                true
+            }
+            Event::Select(EntryId::SearchTitle) => {
+                // Open input field for title search
+                self.toggle_keyboard(Some(true), hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::SearchSeries) => {
+                // Open input field for series search
+                self.toggle_keyboard(Some(true), hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::SearchPublisher) => {
+                // Open input field for publisher search
+                self.toggle_keyboard(Some(true), hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::SearchYear) => {
+                // Open input field for year search
+                self.toggle_keyboard(Some(true), hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::ToggleSearchReading) => {
+                // Toggle reading status filter
+                true
+            }
+            Event::Select(EntryId::ToggleSearchNew) => {
+                // Toggle new status filter
+                true
+            }
+            Event::Select(EntryId::ToggleSearchFinished) => {
+                // Toggle finished status filter
+                true
+            }
+            Event::Select(EntryId::ClearSearchFilters) => {
+                // Clear all search filters
+                self.query = None;
+                self.refresh_visibles(true, true, hub, rq, context);
                 true
             }
             Event::ToggleBatchMode => {

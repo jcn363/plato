@@ -9,7 +9,7 @@ This document identifies potential new features and enhancements for Plato, prio
 
 **Current State**:
 
-- 60 features implemented in the last 12 months
+- 61 features implemented in the last 12 months
 - Pure Rust migration complete (no C dependencies)
 - All files AGENTS.md compliant (under 1,000 lines)
 - Comprehensive PDF manipulation (PDFPurr + lopdf)
@@ -30,6 +30,7 @@ This document identifies potential new features and enhancements for Plato, prio
 **Estimated Cost**: 3/10 (Low to Medium)
 **User Value**: High
 **Implementation Effort**: Moderate
+**Status**: ✅ **Implemented** (Backend + UI complete)
 
 **Description**: Enhanced search capabilities across the library with support for metadata, content, and custom filters.
 
