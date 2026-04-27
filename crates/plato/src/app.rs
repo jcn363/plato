@@ -465,6 +465,31 @@ pub fn run() -> Result<(), Error> {
                     }
                 }
             }
+            #[cfg(target_os = "linux")]
+            Event::Select(EntryId::SignDocument(ref path)) => {
+                match plato_core::view::signatures::SignaturesView::new(
+                    context.fb.rect(),
+                    path,
+                    &mut rq,
+                    &mut context,
+                ) {
+                    Ok(signatures_view) => {
+                        goto_view(
+                            Box::new(signatures_view),
+                            &mut view,
+                            &mut history,
+                            context.display.rotation,
+                            context.fb.monochrome(),
+                            context.fb.dithered(),
+                            &mut rq,
+                            &mut context,
+                        );
+                    }
+                    Err(e) => {
+                        log_error!("Failed to open Digital Signatures: {}", e);
+                    }
+                }
+            }
             Event::Back => {
                 if handle_back_event(
                     &mut view,

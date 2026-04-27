@@ -112,6 +112,14 @@ pub enum EntryId {
     ClickButton(String),
     #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
     SetValue(String, String),
+    #[cfg(target_os = "linux")]
+    SignDocument(PathBuf),
+    #[cfg(target_os = "linux")]
+    VerifySignatures,
+    #[cfg(target_os = "linux")]
+    SelectCertificate(usize),
+    #[cfg(target_os = "linux")]
+    ImportCertificate,
     AdjustSelection,
     Annotations,
     Bookmarks,
@@ -515,6 +523,14 @@ impl EntryId {
             EntryId::ClickButton(_) => "ClickButton",
             #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
             EntryId::SetValue(_, _) => "SetValue",
+            #[cfg(target_os = "linux")]
+            EntryId::SignDocument(_) => "SignDocument",
+            #[cfg(target_os = "linux")]
+            EntryId::VerifySignatures => "VerifySignatures",
+            #[cfg(target_os = "linux")]
+            EntryId::SelectCertificate(_) => "SelectCertificate",
+            #[cfg(target_os = "linux")]
+            EntryId::ImportCertificate => "ImportCertificate",
             EntryId::AllBooks => "AllBooks",
             EntryId::Collection(_) => "Collection",
             EntryId::CreateCollection => "CreateCollection",

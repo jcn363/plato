@@ -583,7 +583,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 #### Digital Signatures
 
 **Kobo Status**: ❌ Excluded (no secure key storage, no use case)
-**Desktop Status**: ✅ **Recommended for Desktop Implementation**
+**Desktop Status**: ✅ **Structurally Implemented (Crypto Operations Pending)**
 
 **Why Feasible on Desktop:**
 
@@ -595,6 +595,16 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 **Implementation Cost**: 6/10 (Medium-High) - Security infrastructure needed
 
 **User Value**: Moderate - Legal/business document workflows
+
+**Implementation Status**:
+
+- ✅ Backend: Digital signature module with data structures (DigitalSignature, Certificate, SignatureManager)
+- ✅ UI: SignaturesView with certificate selection, signing, and verification UI
+- ✅ Integration: PDF viewer menu entry for digital signatures
+- ⏳ Crypto: PKCS#7/CMS signature generation (requires OpenSSL/ring integration)
+- ⏳ Keyring: System keyring integration for secure key storage (secret-service on Linux)
+- ⏳ PDF: PDF signature field creation with lopdf
+- ⏳ Verification: Certificate chain validation and signature verification
 
 ---
 

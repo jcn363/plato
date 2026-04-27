@@ -27,6 +27,7 @@
 //! - **progressive_loader/**: Progressive PDF loading for large documents loading with caching
 //! - **sysinfo.rs**: System information HTML generator
 //! - **forms.rs**: PDF forms handling for mobile/desktop platforms (AcroForm parsing, form field values)
+//! - **signatures.rs**: Digital signatures for PDF documents on desktop platforms (certificate management, signing, verification)
 //!
 //! ## Module Hierarchy
 //!
@@ -88,6 +89,8 @@ pub mod pdf;
 pub mod pdf_manipulator;
 pub mod pdfpurr;
 pub mod progressive_loader;
+#[cfg(target_os = "linux")]
+pub mod signatures;
 pub mod sysinfo;
 
 #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]

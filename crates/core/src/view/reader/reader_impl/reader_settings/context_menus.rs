@@ -260,6 +260,13 @@ pub(crate) fn toggle_title_menu(
                     EntryId::FillForms(path.clone().into()),
                 ));
             }
+            #[cfg(target_os = "linux")]
+            {
+                entries.push(EntryKind::Command(
+                    "Digital Signatures".to_string(),
+                    EntryId::SignDocument(path.clone().into()),
+                ));
+            }
             entries.push(EntryKind::Command(
                 "PDF Tools".to_string(),
                 EntryId::Launch(AppCmd::OpenPdfManipulator(path.clone().into())),

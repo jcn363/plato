@@ -118,6 +118,9 @@ pub mod frontlight;
 #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
 pub mod forms;
 
+#[cfg(target_os = "linux")]
+pub mod signatures;
+
 pub mod home;
 pub mod icon;
 pub mod image;
