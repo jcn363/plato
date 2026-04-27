@@ -38,6 +38,10 @@ serde_json = "1.0.149"
 uuid = { version = "1.23.1", features = ["v4"] }
 zip = "8.5.1"
 
+[workspace.features]
+default = []
+ocr = []
+
 [patch.crates-io]
 pdfpurr = { git = "https://github.com/PratikP1/PDFPurr", branch = "main" }
 

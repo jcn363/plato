@@ -3,6 +3,7 @@
 //! This module provides validation functionality for PDF/A (archival) and PDF/X (print production) standards.
 //! It uses PDFPurr's built-in validation capabilities where available.
 
+use crate::document::pdfpurr;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -158,9 +159,9 @@ impl PdfAValidator {
 
         // Use PDFPurr's built-in PDF/A validation
         let pdfpurr_level = match level {
-            PdfALevel::A1b => pdfpurr::PdfALevel::A1b,
-            PdfALevel::A2b => pdfpurr::PdfALevel::A2b,
-            PdfALevel::A3b => pdfpurr::PdfALevel::A3b,
+            PdfALevel::A1b => PdfPurrALevel::A1b,
+            PdfALevel::A2b => PdfPurrALevel::A2b,
+            PdfALevel::A3b => PdfPurrALevel::A3b,
         };
 
         let report = doc.validate_pdfa(pdfpurr_level);
@@ -231,9 +232,9 @@ impl PdfXValidator {
 
         // Use PDFPurr's built-in PDF/X validation
         let pdfpurr_level = match level {
-            PdfXLevel::X1a => pdfpurr::PdfXLevel::X1a,
-            PdfXLevel::X3 => pdfpurr::PdfXLevel::X3,
-            PdfXLevel::X4 => pdfpurr::PdfXLevel::X4,
+            PdfXLevel::X1a => PdfPurrXLevel::X1a,
+            PdfXLevel::X3 => PdfPurrXLevel::X3,
+            PdfXLevel::X4 => PdfPurrXLevel::X4,
         };
 
         let report = doc.validate_pdfx(pdfpurr_level);

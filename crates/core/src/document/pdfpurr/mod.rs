@@ -21,6 +21,10 @@ use pdfpurr::Document as PdfPurrDoc;
 use std::path::Path;
 use std::sync::Arc;
 
+// External pdfpurr crate types for validation
+#[cfg(target_os = "linux")]
+use ::pdfpurr::{PdfALevel as ExtPdfALevel, PdfXLevel as ExtPdfXLevel};
+
 use crate::document::cache::{PageCacheKey, PdfCache};
 
 /// Wrapper around PDFPurr Document
@@ -207,7 +211,71 @@ impl Document {
         // PDFPurr handles encryption in from_bytes_with_password
         false
     }
+
+    /// Validate PDF/A compliance
+    #[cfg(target_os = "linux")]
+    pub fn validate_pdfa(&self, level: PdfALevel) -> StandardsReport {
+        // Delegate to inner PDFPurr document
+        self.inner.validate_pdfa(level.into())
+    }
+
+    /// Validate PDF/X compliance
+    #[cfg(target_os = "linux")]
+    pub fn validate_pdfx(&self, level: PdfXLevel) -> StandardsReport {
+        // Delegate to inner PDFPurr document
+        self.inner.validate_pdfx(level.into())
+    }
 }
+
+/// PDF/A conformance levels for validation
+#[cfg(target_os = "linux")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PdfALevel {
+    /// PDF/A-1b (Level B - basic)
+    A1b,
+    /// PDF/A-2b (Level B - basic)
+    A2b,
+    /// PDF/A-3b (Level B - basic)
+    A3b,
+}
+
+#[cfg(target_os = "linux")]
+impl From<PdfALevel> for ExtPdfALevel {
+    fn from(level: PdfALevel) -> Self {
+        match level {
+            PdfALevel::A1b => ExtPdfALevel::A1b,
+            PdfALevel::A2b => ExtPdfALevel::A2b,
+            PdfALevel::A3b => ExtPdfALevel::A3b,
+        }
+    }
+}
+
+/// PDF/X conformance levels for validation
+#[cfg(target_os = "linux")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PdfXLevel {
+    /// PDF/X-1a
+    X1a,
+    /// PDF/X-3
+    X3,
+    /// PDF/X-4
+    X4,
+}
+
+#[cfg(target_os = "linux")]
+impl From<PdfXLevel> for ExtPdfXLevel {
+    fn from(level: PdfXLevel) -> Self {
+        match level {
+            PdfXLevel::X1a => ExtPdfXLevel::X1a,
+            PdfXLevel::X3 => ExtPdfXLevel::X3,
+            PdfXLevel::X4 => ExtPdfXLevel::X4,
+        }
+    }
+}
+
+/// Standards validation report
+#[cfg(target_os = "linux")]
+pub use pdfpurr::standards::StandardsReport;
 
 // ============================================================================
 // Unit Tests for Phase 5 Validation

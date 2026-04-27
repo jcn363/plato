@@ -650,6 +650,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 - ✅ Integration: PDF viewer menu entries for PDF/A and PDF/X validation
 - ✅ Event Handling: EntryId variants for ValidatePdfA and ValidatePdfX with path and level parameters
 - ✅ Menu: Submenus in PDF viewer title menu for PDF/A-1b/2b/3b and PDF/X-1a/3/4 validation
+- ✅ OCR: OCR module for Desktop/Android using PDFPurr's Tesseract engine with UI integration
 
 **Notes**:
 
@@ -662,6 +663,10 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 - Validation results include detailed checks from pdfpurr's StandardsReport
 - Converts pdfpurr's StandardsCheck results to Plato's ValidationResult format
 - All failed checks are reported with their category, description, and severity
+- OCR module located in `crates/core/src/document/ocr.rs` (Desktop/Android only)
+- OCR uses PDFPurr's Tesseract engine with configurable language support
+- OCR UI integrated into ValidationView with "OCR Current Page" button
+- OCR feature flag added to workspace and core Cargo.toml
 
 **Implementation Cost**: 3/10 (Low) - Basic conformance detection
 
