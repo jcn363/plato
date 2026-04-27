@@ -534,8 +534,8 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 
 #### Interactive PDF Forms
 
-**Kobo Status**: Excluded (poor e-ink UX for text input)
-**Mobile/Desktop Status**: **Backend Implemented, UI Pending**
+**Kobo Status**: ❌ Excluded (poor e-ink UX for text input)
+**Mobile/Desktop Status**: ✅ **Implemented**
 
 **Why Feasible on Mobile/Desktop:**
 
@@ -549,11 +549,12 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 **User Value**: Moderate - Forms rare in e-books (<0.01%) but useful for government/legal documents
 
 **Implementation Status**:
-- Backend: Form field parsing (FormField, FormParser, FormValues)
-- Backend: Form value storage and serialization
-- UI: Form input components (text fields, checkboxes, dropdowns)
-- Integration: PDF viewer form UI overlay
-- Export: PDF form field value export (requires lopdf AcroForm modification)
+
+- ✅ Backend: Form field parsing (FormField, FormParser, FormValues)
+- ✅ Backend: Form value storage and serialization
+- ✅ UI: Form input components (forms view with field list display)
+- ✅ Integration: PDF viewer form UI overlay (menu entry added)
+- ⏳ Export: PDF form field value export (requires lopdf AcroForm modification)
 
 ---
 

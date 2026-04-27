@@ -98,6 +98,20 @@ pub enum EntryId {
     AnnotateSelection,
     DefineSelection,
     SearchForSelection,
+    #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+    FillForms(PathBuf),
+    #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+    NextField,
+    #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+    PreviousField,
+    #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+    ToggleCheckbox(String),
+    #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+    SelectRadio(String, usize),
+    #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+    ClickButton(String),
+    #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+    SetValue(String, String),
     AdjustSelection,
     Annotations,
     Bookmarks,
@@ -484,9 +498,23 @@ impl EntryId {
             EntryId::OpenFileBrowser => "OpenFileBrowser",
             EntryId::SelectFile(_) => "SelectFile",
             EntryId::OpenRedactionEditor(_, _) => "OpenRedactionEditor",
-            EntryId::HighlightColor(_) => "HighlightColor",
             EntryId::OpenOpds(_) => "OpenOpds",
             EntryId::DownloadOpds(_) => "DownloadOpds",
+            EntryId::HighlightColor(_) => "HighlightColor",
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            EntryId::FillForms(_) => "FillForms",
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            EntryId::NextField => "NextField",
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            EntryId::PreviousField => "PreviousField",
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            EntryId::ToggleCheckbox(_) => "ToggleCheckbox",
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            EntryId::SelectRadio(_, _) => "SelectRadio",
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            EntryId::ClickButton(_) => "ClickButton",
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            EntryId::SetValue(_, _) => "SetValue",
             EntryId::AllBooks => "AllBooks",
             EntryId::Collection(_) => "Collection",
             EntryId::CreateCollection => "CreateCollection",

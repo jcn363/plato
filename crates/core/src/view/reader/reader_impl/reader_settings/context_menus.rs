@@ -253,6 +253,13 @@ pub(crate) fn toggle_title_menu(
 
     if file_kind == "pdf" {
         if let Some(path) = file_path.as_ref() {
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            {
+                entries.push(EntryKind::Command(
+                    "Fill Forms".to_string(),
+                    EntryId::FillForms(path.clone().into()),
+                ));
+            }
             entries.push(EntryKind::Command(
                 "PDF Tools".to_string(),
                 EntryId::Launch(AppCmd::OpenPdfManipulator(path.clone().into())),

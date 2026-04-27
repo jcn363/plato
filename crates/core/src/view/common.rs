@@ -203,6 +203,11 @@ pub fn toggle_main_menu(
                     "PDF Tools".to_string(),
                     EntryId::Launch(AppCmd::PdfManipulator),
                 ),
+                #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+                EntryKind::Command(
+                    "PDF Forms".to_string(),
+                    EntryId::FillForms("".to_string().into()),
+                ),
                 EntryKind::Separator,
                 EntryKind::Command(
                     "Touch Events".to_string(),

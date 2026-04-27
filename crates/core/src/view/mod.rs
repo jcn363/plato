@@ -47,6 +47,7 @@
 //! - **epub_editor/**: EPUB editing interface
 //! - **cover_editor.rs**: Book cover editing
 //! - **pdf_manipulator.rs**: PDF tools UI
+//! - **forms.rs**: PDF forms UI (mobile/desktop only)
 //!
 //! ### System Views
 //! - **intermission.rs**: Sleep/power-off screens
@@ -113,6 +114,10 @@ pub mod email_dialog;
 pub mod epub_editor;
 pub mod filler;
 pub mod frontlight;
+
+#[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+pub mod forms;
+
 pub mod home;
 pub mod icon;
 pub mod image;

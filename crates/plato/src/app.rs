@@ -104,7 +104,7 @@ pub fn run() -> Result<(), Error> {
     ));
     let usb_port = usb_events();
 
-    let (tx, rx) = mpsc::channel();
+    let (mut tx, rx) = mpsc::channel();
     let tx2 = tx.clone();
 
     thread::spawn(move || {
@@ -433,12 +433,37 @@ pub fn run() -> Result<(), Error> {
                 handle_launch(
                     app_cmd,
                     &mut view,
-                    &tx,
+                    &mut tx,
                     &mut rq,
                     &mut context,
                     &mut event_ctx,
                     &mut history,
                 );
+            }
+            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+            Event::Select(EntryId::FillForms(ref path)) => {
+                match plato_core::view::forms::FormsView::new(
+                    context.fb.rect(),
+                    path,
+                    &mut rq,
+                    &mut context,
+                ) {
+                    Ok(forms_view) => {
+                        goto_view(
+                            Box::new(forms_view),
+                            &mut view,
+                            &mut history,
+                            context.display.rotation,
+                            context.fb.monochrome(),
+                            context.fb.dithered(),
+                            &mut rq,
+                            &mut context,
+                        );
+                    }
+                    Err(e) => {
+                        log_error!("Failed to open PDF Forms: {}", e);
+                    }
+                }
             }
             Event::Back => {
                 if handle_back_event(
