@@ -121,6 +121,9 @@ pub mod forms;
 #[cfg(target_os = "linux")]
 pub mod signatures;
 
+#[cfg(target_os = "linux")]
+pub mod validation;
+
 pub mod home;
 pub mod icon;
 pub mod image;

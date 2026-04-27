@@ -9,13 +9,12 @@ mod text;
 mod types;
 
 pub use types::{
-    rect_from_quad, scale, union_rect, FzLocation, FzPoint, FzQuad, FzRect, PdfPurrPixmap,
+    rect_from_quad, union_rect, FzPoint, FzQuad, FzRect, PdfPurrPixmap,
     PixmapFormat, FZ_PAGE_BLOCK_IMAGE,
 };
 
 pub use outline::{Link, Outline};
 pub use page::Page;
-pub use text::{TextBlock, TextChar, TextLine, TextPage};
 
 use anyhow::{bail, Context, Result};
 use pdfpurr::Document as PdfPurrDoc;

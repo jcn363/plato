@@ -50,7 +50,9 @@ impl EntryKind {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+use crate::document::validation::{PdfALevel, PdfXLevel};
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EntryId {
     About,
     SystemInfo,
@@ -120,6 +122,10 @@ pub enum EntryId {
     SelectCertificate(usize),
     #[cfg(target_os = "linux")]
     ImportCertificate,
+    #[cfg(target_os = "linux")]
+    ValidatePdfA(PathBuf, PdfALevel),
+    #[cfg(target_os = "linux")]
+    ValidatePdfX(PathBuf, PdfXLevel),
     AdjustSelection,
     Annotations,
     Bookmarks,
@@ -531,6 +537,10 @@ impl EntryId {
             EntryId::SelectCertificate(_) => "SelectCertificate",
             #[cfg(target_os = "linux")]
             EntryId::ImportCertificate => "ImportCertificate",
+            #[cfg(target_os = "linux")]
+            EntryId::ValidatePdfA(_, _) => "ValidatePdfA",
+            #[cfg(target_os = "linux")]
+            EntryId::ValidatePdfX(_, _) => "ValidatePdfX",
             EntryId::AllBooks => "AllBooks",
             EntryId::Collection(_) => "Collection",
             EntryId::CreateCollection => "CreateCollection",

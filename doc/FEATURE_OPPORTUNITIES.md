@@ -629,7 +629,7 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 #### PDF/A and PDF/X Validation
 
 **Kobo Status**: ❌ Excluded (no use case on e-readers)
-**Desktop Status**: ✅ **Recommended for Desktop Implementation**
+**Desktop Status**: ✅ **Implemented**
 
 **Why Feasible on Desktop:**
 
@@ -637,6 +637,28 @@ The following features are excluded for Kobo e-readers due to hardware constrain
 - No hardware constraints
 - Can leverage existing validation libraries
 - Technical implementation easy (3/10 cost)
+
+**Implementation Status**:
+
+- ✅ Backend: PDF/A and PDF/X validation module with data structures (PdfALevel, PdfXLevel, ValidationResult, ValidationIssue)
+- ✅ Validators: PdfAValidator and PdfXValidator with validation logic using pdfpurr
+- ✅ Full API Integration: Uses pdfpurr's built-in `validate_pdfa` and `validate_pdfx` methods for comprehensive conformance checking
+- ✅ UI: ValidationView with PDF/A and PDF/X level selection buttons
+- ✅ Integration: PDF viewer menu entries for PDF/A and PDF/X validation
+- ✅ Event Handling: EntryId variants for ValidatePdfA and ValidatePdfX with path and level parameters
+- ✅ Menu: Submenus in PDF viewer title menu for PDF/A-1b/2b/3b and PDF/X-1a/3/4 validation
+
+**Notes**:
+
+- Validation module is located in `crates/core/src/document/validation.rs`
+- UI view is located in `crates/core/src/view/validation.rs` (desktop only)
+- Menu entries added to `crates/core/src/view/reader/reader_impl/reader_settings/context_menus.rs`
+- Implementation uses pdfpurr's full validation API (`validate_pdfa` and `validate_pdfx` methods)
+- PDF/A levels supported: 1b, 2b, 3b (matches pdfpurr's available levels)
+- PDF/X levels supported: 1a, 3, 4 (matches pdfpurr's available levels)
+- Validation results include detailed checks from pdfpurr's StandardsReport
+- Converts pdfpurr's StandardsCheck results to Plato's ValidationResult format
+- All failed checks are reported with their category, description, and severity
 
 **Implementation Cost**: 3/10 (Low) - Basic conformance detection
 
