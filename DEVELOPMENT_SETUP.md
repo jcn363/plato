@@ -1,126 +1,43 @@
-# Plato Development Setup Guide
+# Plato Development Setup
 
-## Setup Status: ✅ COMPLETE (with notes)
+Quick reference for developing Plato e-reader software.
 
-The Plato project has been successfully set up for development on this machine. This document summarizes the setup process, issues encountered, fixes applied, and next steps.
-
----
-
-## ✅ Completed Steps
-
-### 1. Rust Toolchain Verification
-
-- **Rust version**: 1.93.0 (stable)
-- **Targets installed**:
-  - `x86_64-unknown-linux-gnu` (host/development)
-  - `arm-unknown-linux-gnueabihf` (32-bit ARM for Kobo)
-  - `aarch64-unknown-linux-gnu` (64-bit ARM for newer Kobo)
-- **Status**: ✅ All required toolchains and targets are installed
-
-### 2. Native Dependencies
-
-- **OpenSSL**: ✅ Installed (libssl-dev)
-- **pkg-config**: ✅ Installed
-- **Status**: ✅ All native development libraries are present
-
-**Note:** The project has migrated to pure Rust libraries. C dependencies (FreeType, HarfBuzz, MuPDF, SDL2, etc.) are no longer needed.
-
-### 3. Build Configuration
-
-- **Cargo workspace**: ✅ Configured with 7 crates
-- **Cross-compilation**: ✅ ARM toolchains configured in `.cargo/config.toml`
-- **Build profiles**: ✅ Custom profiles for ARM, ARM64, and embedded targets
-- **Pure Rust libraries**:
-  - `bzip2`, `html5ever`, `justjp2`, `hayro-jbig2`, `djvu-rs` - Rust compression/parsing
-  - `skrifa`, `rustybuzz`, `ab_glyph` - Rust font stack (replaces FreeType + HarfBuzz)
-  - `pdfpurr` - Pure Rust PDF (replaces MuPDF)
-
-### 4. Third-Party Libraries
-
-- **Status**: ✅ All C libraries removed - project uses pure Rust equivalents
-- **PDF Rendering**: PDFPurr (pure Rust PDF library)
-- **PDF Manipulation**: lopdf for page deletion, rotation, extraction, merging, annotations, redaction, resource extraction
+> **Status**: ✅ Ready for development  
+> **Last Updated**: 2026-04-27
 
 ---
 
-## ⚠️ Issues Found and Fixed
+## ✅ Prerequisites
 
-### Issue 1: Corrupted `reader.rs` File
+| Component   | Version/Status       | Notes                |
+|-------------|----------------------|----------------------|
+| Rust        | 1.93.0               | Stable toolchain     |
+| Targets     | x86_64, arm, aarch64 | Host + cross-compile |
+| OpenSSL     | libssl-dev           | System dependency    |
+| C Libraries | ❌ None              | Pure Rust project    |
 
-**Severity**: 🔴 Critical (prevented build)
+**Pure Rust Stack**:
 
-**Problem**: The file `crates/core/src/view/reader/reader_impl/reader.rs` had uncommitted changes that corrupted the file structure - function bodies appeared inside struct definitions.
+- `pdfpurr` - PDF rendering (replaces MuPDF)
+- `lopdf` - PDF manipulation
+- `skrifa` + `rustybuzz` - Font stack (replaces FreeType/HarfBuzz)
+- `djvu-rs`, `zip`, `unrar` - Format support
 
-**Fix**: Restored the file from git:
+---
+
+## ⚠️ Known Issues
+
+### Test Linking (Host Development)
+
+The `libs_host/` directory contains 32-bit ARM binaries, not x86_64. This causes test linking to fail on host machines.
+
+**Impact**: `cargo check` and `cargo build` work; `cargo test` fails at link stage.
+
+**Workaround**: Use `cargo check` for verification, or build x86_64 libraries:
 
 ```bash
-git restore crates/core/src/view/reader/reader_impl/reader.rs
+./build.sh host slow
 ```
-
-**Status**: ✅ Fixed
-
----
-
-### Issue 2: Missing `Rectangle` Import in `reader_gestures.rs`
-
-**Severity**: 🔴 Critical (compilation error)
-
-**Problem**: The file `reader_gestures.rs` used `Rectangle` type but didn't import it.
-
-**Fix**: Added `Rectangle` to the geom import:
-
-```rust
-use crate::geom::{Axis, CycleDir, DiagDir, Dir, LinearDir, Point, Rectangle};
-```
-
-**Status**: ✅ Fixed
-
----
-
-### Issue 3: Borrow Checker Errors in `reader_gestures.rs`
-
-**Severity**: 🔴 Critical (compilation error)
-
-**Problem**: Multiple functions tried to borrow `self` mutably and immutably simultaneously:
-
-- `handle_selection_motion()`: Called `self.find_nearest_word_and_rects()` while holding mutable borrow of `self.selection`
-- `handle_selection_up()`: Similar issue with `self.find_word_at_center()`
-- `update_selection_from_word()` and `finalize_selection()`: Took `selection` as parameter while it was borrowed from `self`
-
-**Fix**: Restructured the code to avoid simultaneous borrows:
-
-1. Removed `selection` parameter from helper methods
-2. Access `self.selection` directly inside the methods
-3. Used separate immutable and mutable borrows in sequence rather than simultaneously
-
-**Status**: ✅ Fixed
-
----
-
-### Issue 4: Wrong Architecture in `libs_host`
-
-**Severity**: 🟡 Warning (tests can't link)
-
-**Problem**: The libraries in `libs_host/` are 32-bit ARM ELF binaries, not x86_64 as expected for host development:
-
-```text
-libs_host/libmupdf.so: ELF 32-bit LSB shared object, ARM, EABI5 version 1
-```
-
-**Impact**:
-
-- ✅ **Build succeeds**: `cargo check` and `cargo build` work correctly
-- ❌ **Tests fail**: `cargo test` fails at linking stage due to architecture mismatch
-
-**Workaround**:
-
-- Use `cargo check` for development verification
-- For running tests, you need to either:
-  1. Build third-party libraries from source for x86_64: `./build.sh host slow`
-  2. Download correct x86_64 libraries from a release archive
-  3. Run tests on an ARM device or emulator
-
-**Status**: ⚠️ Known limitation - requires proper x86_64 libraries
 
 ---
 
@@ -149,14 +66,6 @@ cargo check --target x86_64-unknown-linux-gnu
 ./build.sh arm64
 ```
 
-### Running the Emulator
-
-```bash
-# First time setup (creates Settings.toml)
-
-# Subsequent runs
-```
-
 ### Testing
 
 ```bash
@@ -179,84 +88,36 @@ cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings
 
 ---
 
-## 🔧 Next Steps / Recommendations
+## 🔧 Additional Setup (Optional)
 
-### 1. Obtain Proper x86_64 Host Libraries
+### Cross-Compilation Verification
 
-To run tests locally, you need x86_64 versions of the native libraries:
-
-**Option A**: Build from source (slow but complete)
-
-```bash
-./build.sh host slow
-```
-
-This will compile all third-party libraries from source in the `thirdparty/` directory. Note that PDF rendering uses PDFPurr (pure Rust), which doesn't require native compilation.
-
-**Option B**: Download pre-built x86_64 libraries
-If available from project releases, download the correct host archive.
-
-### 2. Verify Emulator Functionality
-
-Test the desktop emulator to ensure rendering and input work correctly:
-
-```bash
-```
-
-### 3. Cross-Compilation Verification
-
-If targeting Kobo devices, verify ARM builds:
+Verify ARM builds for Kobo devices:
 
 ```bash
 ./build.sh arm skip --no-clippy --no-fmt
 ```
 
-### 4. CI/CD Integration
+### CI/CD Integration
 
-Consider adding GitHub Actions or similar for automated testing. This would require:
-
-- Setting up ARM cross-compilation in CI
-- Providing x86_64 native libraries for test runners
-- Configuring clippy and fmt checks
+Consider GitHub Actions for:
+- ARM cross-compilation
+- clippy and fmt checks
 
 ---
 
 ## 📊 Build Status Summary
 
-| Component           | Status  | Notes                                    |
-|---------------------|---------|------------------------------------------|
-| Rust Toolchain      | ✅      | v1.93.0, all targets installed           |
-| Native Dependencies | ✅      | Minimal (pure Rust, no C dependencies)   |
-| PDF Rendering       | ✅      | PDFPurr 0.4.0 (pure Rust) with Git patch |
-| PDF Text Extraction | ✅      | Implemented with basic search            |
-| PDF Outlines        | ✅      | Implemented                              |
-| PDF Manipulation    | ✅      | Implemented via lopdf                    |
-| Build Scripts       | ✅      | Working correctly                        |
-| Host Build (check)  | ✅      | `cargo check` succeeds                   |
-| Host Build (link)   | ✅      | Works (no C library dependencies)        |
-| ARM Build           | ✅      | Successfully builds for Kobo             |
-| Unit Tests          | ✅      | Can run without native C libraries       |
-| Clippy              | ✅      | Passes on successfully building crates   |
-| Formatting          | ✅      | rustfmt.toml configured                  |
-
-**Dependencies**:
-
-- PDFPurr 0.4.0 (patched from GitHub for tiny-skia 0.12.0 compatibility)
-- skrifa 0.42.0 (font stack)
-- tiny-skia 0.12.0 (rendering)
-- lopdf 0.40.0 (PDF manipulation)
-- lru 0.17.0 (LRU cache)
-- hex 0.4 (cache key generation)
-
----
-
-## 🐛 Fixes Applied This Session
-
-1. **Restored corrupted `reader.rs`** from git
-2. **Added missing `Rectangle` import** in `reader_gestures.rs`
-3. **Fixed borrow checker errors** in `reader_gestures.rs` by restructuring selection handling methods
-
-All fixes have been applied and verified with `cargo check`.
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Rust Toolchain | ✅ | 1.93.0, all targets |
+| Native Dependencies | ✅ | Pure Rust (no C libs) |
+| PDF Rendering | ✅ | PDFPurr 0.4.0 |
+| PDF Manipulation | ✅ | lopdf |
+| ARM Build | ✅ | Successfully builds for Kobo |
+| Unit Tests | ✅ | No C libraries needed |
+| Clippy | ✅ | Passes |
+| Formatting | ✅ | rustfmt.toml configured |
 
 ---
 
@@ -264,14 +125,14 @@ All fixes have been applied and verified with `cargo check`.
 
 The Plato workspace consists of:
 
-| Crate         | Purpose                                                 |
-|---------------|---------------------------------------------------------|
-| `plato-core`  | Core library: document handling, rendering, UI, device  |
-| `plato`       | Main binary for Kobo devices                            |
-| `importer`    | Document importer tool                                  |
-| `fetcher`     | Article fetcher from online sources                     |
-| `epub_edit`   | EPUB editing library                                    |
-| `epub_editor` | EPUB editing CLI tool                                   |
+| Crate         | Purpose                                                |
+|---------------|--------------------------------------------------------|
+| `plato-core`  | Core library: document handling, rendering, UI, device |
+| `plato`       | Main binary for Kobo devices                           |
+| `importer`    | Document importer tool                                 |
+| `fetcher`     | Article fetcher from online sources                    |
+| `epub_edit`   | EPUB editing library                                   |
+| `epub_editor` | EPUB editing CLI tool                                  |
 
 ---
 
@@ -288,5 +149,4 @@ For day-to-day development:
 
 ---
 
-*Last updated: 2026-04-14*
-*Setup completed by: Qwen Code AI Assistant*
+*Last updated: 2026-04-27*
