@@ -35,9 +35,9 @@ graph TB
     end
 
     subgraph External["External Libraries"]
-        MuPDF["MuPDF"]
-        HarfBuzz["HarfBuzz"]
-        SDL2["SDL2"]
+        PDFPurr["PDFPurr (Pure Rust)"]
+        Skrifa["Skrifa (Pure Rust)"]
+        Lopdf["Lopdf (Pure Rust)"]
     end
 
     ViewSystem --> Library
@@ -50,9 +50,9 @@ graph TB
     Input --> Frontlight
     Storage --> Battery
     Sync --> InputDev
-    Framebuffer --> MuPDF
-    Frontlight --> HarfBuzz
-    Battery --> SDL2
+    Framebuffer --> PDFPurr
+    Frontlight --> Skrifa
+    Battery --> Lopdf
 ```
 
 ```text
@@ -165,22 +165,24 @@ All constants and configuration values have one authoritative location:
 - Maintenance burden of custom engine
 - Need to implement features that browsers provide natively
 
-### Why MuPDF for PDF Rendering?
+### Why PDFPurr for PDF Rendering?
 
-**Decision**: Use MuPDF via FFI rather than pure Rust PDF libraries.
+**Decision**: Use PDFPurr as a pure Rust PDF library rather than MuPDF via FFI.
 
 **Rationale**:
 
-- MuPDF is mature, fast, and has excellent rendering quality
-- Supports complex PDF features (forms, annotations, JavaScript)
-- Small footprint suitable for embedded devices
-- Active development and security updates
+- Eliminates FFI complexity and safety concerns
+- Removes dependency on external C library
+- Simplifies build system
+- Active development and good rendering quality
+- Sufficient performance for e-ink devices
+- Pure Rust alignment with project goals
 
 **Trade-offs**:
 
-- FFI complexity and safety concerns
-- Dependency on external C library
-- Build system complexity
+- May lack some advanced PDF features compared to MuPDF
+- Newer library with less battle-testing
+- Ongoing development to match MuPDF's feature set
 
 ### Why View Tree Architecture?
 
