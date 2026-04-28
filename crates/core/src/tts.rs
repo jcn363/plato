@@ -9,11 +9,12 @@
 //!
 //! ## Usage
 //!
-//! ```
-//! use plato_core::tts::{TtsEngine, TtsOptions};
+//! ```no_run
+//! use plato_core::tts::{create_tts_engine, TtsOptions};
 //!
-//! let mut tts = TtsEngine::new()?;
+//! let mut tts = create_tts_engine()?;
 //! tts.speak("Hello, world!", TtsOptions::default())?;
+//! # Ok::<(), anyhow::Error>(())
 //! ```
 
 use anyhow::{Error, Result};

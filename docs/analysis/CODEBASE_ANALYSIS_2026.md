@@ -1,8 +1,8 @@
-# Plato Codebase Analysis - 2026 (FINAL UPDATE 2026-04-28)
+# Plato Codebase Analysis - 2026 (UPDATE 2026-04-29)
 
 ## Executive Summary
 
-**Status**: Full build ✅ **0 warnings** | **AI: 8/8 tests passing** ✅ | **Clippy: 0 errors** ✅ |
+**Status**: Full build ✅ **0 warnings** | **AI: 8/8 tests passing** ✅ | **Clippy: 0 errors** ✅ | **All tests passing** ✅
 
 ## 1. Session Achievements
 
@@ -14,6 +14,9 @@
 5. ✅ **Fixed render signature** in `view/settings/ai.rs`
 6. ✅ **Fixed validation.rs** enum variants (`A1b`, `A3b`, `X3`, `X4`)
 7. ✅ **Fixed validation.rs** unused assignment
+8. ✅ **Fixed AccessibilitySettings validation** - Set valid default values
+9. ✅ **Removed dead code** - Cleaned up unused `current_page` field
+10. ✅ **Fixed doctest in tts.rs** - Updated to use `no_run` and correct factory function
 
 ### Der Crate Conflict Fixed (signatures.rs)
 1. ✅ **Replaced `ring` with `sha2`** - Removed ring (bundled der conflict)
@@ -64,7 +67,7 @@
 1. ❌ **CBR support** - Disabled due to unrar 0.5.x API complexity
 2. ⚠️ **epub_editor clippy allow** - Pre-existing `#![allow(clippy::all)]`
 3. ⚠️ **pdfpurr dead_code allows** - Multiple files with `#![allow(dead_code)]`
-4. ⚠️ **validation.rs TODO** - `let current_page = 0; // TODO: Get actual current page`
+4. ✅ **validation.rs TODO** - Fixed (removed unused current_page field)
 
 ## 3. Build Targets Status
 
@@ -109,8 +112,9 @@ These are **device types** handled by `is_elipsa()`, not build targets:
 
 ---
 
-**Last Updated**: 2026-04-28  
+**Last Updated**: 2026-04-29  
 **Status**: ✅ ALL MAJOR FIXES COMPLETE - Ready for commit & push  
-**Build**: ✅ 0 warnings, 0 errors (x86_64 + ARM)  
+**Build**: ✅ 270 tests passing, 0 warnings, 0 errors (x86_64 + ARM)  
 **AI Tests**: ✅ 8/8 passing  
-**Git**: ✅ Committed & pushed to main
+**Doctests**: ✅ All passing (including fixed tts.rs)  
+**Git**: ✅ Ready for commit
