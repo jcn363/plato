@@ -4,6 +4,8 @@ name = "plato"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Document reader and library manager for e-ink devices"
+repository = "https://github.com/jcn363/plato"
 
 [[bin]]
 name = "plato"
@@ -11,3 +13,17 @@ path = "src/main.rs"
 
 [dependencies]
 plato-core = { path = "../core", features = ["ocr"] }
+
+[package.metadata.deb]
+maintainer = "Plato Project <https://github.com/jcn363/plato>"
+copyright = "2024-2026, Plato Contributors"
+assets = [
+    ["target/release/plato", "usr/bin/", "755"],
+    ["../../README.md", "usr/share/doc/plato/", "644"],
+    ["../../CHANGES.md", "usr/share/doc/plato/", "644"],
+    ["../../LICENSE-AGPLv3", "usr/share/doc/plato/", "644"],
+]
+depends = "$auto"
+section = "text"
+priority = "optional"
+conf-files = ["/etc/plato/settings.toml"]
