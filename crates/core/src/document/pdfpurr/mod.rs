@@ -3,6 +3,8 @@
 //! This module provides a wrapper around PDFPurr (pure Rust PDF library)
 //! to replace the MuPDF C library dependency.
 
+#![allow(dead_code)]
+
 mod outline;
 mod page;
 mod text;

@@ -1,5 +1,7 @@
 //! PDFPurr page wrapper
 
+#![allow(dead_code)]
+
 use anyhow::Result;
 use pdfpurr::rendering::{RenderOptions, Renderer};
 use pdfpurr::Document as PdfPurrDoc;

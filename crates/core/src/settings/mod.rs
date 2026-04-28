@@ -153,6 +153,40 @@ pub struct Settings {
     pub goodreads: GoodreadsSettings,
     pub pocket: PocketSettings,
     pub cloud_storage: CloudStorageSettings,
+    pub ai: AiSettings,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct AiSettings {
+    /// Enable AI features
+    pub enabled: bool,
+    /// AI provider (ollama, openai, claude)
+    pub provider: String,
+    /// Model name
+    pub model: String,
+    /// Endpoint for local/cloud providers
+    pub endpoint: Option<String>,
+    /// API key for cloud providers
+    pub api_key: Option<String>,
+    /// Enable spoiler protection in reader
+    pub spoiler_protection: bool,
+    /// Enable semantic search
+    pub semantic_search: bool,
+    /// Memory threshold (MB) - AI disabled below this
+    pub memory_threshold_mb: usize,
+    /// Allow AI on low battery
+    pub allow_on_low_battery: bool,
+    /// Enable AI caching
+    pub caching: bool,
+    /// Cache TTL in seconds
+    pub cache_ttl_seconds: u64,
+}
+
+impl AiSettings {
+    pub fn can_run(&self, total_ram_mb: usize) -> bool {
+        self.enabled && total_ram_mb >= self.memory_threshold_mb
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -635,6 +669,7 @@ impl Default for Settings {
             goodreads: GoodreadsSettings::default(),
             pocket: PocketSettings::default(),
             cloud_storage: CloudStorageSettings::default(),
+            ai: AiSettings::default(),
         }
     }
 }

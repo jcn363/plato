@@ -1,4 +1,5 @@
 mod accessibility;
+mod ai;
 mod calibre;
 mod cloud_storage;
 mod defaults;

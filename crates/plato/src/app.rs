@@ -546,7 +546,7 @@ pub fn run() -> Result<(), Error> {
                     }
                 }
             }
-            #[cfg(all(feature = "ocr", target_os = "linux"))]
+            #[cfg(target_os = "linux")]
             Event::Select(EntryId::OcrDocument(ref path)) => {
                 match plato_core::view::validation::ValidationView::new(
                     context.fb.rect(),

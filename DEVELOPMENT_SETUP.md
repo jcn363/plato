@@ -88,7 +88,7 @@ cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings
 
 ---
 
-##  Build Status
+## Build Status
 
 | Component           | Status  | Notes                        |
 |---------------------|---------|------------------------------|

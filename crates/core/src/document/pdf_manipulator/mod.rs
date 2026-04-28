@@ -418,7 +418,7 @@ fn calculate_booklet_order(total_pages: usize) -> Vec<(usize, usize)> {
     let mut order = Vec::new();
 
     // Pad to multiple of 4 (signature size)
-    let padded_pages = ((total_pages + 3) / 4) * 4;
+    let padded_pages = total_pages.div_ceil(4) * 4;
 
     // Calculate booklet imposition
     // For each signature (4 pages), the order is:

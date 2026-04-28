@@ -1,5 +1,3 @@
-#![allow(clippy::all)]
-
 use plato_core::anyhow::{format_err, Context, Error};
 use plato_core::chrono::{DateTime, Duration, Local, Utc};
 use plato_core::helpers::{decode_entities, load_json, load_toml, save_json};
@@ -120,7 +118,8 @@ fn is_detail_available(client: &Client, settings: &Settings) -> bool {
     client
         .get(&url)
         .send()
-        .map_or(false, |response| response.status().is_success())
+        .map(|r| r.status().is_success())
+        .unwrap_or(false)
 }
 
 fn main() -> Result<(), Error> {
@@ -477,6 +476,7 @@ fn main() -> Result<(), Error> {
 
                 session.since = updated_at.timestamp();
 
+                #[allow(clippy::needless_borrows_for_generic_args)]
                 let epub_path = save_path.join(&format!("{id}.epub"));
                 if epub_path.exists() {
                     continue;

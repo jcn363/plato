@@ -185,7 +185,6 @@ impl ValidationView {
                 "OCR Current Page".to_string(),
             );
             children.push(Box::new(ocr_btn) as Box<dyn View>);
-            y += BUTTON_HEIGHT + BUTTON_SPACING;
         }
 
         Ok(ValidationView {

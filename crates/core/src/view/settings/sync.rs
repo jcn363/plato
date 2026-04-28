@@ -205,7 +205,7 @@ pub fn build_rows(
 
 pub fn handle_event(
     evt: &Event,
-    children: &mut Vec<Box<dyn View>>,
+    #[allow(clippy::ptr_arg)] children: &mut Vec<Box<dyn View>>,
     offset: usize,
     bus: &mut Bus,
     rq: &mut RenderQueue,

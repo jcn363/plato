@@ -76,7 +76,7 @@ impl SearchIndex {
             }
             index
                 .entry(word.to_lowercase())
-                .or_insert_with(FxHashSet::default)
+                .or_default()
                 .insert(doc_id.clone());
         }
 

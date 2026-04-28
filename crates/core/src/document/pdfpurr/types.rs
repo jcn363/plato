@@ -3,6 +3,8 @@
 //! These types provide API compatibility during the migration from MuPDF to PDFPurr.
 //! They are used for coordinate conversion and PDF page layout calculations.
 
+#![allow(dead_code)]
+
 /// Rectangle type for PDF coordinate representation (compatible with MuPDF fz_rect).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct FzRect {
@@ -17,10 +19,7 @@ pub struct FzRect {
 }
 
 impl FzRect {
-    #[expect(
-        clippy::should_implement_trait,
-        reason = "Custom default() provides zero-initialized rectangle specific to PDF coordinate system"
-    )]
+    #[allow(clippy::should_implement_trait)]
     pub fn default() -> Self {
         FzRect {
             x0: 0.0,
@@ -74,6 +73,7 @@ pub struct FzLocation {
 
 /// Pixel format for rendered output buffers.
 #[derive(Debug, Clone, Copy)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum PixmapFormat {
     /// Grayscale color format.
     Grayscale,

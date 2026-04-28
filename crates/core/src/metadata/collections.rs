@@ -12,7 +12,7 @@ use crate::helpers::load_json;
 use crate::helpers::save_json;
 
 /// Collection metadata
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Collection {
     /// Unique identifier for the collection
@@ -31,21 +31,6 @@ pub struct Collection {
     pub created_at: String,
     /// Timestamp when last modified
     pub modified_at: String,
-}
-
-impl Default for Collection {
-    fn default() -> Self {
-        Self {
-            id: String::default(),
-            name: String::default(),
-            parent_id: None,
-            color: None,
-            icon: None,
-            rules: None,
-            created_at: String::default(),
-            modified_at: String::default(),
-        }
-    }
 }
 
 /// Smart collection rules for auto-populating collections

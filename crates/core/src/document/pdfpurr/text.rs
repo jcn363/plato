@@ -1,5 +1,7 @@
 //! Text extraction structures for PDFPurr
 
+#![allow(dead_code)]
+
 use super::types::{FzPoint, FzQuad, FzRect};
 use pdfpurr::content::analysis::TextRun;
 

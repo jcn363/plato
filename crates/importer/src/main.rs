@@ -1,5 +1,3 @@
-#![allow(clippy::all)]
-
 use getopts::Options;
 use plato_core::anyhow::{format_err, Context, Error};
 use plato_core::chrono::NaiveDateTime;
@@ -120,6 +118,7 @@ fn main() -> Result<(), Error> {
         })
         .unwrap_or(LibraryMode::Database);
 
+    #[allow(clippy::needless_borrows_for_generic_args)]
     let mut library = Library::new(&library_path, mode)?;
 
     if matches.opt_present("I") {
@@ -132,8 +131,9 @@ fn main() -> Result<(), Error> {
         let opt_consolidate = matches.opt_present("S");
         let opt_rename_from_info = matches.opt_present("N");
 
+        #[allow(clippy::unnecessary_map_or)]
         library.apply(|path, info| {
-            if added_after.map_or(true, |added| info.added >= added) {
+            if added_after.is_some_and(|added| info.added >= added) {
                 if opt_extract_metadata_document
                     && import_settings.metadata_kinds.contains(&info.file.kind)
                 {

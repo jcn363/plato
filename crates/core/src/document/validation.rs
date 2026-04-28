@@ -282,16 +282,16 @@ mod tests {
 
     #[test]
     fn test_pdfa_level_display() {
-        assert_eq!(PdfALevel::A1a.to_string(), "PDF/A-1a");
+        assert_eq!(PdfALevel::A1b.to_string(), "PDF/A-1b");
         assert_eq!(PdfALevel::A2b.to_string(), "PDF/A-2b");
-        assert_eq!(PdfALevel::A3u.to_string(), "PDF/A-3u");
+        assert_eq!(PdfALevel::A3b.to_string(), "PDF/A-3b");
     }
 
     #[test]
     fn test_pdfx_level_display() {
         assert_eq!(PdfXLevel::X1a.to_string(), "PDF/X-1a");
-        assert_eq!(PdfXLevel::X4p.to_string(), "PDF/X-4p");
-        assert_eq!(PdfXLevel::X4g.to_string(), "PDF/X-4g");
+        assert_eq!(PdfXLevel::X3.to_string(), "PDF/X-3");
+        assert_eq!(PdfXLevel::X4.to_string(), "PDF/X-4");
     }
 
     #[test]

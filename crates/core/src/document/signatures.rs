@@ -15,7 +15,9 @@
 
 use anyhow::{Context, Error};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::path::Path;
+use x509_cert::der::Decode;
 
 /// Digital signature information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,21 +83,14 @@ impl SignatureManager {
 
     /// Parse certificate data from bytes
     fn parse_certificate_data(cert_data: &[u8]) -> Result<Certificate, Error> {
-        use der::Decode;
+        use x509_cert::der::DecodePem;
         use x509_cert::Certificate as X509Certificate;
 
         // Try to parse as PEM first
         let cert = if let Ok(pem_str) = std::str::from_utf8(cert_data) {
             if pem_str.contains("-----BEGIN CERTIFICATE-----") {
-                let (label, der_bytes) = der::pem::decode_vec(pem_str.as_bytes())
-                    .map_err(|e| anyhow::format_err!("Failed to parse PEM: {}", e))?;
-                if label != "CERTIFICATE" {
-                    return Err(anyhow::format_err!(
-                        "Expected CERTIFICATE label, got: {}",
-                        label
-                    ));
-                }
-                X509Certificate::from_der(&der_bytes).map_err(|e| {
+                // Use x509-cert's built-in PEM parsing
+                X509Certificate::from_pem(pem_str.as_bytes()).map_err(|e| {
                     anyhow::format_err!("Failed to parse certificate from PEM: {}", e)
                 })?
             } else {
@@ -110,8 +105,11 @@ impl SignatureManager {
 
         let subject = cert.tbs_certificate.subject.to_string();
         let issuer = cert.tbs_certificate.issuer.to_string();
-        let fingerprint =
-            hex::encode(ring::digest::digest(&ring::digest::SHA256, cert_data).as_ref());
+        let fingerprint = {
+            let mut hasher = Sha256::new();
+            hasher.update(cert_data);
+            hex::encode(hasher.finalize())
+        };
         let valid_from = cert.tbs_certificate.validity.not_before.to_string();
         let valid_until = cert.tbs_certificate.validity.not_after.to_string();
 
@@ -141,7 +139,7 @@ impl SignatureManager {
 
     /// Sign a PDF document with a digital signature
     ///
-    /// This implementation uses ring for SHA256 hashing and stores signature metadata.
+    /// This implementation uses sha2 for SHA256 hashing and stores signature metadata.
     /// Full PKCS#7/CMS signature generation requires complex certificate handling
     /// and is deferred for future implementation when proper certificate management is available.
     pub fn sign_pdf(
@@ -149,7 +147,7 @@ impl SignatureManager {
         output_path: &Path,
         certificate: &Certificate,
     ) -> Result<DigitalSignature, Error> {
-        use ring::digest;
+        use sha2::{Digest, Sha256};
         use std::fs;
         use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -158,8 +156,9 @@ impl SignatureManager {
             .with_context(|| format!("Failed to read PDF: {}", input_path.display()))?;
 
         // Generate SHA256 hash of the PDF
-        let digest = digest::digest(&digest::SHA256, &pdf_data);
-        let signature_data = digest.as_ref();
+        let mut hasher = Sha256::new();
+        hasher.update(&pdf_data);
+        let signature_data = hasher.finalize();
 
         // Create signature metadata
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
@@ -167,7 +166,7 @@ impl SignatureManager {
             .unwrap_or_default()
             .to_rfc3339();
 
-        let signature_id = format!("sha256_sig_{}", hex::encode(digest.as_ref()));
+        let signature_id = format!("sha256_sig_{}", hex::encode(signature_data));
 
         let digital_signature = DigitalSignature {
             id: signature_id.clone(),
@@ -321,13 +320,15 @@ impl SignatureManager {
         })?;
 
         for entry in entries {
-            let entry = entry.with_context(|| format!("Failed to read directory entry"))?;
+            let entry = entry.with_context(|| "Failed to read directory entry".to_string())?;
             let path = entry.path();
 
             // Only process certificate files
-            if path.extension().map_or(false, |ext| {
-                ext == "pem" || ext == "der" || ext == "crt" || ext == "cer"
-            }) {
+            #[allow(clippy::unnecessary_map_or)]
+            if path
+                .extension()
+                .is_some_and(|ext| ext == "pem" || ext == "der" || ext == "crt" || ext == "cer")
+            {
                 match Self::import_certificate(&path) {
                     Ok(cert) => certificates.push(cert),
                     Err(e) => {

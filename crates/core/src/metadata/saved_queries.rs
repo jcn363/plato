@@ -12,7 +12,7 @@ use crate::helpers::load_json;
 use crate::helpers::save_json;
 
 /// Saved search query with metadata
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub struct SavedQuery {
     /// Unique identifier for the query
@@ -27,19 +27,6 @@ pub struct SavedQuery {
     pub last_used: Option<String>,
     /// Number of times the query has been used
     pub use_count: u32,
-}
-
-impl Default for SavedQuery {
-    fn default() -> Self {
-        Self {
-            id: String::default(),
-            name: String::default(),
-            query: String::default(),
-            created_at: String::default(),
-            last_used: None,
-            use_count: 0,
-        }
-    }
 }
 
 /// Collection of saved search queries

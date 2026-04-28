@@ -83,9 +83,8 @@ tts = ["dep:tts", "dep:jni", "dep:ndk-context"]
 
 # Cryptographic operations for digital signatures (Linux only)
 [target.'cfg(target_os = "linux")'.dependencies]
-ring = "0.17.14"
+sha2 = "0.10.9"
 x509-cert = "0.2.5"
-der = { version = "0.8.0", features = ["pem", "std"] }
 
 [dev-dependencies]
 tempfile = "3.27.0"

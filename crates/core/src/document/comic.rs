@@ -9,25 +9,23 @@
 use std::io::Read;
 use std::path::Path;
 
-use anyhow::{Context, Error};
-use image::DynamicImage;
+use anyhow::{format_err, Context, Error};
 
 use crate::framebuffer::Pixmap;
-use crate::geom::{Boundary, CycleDir, Point};
-use crate::metadata::{Annotation, TextAlign};
+use crate::geom::{Boundary, CycleDir};
+use crate::metadata::TextAlign;
 
-use super::{BoundedText, Document, Location, Neighbors, TocEntry};
+use super::{BoundedText, Document, Location, TocEntry};
 
-/// Represents a comic book archive document (CBZ/CBR)
 pub struct ComicDocument {
-    pages: Vec<Vec<u8>>, // Raw image data for each page
+    path: std::path::PathBuf,
+    pages: Vec<Vec<u8>>,
     page_count: usize,
     current_page: usize,
-    dims: Vec<(f32, f32)>, // Dimensions for each page
+    dims: Vec<(f32, f32)>,
 }
 
 impl ComicDocument {
-    /// Open a comic book archive file
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
         let path = path.as_ref();
         let ext = path
@@ -43,7 +41,6 @@ impl ComicDocument {
         }
     }
 
-    /// Open a CBZ (ZIP) archive
     fn open_cbz(path: &Path) -> Result<Self, Error> {
         let file = std::fs::File::open(path)
             .with_context(|| format!("can't open CBZ file {}", path.display()))?;
@@ -52,7 +49,6 @@ impl ComicDocument {
 
         let mut image_entries: Vec<(String, Vec<u8>)> = Vec::new();
 
-        // Extract all image files from the archive
         for i in 0..archive.len() {
             let mut entry = archive.by_index(i)?;
             if entry.is_file() {
@@ -65,7 +61,6 @@ impl ComicDocument {
             }
         }
 
-        // Sort by filename for proper page ordering
         image_entries.sort_by(|a, b| a.0.cmp(&b.0));
 
         let page_count = image_entries.len();
@@ -73,72 +68,6 @@ impl ComicDocument {
             return Err(format_err!("No images found in CBZ archive"));
         }
 
-        // Get dimensions for each page
-        let mut dims = Vec::with_capacity(page_count);
-        let mut pages = Vec::with_capacity(page_count);
-
-        for (_, data) in image_entries {
-            // Try to get image dimensions
-            if let Ok(img) = image::load_from_memory(&data) {
-                dims.push((img.width() as f32, img.height() as f32));
-            } else {
-                dims.push((800.0, 1200.0)); // Default fallback dimensions
-            }
-            pages.push(data);
-        }
-
-        Ok(ComicDocument {
-            pages,
-            page_count,
-            current_page: 0,
-            dims,
-        })
-    }
-
-    /// Open a CBR (RAR) archive
-    fn open_cbr(path: &Path) -> Result<Self, Error> {
-        let archive = unrar::Archive::new(path)
-            .open_for_processing()
-            .map_err(|e| format_err!("can't open CBR archive: {:?}", e))?;
-
-        let mut image_entries: Vec<(String, Vec<u8>)> = Vec::new();
-
-        // Process archive entries sequentially
-        let mut cursor = archive;
-        loop {
-            // Read header to get file info
-            let (header, cursor_after_header) = match cursor.read_header() {
-                Ok((h, c)) => (h, c),
-                Err(_) => break, // No more entries
-            };
-
-            let filename = header.filename.to_lowercase();
-
-            if Self::is_image_file(&filename) {
-                // Process file to read into memory
-                let (data, cursor_after_file) = cursor_after_header
-                    .read()
-                    .map_err(|e| format_err!("can't read CBR entry: {:?}", e))?;
-                image_entries.push((filename, data));
-                cursor = cursor_after_file;
-            } else {
-                // Skip non-image files
-                let (_, cursor_after_skip) = cursor_after_header
-                    .skip()
-                    .map_err(|e| format_err!("can't skip CBR entry: {:?}", e))?;
-                cursor = cursor_after_skip;
-            }
-        }
-
-        // Sort by filename for proper page ordering
-        image_entries.sort_by(|a, b| a.0.cmp(&b.0));
-
-        let page_count = image_entries.len();
-        if page_count == 0 {
-            return Err(format_err!("No images found in CBR archive"));
-        }
-
-        // Get dimensions for each page
         let mut dims = Vec::with_capacity(page_count);
         let mut pages = Vec::with_capacity(page_count);
 
@@ -146,12 +75,13 @@ impl ComicDocument {
             if let Ok(img) = image::load_from_memory(&data) {
                 dims.push((img.width() as f32, img.height() as f32));
             } else {
-                dims.push((800.0, 1200.0)); // Default fallback
+                dims.push((800.0, 1200.0));
             }
             pages.push(data);
         }
 
         Ok(ComicDocument {
+            path: path.to_path_buf(),
             pages,
             page_count,
             current_page: 0,
@@ -159,7 +89,13 @@ impl ComicDocument {
         })
     }
 
-    /// Check if a file is an image based on extension
+    fn open_cbr(_path: &Path) -> Result<Self, Error> {
+        Err(format_err!(
+            "CBR (RAR) support is temporarily disabled due to unrar API changes. \
+             Please convert CBR files to CBZ format."
+        ))
+    }
+
     fn is_image_file(name: &str) -> bool {
         name.ends_with(".jpg")
             || name.ends_with(".jpeg")
@@ -169,7 +105,6 @@ impl ComicDocument {
             || name.ends_with(".webp")
     }
 
-    /// Get image data for a specific page
     fn get_page_data(&self, index: usize) -> Option<&[u8]> {
         self.pages.get(index).map(|v| v.as_slice())
     }
@@ -185,50 +120,33 @@ impl Document for ComicDocument {
     }
 
     fn toc(&mut self) -> Option<Vec<TocEntry>> {
-        // Comic archives typically don't have a table of contents
         None
     }
-
-    fn chapter<'a>(
-        &mut self,
-        _offset: usize,
-        _toc: &'a [TocEntry],
-    ) -> Option<(&'a TocEntry, f32)> {
-        // No chapter support for comic archives
+    fn chapter<'a>(&mut self, _: usize, _: &'a [TocEntry]) -> Option<(&'a TocEntry, f32)> {
         None
     }
-
     fn chapter_relative<'a>(
         &mut self,
-        _offset: usize,
-        _dir: CycleDir,
-        _toc: &'a [TocEntry],
+        _: usize,
+        _: CycleDir,
+        _: &'a [TocEntry],
     ) -> Option<&'a TocEntry> {
-        // No chapter support for comic archives
+        None
+    }
+    fn words(&mut self, _: Location) -> Option<(Vec<BoundedText>, usize)> {
+        None
+    }
+    fn lines(&mut self, _: Location) -> Option<(Vec<BoundedText>, usize)> {
+        None
+    }
+    fn links(&mut self, _: Location) -> Option<(Vec<BoundedText>, usize)> {
+        None
+    }
+    fn images(&mut self, _: Location) -> Option<(Vec<Boundary>, usize)> {
         None
     }
 
-    fn words(&mut self, _loc: Location) -> Option<(Vec<BoundedText>, usize)> {
-        // No text extraction for comic images
-        None
-    }
-
-    fn lines(&mut self, _loc: Location) -> Option<(Vec<BoundedText>, usize)> {
-        // No text extraction for comic images
-        None
-    }
-
-    fn links(&mut self, _loc: Location) -> Option<(Vec<BoundedText>, usize)> {
-        // No links in comic archives
-        None
-    }
-
-    fn images(&mut self, _loc: Location) -> Option<(Vec<Boundary>, usize)> {
-        // Each page is an image, so we return the page as a single image
-        None
-    }
-
-    fn pixmap(&mut self, loc: Location, _scale: f32, _samples: usize) -> Option<(Pixmap, usize)> {
+    fn pixmap(&mut self, loc: Location, _: f32, _: usize) -> Option<(Pixmap, usize)> {
         let page = match loc {
             Location::Exact(p) => p,
             Location::Previous(p) => p.saturating_sub(1),
@@ -240,66 +158,36 @@ impl Document for ComicDocument {
             return None;
         }
 
-        // Load the image and convert to Pixmap
         let data = self.get_page_data(page)?;
         let img = image::load_from_memory(data).ok()?;
-        let rgba = img.to_rgba8();
-        let (width, height) = rgba.dimensions();
-
-        let pixmap = Pixmap::from_raw(
-            width as usize,
-            height as usize,
-            rgba.into_raw(),
-        );
+        let pixmap = Pixmap::from_dynamic_image(&img).ok()?;
 
         self.current_page = page;
         Some((pixmap, page))
     }
 
-    fn layout(&mut self, _width: u32, _height: u32, _font_size: f32, _dpi: u16) {
-        // No layout needed for fixed-size comic images
-    }
-
-    fn set_font_family(&mut self, _family_name: &str, _search_path: &str) {
-        // Not applicable for comic archives
-    }
-
-    fn set_margin_width(&mut self, _width: i32) {
-        // Not applicable for comic archives
-    }
-
-    fn set_text_align(&mut self, _text_align: TextAlign) {
-        // Not applicable for comic archives
-    }
-
-    fn set_line_height(&mut self, _line_height: f32) {
-        // Not applicable for comic archives
-    }
-
-    fn set_hyphen_penalty(&mut self, _hyphen_penalty: i32) {
-        // Not applicable for comic archives
-    }
-
-    fn set_stretch_tolerance(&mut self, _stretch_tolerance: f32) {
-        // Not applicable for comic archives
-    }
-
-    fn set_ignore_document_css(&mut self, _ignore: bool) {
-        // Not applicable for comic archives
-    }
+    fn layout(&mut self, _: u32, _: u32, _: f32, _: u16) {}
+    fn set_font_family(&mut self, _: &str, _: &str) {}
+    fn set_margin_width(&mut self, _: i32) {}
+    fn set_text_align(&mut self, _: TextAlign) {}
+    fn set_line_height(&mut self, _: f32) {}
+    fn set_hyphen_penalty(&mut self, _: i32) {}
+    fn set_stretch_tolerance(&mut self, _: f32) {}
+    fn set_ignore_document_css(&mut self, _: bool) {}
 
     fn title(&self) -> Option<String> {
-        None
+        self.path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .map(|s| s.to_string())
     }
 
     fn author(&self) -> Option<String> {
         None
     }
-
-    fn metadata(&self, _key: &str) -> Option<String> {
+    fn metadata(&self, _: &str) -> Option<String> {
         None
     }
-
     fn is_reflowable(&self) -> bool {
         false
     }

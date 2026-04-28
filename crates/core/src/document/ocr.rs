@@ -11,6 +11,12 @@ pub struct OcrManager {
     language: String,
 }
 
+impl Default for OcrManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OcrManager {
     pub fn new() -> Self {
         Self {

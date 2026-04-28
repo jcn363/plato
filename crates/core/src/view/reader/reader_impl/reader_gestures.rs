@@ -120,11 +120,19 @@ impl Reader {
             ZoomMode::FitToPage | ZoomMode::FitToWidth | ZoomMode::Fit(_) => match dir {
                 // In manga mode, reverse the navigation direction (right-to-left reading)
                 Dir::West => {
-                    let dir = if manga_mode { CycleDir::Previous } else { CycleDir::Next };
+                    let dir = if manga_mode {
+                        CycleDir::Previous
+                    } else {
+                        CycleDir::Next
+                    };
                     self.go_to_neighbor(dir, hub, rq, context)
                 }
                 Dir::East => {
-                    let dir = if manga_mode { CycleDir::Next } else { CycleDir::Previous };
+                    let dir = if manga_mode {
+                        CycleDir::Next
+                    } else {
+                        CycleDir::Previous
+                    };
                     self.go_to_neighbor(dir, hub, rq, context)
                 }
                 Dir::South | Dir::North => {
@@ -154,7 +162,11 @@ impl Reader {
         match dir {
             // In manga mode, reverse the navigation direction (right-to-left reading)
             Dir::West => {
-                let dir = if manga_mode { CycleDir::Next } else { CycleDir::Previous };
+                let dir = if manga_mode {
+                    CycleDir::Next
+                } else {
+                    CycleDir::Previous
+                };
                 if self.search.is_none() {
                     self.go_to_chapter(dir, hub, rq, context);
                 } else {
@@ -162,7 +174,11 @@ impl Reader {
                 }
             }
             Dir::East => {
-                let dir = if manga_mode { CycleDir::Previous } else { CycleDir::Next };
+                let dir = if manga_mode {
+                    CycleDir::Previous
+                } else {
+                    CycleDir::Next
+                };
                 if self.search.is_none() {
                     self.go_to_chapter(dir, hub, rq, context);
                 } else if let Some(ref search) = self.search {
@@ -193,11 +209,19 @@ impl Reader {
         match dir {
             // In manga mode, reverse the navigation direction (right-to-left reading)
             DiagDir::NorthWest => {
-                let dir = if manga_mode { CycleDir::Next } else { CycleDir::Previous };
+                let dir = if manga_mode {
+                    CycleDir::Next
+                } else {
+                    CycleDir::Previous
+                };
                 self.go_to_bookmark(dir, hub, rq, context)
             }
             DiagDir::NorthEast => {
-                let dir = if manga_mode { CycleDir::Previous } else { CycleDir::Next };
+                let dir = if manga_mode {
+                    CycleDir::Previous
+                } else {
+                    CycleDir::Next
+                };
                 self.go_to_bookmark(dir, hub, rq, context)
             }
             DiagDir::SouthEast => match context.settings.reader.bottom_right_gesture {
@@ -246,11 +270,19 @@ impl Reader {
         match dir {
             // In manga mode, reverse the navigation direction (right-to-left reading)
             DiagDir::NorthWest => {
-                let dir = if manga_mode { CycleDir::Next } else { CycleDir::Previous };
+                let dir = if manga_mode {
+                    CycleDir::Next
+                } else {
+                    CycleDir::Previous
+                };
                 self.go_to_annotation(dir, hub, rq, context);
             }
             DiagDir::NorthEast => {
-                let dir = if manga_mode { CycleDir::Previous } else { CycleDir::Next };
+                let dir = if manga_mode {
+                    CycleDir::Previous
+                } else {
+                    CycleDir::Next
+                };
                 self.go_to_annotation(dir, hub, rq, context)
             }
             _ => (),

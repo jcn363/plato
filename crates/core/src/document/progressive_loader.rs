@@ -1,3 +1,7 @@
+//! Progressive document loading with caching for large PDFs.
+
+#![allow(dead_code)]
+
 use crate::consts::system::{PAGE_CACHE_SIZE_MB, PRELOAD_AHEAD_PAGES, PRELOAD_BEHIND_PAGES};
 use crate::device::{page_cache_size_mb, preload_ahead_pages, preload_behind_pages};
 use crate::document::pdfpurr::Document as PdfPurrDocument;
