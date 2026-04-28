@@ -82,3 +82,62 @@ cp LICENSE-AGPLv3 dist
 
 # No external libraries needed - pure Rust build
 $STRIP_TOOL dist/plato
+
+# Create zip bundle for Kobo
+if [ "$TARGET" = "arm" ]; then
+    echo "Creating ZIP bundle for Kobo devices..."
+    cd dist && zip -r "../plato-kobo.zip" . && cd ..
+    echo "Created: plato-kobo.zip"
+elif [ "$TARGET" = "arm64" ]; then
+    echo "Creating ZIP bundle for Kobo 64-bit devices..."
+    cd dist && zip -r "../plato-kobo-arm64.zip" . && cd ..
+    echo "Created: plato-kobo-arm64.zip"
+fi
+
+# Create .deb for Linux mint (x86_64)
+if [ "$TARGET" = "host" ] || [ "$TARGET" = "linuxmint" ]; then
+    echo "Creating .deb package for Linux..."
+    # Create debian package structure
+    mkdir -p debian/DEBIAN
+    mkdir -p debian/usr/local/bin
+    mkdir -p debian/usr/share/applications
+    mkdir -p debian/usr/share/icons/hicolor/64x64/apps
+    
+    # Copy binary
+    cp "$TARGET_DIR/$CARGO_TARGET/$CARGO_PROFILE/plato" debian/usr/local/bin/plato
+    
+    # Create desktop file
+    cat > debian/usr/share/applications/plato.desktop << 'DEOF'
+[Desktop Entry]
+Name=Plato
+Exec=/usr/local/bin/plato
+Type=Application
+Icon=plato
+Terminal=false
+Categories=Office;Viewer;
+DEOF
+    
+    # Copy icon (if exists)
+    if [ -f "icons/plato.png" ]; then
+        cp icons/plato.png debian/usr/share/icons/hicolor/64x64/apps/
+    fi
+    
+    # Create control file
+    cat > debian/DEBIAN/control << 'DEOF'
+Package: plato
+Version: $(date +%Y%m%d)
+Section: office
+Priority: optional
+Architecture: amd64
+Maintainer: Plato Team
+Description: Document reader for Kobo and desktop
+ Plato is a document reader for Kobo e-readers and Linux desktop.
+DEOF
+    
+    # Build .deb
+    dpkg-deb --build debian plato-linux.deb
+    rm -Rf debian
+    echo "Created: plato-linux.deb"
+fi
+
+echo "Distribution package created for $TARGET!"
