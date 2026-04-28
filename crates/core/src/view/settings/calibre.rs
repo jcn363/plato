@@ -279,9 +279,22 @@ pub fn handle_event(
             true
         }
         Event::Select(EntryId::TestCalibreConnection) => {
-            // TODO: Implement connection test
+            use std::net::TcpStream;
+            use std::time::Duration;
+
+            let addr = format!("{}:{}", &context.settings.calibre.host, context.settings.calibre.port);
+            let timeout = Duration::from_secs(3);
+
+            let msg = match addr.parse::<std::net::SocketAddr>() {
+                Ok(sock_addr) => match TcpStream::connect_timeout(&sock_addr, timeout) {
+                    Ok(_) => "Connected!".to_string(),
+                    Err(_) => "Connection failed".to_string(),
+                },
+                Err(_) => "Invalid address".to_string(),
+            };
+
             if let Some(btn) = children[offset + 17].downcast_mut::<Button>() {
-                btn.update("Testing...".to_string(), rq);
+                btn.update(msg, rq);
             }
             true
         }
