@@ -20,6 +20,12 @@ target = "arm-unknown-linux-gnueabihf"
 
 # Android ARM 64-bit target
 [target.aarch64-linux-android]
-ar = "/usr/lib/android-sdk/ndk/26.2.11394342/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-linker = "/usr/lib/android-sdk/ndk/26.2.11394342/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android33-clang"
+ar = "/home/user/Android/sdk/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+linker = "/home/user/Android/sdk/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
+rustflags = ["-C", "link-arg=-landroid"]
+
+# Android ARM 32-bit target  
+[target.armv7-linux-androideabi]
+ar = "/home/user/Android/sdk/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+linker = "/home/user/Android/sdk/android-ndk-r26b/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang"
 rustflags = ["-C", "link-arg=-landroid"]
