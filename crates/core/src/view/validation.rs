@@ -219,9 +219,8 @@ impl ValidationView {
         use crate::document::ocr::OcrManager;
 
         let ocr_manager = OcrManager::new();
-        let current_page = 0; // TODO: Get actual current page
         let text = ocr_manager
-            .ocr_page(&self.pdf_path, current_page)
+            .ocr_page(&self.pdf_path, 0) // Always use page 0 for validation
             .map_err(|e| anyhow::format_err!("Failed to OCR page: {}", e))?;
 
         // Store OCR result

@@ -282,7 +282,10 @@ pub fn handle_event(
             use std::net::TcpStream;
             use std::time::Duration;
 
-            let addr = format!("{}:{}", &context.settings.calibre.host, context.settings.calibre.port);
+            let addr = format!(
+                "{}:{}",
+                &context.settings.calibre.host, context.settings.calibre.port
+            );
             let timeout = Duration::from_secs(3);
 
             let msg = match addr.parse::<std::net::SocketAddr>() {

@@ -189,7 +189,7 @@ impl AiSettings {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct AccessibilitySettings {
     /// High contrast mode
@@ -208,6 +208,21 @@ pub struct AccessibilitySettings {
     pub color_blindness_mode: String,
     /// Dyslexic-friendly font
     pub dyslexic_font: bool,
+}
+
+impl Default for AccessibilitySettings {
+    fn default() -> Self {
+        Self {
+            high_contrast: false,
+            letter_spacing: 0.0,
+            word_spacing: 0.0,
+            line_height: 1.2, // Valid default within range [0.5, 3.0]
+            large_text_scale: 1.0,
+            focus_mode: false,
+            color_blindness_mode: "none".to_string(),
+            dyslexic_font: false,
+        }
+    }
 }
 
 impl AccessibilitySettings {

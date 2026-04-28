@@ -286,6 +286,8 @@ pub use pdfpurr::standards::StandardsReport;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::document::pdfpurr::text::TextPage;
+    use crate::document::pdfpurr::types::{scale, FzLocation};
 
     // ------------------------------------------------------------------------
     // FzRect Tests
