@@ -48,28 +48,29 @@ impl SearchIndexer {
     }
 
     /// Search for semantically similar documents
-    pub fn search(&self, query: &str, limit: usize) -> Result<Vec<(String, f32)>> {
+    pub fn search(&self, query: &str, limit: usize) -> Result<Vec<(String, f32, String)>> {
         let query_vec = self.embedder.embed(query)?;
         
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare("SELECT doc_id, vector FROM embeddings")?;
+        let mut stmt = conn.prepare("SELECT doc_id, content, vector FROM embeddings")?;
         let rows = stmt.query_map([], |row| {
             let doc_id: String = row.get(0)?;
-            let blob: Vec<u8> = row.get(1)?;
+            let content: String = row.get(1)?;
+            let blob: Vec<u8> = row.get(2)?;
             let vector: Vec<f32> = blob.chunks(4)
                 .map(|chunk| f32::from_le_bytes(chunk.try_into().unwrap()))
                 .collect();
-            Ok((doc_id, vector))
+            Ok((doc_id, content, vector))
         })?;
 
         let mut results = Vec::new();
         for row in rows {
-            let (doc_id, vector) = row?;
+            let (doc_id, content, vector) = row?;
             let sim = <CandleEmbedder as VectorEmbedder>::similarity(&query_vec, &vector);
-            results.push((doc_id, sim));
+            results.push((doc_id, sim, content));
         }
         
-        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        results.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
         Ok(results.into_iter().take(limit).collect())
     }
 }

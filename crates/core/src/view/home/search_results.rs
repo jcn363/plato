@@ -35,14 +35,15 @@ impl SearchResults {
         y += small_height + padding;
 
         if let Ok(results) = indexer.search(query, 5) {
-            for (doc_id, score) in results {
+            for (doc_id, score, content) in results {
+                let snippet = if content.len() > 50 { &content[..50] } else { &content };
                 let btn = crate::view::button::Button::new(
-                    rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height],
+                    rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height + padding],
                     Event::Select(crate::view::EntryId::OpenDocument(std::path::PathBuf::from(doc_id.clone()))),
-                    format!("{} ({:.2})", doc_id, score),
+                    format!("{} ({:.2})\nMatch: {}...", doc_id, score, snippet),
                 );
                 children.push(Box::new(btn) as Box<dyn View>);
-                y += small_height;
+                y += small_height + padding;
             }
         }
 

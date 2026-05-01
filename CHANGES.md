@@ -181,3 +181,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Final Integration: Semantic Search Input
 - **Search Bar Hook**: Connected the main library search bar to the 'SearchIndexer', allowing users to perform semantic content queries directly from the home view.
+
+## UI: Semantic Search Result Context
+- **Snippets**: Enhanced the 'SearchResults' view to display text snippets for matched documents, providing immediate visual context for search results.
