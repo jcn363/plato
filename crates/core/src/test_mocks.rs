@@ -21,8 +21,9 @@
 //! let context = Context::with_framebuffer(Box::new(mock));
 //! ```
 
-use crate::battery::{Battery, BatteryError, Status};
+use crate::battery::{Battery, Status};
 use crate::color::Color;
+use crate::error::PlatoResult;
 use crate::device::{Device, FrontlightKind, KoboDevice, Model, Orientation};
 use crate::document::BoundedText;
 use crate::document::{Document, Location, TocEntry};
@@ -199,11 +200,11 @@ impl MockBattery {
 }
 
 impl Battery for MockBattery {
-    fn capacity(&mut self) -> Result<Vec<f32>, BatteryError> {
+    fn capacity(&mut self) -> PlatoResult<Vec<f32>> {
         Ok(self.capacities.clone())
     }
 
-    fn status(&mut self) -> Result<Vec<Status>, BatteryError> {
+    fn status(&mut self) -> PlatoResult<Vec<Status>> {
         Ok(self.statuses.clone())
     }
 }

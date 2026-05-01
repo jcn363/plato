@@ -32,21 +32,10 @@
 mod fake;
 mod kobo;
 
-use thiserror::Error;
+use crate::error::PlatoResult;
 
 pub use self::fake::FakeBattery;
 pub use self::kobo::KoboBattery;
-
-/// Battery error types
-#[derive(Debug, Error)]
-pub enum BatteryError {
-    #[error("Failed to read battery capacity: {0}")]
-    CapacityReadError(String),
-    #[error("Failed to read battery status: {0}")]
-    StatusReadError(String),
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Status {
@@ -63,6 +52,6 @@ impl Status {
 }
 
 pub trait Battery {
-    fn capacity(&mut self) -> Result<Vec<f32>, BatteryError>;
-    fn status(&mut self) -> Result<Vec<Status>, BatteryError>;
+    fn capacity(&mut self) -> PlatoResult<Vec<f32>>;
+    fn status(&mut self) -> PlatoResult<Vec<Status>>;
 }

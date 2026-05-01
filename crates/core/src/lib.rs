@@ -6,6 +6,7 @@ pub mod buffer_pool;
 pub mod color;
 pub mod consts;
 pub mod context;
+pub mod error;
 pub mod cover_editor;
 pub mod device;
 pub mod image_formats;

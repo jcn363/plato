@@ -107,3 +107,8 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Build Status
 - Build verified with `cargo build --workspace`.
+## Error Handling Standardization
+- **Global Error Type**: Established `PlatoError` and `PlatoResult` in `crates/core/src/error.rs` as the unified error handling pattern.
+- **Dictionary Module Refactor**: Migrated `crates/core/dictionary/` from legacy `DictError` to the unified `PlatoError` pattern, including necessary wrapping for backward compatibility.
+- **Battery Module Refactor**: Standardized battery module error types to use `PlatoResult`.
+- **System-wide Consistency**: Replaced remaining occurrences of custom local error types (e.g., `DictError`, custom `Error` aliases) across `crates/core` with the global `PlatoError`, ensuring consistent error propagation and build stability.

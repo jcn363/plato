@@ -1,4 +1,5 @@
-use super::{Battery, BatteryError, Status};
+use super::{Battery, Status};
+use crate::error::PlatoResult;
 
 /// Fake battery implementation for testing.
 /// Values are cached in struct fields (no file I/O required).
@@ -33,11 +34,11 @@ impl FakeBattery {
 }
 
 impl Battery for FakeBattery {
-    fn capacity(&mut self) -> Result<Vec<f32>, BatteryError> {
+    fn capacity(&mut self) -> PlatoResult<Vec<f32>> {
         Ok(vec![self.capacity])
     }
 
-    fn status(&mut self) -> Result<Vec<Status>, BatteryError> {
+    fn status(&mut self) -> PlatoResult<Vec<Status>> {
         Ok(vec![self.status])
     }
 }

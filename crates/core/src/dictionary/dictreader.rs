@@ -69,7 +69,7 @@ impl<B: Read + Seek> DictReader for DictReaderRaw<B> {
         }
 
         if (start_offset + length) > self.total_length {
-            return Err(DictError::IoError(io::Error::new(
+            return Err(DictError::from(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
                 "a \
                       seek beyond the end of uncompressed data was requested",
@@ -81,7 +81,7 @@ impl<B: Read + Seek> DictReader for DictReaderRaw<B> {
         let bytes_read = self.dict_data.read(read_data.as_mut_slice())? as u64;
         if bytes_read != length {
             // reading from end of file?
-            return Err(DictError::IoError(io::Error::new(
+            return Err(DictError::from(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
                 "seek beyond end of file",
             )));
@@ -103,7 +103,7 @@ impl<B: Read + Seek> DictReader for DictReaderRaw<B> {
 pub fn load_dict<P: AsRef<Path>>(path: P) -> Result<Box<dyn DictReader>, DictError> {
     if path.as_ref().extension() == Some(OsStr::new("dz")) {
         let file = File::open(path.as_ref()).map_err(|e| {
-            DictError::IoError(io::Error::other(format!(
+            DictError::from(io::Error::other(format!(
                 "can't open dictionary file {}: {}",
                 path.as_ref().display(),
                 e
@@ -112,7 +112,7 @@ pub fn load_dict<P: AsRef<Path>>(path: P) -> Result<Box<dyn DictReader>, DictErr
         Ok(Box::new(DictReaderDz::new(file)?))
     } else {
         let file = File::open(path.as_ref()).map_err(|e| {
-            DictError::IoError(io::Error::other(format!(
+            DictError::from(io::Error::other(format!(
                 "can't open dictionary file {}: {}",
                 path.as_ref().display(),
                 e
@@ -342,7 +342,7 @@ impl<B: Read + Seek> DictReader for DictReaderDz<B> {
             return Err(DictError::MemoryError);
         }
         if (start_offset + length) > self.ufile_length {
-            return Err(DictError::IoError(io::Error::new(
+            return Err(DictError::from(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
                 "a \
                       seek beyond the end of uncompressed data was requested",
@@ -352,7 +352,7 @@ impl<B: Read + Seek> DictReader for DictReaderDz<B> {
         for chunk in self.get_chunks_for(start_offset, length) {
             let pos = self.dzdict.seek(SeekFrom::Start(chunk.offset as u64))?;
             if pos != (chunk.offset as u64) {
-                return Err(DictError::IoError(io::Error::other(format!(
+                return Err(DictError::from(io::Error::other(format!(
                     "attempted to seek to {} but new position is {}",
                     chunk.offset, pos
                 ))));
