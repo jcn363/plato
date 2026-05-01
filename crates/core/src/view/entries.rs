@@ -334,6 +334,7 @@ pub enum EntryId {
     ToggleBookView,
     ToggleDirectoryView,
     OpenFileBrowser,
+    OpenDocument(std::path::PathBuf),
     SelectFile(PathBuf),
     OpenRedactionEditor(PathBuf, usize),
     OpenOpds(String),
@@ -455,6 +456,7 @@ impl EntryId {
             EntryId::ToggleAiApiKey => "ToggleAiApiKey",
             EntryId::AiSendMessage => "AiSendMessage",
             EntryId::ToggleAiChat => "ToggleAiChat",
+            EntryId::OpenDocument(_) => "OpenDocument",
             EntryId::Preview => "Preview",
             _ => "Unknown",
         }

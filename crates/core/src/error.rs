@@ -39,3 +39,11 @@ pub enum PlatoError {
 }
 
 pub type PlatoResult<T> = Result<T, PlatoError>;
+
+/// Convert any error that implements `std::error::Error` into a `PlatoError::Ai` variant.
+pub fn into_plato_err<E>(e: E) -> PlatoError
+where
+    E: std::error::Error + Send + Sync + 'static,
+{
+    PlatoError::Ai(anyhow::Error::new(e))
+}

@@ -358,7 +358,7 @@ impl Framebuffer for KoboFramebuffer2 {
             cfa_use: 0,
         };
 
-        // SAFETY: Display file descriptor is valid. Update data pointers are properly initialized.
+        // SAFETY: Display file descriptor and update data pointers are valid. The update data struct was fully initialized, ensuring correct layout for the native call.
         let result = unsafe { send_update(self.display.as_raw_fd(), &mut update_data) };
 
         match result {

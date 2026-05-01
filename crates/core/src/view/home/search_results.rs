@@ -36,12 +36,12 @@ impl SearchResults {
 
         if let Ok(results) = indexer.search(query, 5) {
             for (doc_id, score) in results {
-                let res_label = Label::new(
+                let btn = crate::view::button::Button::new(
                     rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height],
+                    Event::Select(crate::view::EntryId::OpenDocument(std::path::PathBuf::from(doc_id.clone()))),
                     format!("{} ({:.2})", doc_id, score),
-                    Align::Left(0),
                 );
-                children.push(Box::new(res_label) as Box<dyn View>);
+                children.push(Box::new(btn) as Box<dyn View>);
                 y += small_height;
             }
         }
