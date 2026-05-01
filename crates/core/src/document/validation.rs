@@ -276,6 +276,27 @@ impl PdfXValidator {
     }
 }
 
+// From implementations to convert validation types to pdfpurr types
+impl From<PdfALevel> for pdfpurr::PdfALevel {
+    fn from(level: PdfALevel) -> Self {
+        match level {
+            PdfALevel::A1b => pdfpurr::PdfALevel::A1b,
+            PdfALevel::A2b => pdfpurr::PdfALevel::A2b,
+            PdfALevel::A3b => pdfpurr::PdfALevel::A3b,
+        }
+    }
+}
+
+impl From<PdfXLevel> for pdfpurr::PdfXLevel {
+    fn from(level: PdfXLevel) -> Self {
+        match level {
+            PdfXLevel::X1a => pdfpurr::PdfXLevel::X1a,
+            PdfXLevel::X3 => pdfpurr::PdfXLevel::X3,
+            PdfXLevel::X4 => pdfpurr::PdfXLevel::X4,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -349,26 +370,5 @@ mod tests {
 
         assert!(result.summary().contains("not compliant"));
         assert!(result.summary().contains("1 critical"));
-    }
-}
-
-// From implementations to convert validation types to pdfpurr types
-impl From<PdfALevel> for pdfpurr::PdfALevel {
-    fn from(level: PdfALevel) -> Self {
-        match level {
-            PdfALevel::A1b => pdfpurr::PdfALevel::A1b,
-            PdfALevel::A2b => pdfpurr::PdfALevel::A2b,
-            PdfALevel::A3b => pdfpurr::PdfALevel::A3b,
-        }
-    }
-}
-
-impl From<PdfXLevel> for pdfpurr::PdfXLevel {
-    fn from(level: PdfXLevel) -> Self {
-        match level {
-            PdfXLevel::X1a => pdfpurr::PdfXLevel::X1a,
-            PdfXLevel::X3 => pdfpurr::PdfXLevel::X3,
-            PdfXLevel::X4 => pdfpurr::PdfXLevel::X4,
-        }
     }
 }

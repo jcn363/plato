@@ -251,7 +251,7 @@ fn test_ordered_dithering() {
     let rgba: Vec<u8> = (0..(16 * 16))
         .flat_map(|_| [128u8, 128, 128, 255])
         .collect();
-    let grayscale = converter
+    let _grayscale = converter
         .convert(&rgba, 16, 16)
         .expect("Failed to convert RGBA to grayscale");
 }

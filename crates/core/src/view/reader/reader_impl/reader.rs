@@ -442,7 +442,8 @@ impl View for Reader {
                     let ai_chat = crate::view::ai_chat::AiChatView::new(sidebar_rect, context);
                     self.children.push(Box::new(ai_chat) as Box<dyn View>);
                 } else {
-                    self.children.retain(|child| child.view_id() != Some(ViewId::AiChat));
+                    self.children
+                        .retain(|child| child.view_id() != Some(ViewId::AiChat));
                 }
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true

@@ -46,7 +46,10 @@ mod software;
 mod sunxi_sys;
 mod transform;
 
-#[cfg(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64"))))]
+#[cfg(all(
+    target_os = "linux",
+    not(any(target_arch = "arm", target_arch = "aarch64"))
+))]
 mod desktop;
 
 use crate::theme;
@@ -62,7 +65,10 @@ pub use self::kobo1::KoboFramebuffer1;
 pub use self::kobo2::KoboFramebuffer2;
 pub use self::software::SoftwareFramebuffer;
 
-#[cfg(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64"))))]
+#[cfg(all(
+    target_os = "linux",
+    not(any(target_arch = "arm", target_arch = "aarch64"))
+))]
 pub use self::desktop::DesktopFramebuffer;
 
 #[derive(Debug, Copy, Clone)]

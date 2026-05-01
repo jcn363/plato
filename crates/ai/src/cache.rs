@@ -181,7 +181,7 @@ mod tests {
             [],
             |row| Ok((row.get(0)?, row.get(1)?)),
         );
-        println!("Cache contents: {:?}", check);
+        println!("Cache contents: {check:?}");
 
         let cached = cache
             .get("Summarize chapter 1", &context, 3600)

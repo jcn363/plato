@@ -243,8 +243,10 @@ mod reading_stats_tests {
 
     #[test]
     fn test_from_reader_info() {
-        let mut reader_info = ReaderInfo::default();
-        reader_info.reading_time_seconds = 3600; // 1 hour
+        let reader_info = ReaderInfo {
+            reading_time_seconds: 3600, // 1 hour
+            ..ReaderInfo::default()
+        };
 
         let stats = ReadingStatistics::from_reader_info(&reader_info);
         assert_eq!(stats.total_reading_time_seconds, 3600);

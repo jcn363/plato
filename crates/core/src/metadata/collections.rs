@@ -519,8 +519,10 @@ mod collections_tests {
             })
             .expect("Test assertion failed");
 
-        let mut info = crate::metadata::Info::default();
-        info.reader = Some(crate::metadata::ReaderInfo::default());
+        let info = crate::metadata::Info {
+            reader: Some(crate::metadata::ReaderInfo::default()),
+            ..crate::metadata::Info::default()
+        };
 
         assert!(collections.matches_smart_collection("reading", &info));
     }

@@ -101,8 +101,10 @@ mod tests {
 
     #[test]
     fn test_can_run_on_device() {
-        let mut settings = AiSettings::default();
-        settings.enabled = true;
+        let mut settings = AiSettings {
+            enabled: true,
+            ..AiSettings::default()
+        };
 
         // Should not run on 256MB device
         assert!(!settings.can_run_on_device(256));

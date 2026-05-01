@@ -16,7 +16,7 @@ use crate::view::top_bar::TopBar;
 use crate::view::{Align, Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use anyhow::{format_err, Error};
+use anyhow::{format_err, Context as AnyhowContext, Error};
 
 mod manipulation_handlers;
 mod types;
@@ -337,22 +337,31 @@ Max: 30MB, 500 pages. Keep battery charged."
 
         if action == "ocr_all" {
             let output_path = file_path.with_extension("txt");
-            let mut ocr = crate::document::ocr::OcrManager::new("eng")?;
+            let ocr = crate::document::ocr::OcrManager::with_language("eng");
             let mut text = String::new();
             let page_count = self.manipulator.page_count(file_path)?;
 
             for i in 0..page_count {
-                bus.push_back(Event::Progress(i, page_count, "OCR in progress...".to_string()));
-                if let Ok(page_text) = ocr.extract_text(file_path, i) {
+                bus.push_back(Event::Progress(
+                    i,
+                    page_count,
+                    "OCR in progress...".to_string(),
+                ));
+                if let Ok(page_text) = ocr.ocr_page(file_path, i) {
                     text.push_str(&page_text);
                     text.push('\n');
                 }
             }
-            std::fs::write(&output_path, text).context("Failed to save OCR output")?;
-            bus.push_back(Event::Render(format!("✅ OCR saved to {}", output_path.file_name().unwrap().to_string_lossy())));
+            std::fs::write(&output_path, text).with_context(|| {
+                format!("Failed to save OCR output to {}", output_path.display())
+            })?;
+            bus.push_back(Event::Render(format!(
+                "✅ OCR saved to {}",
+                output_path.file_name().unwrap().to_string_lossy()
+            )));
             return Ok(());
         }
-        
+
         manipulation_handlers::process_manipulation(
             &mut self.manipulator,
             file_path,
