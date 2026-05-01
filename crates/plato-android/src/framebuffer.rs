@@ -190,3 +190,33 @@ impl Framebuffer for AndroidFramebuffer {
         self.inverted
     }
 }
+
+pub struct AndroidBattery {}
+
+impl AndroidBattery {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl plato_core::battery::Battery for AndroidBattery {
+    fn level(&self) -> u8 {
+        // In a real implementation, use JNI to call BatteryManager.BATTERY_PROPERTY_CAPACITY
+        100
+    }
+}
+
+pub struct AndroidLightSensor {}
+
+impl AndroidLightSensor {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl plato_core::lightsensor::LightSensor for AndroidLightSensor {
+    fn value(&self) -> u16 {
+        // In a real implementation, use JNI to call SensorManager.TYPE_LIGHT
+        0
+    }
+}
