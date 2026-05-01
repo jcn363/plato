@@ -61,3 +61,20 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 - **Build**: Clean ARM target build with zero warnings
 - **Dead Code**: All `#[allow(dead_code)]` attributes removed from actionable code
 - **Total Lines Reduced**: 1200+ lines across multiple modules
+## DEB Package Build
+
+### Linux Mint DEB Package
+- Created: `dist/plato_0.9.45-1_amd64.deb`
+- Includes: binary, desktop file, icon, resources (fonts, css, icons, keyboard layouts, translations)
+- Dependencies: libc6 (>= 2.28)
+- Install: `sudo dpkg -i dist/plato_0.9.45-1_amd64.deb`
+
+### Build Process
+1. Build with `cargo build --release --package plato --target x86_64-unknown-linux-gnu`
+2. Package with `dpkg-deb --build debian/plato`
+3. Move to `dist/` directory
+
+### Documentation
+- See `doc/DEB_PACKAGE.md` for full instructions
+- Build script: `build-deb.sh`
+

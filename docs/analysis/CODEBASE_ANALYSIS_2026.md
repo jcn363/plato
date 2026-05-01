@@ -22,7 +22,14 @@
 
 - **AI Chat**: ToggleAiChat entry, reader field, AiChatView
 - **OPDS**: Already integrated (view + entries)
-- **TTS**: Complete implementations
+- **TTS Desktop**: Complete implementations
+- **TTS Android**: Stubbed (jni 0.22+ API breaks compile)
+
+## Android APK Status
+
+- ⚠️ **Blocked**: jni 0.22+ API breaks Android TTS (~23 errors)
+- **Requires**: Either jni 0.21 or full API rewrite
+- Desktop/Linux: ✅ Working
 
 ## TTS Android Implementation - Complete
 

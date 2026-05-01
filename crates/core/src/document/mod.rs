@@ -98,7 +98,7 @@ pub mod sysinfo;
 pub mod ocr;
 #[cfg(target_os = "linux")]
 pub mod signatures;
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub mod validation;
 
 #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
