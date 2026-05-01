@@ -8,7 +8,12 @@ members = [
   'crates/epub_edit',
   'crates/epub_editor',
   'crates/plato-ios',
+  'crates/plato-android',
   'crates/ai',
+  # New modular crates
+  'crates/plato-document',
+  'crates/plato-library',
+  'crates/plato-view',
 ]
 exclude = [
   'crates/plato-android',

@@ -1,0 +1,9 @@
+[package]
+name = "plato-document"
+version = "0.1.0"
+edition = "2021"
+
+# The crate will expose document data structures and traits.
+# Dependencies will be added when the crate is fleshed out.
+[dependencies]
+

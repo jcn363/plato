@@ -1,5 +1,5 @@
 [package]
-name = "plato-search"
+name = "plato_search"
 version = "0.9.45"
 edition = "2021"
 license = "AGPLv3"

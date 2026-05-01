@@ -29,6 +29,8 @@ use std::time::{Duration, SystemTime};
 
 // Import validate_library_path from validation module
 use crate::validation::validate_library_path;
+use plato_search::indexer::LibraryIndexer;
+use plato_ai::embedding::CandleEmbedder;
 
 // Re-export library constants from canonical source in consts::library
 // per Single Source of Truth rule.
