@@ -2,25 +2,42 @@
 //!
 //! Provides an AI chat sidebar in the reader for asking questions about the current document.
 
+use super::{Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
+use crate::color::text_inverted_hard;
 use crate::context::Context;
+use crate::font::Fonts;
+use crate::framebuffer::Framebuffer;
 use crate::geom::Rectangle;
-use crate::view::{Bus, EntryId, Event, Hub, Id, RenderQueue, View, ViewId};
+use crate::theme;
 
 pub struct AiChatView {
     id: Id,
     rect: Rectangle,
+    children: Vec<Box<dyn View>>,
 }
 
 impl AiChatView {
     pub fn new(rect: Rectangle) -> AiChatView {
-        let id = crate::view::ID_FEEDER.next();
-        AiChatView { id, rect }
+        let id = ID_FEEDER.next();
+        AiChatView {
+            id,
+            rect,
+            children: Vec::new(),
+        }
+    }
+
+    pub fn show(rect: Rectangle, _context: &mut Context) -> Box<dyn View> {
+        Box::new(AiChatView::new(rect))
     }
 }
 
 impl View for AiChatView {
-    fn id(&self) -> Option<Id> {
-        Some(self.id)
+    fn id(&self) -> Id {
+        self.id
+    }
+
+    fn view_id(&self) -> Option<ViewId> {
+        Some(ViewId::AiChat)
     }
 
     fn rect(&self) -> &Rectangle {
@@ -32,11 +49,11 @@ impl View for AiChatView {
     }
 
     fn children(&self) -> &Vec<Box<dyn View>> {
-        &Vec::new()
+        &self.children
     }
 
     fn children_mut(&mut self) -> &mut Vec<Box<dyn View>> {
-        &mut Vec::new()
+        &mut self.children
     }
 
     fn handle_event(
@@ -56,7 +73,8 @@ impl View for AiChatView {
         }
     }
 
-    fn is_empty(&self) -> bool {
-        true
+    fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
+        let scheme = text_inverted_hard(theme::is_dark_mode());
+        fb.draw_rectangle(&self.rect, scheme[0]);
     }
 }

@@ -4,7 +4,8 @@
 
 **AI Crate**: 8/8 tests ✅  
 **UI**: Settings integrated ✅  
-**Features**: Enable/Provider/Model/Endpoint ✅
+**Features**: Enable/Provider/Model/Endpoint/API Key ✅  
+**Reader**: AI Chat sidebar stubs ✅
 
 ## What's Working
 
@@ -17,12 +18,12 @@
 - Spoiler protection
 - SQLite caching
 
-## Next Steps (Implemented)
+## Next Steps (All Implemented ✅)
 
 1. ✅ Provider dropdown - Button cycles Ollama/OpenAI/Claude
 2. ✅ Model name - Button cycles phi3:mini/gpt-4/claude-3
 3. ✅ Endpoint config - Button cycles localhost/api.openai/api.anthropic
 4. ✅ API key - Button cycles preset keys
-5. ⏳ Reader sidebar with AI chat - (future)
+5. ✅ Reader sidebar with AI chat - ViewId, stub implementation
 
 **Date**: 2026-05-01
