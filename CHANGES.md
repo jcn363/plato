@@ -178,3 +178,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Semantic Search: Result Navigation
 - **Direct Navigation**: Enabled direct document opening from semantic search results by adding the 'OpenDocument(PathBuf)' event and mapping it to search result selection.
+
+## Final Integration: Semantic Search Input
+- **Search Bar Hook**: Connected the main library search bar to the 'SearchIndexer', allowing users to perform semantic content queries directly from the home view.
