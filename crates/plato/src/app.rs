@@ -730,10 +730,10 @@ pub fn run() -> Result<(), Error> {
 
     match exit_status {
         ExitStatus::Reboot => {
-            File::create("./tmp/reboot").ok();
+            File::create("tmp/reboot").ok();
         }
         ExitStatus::PowerOff => {
-            File::create("./tmp/power_off").ok();
+            File::create("tmp/power_off").ok();
         }
         _ => (),
     }
