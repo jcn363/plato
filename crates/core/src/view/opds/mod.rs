@@ -112,31 +112,33 @@ impl OpdsView {
             let _ = fs::create_dir_all(&downloads_path);
         }
 
-        std::thread::spawn(move || match reqwest::blocking::get(&url) {
-            Ok(response) => {
-                let filename = url.split('/').next_back().unwrap_or("book.epub");
-                let mut dest_path = downloads_path.join(filename);
-                if !dest_path.to_string_lossy().contains('.') {
-                    dest_path.set_extension("epub");
-                }
+        tokio::spawn(async move {
+            match reqwest::get(&url).await {
+                Ok(response) => {
+                    let filename = url.split('/').next_back().unwrap_or("book.epub");
+                    let mut dest_path = downloads_path.join(filename);
+                    if !dest_path.to_string_lossy().contains('.') {
+                        dest_path.set_extension("epub");
+                    }
 
-                match fs::File::create(&dest_path) {
-                    Ok(mut file) => {
-                        if let Ok(bytes) = response.bytes() {
-                            if std::io::copy(&mut bytes.as_ref(), &mut file).is_ok() {
-                                hub.send(Event::Notify(format!("Downloaded {}", filename)))
-                                    .ok();
-                                hub.send(Event::Select(EntryId::Import)).ok();
+                    match fs::File::create(&dest_path) {
+                        Ok(mut file) => {
+                            if let Ok(bytes) = response.bytes().await {
+                                if std::io::copy(&mut bytes.as_ref(), &mut file).is_ok() {
+                                    hub.send(Event::Notify(format!("Downloaded {}", filename)))
+                                        .ok();
+                                    hub.send(Event::Select(EntryId::Import)).ok();
+                                }
                             }
                         }
-                    }
-                    Err(e) => {
-                        crate::log_error!("Failed to create file {:?}: {}", dest_path, e);
+                        Err(e) => {
+                            crate::log_error!("Failed to create file {:?}: {}", dest_path, e);
+                        }
                     }
                 }
-            }
-            Err(e) => {
-                crate::log_error!("Failed to download book: {}", e);
+                Err(e) => {
+                    crate::log_error!("Failed to download book: {}", e);
+                }
             }
         });
     }

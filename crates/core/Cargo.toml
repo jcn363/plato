@@ -13,6 +13,7 @@ bitflags.workspace = true
 plato_error = { path = "../error" }
 plato-ai = { path = "../ai" }
 plato_search = { path = "../search" }
+tokio = { version = "1.43", features = ["full"] }
 downcast-rs = "2.0.2"
 image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "gif", "bmp", "webp", "tga"] }
 lazy_static = "1.5.0"

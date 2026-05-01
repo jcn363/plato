@@ -162,3 +162,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Infrastructure: Tokio Runtime
 - **Asynchronous Runtime**: Integrated 'tokio' runtime into the application entry point, enabling structured concurrency and laying the foundation for asynchronous offloading of blocking I/O tasks.
+
+## Network Optimization: Async OPDS
+- **Asynchronous Downloads**: Migrated OPDS book download functionality to use 'tokio::spawn' with asynchronous 'reqwest', eliminating blocking UI thread operations during network I/O.

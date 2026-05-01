@@ -19,6 +19,7 @@ SYMBOLS_FILE=$(mktemp)
 ) | sort -u >"$SYMBOLS_FILE"
 
 # 2. Scan docs
+MISMATCHES=()
 find doc -name '*.md' -print0 | while IFS= read -r -d '' doc; do
   tokens=$(grep -oP '`[^`]*`' "$doc" | tr -d '`')
   for tok in $tokens; do
