@@ -7,7 +7,7 @@
 //! Images are sorted alphabetically and displayed as pages.
 
 use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::{format_err, Context, Error};
 use rar::Archive;
@@ -92,7 +92,7 @@ impl ComicDocument {
 
     fn open_cbr(path: &Path) -> Result<Self, Error> {
         let temp_dir = tempfile::tempdir()
-            .with_context(|| format!("can't create temp dir for CBR extraction"))?;
+            .with_context(|| "can't create temp dir for CBR extraction".to_string())?;
         let temp_path = temp_dir.path();
 
         // Extract the CBR archive to temp directory

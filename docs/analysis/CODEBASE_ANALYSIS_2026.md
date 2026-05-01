@@ -47,10 +47,9 @@
 ### Still Present
 - Android: tts_android.rs API incompatibilities
 - DEB: No debian/ packaging directory
-- CBR: Disabled (unrar API)
 
 ### Fixed (2026-05-01)
-- Unrar removed from dependencies
+- CBR support enabled using pure Rust `rar` crate (replaces unrar)
 - All clippy warnings resolved
 - sha2/x509-cert now Linux-only
 

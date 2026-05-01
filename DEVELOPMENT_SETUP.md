@@ -21,7 +21,7 @@ Quick reference for developing Plato e-reader software.
 - `pdfpurr` - PDF rendering (replaces MuPDF)
 - `lopdf` - PDF manipulation
 - `skrifa` + `rustybuzz` - Font stack (replaces FreeType/HarfBuzz)
-- `djvu-rs`, `zip`, `unrar` - Format support
+- `djvu-rs`, `zip`, `rar` - Format support (pure Rust)
 
 ---
 

@@ -1,6 +1,6 @@
 # Format Support for Plato
 
-> **Last Updated**: 2026-04-27 (CBR support added)
+> **Last Updated**: 2026-05-01 (CBR support using rar crate)
 > **Related Documents**: [PDF_FEATURES.md](./PDF_FEATURES.md) | [BUILD.md](./BUILD.md)
 
 This document catalogs the document and image format support in Plato, detailing implementation status, technical decisions, and dependencies.
@@ -14,7 +14,7 @@ This document catalogs the document and image format support in Plato, detailing
  | Document    | HTML            | ✅ Implemented | Custom         | HTML/CSS rendering engine           |
  | Document    | DJVU            | ✅ Implemented | djvu-rs        | Basic page navigation               |
  | Document    | CBZ             | ✅ Implemented | zip crate      | Comic book ZIP archives             |
- | Document    | CBR             | ✅ Implemented | unrar          | Comic book RAR archives             |
+ | Document    | CBR             | ✅ Implemented | rar            | Comic book RAR archives (pure Rust) |
  | Image       | PNG             | ✅ Implemented | image crate    | Standard format support             |
  | Image       | JPEG            | ✅ Implemented | image crate    | Standard format support             |
  | Image       | GIF             | ✅ Implemented | image crate    | Standard format support             |
@@ -116,7 +116,7 @@ let dims = doc.dims(0)?;
 **Implementation Details**:
 
 - Module: `document/comic.rs`
-- Library: `zip` crate (CBZ), `unrar` crate (CBR)
+- Library: `zip` crate (CBZ), `rar` crate (CBR, pure Rust)
 - Format: ZIP/RAR archives containing image files (PNG, JPEG, GIF, BMP, WebP)
 - Features: Page navigation, image rendering, alphabetical page ordering
 
@@ -237,7 +237,7 @@ Image Open → Format Detection → Image Crate / justjp2
 | DJVU Support     | djvu-rs    | Rust bindings for DjVuLibre         |
 | JPEG 2000        | openjp2    | Rust bindings for OpenJPEG          |
 | Standard Images  | image      | Rust image processing library       |
-| CBZ/CBR Archives | zip, unrar | ZIP/RAR archive support             |
+ | CBZ/CBR Archives | zip, rar | ZIP/RAR archive support (pure Rust) |
 | Compression      | bzip2      | BZIP2 compression/decompression     |
 | XML Processing   | quick-xml  | Enhanced XML parsing                |
 

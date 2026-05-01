@@ -252,6 +252,17 @@ impl SettingsEditor {
         children.append(&mut sync_children);
         y_pos = y;
 
+        let (mut ai_children, y) = ai::build_rows(
+            &rect,
+            y_pos,
+            small_height,
+            padding,
+            max_label_width,
+            settings,
+        );
+        children.append(&mut ai_children);
+        y_pos = y;
+
         let button_height = x_height * 3;
         let button_width = window_width - 2 * padding;
         let save_rect = rect![
@@ -385,6 +396,12 @@ impl View for SettingsEditor {
         }
 
         if sync::handle_event(evt, &mut self.children, sync_offset, bus, rq, context) {
+            self.dirty = true;
+            return true;
+        }
+
+        let ai_offset = sync_offset + ai::CHILD_COUNT;
+        if ai::handle_event(evt, &mut self.children, ai_offset, bus, rq, context) {
             self.dirty = true;
             return true;
         }

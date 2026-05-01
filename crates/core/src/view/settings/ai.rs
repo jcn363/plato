@@ -4,23 +4,20 @@
 
 use crate::context::Context;
 use crate::geom::Rectangle;
-use crate::settings::AiSettings;
+use crate::settings::Settings;
 use crate::view::button::Button;
 use crate::view::label::Label;
 use crate::view::{Align, Bus, EntryId, Event, RenderQueue, View};
 
-#[allow(dead_code)]
-#[allow(unused_imports)]
-pub const CHILD_COUNT: usize = 6;
+pub const CHILD_COUNT: usize = 4;
 
-#[allow(dead_code)]
 pub fn build_rows(
     rect: &Rectangle,
     y_pos: i32,
     small_height: i32,
     padding: i32,
     max_label_width: i32,
-    ai_settings: &AiSettings,
+    settings: &Settings,
 ) -> (Vec<Box<dyn View>>, i32) {
     let mut children = Vec::new();
     let mut y = y_pos;
@@ -46,7 +43,7 @@ pub fn build_rows(
     let toggle = Button::new(
         ctrl_rect,
         Event::Select(EntryId::ToggleAiFeature),
-        if ai_settings.enabled {
+        if settings.ai.enabled {
             "On".to_string()
         } else {
             "Off".to_string()
@@ -85,7 +82,6 @@ pub fn build_rows(
     (children, y)
 }
 
-#[allow(dead_code)]
 pub fn handle_event(
     evt: &Event,
     children: &mut [Box<dyn View>],
