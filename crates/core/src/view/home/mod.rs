@@ -55,6 +55,7 @@ mod navigation;
 mod navigation_bar;
 mod ops;
 mod search_menu;
+mod search_results;
 mod shelf;
 mod ui_toggles;
 mod updates;
@@ -216,6 +217,7 @@ impl Home {
             go_to_page: None,
             sort_menu: None,
             search_menu: None,
+            semantic_results: None,
             book_menu: None,
             library_menu: None,
             settings_menu: None,

@@ -64,6 +64,7 @@ pub struct Home {
     pub go_to_page: Option<Box<dyn View>>,
     pub sort_menu: Option<Box<dyn View>>,
     pub search_menu: Option<Box<dyn View>>,
+    pub semantic_results: Option<Box<dyn View>>,
     pub book_menu: Option<Box<dyn View>>,
     pub library_menu: Option<Box<dyn View>>,
     pub settings_menu: Option<Box<dyn View>>,

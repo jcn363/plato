@@ -337,6 +337,22 @@ impl HomeInputExt for Home {
                 // Toggle finished status filter
                 true
             }
+            Event::Select(EntryId::ToggleSemanticSearch) => {
+                // Toggle semantic results view
+                let rect = *self.rect();
+                if self.semantic_results.is_some() {
+                    self.semantic_results = None;
+                } else {
+                    use crate::view::home::search_results::SearchResults;
+                    // For now using dummy query, will hook to search bar later
+                    if let Some(indexer) = context.library.indexer.as_ref() {
+                        let res = SearchResults::new(rect, context, "test query", indexer.indexer());
+                        self.semantic_results = Some(Box::new(res));
+                    }
+                }
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
             Event::Select(EntryId::ClearSearchFilters) => {
                 // Clear all search filters
                 self.query = None;

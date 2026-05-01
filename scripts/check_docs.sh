@@ -10,7 +10,7 @@ SYMBOLS_FILE=$(mktemp)
 
   # crate names
   git ls-files crates/*/Cargo.toml | while read -r cargo; do
-    awk '/^\s*name\s*=/{gsub(/[\" ]/, "", $2); print $2}' "$cargo"
+    awk '/^\s*name\s*=/{gsub(/[" ]/, "", $2); print $2}' "$cargo"
   done
 
   # const/static inside modules

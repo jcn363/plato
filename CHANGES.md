@@ -151,3 +151,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Async Indexing Integration
 - **Background Tasks**: Migrated document indexing to 'tokio::task::spawn_blocking', ensuring that compute-intensive embedding generation does not block the main UI thread, maintaining device responsiveness.
+
+## UI: Semantic Search Results View
+- **Results Integration**: Connected the semantic results view to the library search indexer, enabling users to view top-scored semantic document matches directly from the search menu.

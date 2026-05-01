@@ -12,6 +12,9 @@ pub struct LibraryIndexer {
 }
 
 impl LibraryIndexer {
+    pub fn indexer(&self) -> &SearchIndexer {
+        &self.indexer
+    }
     /// Create a new indexer
     pub fn new(db_path: &str, embedder: CandleEmbedder) -> Result<Self> {
         let indexer = SearchIndexer::new(db_path, embedder)?;

@@ -18,7 +18,7 @@ pub struct SearchResults {
 }
 
 impl SearchResults {
-    pub fn new(rect: Rectangle, context: &mut Context, query: &str, indexer: &SearchIndexer) -> Self {
+    pub fn new(rect: Rectangle, _context: &Context, query: &str, indexer: &SearchIndexer) -> Self {
         let id = ID_FEEDER.next();
         let dpi = crate::unit::get_device_dpi();
         let small_height = crate::unit::scale_by_dpi(40.0, dpi) as i32;
