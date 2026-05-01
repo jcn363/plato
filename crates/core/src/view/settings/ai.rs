@@ -9,7 +9,7 @@ use crate::view::button::Button;
 use crate::view::label::Label;
 use crate::view::{Align, Bus, EntryId, Event, RenderQueue, View};
 
-pub const CHILD_COUNT: usize = 6;
+pub const CHILD_COUNT: usize = 8;
 
 const PROVIDERS: &[&str] = &["ollama", "openai", "claude"];
 const MODELS: &[&str] = &["phi3:mini", "gpt-4", "claude-3"];
@@ -144,6 +144,39 @@ pub fn build_rows(
     );
     children.push(Box::new(endpoint_btn) as Box<dyn View>);
 
+    y += small_height;
+
+    // API Key display
+    let api_key_label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "API Key".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(api_key_label) as Box<dyn View>);
+
+    let api_key_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let api_key_text = if settings.ai.api_key.is_some() {
+        "***".to_string()
+    } else {
+        "Set API Key".to_string()
+    };
+    let api_key_btn = Button::new(
+        api_key_rect,
+        Event::Select(EntryId::ToggleAiApiKey),
+        api_key_text,
+    );
+    children.push(Box::new(api_key_btn) as Box<dyn View>);
+
     (children, y)
 }
 
@@ -206,6 +239,26 @@ pub fn handle_event(
             context.settings.ai.endpoint = Some(endpoints[next_idx].to_string());
             if let Some(btn) = children[offset + 7].downcast_mut::<Button>() {
                 let text = context.settings.ai.endpoint.clone().unwrap_or_default();
+                btn.set_text(&text);
+            }
+            true
+        }
+        Event::Select(EntryId::ToggleAiApiKey) => {
+            // Cycle through demo API keys (in production, this would open a secure input dialog)
+            let demo_keys = [
+                None,
+                Some("sk-demo-openai".to_string()),
+                Some("sk-demo-claude".to_string()),
+            ];
+            let current_has_key = context.settings.ai.api_key.is_some();
+            let next_idx = if current_has_key { 0 } else { 1 };
+            context.settings.ai.api_key = demo_keys[next_idx].clone();
+            let text = if context.settings.ai.api_key.is_some() {
+                "***".to_string()
+            } else {
+                "Set API Key".to_string()
+            };
+            if let Some(btn) = children[offset + 9].downcast_mut::<Button>() {
                 btn.set_text(&text);
             }
             true

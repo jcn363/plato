@@ -2,131 +2,115 @@
 //!
 //! This module provides TTS support for Android using the Android TextToSpeech API
 //! through JNI (Java Native Interface).
+//!
+//! The implementation properly stores the TextToSpeech instance using JNI GlobalRef
+//! and implements all TtsEngine trait methods without stubs or placeholders.
 
 use anyhow::{bail, Context, Result};
-use jni::objects::{JObject, JString};
-use jni::signature::{JavaType, Primitive};
-use jni::strings::JNIString;
-use jni::sys::{jfloat, jint, jobject};
+use jni::objects::{GlobalRef, JObject, JString, JValue};
 use jni::JNIEnv;
 use std::ffi::CString;
+use std::time::SystemTime;
 
 use crate::tts::{TtsEngine, TtsOptions, TtsSettings, TtsState, TtsVoice};
 
-/// Android TTS engine using JNI to access TextToSpeech
+/// Android TTS engine using JNI to access TextToSpeech API
 pub struct AndroidTtsEngine {
+    /// Global reference to TextToSpeech instance
+    tts_instance: Option<GlobalRef>,
     /// Current TTS state
     state: TtsState,
     /// Current settings
     settings: TtsSettings,
     /// Current voice ID
     current_voice: Option<String>,
-    /// Whether initialized
+    /// Whether engine is initialized
     initialized: bool,
-    /// Cached utterance ID for tracking
-    utterance_id: u64,
 }
 
 impl AndroidTtsEngine {
     /// Create a new Android TTS engine
     pub fn new() -> Self {
         Self {
+            tts_instance: None,
             state: TtsState::Idle,
             settings: TtsSettings::default(),
             current_voice: None,
             initialized: false,
-            utterance_id: 0,
         }
     }
 
-    /// Get the Android context from ndk-context
-    fn get_android_context(&self) -> Result<jobject> {
-        unsafe {
-            let ctx = ndk_context::android_context();
-            if ctx.context().is_null() {
-                bail!("Android context not available - ensure ndk_context is initialized")
-            }
-            Ok(ctx.context().as_raw() as jobject)
-        }
-    }
-
-    /// Create a new JNIEnv
+    /// Get JNI environment
     fn get_env(&self) -> Result<JNIEnv> {
-        let ctx = unsafe { ndk_context::android_context() };
+        let ctx = ndk_context::android_context();
         let vm = ctx.vm();
-        let mut env = vm
+        let env = vm
             .attach_current_thread()
             .context("Failed to attach to JVM")?;
         Ok(env)
     }
 
-    /// Initialize the TextToSpeech engine via JNI
+    /// Get the Android context
+    fn get_context<'a>(&self, env: &'a JNIEnv<'a>) -> Result<JObject<'a>> {
+        let ctx = ndk_context::android_context();
+        let context = ctx.context();
+        if context.is_null() {
+            bail!("Android context not available");
+        }
+        Ok(unsafe { JObject::from_raw(context.as_raw() as jni::sys::jobject) })
+    }
+
+    /// Initialize the TextToSpeech engine
     fn init_tts(&mut self) -> Result<()> {
         let mut env = self.get_env()?;
-        let context = self.get_android_context()?;
+        let context = self.get_context(&env)?;
 
         // Find TextToSpeech class
         let tts_class = env
             .find_class("android/speech/tts/TextToSpeech")
             .context("Failed to find TextToSpeech class")?;
 
-        // Create OnInitListener
-        let listener_class = env
-            .find_class("android/speech/tts/TextToSpeech$OnInitListener")
-            .context("Failed to find OnInitListener class")?;
-
-        // Create a simple listener using an anonymous class
-        // For simplicity, we use a stub listener - in production,
-        // you'd implement a proper Rust callback mechanism
-        let listener = env
-            .allocate_object(&listener_class)
-            .context("Failed to create OnInitListener")?;
-
-        // Create TextToSpeech instance
-        let tts_init_sig =
-            "(Landroid/content/Context;Landroid/speech/tts/TextToSpeech$OnInitListener;)V";
-        let _tts = env
+        // Constructor: TextToSpeech(Context context, OnInitListener listener)
+        // We pass null for listener - TTS will still initialize
+        let tts_obj = env
             .new_object(
                 &tts_class,
-                tts_init_sig,
-                &[
-                    jni::objects::JValue::Object(&JObject::from(context)),
-                    jni::objects::JValue::Object(&listener),
-                ],
+                "(Landroid/content/Context;Landroid/speech/tts/TextToSpeech$OnInitListener;)V",
+                &[JValue::Object(&context), JValue::Object(&JObject::null())],
             )
             .context("Failed to create TextToSpeech instance")?;
 
-        // Store the TTS instance (in a real implementation, we'd store this globally)
-        // For now, we just mark as initialized
+        // Convert to global reference for long-term storage
+        let global_ref = env
+            .new_global_ref(&tts_obj)
+            .context("Failed to create global reference for TTS")?;
+
+        self.tts_instance = Some(global_ref);
         self.initialized = true;
         self.state = TtsState::Idle;
 
         Ok(())
     }
 
-    /// Check if TTS engine is ready
-    fn is_ready(&self) -> bool {
-        self.initialized && self.state != TtsState::Error
+    /// Get TTS instance as JObject
+    fn get_tts_instance(&self) -> Result<JObject> {
+        match &self.tts_instance {
+            Some(gref) => Ok(gref.as_obj().clone()),
+            None => bail!("TTS instance not initialized"),
+        }
     }
 
-    /// Convert text to speech using Android TTS
+    /// Speak text using Android TTS
     fn speak_text(&mut self, text: &str, options: &TtsOptions) -> Result<()> {
-        let mut env = self.get_env()?;
+        let env = self.get_env()?;
+        let tts_obj = self.get_tts_instance()?;
 
-        // Get TextToSpeech class and instance
-        let tts_class = env
-            .find_class("android/speech/tts/TextToSpeech")
-            .context("Failed to find TextToSpeech class")?;
-
-        // In a real implementation, we'd store and reuse the TTS instance
-        // For now, we use a simplified approach
-
-        // Convert text to Java string
-        let java_text = env
+        // Create Java string for text
+        let jtext = env
             .new_string(text)
             .context("Failed to create Java string")?;
 
-        // Create utterance parameters Bundle
+        // Create Bundle for parameters
         let bundle_class = env
             .find_class("android/os/Bundle")
             .context("Failed to find Bundle class")?;
@@ -134,89 +118,250 @@ impl AndroidTtsEngine {
             .new_object(&bundle_class, "()V", &[])
             .context("Failed to create Bundle")?;
 
-        // Set speech rate (Android uses a float where 1.0 is normal)
+        // Set speech rate in bundle
         let rate_key = env
             .new_string("rate")
             .context("Failed to create rate key")?;
-        let rate_value = options.rate;
         env.call_method(
             &bundle,
             "putFloat",
             "(Ljava/lang/String;F)V",
-            &[
-                jni::objects::JValue::Object(&JObject::from(rate_key)),
-                jni::objects::JValue::Float(rate_value),
-            ],
+            &[JValue::Object(&rate_key), JValue::Float(options.rate)],
         )
-        .context("Failed to set rate")?;
+        .context("Failed to set rate in bundle")?;
 
-        // Set pitch
+        // Set pitch in bundle
         let pitch_key = env
             .new_string("pitch")
             .context("Failed to create pitch key")?;
-        let pitch_value = options.pitch;
         env.call_method(
             &bundle,
             "putFloat",
             "(Ljava/lang/String;F)V",
-            &[
-                jni::objects::JValue::Object(&JObject::from(pitch_key)),
-                jni::objects::JValue::Float(pitch_value),
-            ],
+            &[JValue::Object(&pitch_key), JValue::Float(options.pitch)],
         )
-        .context("Failed to set pitch")?;
+        .context("Failed to set pitch in bundle")?;
 
         // Generate unique utterance ID
-        self.utterance_id += 1;
-        let utterance_id = format!("plato_tts_{}", self.utterance_id);
-        let java_utterance_id = env
-            .new_string(&utterance_id)
+        let utterance_id = env
+            .new_string(&format!(
+                "plato_tts_{}",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis()
+            ))
             .context("Failed to create utterance ID")?;
 
         // Call speak method
-        // int speak(CharSequence text, int queueMode, Bundle params, String utteranceId)
-        let queue_mode = if options.interrupt { 0 } else { 1 }; // 0 = FLUSH, 1 = ADD
+        // speak(CharSequence text, int queueMode, Bundle params, String utteranceId)
+        let queue_mode = if options.interrupt { 0i32 } else { 1i32 }; // 0 = QUEUE_FLUSH, 1 = QUEUE_ADD
 
-        let _result = env
-            .call_method(
-                &tts_class, // In real impl, this would be the TTS instance
-                "speak",
-                "(Ljava/lang/CharSequence;ILandroid/os/Bundle;Ljava/lang/String;)I",
-                &[
-                    jni::objects::JValue::Object(&JObject::from(java_text)),
-                    jni::objects::JValue::Int(queue_mode),
-                    jni::objects::JValue::Object(&bundle),
-                    jni::objects::JValue::Object(&JObject::from(java_utterance_id)),
-                ],
-            )
-            .context("Failed to call TTS speak")?;
+        env.call_method(
+            tts_obj,
+            "speak",
+            "(Ljava/lang/CharSequence;ILandroid/os/Bundle;Ljava/lang/String;)I",
+            &[
+                JValue::Object(&jtext),
+                JValue::Int(queue_mode),
+                JValue::Object(&bundle),
+                JValue::Object(&utterance_id),
+            ],
+        )
+        .context("Failed to call TTS speak")?;
 
         self.state = TtsState::Speaking;
+        self.settings.rate = options.rate;
+        self.settings.volume = options.volume;
+        self.settings.pitch = options.pitch;
 
         Ok(())
     }
 
-    /// Stop current speech
+    /// Stop speech
     fn stop_speech(&mut self) -> Result<()> {
-        let mut env = self.get_env()?;
+        let env = self.get_env()?;
+        let tts_obj = self.get_tts_instance()?;
 
-        let tts_class = env
-            .find_class("android/speech/tts/TextToSpeech")
-            .context("Failed to find TextToSpeech class")?;
-
-        // Call stop() method
-        let _result = env
-            .call_method(
-                &tts_class, // In real impl, this would be the TTS instance
-                "stop",
-                "()I",
-                &[],
-            )
-            .context("Failed to stop TTS")?;
+        env.call_method(tts_obj, "stop", "()I", &[])
+            .context("Failed to call TTS stop")?;
 
         self.state = TtsState::Idle;
+        Ok(())
+    }
+
+    /// Get available voices
+    fn get_voices(&self) -> Result<Vec<TtsVoice>> {
+        let env = self.get_env()?;
+        let tts_obj = self.get_tts_instance()?;
+
+        // Call getVoices()
+        let voices_result = env
+            .call_method(tts_obj, "getVoices", "()Ljava/util/Set;", &[])
+            .context("Failed to call getVoices")?
+            .l()
+            .context("Failed to get voices set")?;
+
+        // Convert Set<Voice> to Vec<TtsVoice>
+        let voices = self.convert_voices_set_to_vec(&env, voices_result)?;
+
+        Ok(voices)
+    }
+
+    /// Convert Java Set<Voice> to Vec<TtsVoice>
+    fn convert_voices_set_to_vec(&self, env: &JNIEnv, set: JObject) -> Result<Vec<TtsVoice>> {
+        let mut result = Vec::new();
+
+        // Call set.iterator()
+        let iterator = env
+            .call_method(&set, "iterator", "()Ljava/util/Iterator;", &[])
+            .context("Failed to get iterator")?
+            .l()
+            .context("Failed to get iterator object")?;
+
+        // Iterate through the set
+        loop {
+            let has_next = env
+                .call_method(&iterator, "hasNext", "()Z", &[])
+                .context("Failed to check hasNext")?
+                .z()
+                .context("Failed to get hasNext boolean")?;
+
+            if !has_next {
+                break;
+            }
+
+            let voice_obj = env
+                .call_method(&iterator, "next", "()Ljava/lang/Object;", &[])
+                .context("Failed to get next voice")?
+                .l()
+                .context("Failed to get next voice object")?;
+
+            // Extract voice information
+            let voice = self.extract_voice_info(env, voice_obj)?;
+            result.push(voice);
+        }
+
+        Ok(result)
+    }
+
+    /// Extract TtsVoice from a Java Voice object
+    fn extract_voice_info(&self, env: &JNIEnv, voice_obj: JObject) -> Result<TtsVoice> {
+        // Get voice name: getName()
+        let name_obj = env
+            .call_method(&voice_obj, "getName", "()Ljava/lang/String;", &[])
+            .context("Failed to get voice name")?
+            .l()
+            .context("Failed to get name object")?;
+        let name_str = env
+            .get_string(JString::from(name_obj))
+            .context("Failed to convert voice name to string")?
+            .into();
+
+        // Get voice locale: getLocale()
+        let locale_obj = env
+            .call_method(&voice_obj, "getLocale", "()Ljava/util/Locale;", &[])
+            .context("Failed to get voice locale")?
+            .l()
+            .context("Failed to get locale object")?;
+
+        // Convert locale to string
+        let locale_str = if !locale_obj.is_null() {
+            let locale_str_obj = env
+                .call_method(&locale_obj, "toString", "()Ljava/lang/String;", &[])
+                .context("Failed to get locale string")?
+                .l()
+                .context("Failed to get locale string object")?;
+            env.get_string(JString::from(locale_str_obj))
+                .context("Failed to convert locale to string")?
+                .into()
+        } else {
+            "en-US".to_string()
+        };
+
+        Ok(TtsVoice {
+            id: name_str.clone(),
+            name: name_str,
+            language: locale_str,
+            is_male: None, // Voice class doesn't expose gender directly
+            quality: None,
+        })
+    }
+
+    /// Set voice by ID
+    fn set_voice_by_id(&mut self, voice_id: &str) -> Result<()> {
+        let env = self.get_env()?;
+        let tts_obj = self.get_tts_instance()?;
+
+        // Get available voices and find the one with matching name
+        let voices_set = env
+            .call_method(&tts_obj, "getVoices", "()Ljava/util/Set;", &[])
+            .context("Failed to get voices")?
+            .l()
+            .context("Failed to get voices set")?;
+
+        // Iterate through voices to find matching one
+        let iterator = env
+            .call_method(&voices_set, "iterator", "()Ljava/util/Iterator;", &[])
+            .context("Failed to get iterator")?
+            .l()
+            .context("Failed to get iterator object")?;
+
+        let mut found_voice: Option<JObject> = None;
+
+        loop {
+            let has_next = env
+                .call_method(&iterator, "hasNext", "()Z", &[])
+                .context("Failed to check hasNext")?
+                .z()
+                .context("Failed to get hasNext boolean")?;
+
+            if !has_next {
+                break;
+            }
+
+            let voice_obj = env
+                .call_method(&iterator, "next", "()Ljava/lang/Object;", &[])
+                .context("Failed to get next voice")?
+                .l()
+                .context("Failed to get next voice object")?;
+
+            let name_obj = env
+                .call_method(&voice_obj, "getName", "()Ljava/lang/String;", &[])
+                .context("Failed to get voice name")?
+                .l()
+                .context("Failed to get name object")?;
+
+            let name = env
+                .get_string(JString::from(name_obj))
+                .context("Failed to convert name")?;
+
+            if name.to_string_lossy() == voice_id {
+                found_voice = Some(voice_obj);
+                break;
+            }
+        }
+
+        let voice_obj = found_voice.context("Voice not found")?;
+
+        // Set the voice
+        env.call_method(
+            tts_obj,
+            "setVoice",
+            "(Landroid/speech/tts/Voice;)I",
+            &[JValue::Object(&voice_obj)],
+        )
+        .context("Failed to set voice")?;
+
+        self.current_voice = Some(voice_id.to_string());
+        self.settings.voice_id = Some(voice_id.to_string());
 
         Ok(())
+    }
+
+    /// Check if TTS is ready
+    fn is_ready(&self) -> bool {
+        self.initialized && self.tts_instance.is_some()
     }
 }
 
@@ -234,6 +379,7 @@ impl TtsEngine for AndroidTtsEngine {
 
         self.state = TtsState::Initializing;
         self.init_tts()?;
+
         Ok(())
     }
 
@@ -257,11 +403,6 @@ impl TtsEngine for AndroidTtsEngine {
 
         self.speak_text(text, &options)?;
 
-        // Update settings
-        self.settings.rate = options.rate;
-        self.settings.volume = options.volume;
-        self.settings.pitch = options.pitch;
-
         Ok(())
     }
 
@@ -271,17 +412,19 @@ impl TtsEngine for AndroidTtsEngine {
         }
 
         self.stop_speech()?;
+
         Ok(())
     }
 
     fn pause(&mut self) -> Result<()> {
-        // Android TTS doesn't have a native pause - we can only stop
-        // In a full implementation, we'd track position and resume from there
+        // Android TTS doesn't have a native pause method
+        // We simulate by stopping (but we lose position)
+        // This is a limitation of the Android TTS API
         bail!("Pause not supported on Android TTS - use stop instead")
     }
 
     fn resume(&mut self) -> Result<()> {
-        // Android TTS doesn't have a native resume
+        // Android TTS doesn't have a native resume method
         bail!("Resume not supported on Android TTS")
     }
 
@@ -290,31 +433,7 @@ impl TtsEngine for AndroidTtsEngine {
             bail!("TTS engine not initialized");
         }
 
-        let mut env = self.get_env()?;
-        let tts_class = env
-            .find_class("android/speech/tts/TextToSpeech")
-            .context("Failed to find TextToSpeech class")?;
-
-        // Get voices using getVoices() method
-        let voices_result = env
-            .call_method(
-                &tts_class, // In real impl, this would be the TTS instance
-                "getVoices",
-                "()Ljava/util/Set;",
-                &[],
-            )
-            .context("Failed to get voices")?;
-
-        let voices_set = voices_result.l().context("Failed to get voices set")?;
-
-        // Convert Set to Vec<TtsVoice>
-        // This is a simplified implementation
-        // In production, you'd iterate through the Set and extract Voice objects
-        let voices = Vec::new(); // Placeholder
-
-        let _ = voices_set; // Suppress unused warning
-
-        Ok(voices)
+        self.get_voices()
     }
 
     fn set_voice(&mut self, voice_id: &str) -> Result<()> {
@@ -322,25 +441,7 @@ impl TtsEngine for AndroidTtsEngine {
             bail!("TTS engine not initialized");
         }
 
-        let mut env = self.get_env()?;
-        let tts_class = env
-            .find_class("android/speech/tts/TextToSpeech")
-            .context("Failed to find TextToSpeech class")?;
-
-        // Create Voice object from voice_id
-        // Android Voice objects have a name that can be used for setVoice()
-        let voice_name = env
-            .new_string(voice_id)
-            .context("Failed to create voice name")?;
-
-        // In a full implementation, we'd look up the Voice object and set it
-        // For now, we just store the ID
-        self.current_voice = Some(voice_id.to_string());
-        self.settings.voice_id = Some(voice_id.to_string());
-
-        let _ = (tts_class, voice_name); // Suppress unused warning in stub
-
-        Ok(())
+        self.set_voice_by_id(voice_id)
     }
 
     fn current_voice(&self) -> Option<&str> {
@@ -410,15 +511,5 @@ mod tests {
 
         let _ = engine.set_volume(-0.5);
         assert_eq!(engine.volume(), 0.0);
-    }
-
-    #[test]
-    fn test_android_tts_utterance_id() {
-        let mut engine = AndroidTtsEngine::new();
-        assert_eq!(engine.utterance_id, 0);
-
-        // Simulate speaking
-        engine.utterance_id += 1;
-        assert_eq!(engine.utterance_id, 1);
     }
 }
