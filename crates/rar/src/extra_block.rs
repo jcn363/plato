@@ -99,7 +99,6 @@ fn test_parse_extra_area_multi() {
         ..FileEncryptionBlock::default()
     };
 
-
     let eab = ExtraAreaBlock {
         file_time: Some(ftb),
         file_encryption: Some(feb),
@@ -274,7 +273,6 @@ fn test_file_encryption_parse() {
         pw_check: [8, 242, 216, 179, 32, 113, 132, 82, 146, 25, 86, 17],
         ..FileEncryptionBlock::default()
     };
-
 
     assert_eq!(FileEncryptionBlock::parse(&data), Ok((&[][..], feb)));
 }

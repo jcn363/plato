@@ -1,5 +1,5 @@
 use crate::color;
-use crate::context::Context;
+use crate::context::Context as PlatoContext;
 use crate::document::pdf_manipulator::{PdfManipulator, RedactionRegion};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
@@ -16,7 +16,7 @@ use crate::view::top_bar::TopBar;
 use crate::view::{Align, Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use anyhow::{format_err, Context as AnyhowContext, Error};
+use anyhow::{format_err, Context, Error};
 
 mod manipulation_handlers;
 mod types;
@@ -38,7 +38,7 @@ impl PdfManipulatorView {
     pub fn new(
         rect: Rectangle,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        context: &mut PlatoContext,
     ) -> Result<PdfManipulatorView, Error> {
         let id = ID_FEEDER.next();
         let dpi = crate::unit::get_device_dpi();
@@ -109,7 +109,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         rect: Rectangle,
         file_path: PathBuf,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        context: &mut PlatoContext,
     ) -> Result<PdfManipulatorView, Error> {
         let mut view = PdfManipulatorView::new(rect, rq, context)?;
         view.selected_file = Some(file_path.clone());
@@ -117,7 +117,12 @@ Max: 30MB, 500 pages. Keep battery charged."
         Ok(view)
     }
 
-    fn show_actions(&mut self, file_path: PathBuf, rq: &mut RenderQueue, context: &mut Context) {
+    fn show_actions(
+        &mut self,
+        file_path: PathBuf,
+        rq: &mut RenderQueue,
+        context: &mut PlatoContext,
+    ) {
         self.mode = ManipulationMode::SelectAction;
 
         let file_size = std::fs::metadata(&file_path)
@@ -219,7 +224,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         file_path: &Path,
         total_pages: usize,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        context: &mut PlatoContext,
     ) -> Result<(), Error> {
         self.mode = ManipulationMode::SelectRedactionPage;
 
@@ -265,7 +270,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         file_path: PathBuf,
         page_index: usize,
         rq: &mut RenderQueue,
-        _context: &mut Context,
+        _context: &mut PlatoContext,
     ) {
         self.mode = ManipulationMode::DefiningRedaction {
             file_path,
@@ -313,7 +318,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         _hub: &Hub,
         bus: &mut Bus,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        context: &mut PlatoContext,
     ) -> Result<(), Error> {
         // Handle special cases that need self methods
         if action == "merge" {
@@ -335,6 +340,7 @@ Max: 30MB, 500 pages. Keep battery charged."
             return self.process_redaction(file_path, page).map(|_| ());
         }
 
+        #[cfg(feature = "ocr")]
         if action == "ocr_all" {
             let output_path = file_path.with_extension("txt");
             let ocr = crate::document::ocr::OcrManager::with_language("eng");
@@ -375,7 +381,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         &mut self,
         _primary_file: PathBuf,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        context: &mut PlatoContext,
     ) {
         self.mode = ManipulationMode::SelectFile;
 
@@ -429,7 +435,7 @@ Max: 30MB, 500 pages. Keep battery charged."
         _hub: &Hub,
         bus: &mut Bus,
         _rq: &mut RenderQueue,
-        _context: &mut Context,
+        _context: &mut PlatoContext,
     ) {
         if let Ok(home) = std::env::var("PLATO_HOME").map(PathBuf::from) {
             match self.manipulator.cleanup_temp_files(&home) {
@@ -452,7 +458,7 @@ impl View for PdfManipulatorView {
         hub: &Hub,
         bus: &mut Bus,
         rq: &mut RenderQueue,
-        context: &mut Context,
+        context: &mut PlatoContext,
     ) -> bool {
         match evt {
             Event::Back => match &self.mode {
