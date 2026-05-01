@@ -504,21 +504,32 @@ impl HomeInputExt for Home {
                 true
             }
             Event::Submit(ViewId::HomeSearchInput, ref text) => {
-                self.query = BookQuery::new(text);
-                if self.query.is_some() {
+                if let Some(indexer) = context.library.indexer.as_ref() {
+                    // Trigger semantic search results view
+                    use crate::view::home::search_results::SearchResults;
+                    let rect = *self.rect();
+                    let res = SearchResults::new(rect, context, text, indexer.indexer());
+                    self.semantic_results = Some(Box::new(res));
                     self.toggle_keyboard(Some(false), hub, rq, context);
-                    for i in self.shelf_index + 1..=self.shelf_index + 2 {
-                        rq.add(RenderData::new(
-                            self.child(i).id(),
-                            *self.child(i).rect(),
-                            UpdateMode::Gui,
-                        ));
-                    }
-                    self.refresh_visibles(true, true, hub, rq, context);
+                    rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 } else {
-                    let notif =
-                        Notification::new("Invalid search query.".to_string(), hub, rq, context);
-                    self.children.push(Box::new(notif) as Box<dyn View>);
+                    // Standard filter-based search
+                    self.query = BookQuery::new(text);
+                    if self.query.is_some() {
+                        self.toggle_keyboard(Some(false), hub, rq, context);
+                        for i in self.shelf_index + 1..=self.shelf_index + 2 {
+                            rq.add(RenderData::new(
+                                self.child(i).id(),
+                                *self.child(i).rect(),
+                                UpdateMode::Gui,
+                            ));
+                        }
+                        self.refresh_visibles(true, true, hub, rq, context);
+                    } else {
+                        let notif =
+                            Notification::new("Invalid search query.".to_string(), hub, rq, context);
+                        self.children.push(Box::new(notif) as Box<dyn View>);
+                    }
                 }
                 true
             }

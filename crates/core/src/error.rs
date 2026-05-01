@@ -1,3 +1,13 @@
+//! Core error module for the Plato project.
+//!
+//! This file contains the `PlatoError` enum, which provides a unified error
+//! representation for the entire `crates/core` crate.  It also defines the
+//! `PlatoResult<T>` type alias and a helper `into_plato_err` function that
+//! converts any arbitrary error into the `PlatoError::Ai` variant.
+//!
+//! The `PlatoError::Ai` variant is used as the catch‑all for any `anyhow::Error`
+//! that bubbles up through the library.
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
