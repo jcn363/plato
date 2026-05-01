@@ -31,6 +31,8 @@
 - **Provider**: Ollama/OpenAI/Claude (button cycles)
 - **Model**: phi3:mini/gpt-4/claude-3 (button cycles)
 - **Endpoint**: localhost/api.openai/api.anthropic (button cycles)
+- **API Key**: Cycles preset keys
+- **Reader Chat**: AiChatView sidebar (stub)
 
 ## Dependencies
 
