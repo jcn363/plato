@@ -123,3 +123,7 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Semantic Search Enhancements
 - **Model Infrastructure**: Integrated 'tokenizers' crate and extended 'CandleEmbedder' to support model and tokenizer file loading, laying the groundwork for real-time semantic embedding generation.
+
+## Semantic Search & Indexing
+- **Search Indexer**: Implemented 'SearchIndexer' in 'crates/ai/src/search.rs', providing persistent vector indexing and semantic querying capabilities backed by SQLite.
+- **Querying**: Integrated similarity search using cosine similarity, enabling efficient retrieval of document content based on semantic relevance.
