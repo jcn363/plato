@@ -80,7 +80,7 @@ This document summarizes a static audit of the Plato repository. It covers safet
 | `clap` | 4.5.4 | CLI parsing | MIT/Apache-2.0 | Dual license |
 | `regex` | 1.10.4 | Regular expressions | MIT | |
 
-(Note: Add a down‑list of critical crates below.)
+
 
 ## 11. Build & Packaging
 - Build scripts now respect target architecture, producing `libs/{arch}/` directories that match the `Cargo.toml` `[target]` sections.
