@@ -44,13 +44,51 @@ Any 4.*X*.*Y* firmware, with *X* >= 6, will do.
 
 **Current Status**: Build compiles successfully
 
-- **Target**: `x86_64-unknown-linux-gnu` (development)
+- **Target**: `x86_64-unknown-linux-gnu` (development/desktop with software framebuffer)
 - **Target**: `arm-unknown-linux-gnueabihf` (32-bit ARM Kobo devices)
 - **Target**: `aarch64-unknown-linux-gnu` (64-bit ARM Kobo devices)
+
+**Framebuffer Support**:
+- Hardware framebuffers (KoboFramebuffer1, KoboFramebuffer2) for Kobo devices
+- Software framebuffer for desktop Linux development and testing
+- All framebuffer implementations support the same trait interface
 
 **Known Issues**:
 
 None currently.
+
+## Desktop Execution (Linux x86_64)
+
+Plato can now run on desktop Linux (x86_64) through a software framebuffer backend:
+
+```bash
+# Build for host (x86_64 Linux)
+cargo build --target x86_64-unknown-linux-gnu -p plato
+
+# Run on desktop (renders to memory, see debug output option below)
+./target/x86_64-unknown-linux-gnu/debug/plato
+
+# Run with debug framebuffer output to PNG (for development/testing)
+PLATO_DEBUG_FB=/tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
+```
+
+The software framebuffer implementation enables:
+- Development and testing on Linux desktops without requiring /dev/fb0
+- Rendering to an in-memory pixel buffer
+- Optional PNG export for debugging and screenshots
+- Identical behavior to hardware framebuffers for non-display-dependent operations
+
+**Note**: The desktop version currently renders only to memory. For a full GUI experience, integration with a desktop graphics system (Wayland/X11) would be required as a future enhancement.
+
+### AppImage Distribution
+
+An AppImage for x86_64 Linux can be created with:
+
+```bash
+./dist.sh
+```
+
+This produces a `Plato.AppImage` that bundles the binary, fonts, icons, CSS, and the software framebuffer backend, enabling distribution to other Linux systems.
 
 ## Supported devices
 
@@ -130,7 +168,7 @@ cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato
 # Build for 64-bit ARM (newer Kobo devices: Libra 2, Sage, Clara 2E, Elipsa 2E, etc.)
 cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato
 
-# Build for host (development/testing)
+# Build for x86_64 Linux desktop development
 cargo build --target x86_64-unknown-linux-gnu -p plato
 
 # Full build with formatting and linting
@@ -139,7 +177,7 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 # Build without cleaning (faster for incremental builds)
 ./build.sh --no-clean arm
 
-# Create distribution bundle
+# Create distribution bundle (AppImage)
 ./dist.sh [arm|arm64]
 
 # Install the importer helper

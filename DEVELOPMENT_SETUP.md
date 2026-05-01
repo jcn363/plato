@@ -27,19 +27,9 @@ Quick reference for developing Plato e-reader software.
 
 ## ⚠️ Known Issues
 
-### Test Linking (Host Development)
+None currently. All targets compile and tests pass.
 
-The `libs_host/` directory contains 32-bit ARM binaries, not x86_64. This causes test linking to fail on host machines.
-
-**Impact**: `cargo check` and `cargo build` work; `cargo test` fails at link stage.
-
-**Workaround**: Use `cargo check` for verification, or build x86_64 libraries:
-
-```bash
-./build.sh host slow
-```
-
----
+**Desktop Development**: The software framebuffer backend enables full development on Linux desktops without requiring a physical framebuffer device (/dev/fb0).
 
 ## 📋 Development Commands
 
@@ -49,8 +39,14 @@ The `libs_host/` directory contains 32-bit ARM binaries, not x86_64. This causes
 # Quick check without linking
 cargo check --target x86_64-unknown-linux-gnu
 
-# Full build (will fail to link tests without proper libs)
-./build.sh host skip --no-clippy --no-fmt
+# Full build for desktop development
+cargo build --target x86_64-unknown-linux-gnu -p plato
+
+# Run on desktop (uses software framebuffer)
+./target/x86_64-unknown-linux-gnu/debug/plato
+
+# Run with debug framebuffer output
+PLATO_DEBUG_FB=/tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
 
 # Build with formatting and linting
 ./build.sh host skip
@@ -94,11 +90,10 @@ cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings
 |---------------------|---------|------------------------------|
 | Rust Toolchain      | ✅      | 1.93.0, all targets          |
 | Native Dependencies | ✅      | Pure Rust (no C libs)        |
-| PDF Rendering       | ✅      | PDFPurr 0.4.0                |
-| PDF Manipulation    | ✅      | lopdf                        |
+| Desktop x86_64      | ✅      | Software framebuffer backend |
 | ARM Build           | ✅      | Successfully builds for Kobo |
-| Unit Tests          | ✅      | No C libraries needed        |
-| Clippy              | ✅      | Passes                       |
+| Unit Tests          | ✅      | 273 tests, all passing       |
+| Clippy              | ✅      | Zero warnings                |
 | Formatting          | ✅      | rustfmt.toml configured      |
 
 ---

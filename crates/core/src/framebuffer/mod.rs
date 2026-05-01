@@ -2,7 +2,7 @@
 //!
 //! This module provides hardware abstraction for display output via the
 //! [`Framebuffer`] trait. This allows the application to work with any display
-//! hardware (Kobo e-ink devices) through a common interface.
+//! hardware (Kobo e-ink devices or software framebuffers) through a common interface.
 //!
 //! ## Architecture
 //!
@@ -10,23 +10,30 @@
 //!
 //! - **[`Framebuffer`] trait**: Core abstraction for display operations
 //! - **Hardware implementations**: `KoboFramebuffer1`, `KoboFramebuffer2` for Kobo devices
+//! - **Software implementation**: `SoftwareFramebuffer` for desktop/testing
 //! - **Mock implementations**: [`MockFramebuffer`](crate::test_mocks::MockFramebuffer) for testing
 //!
 //! ## Trait-Based Design
 //!
 //! The [`Framebuffer`] trait enables:
 //! - **Hardware independence**: Application code doesn't depend on specific hardware
-//! - **Testability**: Mock implementations allow headless testing
-//! - **Multiple backends**: Support for Kobo devices and test mocks
+//! - **Testability**: Mock and software implementations allow headless testing
+//! - **Multiple backends**: Support for Kobo devices, software framebuffers, and test mocks
+//! - **Desktop development**: SoftwareFramebuffer enables running Plato on standard Linux desktops
 //!
 //! ## Usage
 //!
 //! ```rust,ignore
-//! use plato_core::framebuffer::Framebuffer;
-//! use plato_core::framebuffer::KoboFramebuffer1;
+//! use plato_core::framebuffer::{Framebuffer, KoboFramebuffer1, SoftwareFramebuffer};
 //!
+//! // On Kobo devices
 //! let fb = Box::new(KoboFramebuffer1::new()?);
 //! fb.update(&rect, UpdateMode::Partial)?;
+//!
+//! // On desktop Linux
+//! let fb = Box::new(SoftwareFramebuffer::new(1404, 1872, None)?);
+//! fb.update(&rect, UpdateMode::Partial)?;
+//! fb.save("/tmp/framebuffer.png")?;
 //! ```
 
 mod image;

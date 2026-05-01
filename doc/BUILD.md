@@ -90,11 +90,40 @@ cargo build --target x86_64-unknown-linux-gnu -p importer
 cargo build --target x86_64-unknown-linux-gnu -p fetcher
 ```
 
-## Distribution
+## Distribution and Desktop Execution
+
+### AppImage
 
 ```bash
 ./dist.sh
 ```
+
+This script creates an AppImage for x86_64 Linux (`Plato.AppImage`) in the current directory.
+The AppImage bundles the Plato binary, fonts, icons, CSS, and the software framebuffer backend.
+
+### Desktop Execution
+
+Plato can now run on desktop Linux systems without requiring a physical framebuffer device (/dev/fb0).
+
+```bash
+# Build for desktop
+cargo build --target x86_64-unknown-linux-gnu -p plato
+
+# Run directly
+./target/x86_64-unknown-linux-gnu/debug/plato
+
+# Run with debug framebuffer output (saves PNG for each update)
+PLATO_DEBUG_FB=/tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
+```
+
+The software framebuffer implementation:
+- Renders to an in-memory pixel buffer instead of /dev/fb0
+- Enables development and testing on standard Linux desktops
+- Provides optional PNG export for debugging
+- Uses the same Framebuffer trait as hardware implementations
+- Produces identical behavior for all non-display operations
+
+**Note**: The current implementation renders to memory only. For a full GUI experience with display output, integration with Wayland/X11 would be needed as a future enhancement.
 
 ## Developer Tools
 
