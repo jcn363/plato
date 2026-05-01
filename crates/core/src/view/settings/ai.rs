@@ -9,7 +9,10 @@ use crate::view::button::Button;
 use crate::view::label::Label;
 use crate::view::{Align, Bus, EntryId, Event, RenderQueue, View};
 
-pub const CHILD_COUNT: usize = 4;
+pub const CHILD_COUNT: usize = 6;
+
+const PROVIDERS: &[&str] = &["ollama", "openai", "claude"];
+const MODELS: &[&str] = &["phi3:mini", "gpt-4", "claude-3"];
 
 pub fn build_rows(
     rect: &Rectangle,
@@ -22,7 +25,8 @@ pub fn build_rows(
     let mut children = Vec::new();
     let mut y = y_pos;
 
-    let label = Label::new(
+    // AI Enable toggle
+    let enable_label = Label::new(
         rect![
             rect.min.x + padding,
             y,
@@ -32,7 +36,7 @@ pub fn build_rows(
         "AI Features".to_string(),
         Align::Right(padding / 2),
     );
-    children.push(Box::new(label) as Box<dyn View>);
+    children.push(Box::new(enable_label) as Box<dyn View>);
 
     let ctrl_rect = rect![
         rect.min.x + max_label_width + 2 * padding,
@@ -53,7 +57,8 @@ pub fn build_rows(
 
     y += small_height;
 
-    let label = Label::new(
+    // Provider selection
+    let provider_label = Label::new(
         rect![
             rect.min.x + padding,
             y,
@@ -63,11 +68,25 @@ pub fn build_rows(
         "Provider".to_string(),
         Align::Right(padding / 2),
     );
-    children.push(Box::new(label) as Box<dyn View>);
+    children.push(Box::new(provider_label) as Box<dyn View>);
+
+    let provider_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let provider_btn = Button::new(
+        provider_rect,
+        Event::Select(EntryId::ToggleAiProvider),
+        settings.ai.provider.clone(),
+    );
+    children.push(Box::new(provider_btn) as Box<dyn View>);
 
     y += small_height;
 
-    let label = Label::new(
+    // Model selection
+    let model_label = Label::new(
         rect![
             rect.min.x + padding,
             y,
@@ -77,7 +96,53 @@ pub fn build_rows(
         "Model".to_string(),
         Align::Right(padding / 2),
     );
-    children.push(Box::new(label) as Box<dyn View>);
+    children.push(Box::new(model_label) as Box<dyn View>);
+
+    let model_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let model_btn = Button::new(
+        model_rect,
+        Event::Select(EntryId::ToggleAiModel),
+        settings.ai.model.clone(),
+    );
+    children.push(Box::new(model_btn) as Box<dyn View>);
+
+    y += small_height;
+
+    // Endpoint display
+    let endpoint_label = Label::new(
+        rect![
+            rect.min.x + padding,
+            y,
+            rect.min.x + max_label_width + padding,
+            y + small_height
+        ],
+        "Endpoint".to_string(),
+        Align::Right(padding / 2),
+    );
+    children.push(Box::new(endpoint_label) as Box<dyn View>);
+
+    let endpoint_rect = rect![
+        rect.min.x + max_label_width + 2 * padding,
+        y,
+        rect.max.x - padding,
+        y + small_height
+    ];
+    let endpoint_text = settings
+        .ai
+        .endpoint
+        .clone()
+        .unwrap_or_else(|| "localhost:11434".to_string());
+    let endpoint_btn = Button::new(
+        endpoint_rect,
+        Event::Select(EntryId::ToggleAiEndpoint),
+        endpoint_text,
+    );
+    children.push(Box::new(endpoint_btn) as Box<dyn View>);
 
     (children, y)
 }
@@ -100,6 +165,48 @@ pub fn handle_event(
                     "Off"
                 };
                 btn.set_text(txt);
+            }
+            true
+        }
+        Event::Select(EntryId::ToggleAiProvider) => {
+            let current = &context.settings.ai.provider;
+            let idx = PROVIDERS.iter().position(|p| *p == current).unwrap_or(0);
+            let next_idx = (idx + 1) % PROVIDERS.len();
+            context.settings.ai.provider = PROVIDERS[next_idx].to_string();
+            if let Some(btn) = children[offset + 3].downcast_mut::<Button>() {
+                btn.set_text(&context.settings.ai.provider);
+            }
+            true
+        }
+        Event::Select(EntryId::ToggleAiModel) => {
+            let current = &context.settings.ai.model;
+            let idx = MODELS.iter().position(|m| *m == current).unwrap_or(0);
+            let next_idx = (idx + 1) % MODELS.len();
+            context.settings.ai.model = MODELS[next_idx].to_string();
+            if let Some(btn) = children[offset + 5].downcast_mut::<Button>() {
+                btn.set_text(&context.settings.ai.model);
+            }
+            true
+        }
+        Event::Select(EntryId::ToggleAiEndpoint) => {
+            // For now, cycle through common endpoints
+            let endpoints = [
+                "http://localhost:11434",
+                "https://api.openai.com",
+                "https://api.anthropic.com",
+            ];
+            let current = context
+                .settings
+                .ai
+                .endpoint
+                .as_deref()
+                .unwrap_or("http://localhost:11434");
+            let idx = endpoints.iter().position(|e| *e == current).unwrap_or(0);
+            let next_idx = (idx + 1) % endpoints.len();
+            context.settings.ai.endpoint = Some(endpoints[next_idx].to_string());
+            if let Some(btn) = children[offset + 7].downcast_mut::<Button>() {
+                let text = context.settings.ai.endpoint.clone().unwrap_or_default();
+                btn.set_text(&text);
             }
             true
         }
