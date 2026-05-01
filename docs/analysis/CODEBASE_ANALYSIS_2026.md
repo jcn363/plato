@@ -27,11 +27,11 @@
 
 ## Android APK Status
 
-- ⚠️ **Blocked**: jni 0.22+ API breaks Android TTS (~23 errors)
-- **Requires**: Either jni 0.21 or full API rewrite
+- ⚠️ **Blocked**: sccache/native build on this system
+- Historical issue: jni 0.22+ API breaks Android TTS compile
 - Desktop/Linux: ✅ Working
 
-## TTS Android Implementation - Complete
+## TTS Android Implementation - Stubbed
 
 - Rewrote `tts_android.rs` from scratch with proper JNI `GlobalRef` usage
 - All `TtsEngine` trait methods fully implemented (no stubs)
