@@ -18,6 +18,12 @@
 - Fixed GenerateResponse fields (`_model`, `_created_at`)
 - PDF compare: Now writes file info (.info.txt)
 
+## Integrations (2026-05-01)
+
+- **AI Chat**: ToggleAiChat entry, reader field, AiChatView
+- **OPDS**: Already integrated (view + entries)
+- **TTS**: Complete implementations
+
 ## TTS Android Implementation - Complete
 
 - Rewrote `tts_android.rs` from scratch with proper JNI `GlobalRef` usage

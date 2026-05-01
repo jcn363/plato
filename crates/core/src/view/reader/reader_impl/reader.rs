@@ -38,7 +38,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::{atomic, Arc, Mutex};
 
-use crate::view::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
+use crate::view::{Bus, EntryId, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
 
 use super::reader_animation;
 use super::reader_constructors;
@@ -84,6 +84,7 @@ pub struct Reader {
     pub(crate) previous_chunks: Vec<RenderChunk>,
     pub(crate) bars_visible: bool,
     pub(crate) margin_cropper_visible: bool,
+    pub(crate) ai_chat_visible: bool,
 }
 
 // ===========================================================================
@@ -148,6 +149,7 @@ impl Reader {
             previous_chunks: Vec::new(),
             bars_visible: true,
             margin_cropper_visible: false,
+            ai_chat_visible: false,
         }
     }
 
@@ -427,6 +429,12 @@ impl View for Reader {
                     *dir
                 };
                 self.go_to_chapter(actual_dir, hub, rq, context);
+                true
+            }
+            Event::Select(EntryId::ToggleAiChat) => {
+                // Toggle AI chat sidebar
+                self.ai_chat_visible = !self.ai_chat_visible;
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }
             _ => false,
