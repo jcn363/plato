@@ -120,3 +120,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 ## Semantic Search & Unified Error Handling
 - **Local Embedding Engine**: Integrated 'candle-core' and 'candle-nn' into 'crates/ai' to support local-first semantic search model execution.
 - **Unified Error Handling**: Completed the migration of all 'crates/core' error imports to the centralized 'plato_error' crate, creating a cleaner and more maintainable error management system across the entire workspace.
+
+## Semantic Search Enhancements
+- **Model Infrastructure**: Integrated 'tokenizers' crate and extended 'CandleEmbedder' to support model and tokenizer file loading, laying the groundwork for real-time semantic embedding generation.

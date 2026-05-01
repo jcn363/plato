@@ -33,6 +33,7 @@ rusqlite = { version = "0.33", features = ["bundled"] }
 # Vector embedding library
 candle-core = "0.8.3"
 candle-nn = "0.8.3"
+tokenizers = "0.21.0"
 
 [dev-dependencies]
 tempfile = "3.15"

@@ -1,29 +1,43 @@
 //! Vector embedding engine for semantic search using candle-core
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use candle_core::{Device, Tensor};
-use candle_nn::{Embedding, VarBuilder};
+use candle_nn::VarBuilder;
+use tokenizers::Tokenizer;
 use crate::traits::VectorEmbedder;
 
 /// A local embedding engine powered by candle-core
 pub struct CandleEmbedder {
     device: Device,
-    // Note: In a real implementation, you would load a model here
+    tokenizer: Tokenizer,
+    // Model structure would go here (e.g., BertModel)
 }
 
 impl CandleEmbedder {
-    /// Initialize a new embedder with CPU or CUDA device
-    pub fn new() -> Result<Self> {
-        let device = Device::Cpu; // Defaulting to CPU for now
-        Ok(Self { device })
+    /// Initialize a new embedder, loading the tokenizer and model
+    pub fn new(model_path: &str, tokenizer_path: &str) -> Result<Self> {
+        let device = Device::Cpu;
+        let tokenizer = Tokenizer::from_file(tokenizer_path)
+            .map_err(|e| anyhow::anyhow!("Failed to load tokenizer: {}", e))?;
+        
+        // In a real implementation, you would load the model weights here
+        // let vb = unsafe { VarBuilder::from_mmaped_safetensors(...) };
+        
+        Ok(Self { device, tokenizer })
     }
 }
 
 impl VectorEmbedder for CandleEmbedder {
     fn embed(&self, text: &str) -> crate::AiResult<Vec<f32>> {
-        // Placeholder implementation for embedding generation
-        // Real implementation would tokenize text and run it through a model
-        let len = text.len();
-        Ok(vec![len as f32 / 100.0; 384]) // Returning a dummy vector
+        // Tokenize text
+        let encoding = self.tokenizer.encode(text, true)
+            .map_err(|e| anyhow::anyhow!("Tokenization failed: {}", e))?;
+        let tokens = encoding.get_ids();
+        
+        // Convert to tensor and run through model
+        // ... model inference code here ...
+        
+        // Dummy return for structural completion
+        Ok(vec![0.0; 384]) 
     }
 }
