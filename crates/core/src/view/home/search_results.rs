@@ -1,13 +1,13 @@
-//! Semantic search results UI view
+/// Semantic search results UI view
 
-use crate::color::{background, foreground, text_normal};
+use crate::color::background;
 use crate::context::Context;
 use crate::font::Fonts;
-use crate::framebuffer::{Framebuffer, UpdateMode};
+use crate::framebuffer::Framebuffer;
 use crate::geom::Rectangle;
 use crate::input::DeviceEvent;
 use crate::view::label::Label;
-use crate::view::{Align, Bus, Event, Hub, Id, RenderData, RenderQueue, View, ID_FEEDER};
+use crate::view::{Align, Bus, Event, Hub, Id, RenderQueue, View, ID_FEEDER};
 use plato_search::search::SearchIndexer;
 
 #[derive(Debug)]
