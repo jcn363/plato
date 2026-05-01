@@ -165,3 +165,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Network Optimization: Async OPDS
 - **Asynchronous Downloads**: Migrated OPDS book download functionality to use 'tokio::spawn' with asynchronous 'reqwest', eliminating blocking UI thread operations during network I/O.
+
+## Performance: Async Library Indexing
+- **Async Crawling**: Integrated 'tokio::spawn' into the library import process, ensuring document indexing tasks are offloaded to background threads to prevent UI blocking.

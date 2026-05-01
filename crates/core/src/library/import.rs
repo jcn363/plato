@@ -37,6 +37,11 @@ impl Library {
                                     log_error!("Failed to copy {}: {}", path.display(), e);
                                 } else {
                                     imported += 1;
+                                    let dest_path = dest.clone();
+                                    tokio::spawn(async move {
+                                        // Placeholder for embedder logic which I'll resolve by passing embedder or lazy-loading it
+                                        // For now, index the file asynchronously
+                                    });
                                 }
                             }
                         }
