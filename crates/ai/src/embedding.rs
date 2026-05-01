@@ -22,6 +22,9 @@ impl CandleEmbedder {
         let tokenizer = Tokenizer::from_file(tokenizer_path)
             .map_err(|e| anyhow::anyhow!("Failed to load tokenizer: {}", e))?;
         
+        // SAFETY: VarBuilder::from_mmaped_safetensors uses mmap to map the model file into memory.
+        // It assumes the model file is not modified externally while being read, which is standard for 
+        // read-only model weight files.
         let vb = unsafe {
             VarBuilder::from_mmaped_safetensors(&[model_path], candle_core::DType::F32, &device)?
         };
