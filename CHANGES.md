@@ -130,3 +130,7 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Embedding Engine Refinement
 - **Real Model Inference**: Updated 'CandleEmbedder' to load actual weights from '.safetensors' and perform tensor-based inference using 'candle-core'.
+
+## Semantic Library Indexing
+- **Library Indexer**: Implemented 'LibraryIndexer' in 'crates/ai/src/indexer.rs', serving as the core engine for library-wide crawling and embedding population.
+- **Model Loading**: Finalized 'CandleEmbedder' to load model weights and tokenizer configurations from local files, enabling functional vector embedding generation.
