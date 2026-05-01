@@ -175,3 +175,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 ## Final Build Refinements
 - **UI Stabilization**: Refactored 'SearchResults' UI component for build cleanliness and proper trait implementation.
 - **Project Structure**: Resolved final workspace nesting and dependency issues, restoring project-wide stability and build health.
+
+## Semantic Search: Result Navigation
+- **Direct Navigation**: Enabled direct document opening from semantic search results by adding the 'OpenDocument(PathBuf)' event and mapping it to search result selection.
