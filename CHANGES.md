@@ -127,3 +127,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 ## Semantic Search & Indexing
 - **Search Indexer**: Implemented 'SearchIndexer' in 'crates/ai/src/search.rs', providing persistent vector indexing and semantic querying capabilities backed by SQLite.
 - **Querying**: Integrated similarity search using cosine similarity, enabling efficient retrieval of document content based on semantic relevance.
+
+## Embedding Engine Refinement
+- **Real Model Inference**: Updated 'CandleEmbedder' to load actual weights from '.safetensors' and perform tensor-based inference using 'candle-core'.
