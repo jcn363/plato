@@ -2,14 +2,7 @@
 
 ## Status
 
-**Build**: ✅ x86_64 + ARM | **Tests**: 270 | **AI**: 8/8 | **Clippy**: 0 | **No dead_code**
-
-## Build Targets
-
-| Target | Status |
-|--------|--------|
-| x86_64-unknown-linux-gnu | ✅ |
-| arm-unknown-linux-gnueabihf | ✅ |
+**Build**: ✅ x86_64 + ARM | **Tests**: 270 | **AI**: 8/8 | **Clippy**: 0
 
 ## Test Results
 
@@ -18,18 +11,18 @@
 | plato-core | 270 ✅ |
 | plato-ai | 8 ✅ |
 
-## Cleanup Done (2026-05-01)
+## Cleanup Done
 
 - Removed `#[allow(dead_code)]` from MockProvider
 - Added `config()`, `is_failing()` getters
 - Fixed GenerateResponse fields (`_model`, `_created_at`)
-- Removed unused CollectionsToggleConfig/State
 
-## AI Integration
+## AI Integration - Complete
 
-- Settings > AI Features toggle: ✅
-- Enable/Disable working
-- Settings persisted
+- **Enable**: On/Off toggle
+- **Provider**: Ollama/OpenAI/Claude (button cycles)
+- **Model**: phi3:mini/gpt-4/claude-3 (button cycles)
+- **Endpoint**: localhost/api.openai/api.anthropic (button cycles)
 
 ## Dependencies
 
