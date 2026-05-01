@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**Status**: ✅ Build passing | **270 tests passing** | **AI: 8/8 tests** | **Clippy: 0 errors**
+**Status**: ✅ Build passing | **270 tests passing** | **AI: 8/8 tests** | **Clippy: 0 errors** | **AI UI: Integrated**
 
 ## 1. Build Status
 
@@ -19,41 +19,55 @@
 |-------|-------|--------|
 | plato-core | 270 | ✅ |
 | plato-ai | 8 | ✅ |
-| plato (main) | - | ✅ |
 | All doctests | 1 pass | ✅ |
 
-## 3. Dependencies Status
+## 3. AI Integration (2026-05-01)
+
+### UI Integration
+- ✅ `view/settings/ai.rs` - Integrated into SettingsEditor
+- ✅ `build_rows()` - Added after sync settings
+- ✅ `handle_event()` - Handles ToggleAiFeature
+- ✅ Enable/Disable toggle - Working (On/Off)
+- ✅ Settings persisted - Via Save button
+
+### AI Crate
+- ✅ LLMProvider trait (Ollama + Mock)
+- ✅ AiSettings with device check
+- ✅ Spoiler protection
+- ✅ SQLite caching
+- ✅ 8/8 tests passing
+
+## 4. Dependencies Status
 
 ### Removed
-- **unrar**: Removed (CBR was disabled anyway, breaks Android NDK build)
+- **unrar**: Removed (CBR disabled, breaks Android NDK)
 
 ### Working
-- **sha2, x509-cert**: Linux-only via `target.cfg`
-- **CBZ comics**: Working (ZIP-based)
+- **sha2, x509-cert**: Linux-only via target.cfg
+- **CBZ comics**: ZIP-based working
 
-## 4. Package Builds
+## 5. Package Builds
 
 ### LinuxMint (x86_64)
-- Debug: ✅ `target/x86_64-unknown-linux-gnu/debug/plato`
-- Release: Needs full compile
+- Debug: ✅ `target/.../debug/plato`
 - DEB: Needs debian/ setup
 
 ### OnePlus Nord 2 (Android ARM64)
-- APK: ⚠️ NDK C++ compilation issues
-- Fix needed: tts_android.rs API updates
+- APK: ⚠️ NDK C++ issues (tts_android.rs)
 
-## 5. Known Issues
+## 6. Known Issues
 
 ### Still Present
 - Android: tts_android.rs API incompatibilities
-- DEB: No debian/ packaging directory
+- DEB: No debian/ directory
+- CBR support: Disabled
 
-### Fixed (2026-05-01)
-- CBR support enabled using pure Rust `rar` crate (replaces unrar)
+### Fixed
+- Unrar removed from deps
 - All clippy warnings resolved
-- sha2/x509-cert now Linux-only
+- AI UI integrated
 
 ---
 
 **Last Updated**: 2026-05-01
-**Status**: Core build working, tests passing
+**Status**: AI UI integrated, tests passing

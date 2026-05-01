@@ -9,12 +9,20 @@
 - ✅ AiContext with spoiler protection
 - ✅ SQLite caching
 
-### Integration Points
-- ✅ AiSettings in core Settings
-- ✅ view/settings/ai.rs UI skeleton
-- ⚠️ PluginSystem integration pending
+### UI Integration (2026-05-01)
+- ✅ Settings > AI Features - Integrated
+- ✅ Toggle On/Off - Working
+- ✅ build_rows() added to SettingsEditor
+- ✅ handle_event() handles ToggleAiFeature
+- ✅ Settings persisted via Save button
 
-## Test Coverage
+## Integration Path
+
+```
+Settings → (scroll down) → AI Features → [On/Off] → Save
+```
+
+## Test Results
 
 ```
 test providers::mock::tests::test_mock_provider ... ok
@@ -29,14 +37,23 @@ test providers::ollama::tests::test_ollama_provider_creation ... ok
 8 passed ✅
 ```
 
+## What's Working
+
+- AI enable/disable toggle in Settings UI
+- Provider/Model labels (display)
+- Device memory check (can_run)
+- Spoiler protection (reading position)
+- SQLite response caching
+
 ## Next Steps
 
-### To Make AI Functional
-1. PluginSystem integration (avoid circular deps)
-2. Context initialization
-3. Reader AI sidebar
+1. Provider dropdown (Ollama/OpenAI/Claude selection)
+2. Model name input field
+3. Endpoint configuration (for Ollama)
+4. API key field (for cloud providers)
+5. Reader sidebar with AI chat
 
 ---
 
 **Date**: 2026-05-01
-**Status**: AI crate ready, integration pending
+**Status**: AI UI integrated, toggle working
