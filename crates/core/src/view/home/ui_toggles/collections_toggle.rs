@@ -59,35 +59,6 @@ pub trait HomeCollectionsExt {
 
 use super::super::Home;
 
-/// Collections toggle configuration
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub struct CollectionsToggleConfig {
-    pub show_collections: bool,
-    pub allow_nested: bool,
-    pub max_depth: u8,
-}
-
-impl Default for CollectionsToggleConfig {
-    fn default() -> Self {
-        Self {
-            show_collections: true,
-            allow_nested: true,
-            max_depth: 3,
-        }
-    }
-}
-
-/// Collections toggle state
-#[derive(Debug, Clone, Default)]
-#[allow(dead_code)]
-pub struct CollectionsToggleState {
-    pub visible: bool,
-    pub active: bool,
-    pub config: CollectionsToggleConfig,
-    pub selected_collection: Option<String>,
-}
-
 impl HomeCollectionsExt for Home {
     /// Toggle collections menu visibility
     fn toggle_collections_menu(

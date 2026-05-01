@@ -13,7 +13,6 @@ use crate::AiResponse;
 /// Mock LLM provider for testing
 #[derive(Debug, Clone)]
 pub struct MockProvider {
-    #[allow(dead_code)]
     config: ProviderConfig,
     should_fail: bool,
 }
@@ -37,6 +36,18 @@ impl MockProvider {
             config,
             should_fail: true,
         }
+    }
+
+    /// Get the provider configuration
+    #[must_use]
+    pub fn config(&self) -> &ProviderConfig {
+        &self.config
+    }
+
+    /// Check if provider is configured to fail
+    #[must_use]
+    pub fn is_failing(&self) -> bool {
+        self.should_fail
     }
 }
 

@@ -110,10 +110,8 @@ impl LLMProvider for OllamaProvider {
 #[derive(Deserialize)]
 struct GenerateResponse {
     response: String,
-    #[allow(dead_code)]
-    model: String,
-    #[allow(dead_code)]
-    created_at: String,
+    _model: String,
+    _created_at: String,
 }
 
 #[cfg(test)]

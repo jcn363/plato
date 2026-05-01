@@ -2,16 +2,22 @@
 
 ## Executive Summary
 
-**Status**: ✅ Build passing | **270 tests passing** | **AI: 8/8 tests** | **Clippy: 0 errors** | **AI UI: Integrated**
+**Status**: ✅ Build | **270 tests** | **AI: 8/8** | **Clippy: 0** | **No dead_code**
 
 ## 1. Build Status
 
-| Target | Status | Warnings | Errors |
-|--------|--------|----------|--------|
-| x86_64-unknown-linux-gnu | ✅ | 0 | 0 |
-| arm-unknown-linux-gnueabihf | ✅ | 0 | 0 |
-| aarch64-unknown-linux-gnu | ⚠️ | 0 | NDK tools |
-| aarch64-linux-android | ⚠️ | 0 | NDK C++ |
+| Target | Status | Warnings |
+|--------|--------|----------|
+| x86_64-unknown-linux-gnu | ✅ | 0 |
+| arm-unknown-linux-gnueabihf | ✅ | 0 |
+
+## 2. Cleanup (2026-05-01)
+
+- Removed dead_code from `MockProvider.config`
+- Added getter `config()`, `is_failing()` for MockProvider
+- Fixed unused fields in `GenerateResponse` (renamed to `_model`, `_created_at`)
+- Removed unused `CollectionsToggleConfig`, `CollectionsToggleState`
+- Added `#[must_use]` to new public methods
 
 ## 2. Test Results
 
