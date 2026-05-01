@@ -30,6 +30,10 @@ log = "0.4"
 # SQLite for caching
 rusqlite = { version = "0.33", features = ["bundled"] }
 
+# Vector embedding library
+candle-core = "0.8.3"
+candle-nn = "0.8.3"
+
 [dev-dependencies]
 tempfile = "3.15"
 
@@ -41,7 +45,3 @@ cloud = [] # Enable cloud provider support (OpenAI, Claude, etc.)
 [lib]
 name = "plato_ai"
 path = "src/lib.rs"
-
-# Vector embedding library
-candle-core = "0.8.3"
-candle-nn = "0.8.3"

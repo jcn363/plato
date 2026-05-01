@@ -86,3 +86,21 @@ pub struct LLMResponse {
     pub model: String,
     pub tokens_used: Option<usize>,
 }
+
+/// Trait for generating and comparing text embeddings
+pub trait VectorEmbedder: Send + Sync {
+    /// Generate an embedding vector for the given text
+    fn embed(&self, text: &str) -> crate::AiResult<Vec<f32>>;
+
+    /// Compute cosine similarity between two vectors
+    fn similarity(a: &[f32], b: &[f32]) -> f32 {
+        let dot: f32 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
+        let mag_a: f32 = a.iter().map(|x| x * x).sum::<f32>().sqrt();
+        let mag_b: f32 = b.iter().map(|x| x * x).sum::<f32>().sqrt();
+        if mag_a == 0.0 || mag_b == 0.0 {
+            0.0
+        } else {
+            dot / (mag_a * mag_b)
+        }
+    }
+}
