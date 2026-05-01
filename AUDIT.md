@@ -43,3 +43,17 @@ This document summarizes a static audit of the Plato repository. It covers safet
 **Next steps:**
 1. Finish pending items (CI integration, remaining tests, function documentation).
 2. Verify builds and linting across all targets.
+
+## Future Work
+- Create a dedicated `crate::framebuffer::common` module to eliminate remaining duplicate logic.
+- Expand unit test coverage for device input, gesture handling, and TTS.
+- Automate code review checks for reviewers via GitHub comments.
+- Review and tighten concurrency guarantees for all document types.
+
+## Code Review Summary
+- The code follows ergonomic async patterns and avoids `unwrap` usage.
+- `PlatoError` is consistently propagated via `?`.
+- Most public APIs return `PlatoResult<T>`; residual `anyhow` usage is documented.
+
+## GitHub Actions Overview
+- `rust.yml` enforces `cargo clippy` with `-D warnings` and runs tests on every push and PR.
