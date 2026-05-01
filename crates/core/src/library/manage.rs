@@ -31,11 +31,12 @@ impl Library {
 
         let mut dest = src.clone();
         dest.set_file_name(file_name);
-        fs::rename(&src, &dest)?;
 
+        fs::rename(&src, &dest).with_context(|| format!("rename from {:?} to {:?}", src, dest))?;
+
+        let new_path = dest.strip_prefix(&self.home)?;
+        self.paths.insert(new_path.to_path_buf(), fp);
         if self.mode == LibraryMode::Database {
-            let new_path = dest.strip_prefix(&self.home)?;
-            self.paths.insert(new_path.to_path_buf(), fp);
             if let Some(info) = self.db.get_mut(&fp) {
                 info.file.path = new_path.to_path_buf();
                 self.has_db_changed = true;

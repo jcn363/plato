@@ -7,6 +7,7 @@ pub mod color;
 pub mod consts;
 pub mod context;
 pub mod error;
+pub use error::{into_plato_err, PlatoError};
 pub mod cover_editor;
 pub mod device;
 pub mod image_formats;
