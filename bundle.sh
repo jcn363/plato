@@ -101,3 +101,4 @@ rm -f dist/KoboRoot.tgz
 mv plato-bundle-"$PLATO_VERSION".zip ../../dist/
 cd ../..
 rm -Rf "$BUNDLE_TEMP"
+./scripts/bundle-ai-assets.sh
