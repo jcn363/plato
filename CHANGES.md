@@ -138,3 +138,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 ## Final Integration: Semantic Search
 - **Library Integration**: Successfully integrated 'LibraryIndexer' into the core library workflow, allowing for the crawling and semantic indexing of new document additions.
 - **Search UI Foundation**: Established the structural foundation for UI-side search components in the Plato library view, satisfying all type-system and dependency requirements.
+
+## UI/UX Integration: Semantic Search
+- **Search Menu**: Integrated 'ToggleSemanticSearch' entry into the advanced search menu, providing a UI hook for library-wide semantic search mode.

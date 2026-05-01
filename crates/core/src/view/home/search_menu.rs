@@ -78,6 +78,17 @@ impl SearchMenu {
             y += small_height;
         }
 
+        // Semantic search
+        y += padding;
+        let semantic_rect = rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height];
+        let semantic_btn = Button::new(
+            semantic_rect,
+            Event::Select(EntryId::ToggleSemanticSearch),
+            "Semantic Content Search: Off".to_string(),
+        );
+        children.push(Box::new(semantic_btn) as Box<dyn View>);
+        y += small_height;
+
         // Clear button
         y += padding;
         let clear_rect = rect![

@@ -293,6 +293,7 @@ pub enum EntryId {
     ToggleAiApiKey,
     AiSendMessage,
     ToggleAiChat,
+    ToggleSemanticSearch,
     Preview,
     SearchReplace,
     ReplaceInChapter,
