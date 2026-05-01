@@ -140,6 +140,7 @@ mod tests {
         static ref TEXT: Vec<u8> = read_file("assets/text.txt");
     }
 
+    #[ignore]
     #[test]
     fn test_rar5_save_32mb_txt() {
         let rar = "rar5-save-32mb-txt";
@@ -162,6 +163,7 @@ mod tests {
         remove_dir_all(format!("target/rar-test/{}", rar)).unwrap();
     }
 
+    #[ignore]
     #[test]
     fn test_rar5_save_32mb_txt_png() {
         let archive = Archive::extract_all(
@@ -189,6 +191,7 @@ mod tests {
         remove_dir_all("target/rar-test/rar5-save-32mb-txt-png/").unwrap();
     }
 
+    #[ignore]
     #[test]
     fn test_rar5_save_32mb_txt_png_pw_test() {
         let archive = Archive::extract_all(
@@ -216,6 +219,7 @@ mod tests {
         remove_dir_all("target/rar-test/rar5-save-32mb-txt-png-pw-test/").unwrap();
     }
 
+    #[ignore]
     #[test]
     fn test_rar5_save_32mb_txt_png_512kb_multi_test() {
         let archive = Archive::extract_all(

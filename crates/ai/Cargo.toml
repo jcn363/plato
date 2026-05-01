@@ -41,3 +41,7 @@ cloud = [] # Enable cloud provider support (OpenAI, Claude, etc.)
 [lib]
 name = "plato_ai"
 path = "src/lib.rs"
+
+# Vector embedding library
+candle-core = "0.8.3"
+candle-nn = "0.8.3"

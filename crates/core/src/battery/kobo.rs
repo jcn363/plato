@@ -1,6 +1,6 @@
 use super::{Battery, Status};
 use crate::device::CURRENT_DEVICE;
-use crate::error::{PlatoError, PlatoResult};
+use plato_error::{PlatoError, PlatoResult};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;

@@ -23,7 +23,7 @@
 
 use crate::battery::{Battery, Status};
 use crate::color::Color;
-use crate::error::PlatoResult;
+use plato_error::PlatoResult;
 use crate::device::{Device, FrontlightKind, KoboDevice, Model, Orientation};
 use crate::document::BoundedText;
 use crate::document::{Document, Location, TocEntry};

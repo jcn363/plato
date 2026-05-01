@@ -1,4 +1,4 @@
-use crate::error::PlatoError;
+use plato_error::PlatoError;
 use std::error;
 
 #[derive(Debug)]

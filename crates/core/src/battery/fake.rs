@@ -1,5 +1,5 @@
 use super::{Battery, Status};
-use crate::error::PlatoResult;
+use plato_error::PlatoResult;
 
 /// Fake battery implementation for testing.
 /// Values are cached in struct fields (no file I/O required).

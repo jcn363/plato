@@ -116,3 +116,7 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 - **VectorEmbedder Trait**: Added `VectorEmbedder` trait to `crates/ai/src/traits.rs`, enabling local-first semantic search capabilities. It includes foundational logic for generating text embeddings and computing cosine similarity.
 - **plato-error Crate**: Established a dedicated `plato-error` crate in `crates/error/` to provide a unified `PlatoError` and `PlatoResult` type system across the workspace. This resolves previous dependency complexities and provides a robust, centralized error handling infrastructure.
 - **Build Integrity**: Reverted architectural experiments (modularization of drivers) to restore build stability. The project currently maintains a stable, clean build with the new AI and Error features integrated.
+
+## Semantic Search & Unified Error Handling
+- **Local Embedding Engine**: Integrated 'candle-core' and 'candle-nn' into 'crates/ai' to support local-first semantic search model execution.
+- **Unified Error Handling**: Completed the migration of all 'crates/core' error imports to the centralized 'plato_error' crate, creating a cleaner and more maintainable error management system across the entire workspace.

@@ -1,4 +1,4 @@
-use crate::error::{PlatoError, PlatoResult};
+use plato_error::{PlatoError, PlatoResult};
 use crate::settings::CoverEditorSettings;
 use crate::validation::{validate_path, validate_range};
 use image::{DynamicImage, GenericImageView, ImageFormat};

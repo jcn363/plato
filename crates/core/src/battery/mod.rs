@@ -32,7 +32,7 @@
 mod fake;
 mod kobo;
 
-use crate::error::PlatoResult;
+use plato_error::PlatoResult;
 
 pub use self::fake::FakeBattery;
 pub use self::kobo::KoboBattery;
