@@ -432,8 +432,18 @@ impl View for Reader {
                 true
             }
             Event::Select(EntryId::ToggleAiChat) => {
-                // Toggle AI chat sidebar
                 self.ai_chat_visible = !self.ai_chat_visible;
+                if self.ai_chat_visible {
+                    let sidebar_width = 300;
+                    let sidebar_rect = rect![
+                        pt!(self.rect.max.x - sidebar_width, self.rect.min.y),
+                        self.rect.max
+                    ];
+                    let ai_chat = crate::view::ai_chat::AiChatView::new(sidebar_rect, context);
+                    self.children.push(Box::new(ai_chat) as Box<dyn View>);
+                } else {
+                    self.children.retain(|child| child.view_id() != Some(ViewId::AiChat));
+                }
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }

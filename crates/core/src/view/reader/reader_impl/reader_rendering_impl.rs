@@ -29,7 +29,12 @@ use super::reader::Reader;
 
 impl Reader {
     pub fn render_rect(&self, rect: &Rectangle) -> Rectangle {
-        rect.intersection(&self.rect).unwrap_or(self.rect)
+        let mut r = rect.intersection(&self.rect).unwrap_or(self.rect);
+        if self.ai_chat_visible {
+            let sidebar_width = 300;
+            r.max.x -= sidebar_width;
+        }
+        r
     }
 
     pub fn resize(

@@ -1,0 +1,5 @@
+#!/bin/bash
+HERE="$(dirname "$(readlink -f "${0}")"
+export PATH="${HERE}/usr/bin:${PATH}"
+export PLATO_RESOURCES_PATH="${HERE}/usr/share/plato"
+exec "${HERE}/usr/bin/plato" "$@"

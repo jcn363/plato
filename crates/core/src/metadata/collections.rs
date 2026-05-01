@@ -272,7 +272,9 @@ mod collections_tests {
             modified_at: "2024-01-01T00:00:00Z".to_string(),
         };
 
-        collections.add(collection.clone()).expect("Test assertion failed");
+        collections
+            .add(collection.clone())
+            .expect("Test assertion failed");
         assert_eq!(collections.len(), 1);
         assert_eq!(collections.get("test_id"), Some(&collection));
     }
@@ -328,7 +330,9 @@ mod collections_tests {
         };
 
         collections.add(collection).expect("Test assertion failed");
-        collections.remove("test_id").expect("Test assertion failed");
+        collections
+            .remove("test_id")
+            .expect("Test assertion failed");
         assert!(collections.is_empty());
     }
 

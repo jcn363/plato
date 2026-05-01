@@ -1,4 +1,4 @@
-#!/bin/sh
+#! /bin/sh
 
 set -e
 
@@ -9,7 +9,7 @@ if ! command -v sccache &> /dev/null; then
     export RUSTC_WRAPPER=""
 fi
 
-# Accept TARGET argument (arm | arm64 | host | linuxmint), default to arm for backward compatibility
+# Accept TARGET argument (arm | arm64 | host | linuxmint | android-arm64 | android-arm32), default to arm for backward compatibility
 TARGET="${1:-arm}"
 
 # Resolve target-derived variables
@@ -100,7 +100,7 @@ cp -R css dist
 find dist/css -name '*-user.css' -delete
 find dist/keyboard-layouts -name '*-user.json' -delete
 find dist/hyphenation-patterns -name '*.bounds' -delete
-find dist/scripts -name 'wifi-*-*.sh' -delete
+find dist/scripts -name 'wifi-*.sh' -delete
 cp "$TARGET_DIR/$CARGO_TARGET/$CARGO_PROFILE/plato" dist/
 
 # Build epub_editor if not present
@@ -113,7 +113,7 @@ fi
 cp "$TARGET_DIR/$CARGO_TARGET/$CARGO_PROFILE/epub_editor" dist/
 cp contrib/*.sh dist
 cp contrib/Settings-sample.toml dist
-cp LICENSE-AGPLv3 dist/
+cp LICENSE-AGPLv3 dist
 
 # No external libraries needed - pure Rust build
 $STRIP_TOOL dist/plato
@@ -133,7 +133,6 @@ fi
 if [ "$TARGET" = "host" ] || [ "$TARGET" = "linuxmint" ]; then
     echo "Creating .deb package for Linux..."
     # Create debian package structure
-    mkdir -p debian/DEBIAN
     mkdir -p debian/usr/local/bin
     mkdir -p debian/usr/share/applications
     mkdir -p debian/usr/share/icons/hicolor/64x64/apps
@@ -142,13 +141,15 @@ if [ "$TARGET" = "host" ] || [ "$TARGET" = "linuxmint" ]; then
     cp "$TARGET_DIR/$CARGO_TARGET/$CARGO_PROFILE/plato" debian/usr/local/bin/plato
     
     # Create desktop file
-    echo '[Desktop Entry]' > debian/usr/share/applications/plato.desktop
-    echo 'Name=Plato' >> debian/usr/share/applications/plato.desktop
-    echo 'Exec=/usr/local/bin/plato' >> debian/usr/share/applications/plato.desktop
-    echo 'Type=Application' >> debian/usr/share/applications/plato.desktop
-    echo 'Icon=plato' >> debian/usr/share/applications/plato.desktop
-    echo 'Terminal=false' >> debian/usr/share/applications/plato.desktop
-    echo 'Categories=Office;Viewer;' >> debian/usr/share/applications/plato.desktop
+    cat > debian/usr/share/applications/plato.desktop << EOF'
+[Desktop Entry]
+Name=Plato
+Exec=/usr/local/bin/plato
+Type=Application
+Icon=plato
+Terminal=false
+Categories=Office;Viewer;
+EOF
     
     # Copy icon (if exists)
     if [ -f "icons/plato.png" ]; then
@@ -156,15 +157,18 @@ if [ "$TARGET" = "host" ] || [ "$TARGET" = "linuxmint" ]; then
     fi
     
     # Create control file
-    echo "Package: plato" > debian/DEBIAN/control
-    echo "Version: $(date +%Y%m%d)" >> debian/DEBIAN/control
-    echo "Section: office" >> debian/DEBIAN/control
-    echo "Priority: optional" >> debian/DEBIAN/control
-    echo "Architecture: amd64" >> debian/DEBIAN/control
-    echo "Depends: libc6 (>= 2.28)" >> debian/DEBIAN/control
-    echo "Maintainer: Plato Team" >> debian/DEBIAN/control
-    echo "Description: Document reader for Kobo and desktop" >> debian/DEBIAN/control
-    echo " Plato is a document reader for Kobo e-readers and Linux desktop." >> debian/DEBIAN/control
+    mkdir -p debian/DEBIAN
+    cat > debian/DEBIAN/control << EOF
+Package: plato
+Version: $(date +%Y%m%d)
+Section: office
+Priority: optional
+Architecture: amd64
+Depends: libc6 (>= 2.28)
+Maintainer: Plato Team
+Description: Document reader for Kobo and desktop
+ Plato is a document reader for Kobo e-readers and Linux desktop.
+EOF
     
     # Build .deb
     dpkg-deb --build debian plato-linux.deb

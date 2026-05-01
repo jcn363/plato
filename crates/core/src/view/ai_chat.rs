@@ -1,37 +1,176 @@
 //! AI Chat View for Plato Reader
 //!
 //! Provides an AI chat sidebar in the reader for asking questions about the current document.
+//!
+//! Note: The actual AI processing is implemented in the `plato-ai` crate.
+//! This view provides the UI shell; AI integration requires proper dependency injection
+//! to avoid cyclic dependencies between `plato-core` and `plato-ai`.
 
-use super::{Bus, Event, Hub, Id, RenderQueue, View, ViewId, ID_FEEDER};
-use crate::color::text_inverted_hard;
+use super::input_field::InputField;
+use super::top_bar::TopBar;
+use super::{Bus, Event, Hub, Id, RenderData, RenderQueue, View, ViewId, ID_FEEDER};
+use crate::color::{background, text_inverted_hard};
 use crate::context::Context;
 use crate::font::Fonts;
-use crate::framebuffer::Framebuffer;
+use crate::framebuffer::{Framebuffer, UpdateMode};
 use crate::geom::Rectangle;
 use crate::theme;
+use crate::unit::scale_by_dpi;
+use crate::view::SMALL_BAR_HEIGHT;
 
 pub struct AiChatView {
     id: Id,
     rect: Rectangle,
     children: Vec<Box<dyn View>>,
+    messages: Vec<(bool, String)>,
+    is_processing: bool,
+    status: String,
 }
 
 impl AiChatView {
-    pub fn new(rect: Rectangle) -> AiChatView {
+    pub fn new(rect: Rectangle, context: &mut Context) -> AiChatView {
         let id = ID_FEEDER.next();
+        let dpi = crate::unit::get_device_dpi();
+        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
+
+        let mut children: Vec<Box<dyn View>> = Vec::new();
+
+        let top_bar = TopBar::new(
+            rect![
+                rect.min.x,
+                rect.min.y,
+                rect.max.x,
+                rect.min.y + small_height
+            ],
+            Event::Close(ViewId::AiChat),
+            "AI Assistant".to_string(),
+            context,
+        );
+        children.push(Box::new(top_bar) as Box<dyn View>);
+
+        let input_field_height = small_height;
+        let input_field = InputField::new(
+            rect![
+                rect.min.x,
+                rect.max.y - input_field_height,
+                rect.max.x,
+                rect.max.y
+            ],
+            ViewId::AiChat,
+        )
+        .placeholder("Ask a question...");
+        children.push(Box::new(input_field) as Box<dyn View>);
+
         AiChatView {
             id,
             rect,
-            children: Vec::new(),
+            children,
+            messages: Vec::new(),
+            is_processing: false,
+            status: String::new(),
         }
-    }
-
-    pub fn show(rect: Rectangle, _context: &mut Context) -> Box<dyn View> {
-        Box::new(AiChatView::new(rect))
     }
 }
 
 impl View for AiChatView {
+    fn handle_event(
+        &mut self,
+        evt: &Event,
+        hub: &Hub,
+        bus: &mut Bus,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) -> bool {
+        match evt {
+            Event::Submit(ViewId::AiChat, text) => {
+                if !self.is_processing && !text.is_empty() {
+                    self.messages.push((true, text.clone()));
+                    self.is_processing = true;
+                    self.status = "Thinking...".to_string();
+
+                    // TODO: AI processing is implemented in `plato-ai` crate.
+                    // To avoid cyclic dependencies, the actual AI call should be
+                    // injected via dependency injection or moved to `plato-ai`.
+                    // For now, simulate a response after a delay.
+                    let hub_cloned = hub.clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_secs(2));
+                        hub_cloned
+                            .send(Event::AiResponse(
+                                "AI responses are disabled (cyclic dependency).".to_string(),
+                            ))
+                            .ok();
+                    });
+
+                    if let Some(input_field) = self.children[1].downcast_mut::<InputField>() {
+                        input_field.set_text("", true, rq, context);
+                    }
+
+                    rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                }
+                true
+            }
+            Event::AiResponse(text) => {
+                self.messages.push((false, text.clone()));
+                self.is_processing = false;
+                self.status = String::new();
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
+            Event::AiError(err) => {
+                self.is_processing = false;
+                self.status = format!("Error: {}", err);
+                rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+                true
+            }
+            _ => {
+                for child in self.children.iter_mut() {
+                    if child.handle_event(evt, hub, bus, rq, context) {
+                        return true;
+                    }
+                }
+                false
+            }
+        }
+    }
+
+    fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, fonts: &mut Fonts) {
+        let is_dark = theme::is_dark_mode();
+        fb.draw_rectangle(&self.rect, background(is_dark));
+
+        // Render messages (simple layout for now)
+        let dpi = crate::unit::get_device_dpi();
+        let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
+        let mut y = self.rect.min.y + small_height + 10;
+
+        let scheme = text_inverted_hard(is_dark);
+        let font = &mut fonts.sans_serif.regular;
+
+        for (is_user, text) in self.messages.iter().rev().take(5).rev() {
+            let label = if *is_user { "You: " } else { "AI: " };
+            let full_text = format!("{}{}", label, text);
+            // Very basic wrapping/truncation for now
+            let display_text = if full_text.len() > 40 {
+                format!("{}...", &full_text[..37])
+            } else {
+                full_text
+            };
+
+            let plan = font.plan(&display_text, None, None);
+            font.render(fb, scheme[1], &plan, pt!(self.rect.min.x + 10, y));
+            y += 30;
+        }
+
+        if !self.status.is_empty() {
+            let plan = font.plan(&self.status, None, None);
+            font.render(fb, scheme[1], &plan, pt!(self.rect.min.x + 10, y));
+        }
+
+        for child in self.children.iter() {
+            child.render(fb, *child.rect(), fonts);
+        }
+    }
+
     fn id(&self) -> Id {
         self.id
     }
@@ -54,27 +193,5 @@ impl View for AiChatView {
 
     fn children_mut(&mut self) -> &mut Vec<Box<dyn View>> {
         &mut self.children
-    }
-
-    fn handle_event(
-        &mut self,
-        evt: &Event,
-        _hub: &Hub,
-        bus: &mut Bus,
-        _rq: &mut RenderQueue,
-        _context: &mut Context,
-    ) -> bool {
-        match evt {
-            Event::Close(ViewId::AiChat) => {
-                bus.push_back(Event::Close(ViewId::AiChat));
-                true
-            }
-            _ => false,
-        }
-    }
-
-    fn render(&self, fb: &mut dyn Framebuffer, _rect: Rectangle, _fonts: &mut Fonts) {
-        let scheme = text_inverted_hard(theme::is_dark_mode());
-        fb.draw_rectangle(&self.rect, scheme[0]);
     }
 }

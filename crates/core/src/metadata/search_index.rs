@@ -281,7 +281,9 @@ mod search_index_tests {
         doc_paths.insert(doc_id.clone(), "/path/to/doc1".to_string());
         drop(doc_paths);
 
-        index.remove_document(&doc_id).expect("Test assertion failed");
+        index
+            .remove_document(&doc_id)
+            .expect("Test assertion failed");
         assert_eq!(index.document_count(), 0);
     }
 }

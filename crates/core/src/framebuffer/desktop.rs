@@ -4,15 +4,15 @@
 //! It uses the minifb crate to create a window and display the pixel buffer.
 
 use crate::color::Color;
-use crate::geom::Rectangle;
 use crate::framebuffer::{Framebuffer, UpdateMode};
-use anyhow::{Result, Error, Context};
-use minifb::{Window, WindowOptions, Key};
+use crate::geom::Rectangle;
+use anyhow::{Context, Error, Result};
 use image::{ImageBuffer, RgbImage};
+use minifb::{Key, Window, WindowOptions};
 use std::path::Path;
 
-use crate::input::{DeviceEvent, ButtonCode, ButtonStatus, FingerStatus};
 use crate::geom::Point;
+use crate::input::{ButtonCode, ButtonStatus, DeviceEvent, FingerStatus};
 
 /// Framebuffer that renders to a window on desktop Linux
 pub struct DesktopFramebuffer {
@@ -20,32 +20,29 @@ pub struct DesktopFramebuffer {
     height: u32,
     buffer: Vec<u32>,
     window: Window,
-    title: String,
-    debug_save_path: Option<String>,
     last_mouse_pos: Option<(f32, f32)>,
     last_mouse_buttons: (bool, bool, bool), // left, middle, right
 }
 
 impl DesktopFramebuffer {
     /// Create a new DesktopFramebuffer with given dimensions
-    pub fn new(width: u32, height: u32, title: &str, debug_save_path: Option<String>) -> Result<Self> {
+    pub fn new(width: u32, height: u32, title: &str) -> Result<Self> {
         let mut window = Window::new(
             title,
             width as usize,
             height as usize,
             WindowOptions::default(),
-        ).map_err(|e| Error::msg(format!("failed to create window: {}", e)))?;
+        )
+        .map_err(|e| Error::msg(format!("failed to create window: {}", e)))?;
 
-        // Limit to 60 fps
-        window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+        // Limit to ~60 fps
+        window.set_target_fps(60);
 
         Ok(Self {
             width,
             height,
             buffer: vec![0xFFFFFFFF; (width * height) as usize],
             window,
-            title: title.to_string(),
-            debug_save_path,
             last_mouse_pos: None,
             last_mouse_buttons: (false, false, false),
         })
@@ -63,7 +60,7 @@ impl DesktopFramebuffer {
         if let Some(pos) = self.window.get_mouse_pos(minifb::MouseMode::Discard) {
             let current_pos = Point::new(pos.0 as i32, pos.1 as i32);
             let left_down = self.window.get_mouse_down(minifb::MouseButton::Left);
-            
+
             if left_down {
                 if !self.last_mouse_buttons.0 {
                     // Mouse down (Finger Down)
@@ -91,21 +88,27 @@ impl DesktopFramebuffer {
                     position: current_pos,
                 });
             }
-            
+
             self.last_mouse_pos = Some(pos);
             self.last_mouse_buttons.0 = left_down;
         }
 
         // Handle keyboard events (mapping some keys to Kobo buttons)
-        if self.window.is_key_pressed(Key::Escape, minifb::KeyRepeat::No) {
+        if self
+            .window
+            .is_key_pressed(Key::Escape, minifb::KeyRepeat::No)
+        {
             events.push(DeviceEvent::Button {
                 time: now,
                 code: ButtonCode::Home,
                 status: ButtonStatus::Pressed,
             });
         }
-        
-        if self.window.is_key_pressed(Key::Left, minifb::KeyRepeat::Yes) {
+
+        if self
+            .window
+            .is_key_pressed(Key::Left, minifb::KeyRepeat::Yes)
+        {
             events.push(DeviceEvent::Button {
                 time: now,
                 code: ButtonCode::Backward,
@@ -113,7 +116,10 @@ impl DesktopFramebuffer {
             });
         }
 
-        if self.window.is_key_pressed(Key::Right, minifb::KeyRepeat::Yes) {
+        if self
+            .window
+            .is_key_pressed(Key::Right, minifb::KeyRepeat::Yes)
+        {
             events.push(DeviceEvent::Button {
                 time: now,
                 code: ButtonCode::Forward,
@@ -122,6 +128,13 @@ impl DesktopFramebuffer {
         }
 
         events
+    }
+
+    /// Update the window with the current pixel buffer
+    fn update_window(&mut self) -> Result<(), Error> {
+        self.window
+            .update_with_buffer(&self.buffer, self.width as usize, self.height as usize)
+            .map_err(|e| Error::msg(format!("failed to update window: {}", e)))
     }
 }
 
@@ -183,7 +196,8 @@ impl Framebuffer for DesktopFramebuffer {
                     let mut color = Color::Rgb(r, g, b);
                     color.shift(drift);
                     let rgb = color.rgb();
-                    self.buffer[idx] = ((rgb[0] as u32) << 16) | ((rgb[1] as u32) << 8) | (rgb[2] as u32);
+                    self.buffer[idx] =
+                        ((rgb[0] as u32) << 16) | ((rgb[1] as u32) << 8) | (rgb[2] as u32);
                 }
             }
         }
@@ -218,7 +232,7 @@ impl Framebuffer for DesktopFramebuffer {
         imgbuf
             .save(path)
             .with_context(|| format!("failed to save framebuffer to {}", path.display()))?;
-        
+
         Ok(())
     }
 

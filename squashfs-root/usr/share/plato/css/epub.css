@@ -1,0 +1,250 @@
+a {
+	color: #444;
+}
+
+i, em, cite, var, address {
+	font-style: italic;
+}
+
+b, strong {
+	font-weight: bold;
+}
+
+h1 {
+	font-size: 2em;
+	margin: 0.67em 0;
+}
+
+h2 {
+	font-size: 1.5em;
+	margin: 0.75em 0;
+}
+
+h3 {
+	font-size: 1.17em;
+	margin: 0.83em 0;
+}
+
+h4, p, blockquote, dl {
+	margin: 1.12em 0;
+}
+
+h5 {
+	font-size: 0.83em;
+	margin: 1.5em 0;
+}
+
+h6 {
+	font-size: 0.75em;
+	margin: 1.67em 0;
+}
+
+hr {
+	margin: 0.5em 0;
+}
+
+dt {
+	margin-top: 1.12em;
+}
+
+dd {
+	margin-left: 1.5em;
+}
+
+pre, code, samp, kbd {
+	font-family: monospace;
+	font-size: 0.891em;
+}
+
+ul, ol {
+	margin-left: 1.5em;
+	margin-top: 0.6rem;
+	margin-bottom: 0.6rem;
+}
+
+li > ul, li > ol {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+svg {
+	text-align: center;
+}
+
+sub, sup {
+	font-size: 0.83em;
+}
+
+sub {
+	vertical-align: sub;
+}
+
+sup {
+	vertical-align: super;
+}
+
+table {
+	text-align: left;
+}
+
+th {
+	font-weight: bold;
+	text-align: center;
+}
+
+th, td {
+	padding: 0.67em;
+}
+
+/* Drop Caps - Large initial letter spanning multiple lines */
+p.drop-cap::first-letter,
+p.dropcap::first-letter,
+p.drop-cap-first::first-letter,
+.initial-cap::first-letter,
+.first-letter::first-letter {
+	float: left;
+	font-size: 3.5em;
+	line-height: 0.8;
+	padding-right: 0.1em;
+	padding-top: 0.1em;
+	font-weight: bold;
+}
+
+p.drop-cap-2::first-letter {
+	font-size: 2.5em;
+}
+
+p.drop-cap-3::first-letter {
+	font-size: 2em;
+}
+
+/* CSS initial-letter property (modern browsers) */
+p.initial-letter::first-letter {
+	initial-letter: 3;
+}
+
+/* EPUB3 Fixed Layout Support */
+.rendition-spread-landscape,
+.rendition-spread-portrait,
+.rendition-spread-auto {
+	-webkit-column-width: 100%;
+	column-width: 100%;
+}
+
+/* EPUB3 MathML Support */
+math {
+	font-size: 1em;
+	display: inline;
+}
+
+math * {
+	font-family: inherit;
+}
+
+math mi {
+	font-style: italic;
+}
+
+math mn {
+	font-style: normal;
+}
+
+math mo {
+	font-weight: bold;
+	margin: 0 0.2em;
+}
+
+math mfrac {
+	vertical-align: middle;
+}
+
+math mfrac > *:first-child {
+	text-align: right;
+}
+
+math mfrac > *:last-child {
+	text-align: left;
+}
+
+math msub, math msup, math msubsup {
+	padding-left: 0.1em;
+}
+
+math msub > *:last-child, math msup > *:last-child {
+	font-size: 0.7em;
+}
+
+math msqrt, math mroot {
+	padding-left: 0.1em;
+}
+
+math mrow {
+	display: inline;
+}
+
+math mspace {
+	margin: 0 0.2em;
+}
+
+math mtext {
+	font-style: normal;
+}
+
+math mpadded {
+	padding: 0 0.2em;
+}
+
+/* Horizontal Rule */
+hr {
+	display: block;
+	border: none;
+	border-top: 1px solid currentColor;
+	margin: 1em 0;
+	color: currentColor;
+}
+
+/* EPUB3 Enhanced Navigation */
+nav[epub|type="toc"] ol,
+nav[epub|type="landmarks"] ol,
+nav[epub:type="page-list"] ol {
+	list-style: none;
+	padding-left: 0;
+}
+
+nav[epub|type="toc"] li,
+nav[epub:type="landmarks"] li,
+nav[epub:type="page-list"] li {
+	margin: 0.5em 0;
+}
+
+/* EPUB3 Vocabulary Support */
+[epub|type="chapter"],
+[epub|type="section"],
+[epub:type="preface"],
+[epub:type="introduction"],
+[epub|type="conclusion"],
+[epub|type="appendix"],
+[epub|type="part"],
+[epub|type="volume"],
+[epub:type="edition"],
+[epub|type="glossary"],
+[epub:type="acknowledgments"],
+[epub:type="annotation"],
+[epub|type="bibliography"],
+[epub:type="colophon"],
+[epub:type="copyright-page"],
+[epub:type="dedication"],
+[epub|type="epigraph"],
+[epub:type="foreword"],
+[epub:type="index"],
+[epub:type="notice"],
+[epub:type="preamble"],
+[epub:type="subchapter"] {
+	break-inside: avoid;
+}
+
+/* SVG in EPUB3 */
+svg {
+	max-width: 100%;
+	height: auto;
+}

@@ -28,7 +28,9 @@ fn test_full_refresh_pipeline() {
     ghosting_reducer.register_full_refresh();
 
     // Convert to grayscale
-    let grayscale = converter.convert(&frame1.data, 100, 100).expect("Test assertion failed");
+    let grayscale = converter
+        .convert(&frame1.data, 100, 100)
+        .expect("Test assertion failed");
     assert_eq!(grayscale.len(), 100 * 100);
 }
 
@@ -261,7 +263,9 @@ fn test_grayscale_gamma_correction() {
 
     // Mid-gray with gamma correction
     let mid_gray = vec![128u8, 128, 128, 255];
-    let gray = converter.convert(&mid_gray, 1, 1).expect("Test assertion failed");
+    let gray = converter
+        .convert(&mid_gray, 1, 1)
+        .expect("Test assertion failed");
 
     // With gamma 2.2, mid-gray (128) is brightened
     // Linear: 128 -> ~7-8 in 16-level
@@ -290,7 +294,9 @@ fn test_partial_refresh_manager_integration() {
     assert_eq!(regions.len(), 1);
 
     // Simulate conversion
-    let grayscale = converter.convert(&frame1.data, 100, 100).expect("Test assertion failed");
+    let grayscale = converter
+        .convert(&frame1.data, 100, 100)
+        .expect("Test assertion failed");
     assert_eq!(grayscale.len(), 100 * 100);
 }
 
@@ -376,7 +382,8 @@ fn test_large_buffer_performance() {
     let grayscale = converter
         .convert(&data, width as u32, height as u32)
         .expect("Test assertion failed");
-    let frame = FrameBuffer::from_data(width as u32, height as u32, data).expect("Test assertion failed");
+    let frame =
+        FrameBuffer::from_data(width as u32, height as u32, data).expect("Test assertion failed");
     tracker.track_changes(&frame);
 
     let duration = start.elapsed();

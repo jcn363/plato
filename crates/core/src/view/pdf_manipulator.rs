@@ -182,6 +182,10 @@ Max: 30MB, 500 pages. Keep battery charged."
                 EntryId::PdfManipulate(file_path.clone(), "search_annotations".to_string()),
             ),
             EntryKind::Command(
+                "📝 OCR Entire Document".to_string(),
+                EntryId::PdfManipulate(file_path.clone(), "ocr_all".to_string()),
+            ),
+            EntryKind::Command(
                 "📤 Export to XFDF".to_string(),
                 EntryId::PdfManipulate(file_path.clone(), "export_xfdf".to_string()),
             ),
@@ -331,6 +335,24 @@ Max: 30MB, 500 pages. Keep battery charged."
             return self.process_redaction(file_path, page).map(|_| ());
         }
 
+        if action == "ocr_all" {
+            let output_path = file_path.with_extension("txt");
+            let mut ocr = crate::document::ocr::OcrManager::new("eng")?;
+            let mut text = String::new();
+            let page_count = self.manipulator.page_count(file_path)?;
+
+            for i in 0..page_count {
+                bus.push_back(Event::Progress(i, page_count, "OCR in progress...".to_string()));
+                if let Ok(page_text) = ocr.extract_text(file_path, i) {
+                    text.push_str(&page_text);
+                    text.push('\n');
+                }
+            }
+            std::fs::write(&output_path, text).context("Failed to save OCR output")?;
+            bus.push_back(Event::Render(format!("✅ OCR saved to {}", output_path.file_name().unwrap().to_string_lossy())));
+            return Ok(());
+        }
+        
         manipulation_handlers::process_manipulation(
             &mut self.manipulator,
             file_path,

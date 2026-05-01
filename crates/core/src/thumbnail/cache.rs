@@ -144,7 +144,10 @@ mod tests {
 
         let retrieved = cache.get(&path);
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.expect("Test assertion failed").width(), pixmap.width());
+        assert_eq!(
+            retrieved.expect("Test assertion failed").width(),
+            pixmap.width()
+        );
     }
 
     #[test]

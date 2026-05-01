@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Plato
+Comment=Document reader for Kobo e-readers
+Exec=plato
+Icon=plato
+Terminal=false
+Type=Application
+Categories=Office;Viewer;
+Keywords=ebook;reader;kobo;epub;pdf;

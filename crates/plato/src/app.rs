@@ -15,9 +15,12 @@ use plato_core::anyhow::{Context as ResultExt, Error};
 use plato_core::context::DeviceFlags;
 use plato_core::device::CURRENT_DEVICE;
 use plato_core::document::sys_info_as_html;
-use plato_core::framebuffer::{
-    Framebuffer, KoboFramebuffer1, KoboFramebuffer2, SoftwareFramebuffer, UpdateMode,
-};
+#[cfg(not(all(
+    target_os = "linux",
+    not(any(target_arch = "arm", target_arch = "aarch64"))
+)))]
+use plato_core::framebuffer::SoftwareFramebuffer;
+use plato_core::framebuffer::{Framebuffer, KoboFramebuffer1, KoboFramebuffer2, UpdateMode};
 use plato_core::gesture::gesture_events;
 use plato_core::helpers::save_toml;
 use plato_core::input::{device_events, display_rotate_event, raw_events, usb_events};
@@ -53,19 +56,25 @@ pub fn run() -> Result<(), Error> {
         // Desktop windowed framebuffer for Wayland/X11
         let width = 1404;
         let height = 1872;
-        let debug_save = std::env::var("PLATO_DEBUG_FB").ok();
 
-        #[cfg(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64"))))]
+        #[cfg(all(
+            target_os = "linux",
+            not(any(target_arch = "arm", target_arch = "aarch64"))
+        ))]
         {
             use plato_core::framebuffer::DesktopFramebuffer;
             Box::new(
-                DesktopFramebuffer::new(width, height, "Plato", debug_save)
+                DesktopFramebuffer::new(width, height, "Plato")
                     .context("can't create desktop framebuffer")?,
             )
         }
-        #[cfg(not(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64")))))]
+        #[cfg(not(all(
+            target_os = "linux",
+            not(any(target_arch = "arm", target_arch = "aarch64"))
+        )))]
         {
             // Fallback for other non-ARM Linux (unlikely to be hit due to outer cfg)
+            let debug_save = std::env::var("PLATO_DEBUG_FB").ok();
             Box::new(
                 SoftwareFramebuffer::new(width, height, debug_save)
                     .context("can't create software framebuffer")?,
@@ -125,7 +134,7 @@ pub fn run() -> Result<(), Error> {
 
     let (raw_sender, raw_receiver) = raw_events(paths);
     let (device_sender, device_receiver) = mpsc::channel();
-    
+
     let ds2 = device_sender.clone();
     thread::spawn(move || {
         let receiver = device_events(
@@ -247,492 +256,496 @@ pub fn run() -> Result<(), Error> {
 
         if let Ok(evt) = evt_res {
             match evt {
-            Event::Device(de) => {
-                if handle_device_event(
-                    de,
-                    view.as_mut(),
-                    &tx,
-                    &mut bus,
-                    &mut rq,
-                    &mut context,
-                    &mut event_ctx,
-                    &mut history,
-                    &mut updating,
-                    &evt,
-                ) {
-                    continue;
-                }
-            }
-            Event::BatteryTick => {
-                // Check if background sync is needed
-                if context.background_sync.sync_needed() {
-                    if context.background_sync.should_auto_enable_wifi()
-                        && !context.flags.contains(DeviceFlags::ONLINE)
-                    {
-                        set_wifi(true, &mut context);
-                    }
-
-                    if !context.background_sync.wifi_only()
-                        || context.flags.contains(DeviceFlags::ONLINE)
-                    {
-                        context.background_sync.trigger_sync();
-
-                        // Perform actual sync in a background thread
-                        let tx_sync = tx.clone();
-                        let settings = context.settings.clone();
-                        let library_home = context.library.home.clone();
-                        thread::spawn(move || {
-                            if let Err(e) = plato_core::sync::check_network_and_sync(
-                                &settings.cloud_sync,
-                                &settings.background_sync,
-                                &library_home,
-                            ) {
-                                log_error!("Background sync failed: {}", e);
-                            } else {
-                                tx_sync
-                                    .send(Event::Notify("Background sync completed".to_string()))
-                                    .ok();
-                            }
-                        });
-
-                        // Trigger sync complete plugins
-                        if let Err(e) = context.plugin_system.on_sync_complete() {
-                            log_error!("Failed to trigger sync complete plugins: {}", e);
-                        }
-                    }
-                }
-            }
-            Event::CheckBattery => {
-                handle_battery_event(
-                    &mut context,
-                    &mut event_ctx,
-                    &tx,
-                    &mut view,
-                    &mut history,
-                    &mut updating,
-                    &mut rq,
-                );
-                if event_ctx.exit_status == ExitStatus::PowerOff {
-                    break;
-                }
-            }
-            Event::PrepareSuspend => {
-                handle_suspend_event(
-                    &mut context,
-                    &mut event_ctx,
-                    &tx,
-                    &mut view,
-                    &mut updating,
-                    &mut rq,
-                );
-            }
-            Event::Suspend => {
-                handle_suspend_execute_event(
-                    &mut context,
-                    &mut event_ctx,
-                    &tx,
-                    &mut view,
-                    &mut history,
-                    &mut updating,
-                );
-                if event_ctx.exit_status == ExitStatus::PowerOff {
-                    break;
-                }
-            }
-            Event::PrepareShare => {
-                if context.flags.contains(DeviceFlags::SHARED) {
-                    continue;
-                }
-
-                event_ctx.tasks.clear();
-                view.handle_event(&Event::Back, &tx, &mut bus, &mut rq, &mut context);
-                while let Some(mut item) = history.pop() {
-                    item.view
-                        .handle_event(&Event::Back, &tx, &mut bus, &mut rq, &mut context);
-                    if item.rotation != context.display.rotation {
-                        wait_for_all(&mut updating, &mut context);
-                        if let Ok(dims) = context.fb.set_rotation(item.rotation) {
-                            event_ctx
-                                .raw_sender
-                                .send(display_rotate_event(item.rotation))
-                                .ok();
-                            context.display.rotation = item.rotation;
-                            context.display.dims = dims;
-                        }
-                    }
-                    view = item.view;
-                }
-                let path = Path::new(SETTINGS_PATH);
-                save_toml(&context.settings, path)
-                    .map_err(|e| log_error!("Can't save settings: {:#}.", e))
-                    .ok();
-                context.library.flush();
-
-                if context.settings.frontlight {
-                    context.settings.frontlight_levels = context.frontlight.levels();
-                    context.frontlight.set_intensity(0.0);
-                    context.frontlight.set_warmth(0.0);
-                }
-                if context.settings.wifi {
-                    Command::new("scripts/wifi-disable.sh").status().ok();
-                    context.flags.remove(DeviceFlags::ONLINE);
-                }
-
-                let interm = Intermission::new(
-                    context.fb.rect(),
-                    IntermKind::Share,
-                    context.settings.sleep_cover_fill,
-                    &context,
-                );
-                rq.add(RenderData::new(
-                    interm.id(),
-                    *interm.rect(),
-                    UpdateMode::Full,
-                ));
-                view.children_mut().push(Box::new(interm) as Box<dyn View>);
-                tx.send(Event::Share).ok();
-            }
-            Event::Share => {
-                if context.flags.contains(DeviceFlags::SHARED) {
-                    continue;
-                }
-
-                context.flags.insert(DeviceFlags::SHARED);
-                Command::new("scripts/usb-enable.sh").status().ok();
-            }
-            Event::Gesture(ge) => {
-                if handle_gesture_event(
-                    ge,
-                    &mut context,
-                    &mut view,
-                    &tx,
-                    &mut bus,
-                    &mut rq,
-                    &mut event_ctx,
-                    &mut history,
-                    &mut updating,
-                ) {
-                    break;
-                }
-                handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
-            }
-            Event::Open(info) => {
-                handle_open_event(
-                    info,
-                    &mut context,
-                    &mut view,
-                    &tx,
-                    &mut bus,
-                    &mut rq,
-                    &mut event_ctx,
-                    &mut history,
-                );
-            }
-            Event::Select(EntryId::About) => {
-                let dialog = Dialog::new(
-                    ViewId::AboutDialog,
-                    None,
-                    format!("Plato {}", env!("CARGO_PKG_VERSION")),
-                    &mut context,
-                );
-                rq.add(RenderData::new(
-                    dialog.id(),
-                    *dialog.rect(),
-                    UpdateMode::Gui,
-                ));
-                view.children_mut().push(Box::new(dialog) as Box<dyn View>);
-            }
-            Event::Select(EntryId::SystemInfo) => {
-                let html = sys_info_as_html();
-                if let Ok(r) = Reader::from_html(context.fb.rect(), &html, None, &tx, &mut context)
-                {
-                    goto_view(
-                        Box::new(r),
-                        &mut view,
-                        &mut history,
-                        context.display.rotation,
-                        context.fb.monochrome(),
-                        context.fb.dithered(),
-                        &mut rq,
-                        &mut context,
-                    );
-                }
-            }
-            Event::OpenHtml(ref html, ref link_uri) => {
-                if let Ok(r) = Reader::from_html(
-                    context.fb.rect(),
-                    html,
-                    link_uri.as_deref(),
-                    &tx,
-                    &mut context,
-                ) {
-                    goto_view(
-                        Box::new(r),
-                        &mut view,
-                        &mut history,
-                        context.display.rotation,
-                        context.fb.monochrome(),
-                        context.fb.dithered(),
-                        &mut rq,
-                        &mut context,
-                    );
-                }
-            }
-            Event::Select(EntryId::Launch(app_cmd)) => {
-                handle_launch(
-                    app_cmd,
-                    &mut view,
-                    &mut tx,
-                    &mut rq,
-                    &mut context,
-                    &mut event_ctx,
-                    &mut history,
-                );
-            }
-            #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
-            Event::Select(EntryId::FillForms(ref path)) => {
-                match plato_core::view::forms::FormsView::new(
-                    context.fb.rect(),
-                    path,
-                    &mut rq,
-                    &mut context,
-                ) {
-                    Ok(forms_view) => {
-                        goto_view(
-                            Box::new(forms_view),
-                            &mut view,
-                            &mut history,
-                            context.display.rotation,
-                            context.fb.monochrome(),
-                            context.fb.dithered(),
-                            &mut rq,
-                            &mut context,
-                        );
-                    }
-                    Err(e) => {
-                        log_error!("Failed to open PDF Forms: {}", e);
-                    }
-                }
-            }
-            #[cfg(target_os = "linux")]
-            Event::Select(EntryId::SignDocument(ref path)) => {
-                match plato_core::view::signatures::SignaturesView::new(
-                    context.fb.rect(),
-                    path,
-                    &mut rq,
-                    &mut context,
-                ) {
-                    Ok(signatures_view) => {
-                        goto_view(
-                            Box::new(signatures_view),
-                            &mut view,
-                            &mut history,
-                            context.display.rotation,
-                            context.fb.monochrome(),
-                            context.fb.dithered(),
-                            &mut rq,
-                            &mut context,
-                        );
-                    }
-                    Err(e) => {
-                        log_error!("Failed to open Digital Signatures: {}", e);
-                    }
-                }
-            }
-            #[cfg(target_os = "linux")]
-            Event::Select(EntryId::ValidatePdfA(ref path, ref level)) => {
-                match plato_core::view::validation::ValidationView::new(
-                    context.fb.rect(),
-                    path,
-                    &mut rq,
-                    &mut context,
-                ) {
-                    Ok(mut validation_view) => {
-                        if let Err(e) = validation_view.validate_pdfa(level.clone()) {
-                            log_error!("Failed to validate PDF/A: {}", e);
-                        }
-                        goto_view(
-                            Box::new(validation_view),
-                            &mut view,
-                            &mut history,
-                            context.display.rotation,
-                            context.fb.monochrome(),
-                            context.fb.dithered(),
-                            &mut rq,
-                            &mut context,
-                        );
-                    }
-                    Err(e) => {
-                        log_error!("Failed to open PDF Validation: {}", e);
-                    }
-                }
-            }
-            #[cfg(target_os = "linux")]
-            Event::Select(EntryId::ValidatePdfX(ref path, ref level)) => {
-                match plato_core::view::validation::ValidationView::new(
-                    context.fb.rect(),
-                    path,
-                    &mut rq,
-                    &mut context,
-                ) {
-                    Ok(mut validation_view) => {
-                        if let Err(e) = validation_view.validate_pdfx(level.clone()) {
-                            log_error!("Failed to validate PDF/X: {}", e);
-                        }
-                        goto_view(
-                            Box::new(validation_view),
-                            &mut view,
-                            &mut history,
-                            context.display.rotation,
-                            context.fb.monochrome(),
-                            context.fb.dithered(),
-                            &mut rq,
-                            &mut context,
-                        );
-                    }
-                    Err(e) => {
-                        log_error!("Failed to open PDF Validation: {}", e);
-                    }
-                }
-            }
-            #[cfg(target_os = "linux")]
-            Event::Select(EntryId::OcrDocument(ref path)) => {
-                match plato_core::view::validation::ValidationView::new(
-                    context.fb.rect(),
-                    path,
-                    &mut rq,
-                    &mut context,
-                ) {
-                    Ok(mut validation_view) => {
-                        if let Err(e) = validation_view.ocr_page() {
-                            log_error!("Failed to OCR page: {}", e);
-                        }
-                        goto_view(
-                            Box::new(validation_view),
-                            &mut view,
-                            &mut history,
-                            context.display.rotation,
-                            context.fb.monochrome(),
-                            context.fb.dithered(),
-                            &mut rq,
-                            &mut context,
-                        );
-                    }
-                    Err(e) => {
-                        log_error!("Failed to open PDF Validation: {}", e);
-                    }
-                }
-            }
-            Event::Back => {
-                if handle_back_event(
-                    &mut view,
-                    &mut history,
-                    &mut context,
-                    &mut event_ctx,
-                    &tx,
-                    &mut bus,
-                    &mut rq,
-                ) {
-                    break;
-                }
-            }
-            Event::TogglePresetMenu(rect, index) => {
-                if let Some(idx) = locate_by_id(view.as_ref(), ViewId::PresetMenu) {
-                    let rect = *view.child(idx).rect();
-                    view.children_mut().remove(idx);
-                    rq.add(RenderData::expose(rect, UpdateMode::Gui));
-                } else {
-                    let preset_menu = Menu::new(
-                        rect,
-                        ViewId::PresetMenu,
-                        MenuKind::Contextual,
-                        vec![EntryKind::Command(
-                            "Remove".to_string(),
-                            EntryId::RemovePreset(index),
-                        )],
-                        &mut context,
-                    );
-                    rq.add(RenderData::new(
-                        preset_menu.id(),
-                        *preset_menu.rect(),
-                        UpdateMode::Gui,
-                    ));
-                    view.children_mut()
-                        .push(Box::new(preset_menu) as Box<dyn View>);
-                }
-            }
-            Event::Show(ViewId::Frontlight) => {
-                if !context.settings.frontlight {
-                    context.set_frontlight(true);
-                    view.handle_event(
-                        &Event::ToggleFrontlight,
+                Event::Device(de) => {
+                    if handle_device_event(
+                        de,
+                        view.as_mut(),
                         &tx,
                         &mut bus,
                         &mut rq,
                         &mut context,
+                        &mut event_ctx,
+                        &mut history,
+                        &mut updating,
+                        &evt,
+                    ) {
+                        continue;
+                    }
+                }
+                Event::BatteryTick => {
+                    // Check if background sync is needed
+                    if context.background_sync.sync_needed() {
+                        if context.background_sync.should_auto_enable_wifi()
+                            && !context.flags.contains(DeviceFlags::ONLINE)
+                        {
+                            set_wifi(true, &mut context);
+                        }
+
+                        if !context.background_sync.wifi_only()
+                            || context.flags.contains(DeviceFlags::ONLINE)
+                        {
+                            context.background_sync.trigger_sync();
+
+                            // Perform actual sync in a background thread
+                            let tx_sync = tx.clone();
+                            let settings = context.settings.clone();
+                            let library_home = context.library.home.clone();
+                            thread::spawn(move || {
+                                if let Err(e) = plato_core::sync::check_network_and_sync(
+                                    &settings.cloud_sync,
+                                    &settings.background_sync,
+                                    &library_home,
+                                ) {
+                                    log_error!("Background sync failed: {}", e);
+                                } else {
+                                    tx_sync
+                                        .send(Event::Notify(
+                                            "Background sync completed".to_string(),
+                                        ))
+                                        .ok();
+                                }
+                            });
+
+                            // Trigger sync complete plugins
+                            if let Err(e) = context.plugin_system.on_sync_complete() {
+                                log_error!("Failed to trigger sync complete plugins: {}", e);
+                            }
+                        }
+                    }
+                }
+                Event::CheckBattery => {
+                    handle_battery_event(
+                        &mut context,
+                        &mut event_ctx,
+                        &tx,
+                        &mut view,
+                        &mut history,
+                        &mut updating,
+                        &mut rq,
+                    );
+                    if event_ctx.exit_status == ExitStatus::PowerOff {
+                        break;
+                    }
+                }
+                Event::PrepareSuspend => {
+                    handle_suspend_event(
+                        &mut context,
+                        &mut event_ctx,
+                        &tx,
+                        &mut view,
+                        &mut updating,
+                        &mut rq,
                     );
                 }
-                let flw = FrontlightWindow::new(&mut context);
-                rq.add(RenderData::new(flw.id(), *flw.rect(), UpdateMode::Gui));
-                view.children_mut().push(Box::new(flw) as Box<dyn View>);
-            }
-            Event::SetWifi(enable) => {
-                handle_wifi_event(enable, &mut context);
-            }
-            Event::Select(EntryId::ToggleWifi) => {
-                handle_wifi_event(!context.settings.wifi, &mut context);
-            }
-            Event::Select(EntryId::TakeScreenshot) => {
-                handle_screenshot_event(&mut context, &mut view, &tx, &mut rq);
-            }
-            Event::CheckFetcher(..)
-            | Event::FetcherAddDocument(..)
-            | Event::FetcherRemoveDocument(..)
-            | Event::FetcherSearch { .. }
-                if !view.is::<Home>() =>
-            {
-                if let Some(entry) = history.get_mut(0).filter(|entry| entry.view.is::<Home>()) {
-                    let (tx, _rx) = mpsc::channel();
-                    entry.view.handle_event(
-                        &evt,
+                Event::Suspend => {
+                    handle_suspend_execute_event(
+                        &mut context,
+                        &mut event_ctx,
                         &tx,
-                        &mut VecDeque::new(),
-                        &mut RenderQueue::new(),
+                        &mut view,
+                        &mut history,
+                        &mut updating,
+                    );
+                    if event_ctx.exit_status == ExitStatus::PowerOff {
+                        break;
+                    }
+                }
+                Event::PrepareShare => {
+                    if context.flags.contains(DeviceFlags::SHARED) {
+                        continue;
+                    }
+
+                    event_ctx.tasks.clear();
+                    view.handle_event(&Event::Back, &tx, &mut bus, &mut rq, &mut context);
+                    while let Some(mut item) = history.pop() {
+                        item.view
+                            .handle_event(&Event::Back, &tx, &mut bus, &mut rq, &mut context);
+                        if item.rotation != context.display.rotation {
+                            wait_for_all(&mut updating, &mut context);
+                            if let Ok(dims) = context.fb.set_rotation(item.rotation) {
+                                event_ctx
+                                    .raw_sender
+                                    .send(display_rotate_event(item.rotation))
+                                    .ok();
+                                context.display.rotation = item.rotation;
+                                context.display.dims = dims;
+                            }
+                        }
+                        view = item.view;
+                    }
+                    let path = Path::new(SETTINGS_PATH);
+                    save_toml(&context.settings, path)
+                        .map_err(|e| log_error!("Can't save settings: {:#}.", e))
+                        .ok();
+                    context.library.flush();
+
+                    if context.settings.frontlight {
+                        context.settings.frontlight_levels = context.frontlight.levels();
+                        context.frontlight.set_intensity(0.0);
+                        context.frontlight.set_warmth(0.0);
+                    }
+                    if context.settings.wifi {
+                        Command::new("scripts/wifi-disable.sh").status().ok();
+                        context.flags.remove(DeviceFlags::ONLINE);
+                    }
+
+                    let interm = Intermission::new(
+                        context.fb.rect(),
+                        IntermKind::Share,
+                        context.settings.sleep_cover_fill,
+                        &context,
+                    );
+                    rq.add(RenderData::new(
+                        interm.id(),
+                        *interm.rect(),
+                        UpdateMode::Full,
+                    ));
+                    view.children_mut().push(Box::new(interm) as Box<dyn View>);
+                    tx.send(Event::Share).ok();
+                }
+                Event::Share => {
+                    if context.flags.contains(DeviceFlags::SHARED) {
+                        continue;
+                    }
+
+                    context.flags.insert(DeviceFlags::SHARED);
+                    Command::new("scripts/usb-enable.sh").status().ok();
+                }
+                Event::Gesture(ge) => {
+                    if handle_gesture_event(
+                        ge,
+                        &mut context,
+                        &mut view,
+                        &tx,
+                        &mut bus,
+                        &mut rq,
+                        &mut event_ctx,
+                        &mut history,
+                        &mut updating,
+                    ) {
+                        break;
+                    }
+                    handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
+                }
+                Event::Open(info) => {
+                    handle_open_event(
+                        info,
+                        &mut context,
+                        &mut view,
+                        &tx,
+                        &mut bus,
+                        &mut rq,
+                        &mut event_ctx,
+                        &mut history,
+                    );
+                }
+                Event::Select(EntryId::About) => {
+                    let dialog = Dialog::new(
+                        ViewId::AboutDialog,
+                        None,
+                        format!("Plato {}", env!("CARGO_PKG_VERSION")),
                         &mut context,
                     );
+                    rq.add(RenderData::new(
+                        dialog.id(),
+                        *dialog.rect(),
+                        UpdateMode::Gui,
+                    ));
+                    view.children_mut().push(Box::new(dialog) as Box<dyn View>);
+                }
+                Event::Select(EntryId::SystemInfo) => {
+                    let html = sys_info_as_html();
+                    if let Ok(r) =
+                        Reader::from_html(context.fb.rect(), &html, None, &tx, &mut context)
+                    {
+                        goto_view(
+                            Box::new(r),
+                            &mut view,
+                            &mut history,
+                            context.display.rotation,
+                            context.fb.monochrome(),
+                            context.fb.dithered(),
+                            &mut rq,
+                            &mut context,
+                        );
+                    }
+                }
+                Event::OpenHtml(ref html, ref link_uri) => {
+                    if let Ok(r) = Reader::from_html(
+                        context.fb.rect(),
+                        html,
+                        link_uri.as_deref(),
+                        &tx,
+                        &mut context,
+                    ) {
+                        goto_view(
+                            Box::new(r),
+                            &mut view,
+                            &mut history,
+                            context.display.rotation,
+                            context.fb.monochrome(),
+                            context.fb.dithered(),
+                            &mut rq,
+                            &mut context,
+                        );
+                    }
+                }
+                Event::Select(EntryId::Launch(app_cmd)) => {
+                    handle_launch(
+                        app_cmd,
+                        &mut view,
+                        &mut tx,
+                        &mut rq,
+                        &mut context,
+                        &mut event_ctx,
+                        &mut history,
+                    );
+                }
+                #[cfg(any(target_os = "android", target_os = "ios", target_os = "linux"))]
+                Event::Select(EntryId::FillForms(ref path)) => {
+                    match plato_core::view::forms::FormsView::new(
+                        context.fb.rect(),
+                        path,
+                        &mut rq,
+                        &mut context,
+                    ) {
+                        Ok(forms_view) => {
+                            goto_view(
+                                Box::new(forms_view),
+                                &mut view,
+                                &mut history,
+                                context.display.rotation,
+                                context.fb.monochrome(),
+                                context.fb.dithered(),
+                                &mut rq,
+                                &mut context,
+                            );
+                        }
+                        Err(e) => {
+                            log_error!("Failed to open PDF Forms: {}", e);
+                        }
+                    }
+                }
+                #[cfg(target_os = "linux")]
+                Event::Select(EntryId::SignDocument(ref path)) => {
+                    match plato_core::view::signatures::SignaturesView::new(
+                        context.fb.rect(),
+                        path,
+                        &mut rq,
+                        &mut context,
+                    ) {
+                        Ok(signatures_view) => {
+                            goto_view(
+                                Box::new(signatures_view),
+                                &mut view,
+                                &mut history,
+                                context.display.rotation,
+                                context.fb.monochrome(),
+                                context.fb.dithered(),
+                                &mut rq,
+                                &mut context,
+                            );
+                        }
+                        Err(e) => {
+                            log_error!("Failed to open Digital Signatures: {}", e);
+                        }
+                    }
+                }
+                #[cfg(target_os = "linux")]
+                Event::Select(EntryId::ValidatePdfA(ref path, ref level)) => {
+                    match plato_core::view::validation::ValidationView::new(
+                        context.fb.rect(),
+                        path,
+                        &mut rq,
+                        &mut context,
+                    ) {
+                        Ok(mut validation_view) => {
+                            if let Err(e) = validation_view.validate_pdfa(level.clone()) {
+                                log_error!("Failed to validate PDF/A: {}", e);
+                            }
+                            goto_view(
+                                Box::new(validation_view),
+                                &mut view,
+                                &mut history,
+                                context.display.rotation,
+                                context.fb.monochrome(),
+                                context.fb.dithered(),
+                                &mut rq,
+                                &mut context,
+                            );
+                        }
+                        Err(e) => {
+                            log_error!("Failed to open PDF Validation: {}", e);
+                        }
+                    }
+                }
+                #[cfg(target_os = "linux")]
+                Event::Select(EntryId::ValidatePdfX(ref path, ref level)) => {
+                    match plato_core::view::validation::ValidationView::new(
+                        context.fb.rect(),
+                        path,
+                        &mut rq,
+                        &mut context,
+                    ) {
+                        Ok(mut validation_view) => {
+                            if let Err(e) = validation_view.validate_pdfx(level.clone()) {
+                                log_error!("Failed to validate PDF/X: {}", e);
+                            }
+                            goto_view(
+                                Box::new(validation_view),
+                                &mut view,
+                                &mut history,
+                                context.display.rotation,
+                                context.fb.monochrome(),
+                                context.fb.dithered(),
+                                &mut rq,
+                                &mut context,
+                            );
+                        }
+                        Err(e) => {
+                            log_error!("Failed to open PDF Validation: {}", e);
+                        }
+                    }
+                }
+                #[cfg(target_os = "linux")]
+                Event::Select(EntryId::OcrDocument(ref path)) => {
+                    match plato_core::view::validation::ValidationView::new(
+                        context.fb.rect(),
+                        path,
+                        &mut rq,
+                        &mut context,
+                    ) {
+                        Ok(mut validation_view) => {
+                            if let Err(e) = validation_view.ocr_page() {
+                                log_error!("Failed to OCR page: {}", e);
+                            }
+                            goto_view(
+                                Box::new(validation_view),
+                                &mut view,
+                                &mut history,
+                                context.display.rotation,
+                                context.fb.monochrome(),
+                                context.fb.dithered(),
+                                &mut rq,
+                                &mut context,
+                            );
+                        }
+                        Err(e) => {
+                            log_error!("Failed to open PDF Validation: {}", e);
+                        }
+                    }
+                }
+                Event::Back => {
+                    if handle_back_event(
+                        &mut view,
+                        &mut history,
+                        &mut context,
+                        &mut event_ctx,
+                        &tx,
+                        &mut bus,
+                        &mut rq,
+                    ) {
+                        break;
+                    }
+                }
+                Event::TogglePresetMenu(rect, index) => {
+                    if let Some(idx) = locate_by_id(view.as_ref(), ViewId::PresetMenu) {
+                        let rect = *view.child(idx).rect();
+                        view.children_mut().remove(idx);
+                        rq.add(RenderData::expose(rect, UpdateMode::Gui));
+                    } else {
+                        let preset_menu = Menu::new(
+                            rect,
+                            ViewId::PresetMenu,
+                            MenuKind::Contextual,
+                            vec![EntryKind::Command(
+                                "Remove".to_string(),
+                                EntryId::RemovePreset(index),
+                            )],
+                            &mut context,
+                        );
+                        rq.add(RenderData::new(
+                            preset_menu.id(),
+                            *preset_menu.rect(),
+                            UpdateMode::Gui,
+                        ));
+                        view.children_mut()
+                            .push(Box::new(preset_menu) as Box<dyn View>);
+                    }
+                }
+                Event::Show(ViewId::Frontlight) => {
+                    if !context.settings.frontlight {
+                        context.set_frontlight(true);
+                        view.handle_event(
+                            &Event::ToggleFrontlight,
+                            &tx,
+                            &mut bus,
+                            &mut rq,
+                            &mut context,
+                        );
+                    }
+                    let flw = FrontlightWindow::new(&mut context);
+                    rq.add(RenderData::new(flw.id(), *flw.rect(), UpdateMode::Gui));
+                    view.children_mut().push(Box::new(flw) as Box<dyn View>);
+                }
+                Event::SetWifi(enable) => {
+                    handle_wifi_event(enable, &mut context);
+                }
+                Event::Select(EntryId::ToggleWifi) => {
+                    handle_wifi_event(!context.settings.wifi, &mut context);
+                }
+                Event::Select(EntryId::TakeScreenshot) => {
+                    handle_screenshot_event(&mut context, &mut view, &tx, &mut rq);
+                }
+                Event::CheckFetcher(..)
+                | Event::FetcherAddDocument(..)
+                | Event::FetcherRemoveDocument(..)
+                | Event::FetcherSearch { .. }
+                    if !view.is::<Home>() =>
+                {
+                    if let Some(entry) = history.get_mut(0).filter(|entry| entry.view.is::<Home>())
+                    {
+                        let (tx, _rx) = mpsc::channel();
+                        entry.view.handle_event(
+                            &evt,
+                            &tx,
+                            &mut VecDeque::new(),
+                            &mut RenderQueue::new(),
+                            &mut context,
+                        );
+                    }
+                }
+                Event::Notify(msg) => {
+                    let notif = Notification::new(msg, &tx, &mut rq, &mut context);
+                    view.children_mut().push(Box::new(notif) as Box<dyn View>);
+                }
+                Event::Select(EntryId::Reboot) => {
+                    event_ctx.exit_status = ExitStatus::Reboot;
+                    break;
+                }
+                Event::Select(EntryId::Quit) => {
+                    // Trigger shutdown plugins
+                    if let Err(e) = context.plugin_system.on_shutdown() {
+                        log_error!("Failed to trigger shutdown plugins: {}", e);
+                    }
+                    break;
+                }
+                Event::MightSuspend if context.settings.auto_suspend > 0.0 => {
+                    if handle_suspend_check_event(
+                        &mut context,
+                        &mut event_ctx,
+                        &mut view,
+                        &tx,
+                        &mut bus,
+                        &mut rq,
+                    ) {
+                        continue;
+                    }
+                }
+                _ => {
+                    handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
                 }
             }
-            Event::Notify(msg) => {
-                let notif = Notification::new(msg, &tx, &mut rq, &mut context);
-                view.children_mut().push(Box::new(notif) as Box<dyn View>);
-            }
-            Event::Select(EntryId::Reboot) => {
-                event_ctx.exit_status = ExitStatus::Reboot;
-                break;
-            }
-            Event::Select(EntryId::Quit) => {
-                // Trigger shutdown plugins
-                if let Err(e) = context.plugin_system.on_shutdown() {
-                    log_error!("Failed to trigger shutdown plugins: {}", e);
-                }
-                break;
-            }
-            Event::MightSuspend if context.settings.auto_suspend > 0.0 => {
-                if handle_suspend_check_event(
-                    &mut context,
-                    &mut event_ctx,
-                    &mut view,
-                    &tx,
-                    &mut bus,
-                    &mut rq,
-                ) {
-                    continue;
-                }
-            }
-            _ => {
-                handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
-            }
-        }
         } else if let Err(mpsc::RecvTimeoutError::Disconnected) = evt_res {
             break;
         }
