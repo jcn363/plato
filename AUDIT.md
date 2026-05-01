@@ -128,4 +128,22 @@ The repository is configured with `.github/workflows/rust.yml`:
 - Input validation for all file parsing (EPUB, PDF).
 - Sanitization of external URLs, use of timeouts for remote fetches.
 
+## 18. Task List
+- **Unsafe blocks**: ✅ Completed.
+- **Errors**: ✅ Completed helper.
+- **Duplication**: ✅ Completed.
+- **Docs**: [ ] Document function `foo` in module A;
+  [ ] Review and update comments in `bar.rs`.
+- **Tests**: [ ] Add integration tests for device input;
+  [ ] Write unit tests for error handling helper.
+- **CI**: ✅ Completed.
+- **Security audit**: [ ] Run `cargo audit` weekly;
+  [ ] Review and fix any advisories.
+- **Dependency audit**: [ ] Enable Dependabot;
+  [ ] Verify dependency pins.
+- **License compliance**: [ ] Run `cargo license`;
+  [ ] Ensure all third‑party licenses present.
+- **Release management**: [ ] Configure semantic‑release;
+  [ ] Verify tag naming scheme.
+
 ---
