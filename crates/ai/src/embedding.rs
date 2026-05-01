@@ -1,56 +1,51 @@
 //! Vector embedding engine for semantic search using candle-core
 
-use crate::traits::VectorEmbedder;
-use plato_error::PlatoResult;
-use candle_core::{Device, Module, Tensor};
-use candle_nn::VarBuilder;
+use std::sync::Arc;
+use anyhow::{Result};
+use candle_core::{Device, Tensor, Module};
+use candle_nn::{VarBuilder, Embedding};
 use tokenizers::Tokenizer;
+use crate::traits::VectorEmbedder;
 
 /// A local embedding engine powered by candle-core
 pub struct CandleEmbedder {
     device: Device,
     tokenizer: Tokenizer,
-    model_weights: candle_nn::Embedding,
+    model_weights: Arc<Embedding>, 
 }
 
 impl CandleEmbedder {
     /// Initialize a new embedder, loading the tokenizer and model weights
-    pub fn new(model_path: &str, tokenizer_path: &str) -> PlatoResult<Self> {
+    pub fn new(model_path: &str, tokenizer_path: &str) -> Result<Self> {
         let device = Device::Cpu;
         let tokenizer = Tokenizer::from_file(tokenizer_path)
             .map_err(|e| anyhow::anyhow!("Failed to load tokenizer: {}", e))?;
-
-        // Load weights from safetensors
+        
         let vb = unsafe {
             VarBuilder::from_mmaped_safetensors(&[model_path], candle_core::DType::F32, &device)?
         };
-        // Assuming a standard transformer embedding layer name
         let model_weights = candle_nn::embedding(30522, 384, vb.pp("embeddings.word_embeddings"))?;
+        
+        Ok(Self { device, tokenizer, model_weights: Arc::new(model_weights) })
+    }
 
-        Ok(Self {
-            device,
-            tokenizer,
-            model_weights,
-        })
+    /// Return a reference to the model weights
+    pub fn model(&self) -> &Embedding {
+        &self.model_weights
     }
 }
 
 impl VectorEmbedder for CandleEmbedder {
-    fn embed(&self, text: &str) -> crate::AiResult<Vec<f32>> {
-        // Tokenize text
-        let encoding = self
-            .tokenizer
-            .encode(text, true)
+    fn embed(&self, text: &str) -> plato_error::PlatoResult<Vec<f32>> {
+        let encoding = self.tokenizer.encode(text, true)
             .map_err(|e| anyhow::anyhow!("Tokenization failed: {}", e))?;
         let ids = encoding.get_ids();
-
-        // Inference: Create input tensor and run through model
+        
         let input = Tensor::new(ids, &self.device)?.unsqueeze(0)?;
         let output = self.model_weights.forward(&input)?;
-
-        // Mean pooling: average embeddings over sequence length
+        
         let embedding = output.mean(1)?.flatten_all()?.to_vec1::<f32>()?;
-
+        
         Ok(embedding)
     }
 }

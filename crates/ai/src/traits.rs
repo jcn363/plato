@@ -90,7 +90,7 @@ pub struct LLMResponse {
 /// Trait for generating and comparing text embeddings
 pub trait VectorEmbedder: Send + Sync {
     /// Generate an embedding vector for the given text
-    fn embed(&self, text: &str) -> crate::AiResult<Vec<f32>>;
+    fn embed(&self, text: &str) -> plato_error::PlatoResult<Vec<f32>>;
 
     /// Compute cosine similarity between two vectors
     fn similarity(a: &[f32], b: &[f32]) -> f32 {

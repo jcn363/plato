@@ -144,3 +144,7 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## UI/UX: Semantic Search Results
 - **Search Results UI**: Implemented 'SearchResults' view in 'crates/core/src/view/home/search_results.rs', which allows the user to see semantic matches ordered by relevance.
+
+## Embedding Engine Optimization
+- **Model Caching**: Implemented weight caching using 'Arc<Embedding>' in 'CandleEmbedder', ensuring shared access and avoiding redundant disk I/O.
+- **Error Synchronization**: Aligned embedding trait return types with 'PlatoResult' for full consistency with the unified error handling architecture.
