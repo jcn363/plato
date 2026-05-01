@@ -20,7 +20,7 @@ impl CandleEmbedder {
     pub fn new(model_path: &str, tokenizer_path: &str) -> Result<Self> {
         let device = Device::Cpu;
         let tokenizer = Tokenizer::from_file(tokenizer_path)
-            .map_err(|e| anyhow::anyhow!("Failed to load tokenizer: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to load tokenizer: {e}"))?;
         
         // SAFETY: VarBuilder::from_mmaped_safetensors uses mmap to map the model file into memory.
         // It assumes the model file is not modified externally while being read, which is standard for 
@@ -42,7 +42,7 @@ impl CandleEmbedder {
 impl VectorEmbedder for CandleEmbedder {
     fn embed(&self, text: &str) -> plato_error::PlatoResult<Vec<f32>> {
         let encoding = self.tokenizer.encode(text, true)
-            .map_err(|e| anyhow::anyhow!("Tokenization failed: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Tokenization failed: {e}"))?;
         let ids = encoding.get_ids();
         
         let input = Tensor::new(ids, &self.device)?.unsqueeze(0)?;

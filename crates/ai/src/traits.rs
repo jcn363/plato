@@ -93,6 +93,7 @@ pub trait VectorEmbedder: Send + Sync {
     fn embed(&self, text: &str) -> plato_error::PlatoResult<Vec<f32>>;
 
     /// Compute cosine similarity between two vectors
+    #[must_use] 
     fn similarity(a: &[f32], b: &[f32]) -> f32 {
         let dot: f32 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
         let mag_a: f32 = a.iter().map(|x| x * x).sum::<f32>().sqrt();
