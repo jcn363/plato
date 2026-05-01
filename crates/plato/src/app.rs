@@ -15,7 +15,9 @@ use plato_core::anyhow::{Context as ResultExt, Error};
 use plato_core::context::DeviceFlags;
 use plato_core::device::CURRENT_DEVICE;
 use plato_core::document::sys_info_as_html;
-use plato_core::framebuffer::{Framebuffer, KoboFramebuffer1, KoboFramebuffer2, UpdateMode};
+use plato_core::framebuffer::{
+    Framebuffer, KoboFramebuffer1, KoboFramebuffer2, SoftwareFramebuffer, UpdateMode,
+};
 use plato_core::gesture::gesture_events;
 use plato_core::helpers::save_toml;
 use plato_core::input::{device_events, display_rotate_event, raw_events, usb_events};
@@ -44,7 +46,19 @@ pub fn run() -> Result<(), Error> {
     let inactive_since = Instant::now();
     let exit_status = ExitStatus::Quit;
 
-    let mut fb: Box<dyn Framebuffer> = if CURRENT_DEVICE.mark() == 8 {
+    let mut fb: Box<dyn Framebuffer> = if cfg!(target_os = "linux")
+        && !cfg!(target_arch = "arm")
+        && !cfg!(target_arch = "aarch64")
+    {
+        // Software framebuffer for desktop Linux development
+        let width = 1404;
+        let height = 1872;
+        let debug_save = std::env::var("PLATO_DEBUG_FB").ok();
+        Box::new(
+            SoftwareFramebuffer::new(width, height, debug_save)
+                .context("can't create software framebuffer")?,
+        )
+    } else if CURRENT_DEVICE.mark() == 8 {
         Box::new(KoboFramebuffer2::new(FB_DEVICE).context("can't create framebuffer")?)
     } else {
         Box::new(KoboFramebuffer1::new(FB_DEVICE).context("can't create framebuffer")?)

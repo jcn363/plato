@@ -35,6 +35,7 @@ mod kobo1;
 mod kobo2;
 mod linuxfb_sys;
 mod mxcfb_sys;
+mod software;
 mod sunxi_sys;
 mod transform;
 use crate::theme;
@@ -47,6 +48,7 @@ use anyhow::Error;
 pub use self::image::Pixmap;
 pub use self::kobo1::KoboFramebuffer1;
 pub use self::kobo2::KoboFramebuffer2;
+pub use self::software::SoftwareFramebuffer;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Display {
