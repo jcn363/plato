@@ -96,20 +96,59 @@ The DEB package includes:
 2. **LSP errors in dependencies**: The `rar` crate may show LSP errors (trait bound issues), but these don't affect compilation
 3. **Missing `speech-dispatcher`**: For TTS support, install `libspeechd-dev`
 
-## AppImage (Portable)
+## AppImage (Portable) - Linux Mint
 
-Plato also provides an AppImage for portable use:
+Plato provides an AppImage for Linux Mint/Debian-based systems:
 
 ```bash
 # Download or build AppImage
 cd /home/user/Desktop/plato/dist
 chmod +x plato-x86_64.AppImage
 
-# Run directly without installation
+# Run directly without installation (portable)
 ./plato-x86_64.AppImage
 ```
 
-The AppImage includes all resources and runs on any Linux distribution.
+The AppImage includes all resources and runs on any Linux distribution without installation.
+
+### Building AppImage for Linux Mint
+
+```bash
+# 1. Download appimagetool
+cd /home/user/Desktop/plato
+wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+chmod +x appimagetool
+
+# 2. Create AppDir structure
+mkdir -p AppDir/usr/bin AppDir/usr/share/applications
+mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
+mkdir -p AppDir/usr/share/plato
+
+# 3. Copy files
+cp target/x86_64-unknown-linux-gnu/release/plato AppDir/usr/bin/
+cp debian/plato.desktop AppDir/
+cp icons/plato.svg AppDir/
+cp -r fonts css icons keyboard-layouts translations AppDir/usr/share/plato/
+
+# 4. Create AppRun script
+cat > AppDir/AppRun << 'EOF'
+#!/bin/bash
+HERE="$(dirname "$(readlink -f "${0}")")"
+export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+export XDG_DATA_DIRS="${HERE}/usr/share:${XDG_DATA_DIRS}"
+exec "${HERE}/usr/bin/plato" "$@"
+EOF
+chmod +x AppDir/AppRun
+
+# 5. Build AppImage
+./appimagetool AppDir plato-x86_64.AppImage
+
+# 6. Move to dist/
+mv plato-x86_64.AppImage dist/
+chmod +x dist/plato-x86_64.AppImage
+```
+
+The AppImage is portable and runs on Linux Mint without installation.
 
 ## File Locations
 
