@@ -8,6 +8,7 @@ use tokenizers::Tokenizer;
 use crate::traits::VectorEmbedder;
 
 /// A local embedding engine powered by candle-core
+#[derive(Clone)]
 pub struct CandleEmbedder {
     device: Device,
     tokenizer: Tokenizer,
