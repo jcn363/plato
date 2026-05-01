@@ -116,4 +116,16 @@ The repository is configured with `.github/workflows/rust.yml`:
 - **License Verification**: No violations detected by `cargo license` or `licensee`.
 - **License Files**: All licenses are included in the repository.
 
+## 16. Release Cadence & Versioning
+- Semantic versioning (MAJOR.MINOR.PATCH) is followed for all crates.
+- Release process: bump version in workspace Cargo.toml, run `cargo release` with changelog.
+- CI triggers `cargo publish` on tags matching `v*`.
+- Release notes auto‑generated from commit messages; see `.changes/` directory.
+
+## 17. Security Hardening Checklist
+- Harden kernel interfaces used for framebuffer and frontlight (validated `chmod`).
+- Minimum privileges: run binary as non‑root.
+- Input validation for all file parsing (EPUB, PDF).
+- Sanitization of external URLs, use of timeouts for remote fetches.
+
 ---
