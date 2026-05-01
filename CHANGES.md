@@ -168,3 +168,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## Performance: Async Library Indexing
 - **Async Crawling**: Integrated 'tokio::spawn' into the library import process, ensuring document indexing tasks are offloaded to background threads to prevent UI blocking.
+
+## Performance: Async PDF Annotations
+- **Background Persistence**: Offloaded blocking 'std::fs::write' operations in PDF annotation saving to background 'tokio::task::spawn_blocking' tasks, preventing UI hitching during long-running annotation saves.
