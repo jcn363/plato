@@ -48,29 +48,34 @@ impl SearchIndexer {
     }
 
     /// Search for semantically similar documents
-    pub fn search(&self, query: &str, limit: usize) -> Result<Vec<(String, f32, String)>> {
+    pub fn search(&self, query: &str, limit: usize) -> plato_error::PlatoResult<Vec<(String, f32, String)>> {
         let query_vec = self.embedder.embed(query)?;
         
-        let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare("SELECT doc_id, content, vector FROM embeddings")?;
+        let conn = self.conn.lock().map_err(|e| plato_error::PlatoError::Database(e.to_string()))?;
+        let mut stmt = conn.prepare("SELECT doc_id, content, vector FROM embeddings")
+            .map_err(|e| plato_error::PlatoError::Database(e.to_string()))?;
+            
         let rows = stmt.query_map([], |row| {
             let doc_id: String = row.get(0)?;
             let content: String = row.get(1)?;
             let blob: Vec<u8> = row.get(2)?;
             let vector: Vec<f32> = blob.chunks(4)
-                .map(|chunk| f32::from_le_bytes(chunk.try_into().unwrap()))
+                .map(|chunk| {
+                    let bytes: [u8; 4] = chunk.try_into().unwrap_or([0; 4]);
+                    f32::from_le_bytes(bytes)
+                })
                 .collect();
             Ok((doc_id, content, vector))
-        })?;
+        }).map_err(|e| plato_error::PlatoError::Database(e.to_string()))?;
 
         let mut results = Vec::new();
         for row in rows {
-            let (doc_id, content, vector) = row?;
+            let (doc_id, content, vector) = row.map_err(|e| plato_error::PlatoError::Database(e.to_string()))?;
             let sim = <CandleEmbedder as VectorEmbedder>::similarity(&query_vec, &vector);
             results.push((doc_id, sim, content));
         }
         
-        results.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
+        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         Ok(results.into_iter().take(limit).collect())
     }
 }
