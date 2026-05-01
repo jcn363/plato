@@ -428,7 +428,7 @@ cargo build --target x86_64-unknown-linux-gnu --features debug
 //!
 //! # Safety
 //! 
-//! This module uses FFI bindings to MuPDF and must ensure proper memory management.
+//! This module uses pure Rust libraries and must ensure proper memory management through RAII.
 ```
 
 ### API Documentation

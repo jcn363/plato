@@ -45,17 +45,25 @@ mod mxcfb_sys;
 mod software;
 mod sunxi_sys;
 mod transform;
+
+#[cfg(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64"))))]
+mod desktop;
+
 use crate::theme;
 
 use crate::color::{background, foreground, Color};
 use crate::geom::{lerp, nearest_segment_point, surface_area, Point, Rectangle};
 use crate::geom::{BorderSpec, ColorSource, CornerSpec, Vec2};
+use crate::input::DeviceEvent;
 use anyhow::Error;
 
 pub use self::image::Pixmap;
 pub use self::kobo1::KoboFramebuffer1;
 pub use self::kobo2::KoboFramebuffer2;
 pub use self::software::SoftwareFramebuffer;
+
+#[cfg(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64"))))]
+pub use self::desktop::DesktopFramebuffer;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Display {
@@ -85,6 +93,16 @@ pub trait Framebuffer {
     fn wait(&self, token: u32) -> Result<i32, Error>;
     fn save(&self, path: &str) -> Result<(), Error>;
     fn set_rotation(&mut self, n: i8) -> Result<(u32, u32), Error>;
+
+    /// Poll and handle window events (Desktop only).
+    fn handle_events(&mut self) -> Vec<DeviceEvent> {
+        Vec::new()
+    }
+
+    /// Check if the framebuffer is still active (Desktop only).
+    fn is_active(&self) -> bool {
+        true
+    }
 
     /// Enables monochrome (grayscale) display mode.
     fn set_monochrome(&mut self, enable: bool);

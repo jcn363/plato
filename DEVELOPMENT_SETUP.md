@@ -46,7 +46,7 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 ./target/x86_64-unknown-linux-gnu/debug/plato
 
 # Run with debug framebuffer output
-PLATO_DEBUG_FB=/tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
+PLATO_DEBUG_FB=tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
 
 # Build with formatting and linting
 ./build.sh host skip

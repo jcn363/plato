@@ -46,18 +46,31 @@ pub fn run() -> Result<(), Error> {
     let inactive_since = Instant::now();
     let exit_status = ExitStatus::Quit;
 
-    let mut fb: Box<dyn Framebuffer> = if cfg!(target_os = "linux")
-        && !cfg!(target_arch = "arm")
-        && !cfg!(target_arch = "aarch64")
-    {
-        // Software framebuffer for desktop Linux development
+    let mut fb: Box<dyn Framebuffer> = if cfg!(all(
+        target_os = "linux",
+        not(any(target_arch = "arm", target_arch = "aarch64"))
+    )) {
+        // Desktop windowed framebuffer for Wayland/X11
         let width = 1404;
         let height = 1872;
         let debug_save = std::env::var("PLATO_DEBUG_FB").ok();
-        Box::new(
-            SoftwareFramebuffer::new(width, height, debug_save)
-                .context("can't create software framebuffer")?,
-        )
+
+        #[cfg(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64"))))]
+        {
+            use plato_core::framebuffer::DesktopFramebuffer;
+            Box::new(
+                DesktopFramebuffer::new(width, height, "Plato", debug_save)
+                    .context("can't create desktop framebuffer")?,
+            )
+        }
+        #[cfg(not(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64")))))]
+        {
+            // Fallback for other non-ARM Linux (unlikely to be hit due to outer cfg)
+            Box::new(
+                SoftwareFramebuffer::new(width, height, debug_save)
+                    .context("can't create software framebuffer")?,
+            )
+        }
     } else if CURRENT_DEVICE.mark() == 8 {
         Box::new(KoboFramebuffer2::new(FB_DEVICE).context("can't create framebuffer")?)
     } else {
@@ -111,11 +124,21 @@ pub fn run() -> Result<(), Error> {
     }
 
     let (raw_sender, raw_receiver) = raw_events(paths);
-    let touch_screen = gesture_events(device_events(
-        raw_receiver,
-        context.display,
-        context.settings.button_scheme,
-    ));
+    let (device_sender, device_receiver) = mpsc::channel();
+    
+    let ds2 = device_sender.clone();
+    thread::spawn(move || {
+        let receiver = device_events(
+            raw_receiver,
+            context.display,
+            context.settings.button_scheme,
+        );
+        while let Ok(de) = receiver.recv() {
+            ds2.send(de).ok();
+        }
+    });
+
+    let touch_screen = gesture_events(device_receiver);
     let usb_port = usb_events();
 
     let (mut tx, rx) = mpsc::channel();
@@ -210,8 +233,20 @@ pub fn run() -> Result<(), Error> {
     let mut event_ctx =
         EventContext::new(tasks, inactive_since, exit_status, raw_sender, current_dir);
 
-    while let Ok(evt) = rx.recv() {
-        match evt {
+    let is_desktop = cfg!(all(
+        target_os = "linux",
+        not(any(target_arch = "arm", target_arch = "aarch64"))
+    ));
+
+    loop {
+        let evt_res = if is_desktop {
+            rx.recv_timeout(std::time::Duration::from_millis(20))
+        } else {
+            rx.recv().map_err(|_| mpsc::RecvTimeoutError::Disconnected)
+        };
+
+        if let Ok(evt) = evt_res {
+            match evt {
             Event::Device(de) => {
                 if handle_device_event(
                     de,
@@ -696,6 +731,18 @@ pub fn run() -> Result<(), Error> {
             }
             _ => {
                 handle_event(view.as_mut(), &evt, &tx, &mut bus, &mut rq, &mut context);
+            }
+        }
+        } else if let Err(mpsc::RecvTimeoutError::Disconnected) = evt_res {
+            break;
+        }
+
+        if is_desktop {
+            for de in context.fb.handle_events() {
+                device_sender.send(de).ok();
+            }
+            if !context.fb.is_active() {
+                break;
             }
         }
 

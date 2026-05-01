@@ -70,7 +70,7 @@ graph TB
 │  (Framebuffers, Frontlight, Battery, Input Devices)       │
 ├─────────────────────────────────────────────────────────────┤
 │                    External Libraries                      │
-│  (MuPDF, HarfBuzz, SDL2)                                    │
+│  (PDFPurr, skrifa, rustybuzz)                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 

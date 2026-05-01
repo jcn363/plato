@@ -59,32 +59,13 @@ Use the provided automation scripts:
 
 The `build-ios.sh` script handles:
 
-- Building native dependencies (zlib, bzip2, MuPDF, etc.) for iOS
 - Compiling the Rust core library for iOS targets
-- Creating universal binaries when needed
+- Compiling the `plato-ios` library
+- Creating universal binaries for the simulator when on macOS
 
 ### Option 2: Manual Build Steps
 
-#### 1. Build Native Dependencies
-
-```bash
-cd thirdparty
-
-# Build each library for iOS
-./build-ios.sh
-
-cd ..
-```
-
-#### 2. Build MuPDF Wrapper
-
-```bash
-cd mupdf_wrapper
-./build-ios.sh
-cd ..
-```
-
-#### 3. Cross-Compile Rust Core
+#### 1. Cross-Compile Rust Core
 
 ```bash
 # For iOS device (ARM64)
@@ -97,7 +78,15 @@ cargo build --target aarch64-apple-ios-sim --release -p plato-core
 cargo build --target x86_64-apple-ios --release -p plato-core
 ```
 
-#### 4. Create Universal Library (on macOS)
+#### 2. Cross-Compile Rust iOS Library
+
+```bash
+cargo build --target aarch64-apple-ios --profile release-ios -p plato-ios
+cargo build --target aarch64-apple-ios-sim --profile release-ios -p plato-ios
+cargo build --target x86_64-apple-ios --profile release-ios -p plato-ios
+```
+
+#### 3. Create Universal Library (on macOS)
 
 ```bash
 # This step must be done on macOS
@@ -138,11 +127,8 @@ gh workflow run ios.yml
 plato/
 ├── crates/
 │   ├── core/              # Core library (cross-platform)
-│   ├── plato-ios/         # iOS-specific crate (to be created)
+│   ├── plato-ios/         # iOS-specific crate
 │   └── plato-android/     # Android crate (reference implementation)
-├── thirdparty/            # Native dependencies
-│   ├── build-ios.sh       # iOS native library build script
-│   └── ...
 ├── build-ios.sh           # Main iOS build automation
 └── .github/
     └── workflows/
@@ -268,4 +254,6 @@ export DEVELOPER_ID="Your Apple ID"
 ## Related Documentation
 
 - [Android Build](../build-android-apk.sh) - Reference for mobile platform builds
+- [Kobo Build](../build.sh) - Original target platform build
+build-android-apk.sh) - Reference for mobile platform builds
 - [Kobo Build](../build.sh) - Original target platform build

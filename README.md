@@ -59,7 +59,7 @@ None currently.
 
 ## Desktop Execution (Linux x86_64)
 
-Plato can now run on desktop Linux (x86_64) through a software framebuffer backend:
+Plato runs natively on desktop Linux (x86_64) with a full interactive GUI (Wayland/X11 support included).
 
 ```bash
 # Build for host (x86_64 Linux)
@@ -69,16 +69,15 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 ./target/x86_64-unknown-linux-gnu/debug/plato
 
 # Run with debug framebuffer output to PNG (for development/testing)
-PLATO_DEBUG_FB=/tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
+PLATO_DEBUG_FB=tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
 ```
 
-The software framebuffer implementation enables:
-- Development and testing on Linux desktops without requiring /dev/fb0
-- Rendering to an in-memory pixel buffer
-- Optional PNG export for debugging and screenshots
-- Identical behavior to hardware framebuffers for non-display-dependent operations
-
-**Note**: The desktop version currently renders only to memory. For a full GUI experience, integration with a desktop graphics system (Wayland/X11) would be required as a future enhancement.
+The desktop implementation enables:
+- Full interactive GUI development and testing on Linux desktops
+- Native windowed output on Wayland and X11
+- Mouse and keyboard interaction mapped to e-ink touch gestures
+- Optional PNG export for debugging and screenshots (PLATO_DEBUG_FB)
+- Identical behavior to hardware framebuffers for core reading logic
 
 ### AppImage Distribution
 

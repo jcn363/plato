@@ -82,6 +82,10 @@ hex = "0.4.3"
 sha2 = "0.10.9"
 x509-cert = "0.2.5"
 
+# Linux desktop windowing (Wayland/X11)
+[target.'cfg(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64"))))'.dependencies]
+minifb = "0.27.0"
+
 [features]
 default = []
 ocr = ["pdfpurr/ocr"]

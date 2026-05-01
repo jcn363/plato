@@ -77,7 +77,7 @@ cargo build --target aarch64-unknown-linux-gnu --profile release-arm64
 # Build for host (development/testing)
 cargo build --target x86_64-unknown-linux-gnu
 
-# Full build with native dependencies (downloads libs + MuPDF, rebuilds mupdf_wrapper, runs fmt/clippy)
+# Full build (runs fmt/clippy/build)
 ./build.sh
 
 # Full build with options (e.g., skip clean, use specific target/method)
@@ -442,7 +442,7 @@ When facing multiple compilation errors, resolve in this order:
 - **Zero dead code without justification - All `#[allow(dead_code)]` attributes must be accompanied by a comment explaining the future use; if no justification exists, remove the code immediately
 - **No backward compatibility** — Do not add code to support old APIs, deprecated patterns, or legacy behavior unless explicitly required
 - **Replace stubs and TODOs** — Replace all stubs, placeholders, TODO comments, and incomplete implementations with proper, production-ready code; do not leave temporary workarounds or unimplemented!() macros in the codebase
-- **Project containment** — All created or used files and directories must be located inside the project root directory (`~/Desktop/plato`); never create or access files outside the project workspace
+- **Project containment** — All created or used files and directories must be located inside the project root directory (`~/Desktop/plato`); never create or access files outside the project workspace. **Mandatory rule: never use `/tmp`, use `tmp/` instead.**
 - **Git ignore protection** — Do not modify the `.gitignore` file without explicit user permission
 
 ### Dead Code Investigation
@@ -521,7 +521,7 @@ The `get_lib_dir()` function in `build.sh` is the canonical source of truth for 
 - **Never combine device and simulator ARM64** in the same fat binary using `lipo` - they have the same architecture
 - Use `lipo` only to combine different simulator architectures (ARM64 + x86_64) for universal simulator libraries
 - Device libraries should be copied directly without lipo combination
-- This pattern applies to all iOS native libraries: mupdf, mupdf_wrapper, and third-party dependencies
+- This pattern applies to all iOS native libraries and third-party dependencies.
 
 ## Stub and Hardware Limitation Documentation
 
@@ -549,7 +549,7 @@ This section documents key performance decisions for the Plato codebase, particu
 ### Memory Optimization
 
 - **Pre-allocation**: Use `String::with_capacity` and `Vec::with_capacity` when size is predictable
-- **Shared ownership**: Use `Rc` for shared MuPDF contexts, `Arc` for document references
+- **Shared ownership**: Use `Rc` for shared PDFPurr/lopdf contexts, `Arc` for document references
 - **Cow\<str\>**: Use for conditional string ownership to avoid unnecessary clones
 
 ### Stack Overflow Prevention
@@ -607,22 +607,6 @@ rust-lld: error: libs_host/libjbig2dec.so is incompatible with elf64-x86-64
 **Root Cause:** The `libs_host/` directory in this repository incorrectly contains ARM libraries instead of x86_64 libraries. This is a historical artifact from the project's setup.
 
 **Solution:** The build script has been updated in `crates/core/build.rs` to use system library paths (`/lib/x86_64-linux-gnu`) when building for x86_64 Linux. You should not need to modify `libs_host/`.
-
-### mupdf_wrapper Not Found
-
-**Problem:** Build fails with:
-
-```text
-error: could not find native static library `mupdf_wrapper`, perhaps an -L flag is missing?
-```
-
-**Solution:** Build the mupdf_wrapper library before building the project:
-
-```bash
-cd mupdf_wrapper
-TARGET_OS=Linux ./build.sh  # for host
-TARGET_OS=Kobo CC=arm-linux-gnueabihf-gcc AR=arm-linux-gnueabihf-ar ./build.sh  # for ARM
-```
 
 ### Tests Fail to Compile - Missing tempfile
 

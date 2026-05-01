@@ -113,7 +113,7 @@ cargo build --target x86_64-unknown-linux-gnu -p plato
 ./target/x86_64-unknown-linux-gnu/debug/plato
 
 # Run with debug framebuffer output (saves PNG for each update)
-PLATO_DEBUG_FB=/tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
+PLATO_DEBUG_FB=tmp/framebuffer.png ./target/x86_64-unknown-linux-gnu/debug/plato
 ```
 
 The software framebuffer implementation:

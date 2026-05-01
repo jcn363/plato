@@ -235,7 +235,7 @@ Image Open → Format Detection → Image Crate / justjp2
 | PDF Rendering    | pdfpurr    | Pure Rust PDF rendering             |
 | PDF Manipulation | lopdf      | Pure Rust PDF operations            |
 | DJVU Support     | djvu-rs    | Rust bindings for DjVuLibre         |
-| JPEG 2000        | openjp2    | Rust bindings for OpenJPEG          |
+| JPEG 2000        | justjp2    | Pure Rust JPEG 2000 decoder         |
 | Standard Images  | image      | Rust image processing library       |
  | CBZ/CBR Archives | zip, rar | ZIP/RAR archive support (pure Rust) |
 | Compression      | bzip2      | BZIP2 compression/decompression     |

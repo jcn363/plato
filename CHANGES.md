@@ -42,6 +42,8 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ### 🔧 Technical Changes
 
+- **Linux Desktop GUI**: Added native interactive GUI support for Linux desktops (Wayland/X11) via minifb. Integrated desktop mouse/keyboard events into the core gesture system for a consistent experience across all platforms. Removed previous headless-only restriction for x86_64 targets.
+
 - **Dependencies**: Updated signal-hook 0.4.4, reqwest 0.13.2, image 0.25.10, png 0.18.1
 - **Code Quality**: Replaced `unwrap()` calls with proper `expect()` messages, added input validation with `validator::Validate`, enabled `#![warn(missing_docs)]`, added comprehensive safety comments, standardized import organization, improved function call formatting consistency, clean clippy results with zero warnings
 - **Code Style**: Fixed all 18 clippy warnings across the codebase, including unnecessary casts, manual range contains, field reassignment patterns, and sorting improvements. Applied cargo fmt to ensure consistent formatting across all files.

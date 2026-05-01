@@ -1,0 +1,148 @@
+# --- Source Control ---
+.git
+.gitignore
+.gitattributes
+.github
+
+# --- Development Tools & Config ---
+.vscode
+.idea
+.lapce
+.editorconfig
+.prettierrc
+.agents
+.roo
+.qodo
+.qwen
+.windsurf
+.reading-states
+.thumbnail-previews
+.opencode
+.prettierignore
+
+# --- Build Artifacts & Output ---
+target/
+target-arm/
+target-arm64/
+build/
+dist/
+bundle/
+bin/
+libs/
+extra/
+archives/
+AppDir/
+*.AppImage
+*.deb
+*.apk
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+
+# --- Dependencies ---
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.gradle/
+
+# --- Rust Specific ---
+Cargo.lock
+.cargo/
+deny.toml
+**/*.rs.bk
+*.rlib
+*.rmeta
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.out
+*.pdb
+*.dSYM/
+
+# --- Documentation & Metadata ---
+docs/
+doc/
+artworks/
+CONTRIBUTING.md
+CHANGES.md
+DEVELOPMENT_SETUP.md
+GOAL.md
+LlamaR.md
+rust-best-practices.md
+SESSION_COMPLETION_SUMMARY.md
+Settings-sample.toml
+config-sample.sh
+README-*.md
+LICENSE-*
+!LICENSE-AGPLv3
+
+# --- Scripts & Tooling ---
+*.sh
+scripts/
+contrib/
+convert-dictionary.sh
+download.sh
+install-importer.sh
+nickel.sh
+plato.sh
+bundle.sh
+dist.sh
+
+# --- Project Specific Assets (if not part of the package) ---
+# Uncomment these if they should NOT be included in the npm package
+# resources/
+# dictionaries/
+# hyphenation-patterns/
+# keyboard-layouts/
+# fonts/
+# icons/
+# css/
+
+# --- Temporary & Local Files ---
+tmp/
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+.env
+.env.*
+Settings.toml
+.metadata.json
+.fat32-epoch
+.trash/
+
+# --- System Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Testing & Coverage ---
+tests/
+test/
+coverage/
+htmlcov/
+.coverage
+*.profraw
+*.profdata

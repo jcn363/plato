@@ -39,7 +39,6 @@ Root level documentation:
 ### Active Plans
 
 - [APPLE-PLAN.md](APPLE-PLAN.md) - iPhone and iPad support plan
-- [Mu-OUT.md](Mu-OUT.md) - MuPDF-free document handling (Future)
 
 ### Architecture
 
@@ -47,9 +46,8 @@ Root level documentation:
 
 ## Archive
 
-Outdated or superseded planning documents:
-
 - [archive/](archive/) - Directory containing completed or superseded plans:
+  - [Mu-OUT.md](archive/Mu-OUT.md) (Completed)
   - [APK-complete_PLAN.md](archive/APK-complete_PLAN.md)
   - [APK_PLAN.md](archive/APK_PLAN.md)
   - [APK_PLAN2.md](archive/APK_PLAN2.md)
