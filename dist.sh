@@ -1,8 +1,15 @@
-#! /bin/sh
+#!/bin/sh
 
 set -e
 
-# Accept TARGET argument (arm | arm64), default to arm for backward compatibility
+# Fix sccache issue: unset RUSTC_WRAPPER if sccache not available
+if ! command -v sccache &> /dev/null; then
+    echo "Warning: sccache not found, disabling RUSTC_WRAPPER..."
+    unset RUSTC_WRAPPER
+    export RUSTC_WRAPPER=""
+fi
+
+# Accept TARGET argument (arm | arm64 | host | linuxmint), default to arm for backward compatibility
 TARGET="${1:-arm}"
 
 # Resolve target-derived variables
@@ -19,8 +26,36 @@ case "$TARGET" in
 		CARGO_PROFILE="release-arm64"
 		STRIP_TOOL="aarch64-linux-gnu-strip"
 		;;
+	host|linuxmint)
+		LIB_DIR=""
+		CARGO_TARGET="x86_64-unknown-linux-gnu"
+		CARGO_PROFILE="release"
+		STRIP_TOOL="strip"
+		;;
+	android-arm64)
+		echo "Building for Android ARM64..."
+		unset RUSTC_WRAPPER
+		export RUSTC_WRAPPER=""
+		export ANDROID_NDK=/home/user/Android/sdk/android-ndk-r26b
+		export PATH=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+		CARGO_TARGET="aarch64-linux-android"
+		CARGO_PROFILE="release-arm64"
+		./build.sh android-arm64
+		exit 0
+		;;
+	android-arm32)
+		echo "Building for Android ARM32..."
+		unset RUSTC_WRAPPER
+		export RUSTC_WRAPPER=""
+		export ANDROID_NDK=/home/user/Android/sdk/android-ndk-r26b
+		export PATH=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+		CARGO_TARGET="armv7-linux-androideabi"
+		CARGO_PROFILE="release-arm"
+		./build.sh android-arm32
+		exit 0
+		;;
 	*)
-		echo "Error: Invalid target '$TARGET'. Use 'arm' or 'arm64'."
+		echo "Error: Invalid target '$TARGET'. Use 'arm', 'arm64', 'host', 'linuxmint', 'android-arm64', or 'android-arm32'."
 		exit 1
 		;;
 esac
@@ -78,7 +113,7 @@ fi
 cp "$TARGET_DIR/$CARGO_TARGET/$CARGO_PROFILE/epub_editor" dist/
 cp contrib/*.sh dist
 cp contrib/Settings-sample.toml dist
-cp LICENSE-AGPLv3 dist
+cp LICENSE-AGPLv3 dist/
 
 # No external libraries needed - pure Rust build
 $STRIP_TOOL dist/plato
@@ -107,15 +142,13 @@ if [ "$TARGET" = "host" ] || [ "$TARGET" = "linuxmint" ]; then
     cp "$TARGET_DIR/$CARGO_TARGET/$CARGO_PROFILE/plato" debian/usr/local/bin/plato
     
     # Create desktop file
-    cat > debian/usr/share/applications/plato.desktop << 'DEOF'
-[Desktop Entry]
-Name=Plato
-Exec=/usr/local/bin/plato
-Type=Application
-Icon=plato
-Terminal=false
-Categories=Office;Viewer;
-DEOF
+    echo '[Desktop Entry]' > debian/usr/share/applications/plato.desktop
+    echo 'Name=Plato' >> debian/usr/share/applications/plato.desktop
+    echo 'Exec=/usr/local/bin/plato' >> debian/usr/share/applications/plato.desktop
+    echo 'Type=Application' >> debian/usr/share/applications/plato.desktop
+    echo 'Icon=plato' >> debian/usr/share/applications/plato.desktop
+    echo 'Terminal=false' >> debian/usr/share/applications/plato.desktop
+    echo 'Categories=Office;Viewer;' >> debian/usr/share/applications/plato.desktop
     
     # Copy icon (if exists)
     if [ -f "icons/plato.png" ]; then
@@ -123,16 +156,15 @@ DEOF
     fi
     
     # Create control file
-    cat > debian/DEBIAN/control << 'DEOF'
-Package: plato
-Version: $(date +%Y%m%d)
-Section: office
-Priority: optional
-Architecture: amd64
-Maintainer: Plato Team
-Description: Document reader for Kobo and desktop
- Plato is a document reader for Kobo e-readers and Linux desktop.
-DEOF
+    echo "Package: plato" > debian/DEBIAN/control
+    echo "Version: $(date +%Y%m%d)" >> debian/DEBIAN/control
+    echo "Section: office" >> debian/DEBIAN/control
+    echo "Priority: optional" >> debian/DEBIAN/control
+    echo "Architecture: amd64" >> debian/DEBIAN/control
+    echo "Depends: libc6 (>= 2.28)" >> debian/DEBIAN/control
+    echo "Maintainer: Plato Team" >> debian/DEBIAN/control
+    echo "Description: Document reader for Kobo and desktop" >> debian/DEBIAN/control
+    echo " Plato is a document reader for Kobo e-readers and Linux desktop." >> debian/DEBIAN/control
     
     # Build .deb
     dpkg-deb --build debian plato-linux.deb

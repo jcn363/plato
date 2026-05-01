@@ -5,6 +5,13 @@ set -e
 # Enhanced build script for Plato project
 # Supports building for different targets (arm, arm64, host) with various methods (fast, slow, skip)
 
+# Fix sccache issue: unset RUSTC_WRAPPER if sccache not available
+if ! command -v sccache &> /dev/null; then
+    echo "Warning: sccache not found, disabling RUSTC_WRAPPER..."
+    unset RUSTC_WRAPPER
+    export RUSTC_WRAPPER=""
+fi
+
 # Default values
 TARGET="arm"
 METHOD="fast"
@@ -78,8 +85,6 @@ case "$METHOD" in
         ;;
 esac
 
-echo "Building Plato for target: $TARGET using method: $METHOD"
-
 # Check for required tools
 check_tool() {
     if ! command -v "$1" >/dev/null 2>&1; then
@@ -90,6 +95,15 @@ check_tool() {
 
 check_tool cargo
 check_tool rustc
+
+# Fix sccache for Android builds
+if [ "$TARGET" = "android-arm64" ] || [ "$TARGET" = "android-arm32" ]; then
+    echo "Android build detected, ensuring sccache is disabled..."
+    unset RUSTC_WRAPPER
+    export RUSTC_WRAPPER=""
+    export ANDROID_NDK=/home/user/Android/sdk/android-ndk-r26b
+    export PATH=$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+fi
 
 if [ "$TARGET" = "arm" ]; then
     check_tool arm-linux-gnueabihf-gcc
