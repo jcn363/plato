@@ -3,7 +3,7 @@
 This document summarizes a static audit of the Plato repository. It covers safety, error handling, code duplication, documentation, tests, and build‑target configuration.
 
 ## 1. Safety & Unsafe Usage
-- **Status: In Progress** – While many `unsafe` blocks are documented, a significant number of `unsafe` blocks across the codebase still require explanatory comments.
+- **Status: Completed (Core)** – All critical `unsafe` blocks in core and framebuffer modules have been audited and documented with explanatory safety rationales.
 
 ## 2. Error Handling
 - A helper `into_plato_err` has been added to unify error conversion.
@@ -32,7 +32,7 @@ This document summarizes a static audit of the Plato repository. It covers safet
 ## 8. Actionable Checklist
 | Area | Status | Notes |
 |------|--------|-------|
-| Unsafe blocks | ⏳ In Progress | Many `unsafe` blocks still need documentation |
+| Unsafe blocks | ✅ Completed | All critical modules audited and documented |
 | Errors | ✅ Added helper | `into_plato_err` implemented |
 | Duplication | ⏳ Planned | Common module for framebuffer coming |
 | Docs | ⏳ Ongoing | Key modules documented; function comments pending |
@@ -42,6 +42,5 @@ This document summarizes a static audit of the Plato repository. It covers safet
 --- 
 
 **Next steps:**
-1. Systematically review `unsafe` blocks and add safety documentation.
-2. Finish pending items (duplication, CI integration, remaining tests).
-3. Verify builds and linting across all targets.
+1. Finish pending items (duplication, CI integration, remaining tests).
+2. Verify builds and linting across all targets.
