@@ -159,3 +159,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 - **Asynchronous Processing**: Offloaded semantic index operations to background 'tokio' tasks to ensure UI responsiveness.
 - **Model Optimization**: Implemented model weight caching via 'Arc' to reduce disk I/O and latency.
 - **System Stability**: Fixed workspace dependency cycles and trait implementations to ensure a robust, production-grade build.
+
+## Infrastructure: Tokio Runtime
+- **Asynchronous Runtime**: Integrated 'tokio' runtime into the application entry point, enabling structured concurrency and laying the foundation for asynchronous offloading of blocking I/O tasks.

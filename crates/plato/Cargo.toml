@@ -12,6 +12,7 @@ name = "plato"
 path = "src/main.rs"
 
 [dependencies]
+tokio = { version = "1.43", features = ["full"] }
 plato-core = { path = "../core", features = ["ocr"] }
 
 [package.metadata.deb]

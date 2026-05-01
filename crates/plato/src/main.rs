@@ -14,6 +14,13 @@ use crate::app::run;
 use plato_core::anyhow::Error;
 
 fn main() -> Result<(), Error> {
-    run()?;
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("Failed to create tokio runtime");
+
+    runtime.block_on(async {
+        run()
+    })?;
     Ok(())
 }

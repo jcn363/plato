@@ -5,7 +5,7 @@ set -euo pipefail
 SYMBOLS_FILE=$(mktemp)
 (
   # public items
-  grep -rEho 'pub (fn|struct|enum|trait|const|static|type|mod) ([A-Za-z_][A-Za-z0-9_]*)' crates |
+  grep -rEho 'pub (fn|struct|enum|trait|const|static|type|mod) ([A-Za-z_][A-Za-z0-9_]*)' crates --exclude-dir=target |
     awk '{print $3}'
 
   # crate names
@@ -14,15 +14,12 @@ SYMBOLS_FILE=$(mktemp)
   done
 
   # const/static inside modules
-  grep -rEho '(const|static) ([A-Z_][A-Z0-9_]*)' crates |
+  grep -rEho '(const|static) ([A-Z_][A-Z0-9_]*)' crates --exclude-dir=target |
     awk '{print $2}'
 ) | sort -u >"$SYMBOLS_FILE"
 
 # 2. Scan docs
-MISMATCHES=()
-DOCS=$(find doc -name '*.md' -print0)
-
-while IFS= read -r -d '' doc; do
+find doc -name '*.md' -print0 | while IFS= read -r -d '' doc; do
   tokens=$(grep -oP '`[^`]*`' "$doc" | tr -d '`')
   for tok in $tokens; do
     if [[ "$tok" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
@@ -34,7 +31,7 @@ while IFS= read -r -d '' doc; do
       fi
     fi
   done
-done < <(printf '%s\0' $DOCS)
+done
 
 if [[ ${#MISMATCHES[@]} -eq 0 ]]; then
   echo "✅  No stale links or identifiers found – the docs match the source."
