@@ -1,0 +1,12 @@
+[package]
+name = "plato-error"
+version = "0.9.45"
+edition = "2021"
+license = "AGPLv3"
+
+[dependencies]
+thiserror = "1.0"
+anyhow = "1.0"
+
+[lib]
+path = "src/lib.rs"
