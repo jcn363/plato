@@ -112,3 +112,7 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 - **Dictionary Module Refactor**: Migrated `crates/core/dictionary/` from legacy `DictError` to the unified `PlatoError` pattern, including necessary wrapping for backward compatibility.
 - **Battery Module Refactor**: Standardized battery module error types to use `PlatoResult`.
 - **System-wide Consistency**: Replaced remaining occurrences of custom local error types (e.g., `DictError`, custom `Error` aliases) across `crates/core` with the global `PlatoError`, ensuring consistent error propagation and build stability.
+## AI Semantic Search & Error Refactoring
+- **VectorEmbedder Trait**: Added `VectorEmbedder` trait to `crates/ai/src/traits.rs`, enabling local-first semantic search capabilities. It includes foundational logic for generating text embeddings and computing cosine similarity.
+- **plato-error Crate**: Established a dedicated `plato-error` crate in `crates/error/` to provide a unified `PlatoError` and `PlatoResult` type system across the workspace. This resolves previous dependency complexities and provides a robust, centralized error handling infrastructure.
+- **Build Integrity**: Reverted architectural experiments (modularization of drivers) to restore build stability. The project currently maintains a stable, clean build with the new AI and Error features integrated.
