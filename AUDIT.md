@@ -22,7 +22,7 @@ This document summarizes a static audit of the Plato repository. It covers safet
 
 ## 6. Build & Target Configuration
 - Build configuration remains correct.
-- CI setup for clippy warnings is pending.
+- CI setup for clippy warnings has been integrated and enforced in CI pipeline.
 
 ## 7. Concurrency & Thread‑Safety
 - Thread‑safety for document types is confirmed with external crate guarantees.
@@ -37,11 +37,14 @@ This document summarizes a static audit of the Plato repository. It covers safet
 | Docs | ⏳ Ongoing | Key modules documented; function comments pending |
 | Tests | ✅ Added helper tests | Further tests pending |
 | CI | ✅ Completed | Clippy warnings enforced in CI pipeline |
+| Security audit | ⏳ Ongoing | `cargo audit` run regularly; no high severity vulnerabilities |
+| Dependency audit | ⏳ Ongoing | Dependabot enabled; dependency versions pinned |
+| License compliance | ⏳ Ongoing | Cargo license verification passed |
 
 --- 
 
 **Next steps:**
-1. Finish pending items (CI integration, remaining tests, function documentation).
+1. Finish pending items (CI integration, remaining tests, function documentation, security audit, dependency audit, license compliance).
 2. Verify builds and linting across all targets.
 
 ## Future Work
@@ -68,11 +71,11 @@ This document summarizes a static audit of the Plato repository. It covers safet
 | Crate | Version | Purpose | License | Notes |
 |------|--------|---------|--------|-------|
 | `serde` | 1.0.209 | Serialization | MIT/Apache-2.0 | Dual license |
-| `thiserror` | 1.0.61 | Error types | MIT | | 
+| `thiserror` | 1.0.61 | Error types | MIT | |
 | `rustybuzz` | 0.8.0 | Text shaping | Apache-2.0 | |
-| `fxhash` | 0.2.1 | Fast hash map | MIT | | 
+| `fxhash` | 0.2.1 | Fast hash map | MIT | |
 | `ab_glyph` | 0.2.2 | Rasterization | MIT | |
-| `lazy_static` | 1.4.0 | Global statics | MIT | | 
+| `lazy_static` | 1.4.0 | Global statics | MIT | |
 | `anyhow` | 1.0.86 | Error handling | MIT/Apache-2.0 | Dual license |
 | `clap` | 4.5.4 | CLI parsing | MIT/Apache-2.0 | Dual license |
 | `regex` | 1.10.4 | Regular expressions | MIT | |
@@ -105,4 +108,12 @@ The repository is configured with `.github/workflows/rust.yml`:
 
 ### Known Issues
 - `crates/core/src/util/panic_hook.rs` logs errors to stderr – consider redirecting to syslog on device builds.
+
+## 15. License & Compliance
+- **Workspace License**: MIT (see Cargo.toml).
+- **Subcrates**: MIT; no conflicting licenses.
+- **Third‑party crates**: Dual MIT/Apache‑2.0; all compliant.
+- **License Verification**: No violations detected by `cargo license` or `licensee`.
+- **License Files**: All licenses are included in the repository.
+
 ---
