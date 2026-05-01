@@ -439,7 +439,11 @@ impl View for Reader {
                         pt!(self.rect.max.x - sidebar_width, self.rect.min.y),
                         self.rect.max
                     ];
-                    let ai_chat = crate::view::ai_chat::AiChatView::new(sidebar_rect, context);
+                    let ai_chat = crate::view::ai_chat::AiChatView::new(
+                        sidebar_rect,
+                        context,
+                        Box::new(crate::view::ai_chat::EchoProcessor),
+                    );
                     self.children.push(Box::new(ai_chat) as Box<dyn View>);
                 } else {
                     self.children

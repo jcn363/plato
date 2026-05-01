@@ -18,6 +18,13 @@ use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::SMALL_BAR_HEIGHT;
 
+pub trait AiProcessor: Send + Sync {
+    fn process(&self, text: String) -> String;
+    fn clone_box(&self) -> Box<dyn AiProcessor>;
+}
+
+// Removed blanket impl
+
 pub struct AiChatView {
     id: Id,
     rect: Rectangle,
@@ -25,10 +32,11 @@ pub struct AiChatView {
     messages: Vec<(bool, String)>,
     is_processing: bool,
     status: String,
+    processor: Box<dyn AiProcessor>,
 }
 
 impl AiChatView {
-    pub fn new(rect: Rectangle, context: &mut Context) -> AiChatView {
+    pub fn new(rect: Rectangle, context: &mut Context, processor: Box<dyn AiProcessor>) -> AiChatView {
         let id = ID_FEEDER.next();
         let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
@@ -68,7 +76,20 @@ impl AiChatView {
             messages: Vec::new(),
             is_processing: false,
             status: String::new(),
+            processor,
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct EchoProcessor;
+
+impl AiProcessor for EchoProcessor {
+    fn process(&self, text: String) -> String {
+        format!("Echo: {}", text)
+    }
+    fn clone_box(&self) -> Box<dyn AiProcessor> {
+        Box::new(self.clone())
     }
 }
 
@@ -83,22 +104,18 @@ impl View for AiChatView {
     ) -> bool {
         match evt {
             Event::Submit(ViewId::AiChat, text) => {
+                let text = text.clone();
                 if !self.is_processing && !text.is_empty() {
                     self.messages.push((true, text.clone()));
                     self.is_processing = true;
                     self.status = "Thinking...".to_string();
 
-                    // TODO: AI processing is implemented in `plato-ai` crate.
-                    // To avoid cyclic dependencies, the actual AI call should be
-                    // injected via dependency injection or moved to `plato-ai`.
-                    // For now, simulate a response after a delay.
+                    let processor = self.processor.clone_box();
                     let hub_cloned = hub.clone();
                     std::thread::spawn(move || {
-                        std::thread::sleep(std::time::Duration::from_secs(2));
+                        let response = processor.process(text);
                         hub_cloned
-                            .send(Event::AiResponse(
-                                "AI responses are disabled (cyclic dependency).".to_string(),
-                            ))
+                            .send(Event::AiResponse(response))
                             .ok();
                     });
 

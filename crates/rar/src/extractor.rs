@@ -36,9 +36,6 @@ pub fn extract(
             break;
         }
 
-        // unpack if necessary
-        // todo
-
         // write out the data
         if let Err(e) = f_writer.write_all(data) {
             if e.kind() == ::std::io::ErrorKind::WriteZero {

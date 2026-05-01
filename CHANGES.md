@@ -96,3 +96,14 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 ### Documentation
 - See `doc/DEB_PACKAGE.md` for full instructions
 
+# Changes Log (2026-05-01)
+
+## Technical Debt Resolution
+- **RAR Extraction**: Simplified the extraction loop in `crates/rar/src/extractor.rs` by removing an unnecessary `todo` marker. The `RarAesReader` already manages data stream unpacking, so the loop now directly handles raw file writing.
+- **AI Chat Architecture**: Decoupled `plato-core` from `plato-ai` to resolve cyclic dependency issues. 
+    - Introduced `AiProcessor` trait in `crates/core`.
+    - Implemented dependency injection in `AiChatView` to allow external AI logic.
+    - Added an `EchoProcessor` as a temporary implementation to ensure UI functionality and build integrity.
+
+## Build Status
+- Build verified with `cargo build --workspace`.
