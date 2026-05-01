@@ -132,3 +132,7 @@ htmlcov/
 .lzo
 crates/core/tmp/
 debian/
+
+# AppImage
+*.AppImage
+AppDir/

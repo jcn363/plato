@@ -53,6 +53,12 @@
 - **Removed**: unrar (CBR disabled)
 - **Working**: sha2, x509-cert (Linux-only)
 
+## AppImage
+
+- **Created**: Plato.AppImage (12MB) for LinuxMint/x86_64
+- Desktop binary, fonts, icons, CSS bundled
+- Run: `chmod +x Plato.AppImage && ./Plato.AppImage`
+
 ---
 
 **Updated**: 2026-05-01
