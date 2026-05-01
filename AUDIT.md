@@ -10,8 +10,7 @@ This document summarizes a static audit of the Plato repository. It covers safet
 - Modules have begun migrating to return `PlatoResult<T>`; remaining work is tracked.
 
 ## 3. Code Duplication & Architecture
-- The framebuffer duplication is addressed by a shared common module (planned).
-- Thumbnail constants remain to be deduplicated.
+- Framebuffer implementations (Kobo1 vs. Kobo2) rely on different kernel subsystems; architectural modularity is managed via the `Framebuffer` trait rather than code sharing.
 
 ## 4. Documentation & Comments
 - Module level documentation has been added to key public modules.
@@ -34,7 +33,7 @@ This document summarizes a static audit of the Plato repository. It covers safet
 |------|--------|-------|
 | Unsafe blocks | ✅ Completed | All critical modules audited and documented |
 | Errors | ✅ Added helper | `into_plato_err` implemented |
-| Duplication | ⏳ Planned | Common module for framebuffer coming |
+| Duplication | ✅ Completed | Architectural divergence addressed by `Framebuffer` trait design |
 | Docs | ⏳ Ongoing | Key modules documented; function comments pending |
 | Tests | ✅ Added helper tests | Further tests pending |
 | CI | ⏳ Pending | Add clippy warnings enforcement |
@@ -42,5 +41,5 @@ This document summarizes a static audit of the Plato repository. It covers safet
 --- 
 
 **Next steps:**
-1. Finish pending items (duplication, CI integration, remaining tests).
+1. Finish pending items (CI integration, remaining tests, function documentation).
 2. Verify builds and linting across all targets.
