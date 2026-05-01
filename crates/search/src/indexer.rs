@@ -6,6 +6,7 @@ use crate::search::SearchIndexer;
 use plato_ai::embedding::CandleEmbedder;
 
 /// Service for crawling and indexing library content
+#[derive(Debug)]
 pub struct LibraryIndexer {
     indexer: SearchIndexer,
 }

@@ -1,0 +1,13 @@
+[package]
+name = "plato-thumbnail"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+plato-core = { path = "../core" }
+anyhow = "1.0"
+lru = "0.12"
+
+[lib]
+name = "plato_thumbnail"
+path = "src/lib.rs"

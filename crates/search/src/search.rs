@@ -11,6 +11,12 @@ pub struct SearchIndexer {
     embedder: CandleEmbedder,
 }
 
+impl std::fmt::Debug for SearchIndexer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SearchIndexer").finish()
+    }
+}
+
 impl SearchIndexer {
     /// Initialize indexer with a SQLite database
     pub fn new(db_path: &str, embedder: CandleEmbedder) -> Result<Self> {

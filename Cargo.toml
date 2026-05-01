@@ -8,32 +8,16 @@ members = [
   'crates/epub_edit',
   'crates/epub_editor',
   'crates/plato-ios',
-  'crates/plato-android',
   'crates/ai',
-  # New modular crates
+  'crates/rar',
   'crates/plato-document',
   'crates/plato-library',
-  'crates/plato-view',
 ]
-exclude = [
-  'crates/plato-android',
-]
-
-[patch.crates-io]
-nom = { git = "https://github.com/Geal/nom", branch = "main" }
-pdfpurr = { git = "https://github.com/PratikP1/PDFPurr", branch = "main" }
-
-[workspace.lints.rust]
-warnings = "deny"
-
-[workspace.lints.clippy]
-all = "warn"
 
 [workspace.package]
 edition = '2021'
 version = '0.9.45'
 license = 'MIT'
-rust-version = "1.87"
 
 [workspace.dependencies]
 anyhow = "1.0.102"
@@ -47,55 +31,3 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 uuid = { version = "1.23.1", features = ["v4"] }
 zip = "8.6.0"
-
-[profile.release-minsized]
-inherits = "release"
-panic = "abort"
-codegen-units = 4
-opt-level = "z"
-lto = "thin"
-strip = true
-
-[profile.release-arm]
-inherits = "release"
-codegen-units = 4
-lto = "thin"
-strip = true
-opt-level = 3
-
-[profile.release-arm64]
-inherits = "release"
-codegen-units = 4
-lto = "thin"
-strip = true
-opt-level = 3
-
-[profile.release-ios]
-inherits = "release"
-codegen-units = 4
-lto = "thin"
-strip = true
-opt-level = 3
-panic = "abort"
-
-[profile.release-embedded]
-inherits = "release"
-codegen-units = 4
-lto = "thin"
-opt-level = "s"
-strip = true
-debug = false
-
-[profile.release]
-lto = "thin"
-codegen-units = 16
-
-[profile.dev]
-opt-level = 0
-debug = true
-incremental = true
-
-[profile.bench]
-inherits = "release"
-debug = true
-lto = "thin"
