@@ -7,9 +7,10 @@
 //! Images are sorted alphabetically and displayed as pages.
 
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{format_err, Context, Error};
+use rar::Archive;
 
 use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir};
@@ -89,11 +90,62 @@ impl ComicDocument {
         })
     }
 
-    fn open_cbr(_path: &Path) -> Result<Self, Error> {
-        Err(format_err!(
-            "CBR (RAR) support is temporarily disabled due to unrar API changes. \
-             Please convert CBR files to CBZ format."
-        ))
+    fn open_cbr(path: &Path) -> Result<Self, Error> {
+        let temp_dir = tempfile::tempdir()
+            .with_context(|| format!("can't create temp dir for CBR extraction"))?;
+        let temp_path = temp_dir.path();
+
+        // Extract the CBR archive to temp directory
+        let _archive = Archive::extract_all(
+            path.to_str().ok_or_else(|| format_err!("Invalid path"))?,
+            temp_path
+                .to_str()
+                .ok_or_else(|| format_err!("Invalid temp path"))?,
+            "",
+        )
+        .with_context(|| format!("can't extract CBR archive {}", path.display()))?;
+
+        let mut image_entries: Vec<(String, Vec<u8>)> = Vec::new();
+
+        for entry in std::fs::read_dir(temp_path)? {
+            let entry = entry?;
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+            if Self::is_image_file(&name) {
+                let data = std::fs::read(entry.path())
+                    .with_context(|| format!("can't read extracted file {:?}", entry.path()))?;
+                image_entries.push((entry.file_name().to_string_lossy().to_string(), data));
+            }
+        }
+
+        // Temp directory is automatically cleaned up when temp_dir goes out of scope
+        drop(temp_dir);
+
+        image_entries.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let page_count = image_entries.len();
+        if page_count == 0 {
+            return Err(format_err!("No images found in CBR archive"));
+        }
+
+        let mut dims = Vec::with_capacity(page_count);
+        let mut pages = Vec::with_capacity(page_count);
+
+        for (_, data) in image_entries {
+            if let Ok(img) = image::load_from_memory(&data) {
+                dims.push((img.width() as f32, img.height() as f32));
+            } else {
+                dims.push((800.0, 1200.0));
+            }
+            pages.push(data);
+        }
+
+        Ok(ComicDocument {
+            path: path.to_path_buf(),
+            pages,
+            page_count,
+            current_page: 0,
+            dims,
+        })
     }
 
     fn is_image_file(name: &str) -> bool {
