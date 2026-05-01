@@ -1,4 +1,5 @@
 # Plato Codebase Audit
+Last audited: 2026-05-02
 
 This document summarizes a static audit of the Plato repository. It covers safety, error handling, code duplication, documentation, tests, and build‑target configuration.
 
