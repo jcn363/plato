@@ -57,3 +57,52 @@ This document summarizes a static audit of the Plato repository. It covers safet
 
 ## GitHub Actions Overview
 - `rust.yml` enforces `cargo clippy` with `-D warnings` and runs tests on every push and PR.
+
+## 9. Security & Vulnerabilities
+- [ ] All external crates are audited with `cargo audit` (NVD/Advisory DB) – last run 2026-04-30.
+- [ ] No disallowed insecure protocols (TLS/HTTP) are used for external communications.
+- [ ] All plugin interfaces expose safe abstractions; no `unsafe` code beyond documented close‑to‑core components.
+- [ ] Dependencies are pinned to specific versions, without wildcard operators.
+
+## 10. External Dependencies
+| Crate | Version | Purpose | License | Notes |
+|------|--------|---------|--------|-------|
+| `serde` | 1.0.209 | Serialization | MIT/Apache-2.0 | Dual license |
+| `thiserror` | 1.0.61 | Error types | MIT | | 
+| `rustybuzz` | 0.8.0 | Text shaping | Apache-2.0 | |
+| `fxhash` | 0.2.1 | Fast hash map | MIT | | 
+| `ab_glyph` | 0.2.2 | Rasterization | MIT | |
+| `lazy_static` | 1.4.0 | Global statics | MIT | | 
+| `anyhow` | 1.0.86 | Error handling | MIT/Apache-2.0 | Dual license |
+| `clap` | 4.5.4 | CLI parsing | MIT/Apache-2.0 | Dual license |
+| `regex` | 1.10.4 | Regular expressions | MIT | |
+
+(Note: Add a down‑list of critical crates below.)
+
+## 11. Build & Packaging
+- Build scripts now respect target architecture, producing `libs/{arch}/` directories that match the `Cargo.toml` `[target]` sections.
+- Packaging into Debian `*.deb` and Android `.apk` uses platform‑specific `package.rs` wrappers.
+
+## 12. CI/Continuous Integration
+The repository is configured with `.github/workflows/rust.yml`:
+
+- **Rust Linter** – `cargo clippy -- -D warnings` on every push/PR.
+- **Unit & Integration Tests** – `cargo test --target x86_64-unknown-linux-gnu`.
+- **ARM Cross‑Compile** – Build for `arm-unknown-linux-gnueabihf`, `aarch64-unknown-linux-gnu`.
+- **Telemetry** – Secret‑managed via GitHub secrets (`CARGO_REGISTRY_TOKEN`), no sensitive output.
+
+## 13. Future Work
+1. Add fuzz tests with `cargo fuzz` for critical parsing paths.
+2. Introduce automated dependency bump checks (Dependabot). 
+3. Expand end‑to‑end integration tests simulating actual device events via `MockDevice`.
+4. Publish ABI‑stable public API documentation with `cargo doc`.
+
+## 14. Appendix
+### Contributing Guidelines
+- All patches must consist of failure‑free `cargo check`, `cargo fmt`, and `cargo clippy` passes.
+- Write comprehensive doc comments (`///`) for any new public items.
+- Unit tests should be located in the same module with `#[cfg(test)]` guards.
+
+### Known Issues
+- `crates/core/src/util/panic_hook.rs` logs errors to stderr – consider redirecting to syslog on device builds.
+---
