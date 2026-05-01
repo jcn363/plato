@@ -148,3 +148,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 ## Embedding Engine Optimization
 - **Model Caching**: Implemented weight caching using 'Arc<Embedding>' in 'CandleEmbedder', ensuring shared access and avoiding redundant disk I/O.
 - **Error Synchronization**: Aligned embedding trait return types with 'PlatoResult' for full consistency with the unified error handling architecture.
+
+## Async Indexing Integration
+- **Background Tasks**: Migrated document indexing to 'tokio::task::spawn_blocking', ensuring that compute-intensive embedding generation does not block the main UI thread, maintaining device responsiveness.

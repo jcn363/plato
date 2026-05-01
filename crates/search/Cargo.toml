@@ -9,6 +9,7 @@ plato_error = { path = "../error" }
 plato-ai = { path = "../ai" }
 rusqlite = { version = "0.33", features = ["bundled"] }
 anyhow = "1.0"
+tokio = { version = "1.43", features = ["full"] }
 
 [lib]
 path = "src/lib.rs"
