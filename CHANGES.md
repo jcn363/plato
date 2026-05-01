@@ -141,3 +141,6 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 
 ## UI/UX Integration: Semantic Search
 - **Search Menu**: Integrated 'ToggleSemanticSearch' entry into the advanced search menu, providing a UI hook for library-wide semantic search mode.
+
+## UI/UX: Semantic Search Results
+- **Search Results UI**: Implemented 'SearchResults' view in 'crates/core/src/view/home/search_results.rs', which allows the user to see semantic matches ordered by relevance.
