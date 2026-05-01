@@ -63,7 +63,7 @@ html5ever = "0.39.0"
 justjp2 = "0.1.1"
 hayro-jbig2 = "0.3.0"
 djvu-rs = "0.13.0"
-unrar = "0.5.8"
+# unrar: Disabled - CBR support unavailable (requires complex state machine API)
 
 # Rust-native font stack (replaces FreeType + HarfBuzz)
 skrifa = "0.42.1"
@@ -76,15 +76,15 @@ tiny-skia = "0.12.0"
 lopdf = "0.40.0"
 hex = "0.4.3"
 
+# Linux only dependencies (cryptographic signatures)
+[target.'cfg(target_os = "linux")'.dependencies]
+sha2 = "0.10.9"
+x509-cert = "0.2.5"
+
 [features]
 default = []
 ocr = ["pdfpurr/ocr"]
 tts = ["dep:tts", "dep:jni", "dep:ndk-context"]
-
-# Cryptographic operations for digital signatures (Linux only)
-[target.'cfg(target_os = "linux")'.dependencies]
-sha2 = "0.10.9"
-x509-cert = "0.2.5"
 
 [dev-dependencies]
 tempfile = "3.27.0"
