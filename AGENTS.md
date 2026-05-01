@@ -366,14 +366,14 @@ where
 
 ## Error Handling Process
 
-**Mandatory rule:** Address errors in small increments, commit frequently, and review for accuracy.
+**Mandatory rule:** Standardize on a single, unified error handling approach across the `crates/core` crate.
 
-- Fix one category of error at a time (e.g., all `unwrap()` in one file, then all in the next)
-- Run `cargo check` or `cargo test` after each small batch of changes to catch regressions early
-- Commit working changes frequently with clear messages describing what was fixed
-- Review changes for: **grammatical** accuracy (comments, docs), **factual** accuracy (API usage, types), **logical** correctness (control flow, edge cases)
-- When a fix introduces new errors, stop and understand the dependency chain before continuing
-- Never leave the codebase in a broken state — if a refactor is too large, revert and split into smaller steps
+- **Unified Error Type**: Use `PlatoError` as the global error enum defined in `crates/core/src/error.rs` and `PlatoResult<T>` as the standard result alias.
+- **Library Consistency**: Replace legacy custom error types (e.g., `DictError`, `BatteryError`) with `PlatoError` variants, utilizing the `#[from]` attribute for automatic conversion (`std::io::Error`, etc.).
+- **Error Wrapping**: If a module requires specific error variants for semantic clarity (e.g., dictionary module), continue to wrap the global `PlatoError` and implement `From<PlatoError>` for cross-compatibility.
+- **Propagation**: Use `?` for propagating errors. Ensure all public API and internal method signatures in `crates/core` return `PlatoResult<T>`.
+- **Meaningful Context**: Always provide context for errors using `PlatoError` variants, adding enough detail to understand the failure point (file paths, IDs, operation identifiers).
+- **Avoid Legacy Types**: Never introduce new local error types; always extend `PlatoError` in `crates/core/src/error.rs` if a new variant is needed. Never mix `anyhow` and custom `thiserror` enums within the same crate for the same error concerns.
 
 ### Error Resolution Sequence
 
@@ -381,7 +381,7 @@ When facing multiple compilation errors, resolve in this order:
 
 1. **Dependency issues** — fix version conflicts and ensure compatibility (`Cargo.toml`)
 2. **Import resolution** — validate all module imports and path configurations (`use` statements)
-3. **Type mismatches** — harmonize type definitions and error handling patterns
+3. **Type mismatches** — harmonize type definitions and error handling patterns using `PlatoResult`
 4. **Missing implementations** — add missing methods, traits, types
 5. **Validate compilation and testing** — ensure all tests pass and functionality is preserved
 
