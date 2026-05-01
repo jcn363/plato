@@ -37,7 +37,7 @@ fn simulate_render_pipeline(width: u32, height: u32, content_type: ContentType) 
 
     // Step 2: Convert to grayscale using e-ink layer
     let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
-    let grayscale = converter.convert(&rgba_data, width, height).unwrap();
+    let grayscale = converter.convert(&rgba_data, width, height).expect("Test assertion failed");
 
     // Step 3: Select appropriate waveform
     let update_type = UpdateType::Full;
@@ -94,7 +94,7 @@ fn test_image_document_pipeline() {
     }
 
     let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
-    let grayscale = converter.convert(&rgba_data, width, height).unwrap();
+    let grayscale = converter.convert(&rgba_data, width, height).expect("Test assertion failed");
 
     assert_eq!(grayscale.len(), (width * height) as usize);
 
@@ -131,7 +131,7 @@ fn test_page_turn_damage_tracking() {
             page2_data[i + 2] = 0;
         }
     }
-    let page2 = FrameBuffer::from_data(width, height, page2_data).unwrap();
+    let page2 = FrameBuffer::from_data(width, height, page2_data).expect("Test assertion failed");
 
     let regions2 = tracker.track_changes(&page2);
 
@@ -149,7 +149,7 @@ fn test_scroll_partial_refresh() {
 
     // Initial frame - all white
     let frame1_data = vec![255u8; (width * height * 4) as usize];
-    let frame1 = FrameBuffer::from_data(width, height, frame1_data).unwrap();
+    let frame1 = FrameBuffer::from_data(width, height, frame1_data).expect("Test assertion failed");
     tracker.track_changes(&frame1);
 
     // Simulate scroll - add new dark content at bottom 50 pixels
@@ -163,7 +163,7 @@ fn test_scroll_partial_refresh() {
         }
     }
 
-    let frame2 = FrameBuffer::from_data(width, height, frame2_data).unwrap();
+    let frame2 = FrameBuffer::from_data(width, height, frame2_data).expect("Test assertion failed");
     let regions = tracker.track_changes(&frame2);
 
     // Scroll should have partial damage (at bottom)
@@ -225,7 +225,7 @@ fn test_pdfpurr_to_framebuffer() {
     let pixmap_data: Vec<u8> = (0..width * height * 4).map(|i| (i % 256) as u8).collect();
 
     // Convert to FrameBuffer
-    let fb = FrameBuffer::from_data(width, height, pixmap_data.clone()).unwrap();
+    let fb = FrameBuffer::from_data(width, height, pixmap_data.clone()).expect("Test assertion failed");
 
     assert_eq!(fb.width, width);
     assert_eq!(fb.height, height);
@@ -252,7 +252,7 @@ fn test_full_refresh_threshold() {
     for i in 0..frame2_data.len() / 2 {
         frame2_data[i] = 255;
     }
-    let frame2 = FrameBuffer::from_data(width, height, frame2_data).unwrap();
+    let frame2 = FrameBuffer::from_data(width, height, frame2_data).expect("Test assertion failed");
     tracker.track_changes(&frame2);
 
     // Should trigger full refresh
@@ -287,7 +287,7 @@ fn test_dithering_modes_comparison() {
 
     for mode in modes {
         let converter = GrayscaleConverter::new(mode);
-        let grayscale = converter.convert(&rgba, width, height).unwrap();
+        let grayscale = converter.convert(&rgba, width, height).expect("Test assertion failed");
 
         assert_eq!(grayscale.len(), (width * height) as usize);
 
@@ -311,11 +311,11 @@ fn test_pipeline_performance() {
 
     // Convert
     let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
-    let _grayscale = converter.convert(&rgba, width, height).unwrap();
+    let _grayscale = converter.convert(&rgba, width, height).expect("Test assertion failed");
 
     // Track damage
     let mut tracker = DamageTracker::new(50);
-    let fb = FrameBuffer::from_data(width, height, rgba).unwrap();
+    let fb = FrameBuffer::from_data(width, height, rgba).expect("Test assertion failed");
     let _regions = tracker.track_changes(&fb);
 
     let duration = start.elapsed();
@@ -344,7 +344,7 @@ fn test_memory_efficiency() {
         rgba[i * 1000] = 255;
 
         let converter = GrayscaleConverter::new(DitheringMode::FloydSteinberg);
-        let _grayscale = converter.convert(&rgba, width, height).unwrap();
+        let _grayscale = converter.convert(&rgba, width, height).expect("Test assertion failed");
 
         // rgba is dropped here, memory should be reclaimed
     }
@@ -360,7 +360,7 @@ fn test_small_content_area() {
 
     let rgba = vec![255u8; (width * height * 4) as usize];
     let converter = GrayscaleConverter::new(DitheringMode::None);
-    let grayscale = converter.convert(&rgba, width, height).unwrap();
+    let grayscale = converter.convert(&rgba, width, height).expect("Test assertion failed");
 
     assert_eq!(grayscale.len(), 100);
 
@@ -375,7 +375,7 @@ fn test_small_content_area() {
 fn test_single_pixel() {
     let rgba = vec![128u8, 128, 128, 255];
     let converter = GrayscaleConverter::new(DitheringMode::None);
-    let grayscale = converter.convert(&rgba, 1, 1).unwrap();
+    let grayscale = converter.convert(&rgba, 1, 1).expect("Test assertion failed");
 
     assert_eq!(grayscale.len(), 1);
     // With gamma 2.2, mid-gray (128) is brightened to ~11 in 16-level

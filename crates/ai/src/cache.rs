@@ -158,8 +158,8 @@ mod tests {
 
     #[test]
     fn test_cache_put_and_get() {
-        let temp_file = NamedTempFile::new().unwrap();
-        let cache = AiCache::open(temp_file.path().to_str().unwrap()).unwrap();
+        let temp_file = NamedTempFile::new().expect("Test assertion failed");
+        let cache = AiCache::open(temp_file.path().to_str().expect("Test assertion failed")).expect("Test assertion failed");
 
         let context = AiContext::new("/test.epub".into(), 5, 20);
         let response = AiResponse {
@@ -172,7 +172,7 @@ mod tests {
 
         cache
             .put("Summarize chapter 1", &context, &response)
-            .unwrap();
+            .expect("Test assertion failed");
 
         // Debug: check what's in the cache
         let check: Result<(String, String), _> = cache.conn.query_row(
@@ -182,9 +182,9 @@ mod tests {
         );
         println!("Cache contents: {:?}", check);
 
-        let cached = cache.get("Summarize chapter 1", &context, 3600).unwrap();
+        let cached = cache.get("Summarize chapter 1", &context, 3600).expect("Test assertion failed");
         assert!(cached.is_some(), "Expected cache to return Some, got None");
-        let cached = cached.unwrap();
+        let cached = cached.expect("Test assertion failed");
         assert_eq!(cached.content, "Test summary", "Cached content mismatch");
     }
 }

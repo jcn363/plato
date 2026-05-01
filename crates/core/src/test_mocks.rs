@@ -604,7 +604,7 @@ mod tests {
     #[test]
     fn test_mock_battery() {
         let mut battery = MockBattery::new(80.0, Status::Discharging);
-        let caps = battery.capacity().unwrap();
+        let caps = battery.capacity().expect("Test assertion failed");
         assert_eq!(caps[0], 80.0);
     }
 

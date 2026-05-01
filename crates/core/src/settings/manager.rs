@@ -201,7 +201,7 @@ mod tests {
     fn test_config_manager_load_default() {
         let manager = ConfigManager::new();
         // When file doesn't exist, should return defaults
-        let settings = manager.load().unwrap();
+        let settings = manager.load().expect("Test assertion failed");
         // Basic sanity check that defaults are reasonable
         assert!(settings.reader.font_size > 0.0);
     }
@@ -209,25 +209,25 @@ mod tests {
     #[test]
     fn test_config_manager_save_and_load() {
         let temp_dir = PathBuf::from("tmp");
-        fs::create_dir_all(&temp_dir).unwrap();
+        fs::create_dir_all(&temp_dir).expect("Test assertion failed");
         let temp_path = temp_dir.join(format!("config_test_{}.toml", Uuid::new_v4()));
         let manager = ConfigManager::with_path(&temp_path);
 
         let settings = Settings::default();
-        manager.save(&settings).unwrap();
+        manager.save(&settings).expect("Test assertion failed");
 
-        let loaded = manager.load().unwrap();
+        let loaded = manager.load().expect("Test assertion failed");
         assert_eq!(loaded.reader.font_size, settings.reader.font_size);
     }
 
     #[test]
     fn test_config_manager_invalid_settings() {
         let temp_dir = PathBuf::from("tmp");
-        fs::create_dir_all(&temp_dir).unwrap();
+        fs::create_dir_all(&temp_dir).expect("Test assertion failed");
         let temp_path = temp_dir.join(format!("invalid_config_{}.toml", Uuid::new_v4()));
 
         // Write invalid TOML directly - use a field that exists but with wrong type
-        std::fs::write(&temp_path, "frontlight = \"not_a_bool\"").unwrap();
+        std::fs::write(&temp_path, "frontlight = \"not_a_bool\"").expect("Test assertion failed");
 
         let manager = ConfigManager::with_path(&temp_path);
         // Should fail to parse invalid TOML (wrong type for boolean field)

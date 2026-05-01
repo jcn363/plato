@@ -272,7 +272,7 @@ mod collections_tests {
             modified_at: "2024-01-01T00:00:00Z".to_string(),
         };
 
-        collections.add(collection.clone()).unwrap();
+        collections.add(collection.clone()).expect("Test assertion failed");
         assert_eq!(collections.len(), 1);
         assert_eq!(collections.get("test_id"), Some(&collection));
     }
@@ -327,8 +327,8 @@ mod collections_tests {
             modified_at: "2024-01-01T00:00:00Z".to_string(),
         };
 
-        collections.add(collection).unwrap();
-        collections.remove("test_id").unwrap();
+        collections.add(collection).expect("Test assertion failed");
+        collections.remove("test_id").expect("Test assertion failed");
         assert!(collections.is_empty());
     }
 
@@ -354,7 +354,7 @@ mod collections_tests {
                 created_at: "2024-01-01T00:00:00Z".to_string(),
                 modified_at: "2024-01-01T00:00:00Z".to_string(),
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         collections
             .add(Collection {
@@ -367,7 +367,7 @@ mod collections_tests {
                 created_at: "2024-01-01T00:00:00Z".to_string(),
                 modified_at: "2024-01-01T00:00:00Z".to_string(),
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         let top_level = collections.top_level();
         assert_eq!(top_level.len(), 1);
@@ -389,7 +389,7 @@ mod collections_tests {
                 created_at: "2024-01-01T00:00:00Z".to_string(),
                 modified_at: "2024-01-01T00:00:00Z".to_string(),
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         collections
             .add(Collection {
@@ -402,7 +402,7 @@ mod collections_tests {
                 created_at: "2024-01-01T00:00:00Z".to_string(),
                 modified_at: "2024-01-01T00:00:00Z".to_string(),
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         collections
             .add(Collection {
@@ -415,7 +415,7 @@ mod collections_tests {
                 created_at: "2024-01-01T00:00:00Z".to_string(),
                 modified_at: "2024-01-01T00:00:00Z".to_string(),
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         let children = collections.children("parent");
         assert_eq!(children.len(), 2);
@@ -436,7 +436,7 @@ mod collections_tests {
                 created_at: "2024-01-01T00:00:00Z".to_string(),
                 modified_at: "2024-01-01T00:00:00Z".to_string(),
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         collections.clear();
         assert!(collections.is_empty());
@@ -457,13 +457,13 @@ mod collections_tests {
                 created_at: "2024-01-01T00:00:00Z".to_string(),
                 modified_at: "2024-01-01T00:00:00Z".to_string(),
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Test assertion failed");
         let path = temp_file.path();
 
-        collections.save(path).unwrap();
-        let loaded = Collections::load(path).unwrap();
+        collections.save(path).expect("Test assertion failed");
+        let loaded = Collections::load(path).expect("Test assertion failed");
 
         assert_eq!(loaded.len(), 1);
         assert!(loaded.get("test_id").is_some());
@@ -513,7 +513,7 @@ mod collections_tests {
                 created_at: "2024-01-01T00:00:00Z".to_string(),
                 modified_at: "2024-01-01T00:00:00Z".to_string(),
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         let mut info = crate::metadata::Info::default();
         info.reader = Some(crate::metadata::ReaderInfo::default());

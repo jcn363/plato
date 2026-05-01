@@ -122,7 +122,7 @@ mod tests {
     fn test_cache_new() {
         let cache = ThumbnailCache::new(10);
         assert!(cache.is_ok());
-        let cache = cache.unwrap();
+        let cache = cache.expect("Test assertion failed");
         assert_eq!(cache.len(), 0);
         assert_eq!(cache.max_size(), 10);
     }
@@ -135,7 +135,7 @@ mod tests {
 
     #[test]
     fn test_cache_put_and_get() {
-        let mut cache = ThumbnailCache::new(5).unwrap();
+        let mut cache = ThumbnailCache::new(5).expect("Test assertion failed");
         let path = PathBuf::from("test.png");
         let pixmap = create_test_pixmap(100, 100);
 
@@ -144,12 +144,12 @@ mod tests {
 
         let retrieved = cache.get(&path);
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().width(), pixmap.width());
+        assert_eq!(retrieved.expect("Test assertion failed").width(), pixmap.width());
     }
 
     #[test]
     fn test_cache_eviction() {
-        let mut cache = ThumbnailCache::new(2).unwrap();
+        let mut cache = ThumbnailCache::new(2).expect("Test assertion failed");
         let path1 = PathBuf::from("test1.png");
         let path2 = PathBuf::from("test2.png");
         let path3 = PathBuf::from("test3.png");
@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_cache_remove() {
-        let mut cache = ThumbnailCache::new(5).unwrap();
+        let mut cache = ThumbnailCache::new(5).expect("Test assertion failed");
         let path = PathBuf::from("test.png");
         let pixmap = create_test_pixmap(100, 100);
 
@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn test_cache_clear() {
-        let mut cache = ThumbnailCache::new(5).unwrap();
+        let mut cache = ThumbnailCache::new(5).expect("Test assertion failed");
         let pixmap = create_test_pixmap(100, 100);
 
         for i in 0..3 {
@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_cache_stats() {
-        let mut cache = ThumbnailCache::new(10).unwrap();
+        let mut cache = ThumbnailCache::new(10).expect("Test assertion failed");
         let pixmap = create_test_pixmap(100, 100);
 
         let stats = cache.stats();

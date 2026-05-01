@@ -170,7 +170,7 @@ mod saved_queries_tests {
             use_count: 0,
         };
 
-        queries.add(query.clone()).unwrap();
+        queries.add(query.clone()).expect("Test assertion failed");
         assert_eq!(queries.len(), 1);
         assert_eq!(queries.get("test_id"), Some(&query));
     }
@@ -235,8 +235,8 @@ mod saved_queries_tests {
             use_count: 0,
         };
 
-        queries.add(query).unwrap();
-        queries.remove("test_id").unwrap();
+        queries.add(query).expect("Test assertion failed");
+        queries.remove("test_id").expect("Test assertion failed");
         assert!(queries.is_empty());
     }
 
@@ -259,10 +259,10 @@ mod saved_queries_tests {
             use_count: 0,
         };
 
-        queries.add(query).unwrap();
-        queries.mark_used("test_id").unwrap();
+        queries.add(query).expect("Test assertion failed");
+        queries.mark_used("test_id").expect("Test assertion failed");
 
-        let updated = queries.get("test_id").unwrap();
+        let updated = queries.get("test_id").expect("Test assertion failed");
         assert_eq!(updated.use_count, 1);
         assert!(updated.last_used.is_some());
     }
@@ -287,7 +287,7 @@ mod saved_queries_tests {
                 last_used: None,
                 use_count: 0,
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         queries
             .add(SavedQuery {
@@ -298,7 +298,7 @@ mod saved_queries_tests {
                 last_used: None,
                 use_count: 0,
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         let all = queries.all();
         assert_eq!(all.len(), 2);
@@ -317,7 +317,7 @@ mod saved_queries_tests {
                 last_used: None,
                 use_count: 0,
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
         queries.clear();
         assert!(queries.is_empty());
@@ -336,13 +336,13 @@ mod saved_queries_tests {
                 last_used: None,
                 use_count: 0,
             })
-            .unwrap();
+            .expect("Test assertion failed");
 
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new().expect("Test assertion failed");
         let path = temp_file.path();
 
-        queries.save(path).unwrap();
-        let loaded = SavedQueries::load(path).unwrap();
+        queries.save(path).expect("Test assertion failed");
+        let loaded = SavedQueries::load(path).expect("Test assertion failed");
 
         assert_eq!(loaded.len(), 1);
         assert!(loaded.get("test_id").is_some());

@@ -268,7 +268,7 @@ mod search_index_tests {
     #[test]
     fn test_search_empty_query() {
         let index = SearchIndex::new();
-        let result = index.search("").unwrap();
+        let result = index.search("").expect("Test assertion failed");
         assert!(result.is_empty());
     }
 
@@ -281,7 +281,7 @@ mod search_index_tests {
         doc_paths.insert(doc_id.clone(), "/path/to/doc1".to_string());
         drop(doc_paths);
 
-        index.remove_document(&doc_id).unwrap();
+        index.remove_document(&doc_id).expect("Test assertion failed");
         assert_eq!(index.document_count(), 0);
     }
 }

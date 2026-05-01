@@ -41,7 +41,7 @@ fn test_damage_tracker_single_line_change() {
         frame2_data[idx + 1] = 255;
         frame2_data[idx + 2] = 255;
     }
-    let frame2 = FrameBuffer::from_data(100, 100, frame2_data).unwrap();
+    let frame2 = FrameBuffer::from_data(100, 100, frame2_data).expect("Test assertion failed");
 
     let regions = tracker.track_changes(&frame2);
 
@@ -71,7 +71,7 @@ fn test_damage_checkerboard_pattern() {
             }
         }
     }
-    let frame2 = FrameBuffer::from_data(100, 100, frame2_data).unwrap();
+    let frame2 = FrameBuffer::from_data(100, 100, frame2_data).expect("Test assertion failed");
 
     let regions = tracker.track_changes(&frame2);
 
@@ -95,7 +95,7 @@ fn test_grayscale_extreme_values() {
 
     // All black
     let black = vec![0u8; 100 * 4];
-    let gray_black = converter.convert(&black, 10, 10).unwrap();
+    let gray_black = converter.convert(&black, 10, 10).expect("Test assertion failed");
     assert!(
         gray_black.iter().all(|&v| v == 0),
         "All black should be level 0"
@@ -103,7 +103,7 @@ fn test_grayscale_extreme_values() {
 
     // All white
     let white = vec![255u8; 100 * 4];
-    let gray_white = converter.convert(&white, 10, 10).unwrap();
+    let gray_white = converter.convert(&white, 10, 10).expect("Test assertion failed");
     assert!(
         gray_white.iter().all(|&v| v == 15),
         "All white should be level 15"
@@ -127,7 +127,7 @@ fn test_grayscale_transparent_pixels() {
     rgba[6] = 255;
     rgba[7] = 0;
 
-    let gray = converter.convert(&rgba, 2, 2).unwrap();
+    let gray = converter.convert(&rgba, 2, 2).expect("Test assertion failed");
 
     // Both should convert based on RGB values (ignoring alpha)
     assert_eq!(gray[0], 15);
@@ -140,7 +140,7 @@ fn test_floyd_steinberg_narrow_strip() {
 
     // Very narrow image (1 pixel wide, 10 pixels tall)
     let rgba = vec![128u8; 10 * 4];
-    let gray = converter.convert(&rgba, 1, 10).unwrap();
+    let gray = converter.convert(&rgba, 1, 10).expect("Test assertion failed");
 
     assert_eq!(gray.len(), 10);
     // Should not panic on edge case
@@ -152,7 +152,7 @@ fn test_floyd_steinberg_flat_strip() {
 
     // Very flat image (10 pixels wide, 1 pixel tall)
     let rgba = vec![128u8; 10 * 4];
-    let gray = converter.convert(&rgba, 10, 1).unwrap();
+    let gray = converter.convert(&rgba, 10, 1).expect("Test assertion failed");
 
     assert_eq!(gray.len(), 10);
 }
@@ -165,8 +165,8 @@ fn test_ordered_dithering_pattern_consistency() {
     let rgba: Vec<u8> = (0..(16 * 16))
         .flat_map(|_| [128u8, 128, 128, 255])
         .collect();
-    let gray1 = converter.convert(&rgba, 16, 16).unwrap();
-    let gray2 = converter.convert(&rgba, 16, 16).unwrap();
+    let gray1 = converter.convert(&rgba, 16, 16).expect("Test assertion failed");
+    let gray2 = converter.convert(&rgba, 16, 16).expect("Test assertion failed");
 
     // Ordered dithering should be deterministic
     assert_eq!(gray1, gray2, "Ordered dithering should be consistent");
@@ -177,8 +177,8 @@ fn test_gamma_extreme_values() {
     let mid_gray = vec![128u8, 128, 128, 255];
 
     // High gamma (>1.0) brightens mid-tones (curve becomes concave)
-    let high_gamma = GrayscaleConverter::with_gamma(DitheringMode::None, 5.0).unwrap();
-    let result = high_gamma.convert(&mid_gray, 1, 1).unwrap();
+    let high_gamma = GrayscaleConverter::with_gamma(DitheringMode::None, 5.0).expect("Test assertion failed");
+    let result = high_gamma.convert(&mid_gray, 1, 1).expect("Test assertion failed");
     // Gamma 5.0: 128 -> ~196 -> ~12 in 16-level (brightened from mid-gray ~7-8)
     assert!(
         result[0] >= 11,
@@ -187,8 +187,8 @@ fn test_gamma_extreme_values() {
     );
 
     // Low gamma (<1.0) darkens mid-tones (curve becomes convex)
-    let low_gamma = GrayscaleConverter::with_gamma(DitheringMode::None, 0.5).unwrap();
-    let result = low_gamma.convert(&mid_gray, 1, 1).unwrap();
+    let low_gamma = GrayscaleConverter::with_gamma(DitheringMode::None, 0.5).expect("Test assertion failed");
+    let result = low_gamma.convert(&mid_gray, 1, 1).expect("Test assertion failed");
     // Gamma 0.5: 128 -> ~52 -> ~3 in 16-level (darkened from mid-gray ~7-8)
     assert!(
         result[0] <= 5,
@@ -328,8 +328,8 @@ fn test_partial_refresh_small_damage_filtered() {
 
 #[test]
 fn test_controller_input_validation() {
-    let sunxi = SunxiController::default().unwrap();
-    let mxc = MxcController::default().unwrap();
+    let sunxi = SunxiController::default().expect("Test assertion failed");
+    let mxc = MxcController::default().expect("Test assertion failed");
 
     let region = Rectangle::from_coords(0, 0, 100, 100);
 
@@ -393,10 +393,10 @@ fn test_full_pipeline_minimal() {
     let rgba = vec![255u8, 0, 0, 255]; // Red pixel
 
     let converter = GrayscaleConverter::new(DitheringMode::None);
-    let grayscale = converter.convert(&rgba, 1, 1).unwrap();
+    let grayscale = converter.convert(&rgba, 1, 1).expect("Test assertion failed");
 
     let mut tracker = DamageTracker::new(50);
-    let fb = FrameBuffer::from_data(1, 1, rgba).unwrap();
+    let fb = FrameBuffer::from_data(1, 1, rgba).expect("Test assertion failed");
     let regions = tracker.track_changes(&fb);
 
     assert_eq!(grayscale.len(), 1);
@@ -441,7 +441,7 @@ fn test_stress_many_small_regions() {
         frame2_data[idx + 1] = 255;
         frame2_data[idx + 2] = 255;
     }
-    let frame2 = FrameBuffer::from_data(100, 100, frame2_data).unwrap();
+    let frame2 = FrameBuffer::from_data(100, 100, frame2_data).expect("Test assertion failed");
 
     let regions = tracker.track_changes(&frame2);
 

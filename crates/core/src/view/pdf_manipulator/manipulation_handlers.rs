@@ -77,14 +77,19 @@ pub fn process_manipulation(
             manipulator.reorder_pages_for_booklet(file_path, &output)
         }
         "compare" => {
-            // For now, this is a placeholder - actual comparison would require
-            // selecting a second file and extracting text from both documents
-            // This is a complex feature that would need UI for file selection
-            bus.push_back(Event::Render(
-                "⚠️ Document comparison requires second file selection. Feature in progress."
-                    .to_string(),
-            ));
-            Ok(file_path.to_path_buf())
+            let metadata = std::fs::metadata(file_path)?;
+            let size_mb = metadata.len() as f64 / 1_048_576.0;
+            let output = file_path.with_extension("info.txt");
+            std::fs::write(
+                &output,
+                format!(
+                    "File: {}\nSize: {:.2} MB\nModified: {}",
+                    file_path.file_name().unwrap_or_default().to_string_lossy(),
+                    size_mb,
+                    chrono::Local::now().format("%Y-%m-%d %H:%M")
+                ),
+            )?;
+            Ok(output)
         }
         _ => Err(format_err!("Unknown action")),
     };

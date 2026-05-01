@@ -130,7 +130,7 @@ mod tests {
         let context = crate::AiContext::new("/test.epub".into(), 5, 20);
         let response = provider
             .generate("Summarize this chapter", &context)
-            .unwrap();
+            .expect("Test assertion failed");
         assert!(
             response.content.to_lowercase().contains("summary"),
             "Expected response to contain 'summary', got: {}",

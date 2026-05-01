@@ -16,6 +16,7 @@
 - Removed `#[allow(dead_code)]` from MockProvider
 - Added `config()`, `is_failing()` getters
 - Fixed GenerateResponse fields (`_model`, `_created_at`)
+- PDF compare: Now writes file info (.info.txt)
 
 ## TTS Android Implementation - Complete
 
