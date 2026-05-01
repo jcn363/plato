@@ -78,3 +78,19 @@ Completed UI feature implementation, migrated from FFI font dependencies to pure
 - See `doc/DEB_PACKAGE.md` for full instructions
 - Build script: `build-deb.sh`
 
+## AppImage Build
+
+### Linux Portable AppImage
+- Created: `dist/plato-x86_64.AppImage` (12MB)
+- Portable: Runs on any Linux distribution without installation
+- Includes: Binary, resources (fonts, css, icons), desktop file, icon
+- Usage: `chmod +x plato-x86_64.AppImage && ./plato-x86_64.AppImage`
+
+### Build Process
+1. Create AppDir structure with binary and resources
+2. Download `appimagetool`
+3. Run: `./appimagetool AppDir plato-x86_64.AppImage`
+
+### Documentation
+- See `doc/DEB_PACKAGE.md` for full instructions
+

@@ -96,9 +96,25 @@ The DEB package includes:
 2. **LSP errors in dependencies**: The `rar` crate may show LSP errors (trait bound issues), but these don't affect compilation
 3. **Missing `speech-dispatcher`**: For TTS support, install `libspeechd-dev`
 
+## AppImage (Portable)
+
+Plato also provides an AppImage for portable use:
+
+```bash
+# Download or build AppImage
+cd /home/user/Desktop/plato/dist
+chmod +x plato-x86_64.AppImage
+
+# Run directly without installation
+./plato-x86_64.AppImage
+```
+
+The AppImage includes all resources and runs on any Linux distribution.
+
 ## File Locations
 
 - DEB package: `dist/plato_0.9.45-1_amd64.deb`
+- AppImage: `dist/plato-x86_64.AppImage`
 - Build script: `build-deb.sh`
 - Debian config: `debian/` directory
 - Control file: `debian/control`
