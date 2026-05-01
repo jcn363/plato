@@ -5,9 +5,6 @@ edition = "2021"
 description = "AI features for Plato e-reader (local-first, privacy-focused)"
 
 [dependencies]
-# Core Plato dependencies
-plato-core = { path = "../core" }
-
 # Async runtime
 tokio = { version = "1.43", features = ["rt-multi-thread", "macros"] }
 
@@ -20,6 +17,7 @@ serde_json = "1.0"
 
 # Error handling
 anyhow = "1.0"
+plato_error = { path = "../error" }
 
 # Logging
 log = "0.4"

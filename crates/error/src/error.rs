@@ -22,6 +22,8 @@ pub enum PlatoError {
     Format(String),
     #[error("Database error: {0}")]
     Database(String),
+    #[error("Candle error: {0}")]
+    Candle(#[from] candle_core::Error),
     #[error("AI error: {0}")]
     Ai(#[from] anyhow::Error),
     #[error("Configuration error: {0}")]

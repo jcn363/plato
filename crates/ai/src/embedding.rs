@@ -1,10 +1,10 @@
 //! Vector embedding engine for semantic search using candle-core
 
-use anyhow::Result;
+use crate::traits::VectorEmbedder;
+use plato_error::PlatoResult;
 use candle_core::{Device, Module, Tensor};
 use candle_nn::VarBuilder;
 use tokenizers::Tokenizer;
-use crate::traits::VectorEmbedder;
 
 /// A local embedding engine powered by candle-core
 pub struct CandleEmbedder {
@@ -15,7 +15,7 @@ pub struct CandleEmbedder {
 
 impl CandleEmbedder {
     /// Initialize a new embedder, loading the tokenizer and model weights
-    pub fn new(model_path: &str, tokenizer_path: &str) -> Result<Self> {
+    pub fn new(model_path: &str, tokenizer_path: &str) -> PlatoResult<Self> {
         let device = Device::Cpu;
         let tokenizer = Tokenizer::from_file(tokenizer_path)
             .map_err(|e| anyhow::anyhow!("Failed to load tokenizer: {}", e))?;

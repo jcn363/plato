@@ -20,8 +20,6 @@ pub mod providers;
 pub mod settings;
 pub mod traits;
 pub mod embedding;
-pub mod search;
-pub mod indexer;
 
 pub use settings::AiSettings;
 pub use traits::LLMProvider;

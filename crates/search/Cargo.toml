@@ -1,0 +1,14 @@
+[package]
+name = "plato-search"
+version = "0.9.45"
+edition = "2021"
+license = "AGPLv3"
+
+[dependencies]
+plato_error = { path = "../error" }
+plato-ai = { path = "../ai" }
+rusqlite = { version = "0.33", features = ["bundled"] }
+anyhow = "1.0"
+
+[lib]
+path = "src/lib.rs"

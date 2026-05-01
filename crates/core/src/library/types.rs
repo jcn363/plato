@@ -56,6 +56,7 @@ pub struct Library {
     pub search_index: SearchIndex,
     /// Collection management
     pub collections: Collections,
+    pub indexer: Option<LibraryIndexer>,
 }
 
 impl Library {
@@ -71,6 +72,9 @@ impl Library {
         let paths = Self::build_paths_map(&db, mode);
         let reading_states = Self::load_reading_states(&home, mode, &mut db)?;
         Self::create_thumbnail_previews_dir(&home);
+
+        let embedder = plato_ai::embedding::CandleEmbedder::new("model.safetensors", "tokenizer.json").ok();
+        let indexer = embedder.and_then(|e| LibraryIndexer::new("library.db", e).ok());
 
         Ok(Library {
             home: home.as_ref().to_path_buf(),
@@ -88,6 +92,7 @@ impl Library {
             concurrent_cache: Arc::new(DashMap::new()),
             search_index: SearchIndex::new(),
             collections: Self::load_collections(&home),
+            indexer,
         })
     }
 

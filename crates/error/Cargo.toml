@@ -7,6 +7,7 @@ license = "AGPLv3"
 [dependencies]
 thiserror = "1.0"
 anyhow = "1.0"
+candle-core = "0.8.4"
 
 [lib]
 path = "src/lib.rs"
