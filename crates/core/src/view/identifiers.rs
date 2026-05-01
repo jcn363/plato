@@ -77,6 +77,7 @@ pub enum ViewId {
     SystemInfo,
     MarginCropper,
     TopBottomBars,
+    AiChat,
     TableOfContents,
     EpubEditor,
     EpubEditorSearchInput,

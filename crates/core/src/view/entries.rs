@@ -291,6 +291,7 @@ pub enum EntryId {
     ToggleAiModel,
     ToggleAiEndpoint,
     ToggleAiApiKey,
+    AiSendMessage,
     Preview,
     SearchReplace,
     ReplaceInChapter,
@@ -450,6 +451,7 @@ impl EntryId {
             EntryId::ToggleAiModel => "ToggleAiModel",
             EntryId::ToggleAiEndpoint => "ToggleAiEndpoint",
             EntryId::ToggleAiApiKey => "ToggleAiApiKey",
+            EntryId::AiSendMessage => "AiSendMessage",
             EntryId::Preview => "Preview",
             _ => "Unknown",
         }

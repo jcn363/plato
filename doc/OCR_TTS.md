@@ -101,12 +101,21 @@ This document explains the implementation status and constraints for Optical Cha
 5. **E-ink Display Context**: E-readers are primarily designed for silent, visual reading. Adding TTS would deviate from the core use case and add complexity without significant benefit to the target user base.
 
 ### Implementation Details
-
 **Android Implementation:**
 
 - Uses Android's `TextToSpeech` API via JNI (Java Native Interface)
 - Located in `crates/core/src/tts_android.rs`
-- Supports: play, stop, rate adjustment
+- Properly stores TextToSpeech instance using JNI `GlobalRef` for correct lifecycle management
+- Implements all `TtsEngine` trait methods:
+  - `initialize()` - Creates and stores TextToSpeech instance
+  - `speak()` - Speaks text with rate/pitch/volume parameters via Bundle
+  - `stop()` - Stops current speech
+  - `pause()` / `resume()` - Returns errors (Android TTS API doesn't support these natively)
+  - `voices()` - Enumerates available voices via `getVoices()` and converts Set<Voice> to Vec<TtsVoice>
+  - `set_voice()` - Finds and sets voice by ID
+  - `set_rate()` / `rate()` - Clamped to [0.5, 2.0]
+  - `set_volume()` / `volume()` - Clamped to [0.0, 1.0]
+- No stubs, TODOs, or placeholders - complete implementation
 - UI integration in `crates/core/src/view/tts.rs`
 
 **Desktop Implementation:**

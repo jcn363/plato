@@ -17,6 +17,14 @@
 - Added `config()`, `is_failing()` getters
 - Fixed GenerateResponse fields (`_model`, `_created_at`)
 
+## TTS Android Implementation - Complete
+
+- Rewrote `tts_android.rs` from scratch with proper JNI `GlobalRef` usage
+- All `TtsEngine` trait methods fully implemented (no stubs)
+- Stores TextToSpeech instance correctly for lifecycle management
+- Implements voice enumeration, speech parameters (rate/pitch/volume)
+- `pause()`/`resume()` return errors (Android TTS API limitation, not a stub)
+
 ## AI Integration - Complete
 
 - **Enable**: On/Off toggle
