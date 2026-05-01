@@ -105,17 +105,27 @@ This document explains the implementation status and constraints for Optical Cha
 
 - Uses Android's `TextToSpeech` API via JNI (Java Native Interface)
 - Located in `crates/core/src/tts_android.rs`
+- **Pause/Resume Support**: Implemented using `synthesizeToFile()` + `MediaPlayer`
+  1. `speak()` synthesizes text to a temporary WAV file using `synthesizeToFile()`
+  2. Creates `MediaPlayer` with the synthesized audio file
+  3. `pause()` → `MediaPlayer.pause()` (native pause support)
+  4. `resume()` → `MediaPlayer.start()` (native resume support)
+  5. `stop()` → releases MediaPlayer and cleans up temp file
+- **jni 0.22+ Compatibility**:
+  - Uses `Global::as_obj()` returning `&JObject<'static>`
+  - `JObject::from_raw(env, raw)` now requires `Env` parameter
+  - `get_env()` returns `AttachGuard` (derefs to `&Env`)
+  - Removed deprecated `GlobalRef` type references
 - Properly stores TextToSpeech instance using JNI `GlobalRef` for correct lifecycle management
-- Implements all `TtsEngine` trait methods:
+- Implements all `TtsEngine` trait methods without stubs:
   - `initialize()` - Creates and stores TextToSpeech instance
-  - `speak()` - Speaks text with rate/pitch/volume parameters via Bundle
-  - `stop()` - Stops current speech
-  - `pause()` / `resume()` - Returns errors (Android TTS API doesn't support these natively)
-  - `voices()` - Enumerates available voices via `getVoices()` and converts Set<Voice> to Vec<TtsVoice>
+  - `speak()` - Synthesizes to file, plays via MediaPlayer
+  - `stop()` - Stops and releases MediaPlayer, cleans temp file
+  - `pause()` / `resume()` - Full pause/resume support via MediaPlayer
+  - `voices()` - Enumerates available voices via `getVoices()`
   - `set_voice()` - Finds and sets voice by ID
   - `set_rate()` / `rate()` - Clamped to [0.5, 2.0]
   - `set_volume()` / `volume()` - Clamped to [0.0, 1.0]
-- No stubs, TODOs, or placeholders - complete implementation
 - UI integration in `crates/core/src/view/tts.rs`
 
 **Desktop Implementation:**

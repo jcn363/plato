@@ -3,21 +3,35 @@
 //! This module provides TTS support for Android using the Android TextToSpeech API
 //! through JNI (Java Native Interface).
 //!
-//! The implementation properly stores the TextToSpeech instance using JNI GlobalRef
-//! and implements all TtsEngine trait methods without stubs or placeholders.
+//! ## Pause/Resume Implementation
+//!
+//! Android TTS doesn't have native pause/resume. We implement it by:
+//! 1. Using `synthesizeToFile()` to create an audio file
+//! 2. Using MediaPlayer to play/pause/resume the audio
+//!
+//! ## JNI 0.22+ Compatibility
+//!
+//! This implementation uses jni 0.22+ API:
+//! - `Global::as_obj()` returns `&JObject<'static>` (GlobalRef is now Global<JObject<'static>>)
+//! - `JObject::from_raw(env, raw)` requires an Env parameter for safety
+//! - `JObject` no longer implements `Copy`
+//! - `JValue::Object` expects `&JObject<'a>` (use &obj instead of obj.into())
 
 use anyhow::{bail, Context, Result};
 use jni::objects::{GlobalRef, JObject, JString, JValue};
 use jni::JNIEnv;
-use std::ffi::CString;
 use std::time::SystemTime;
 
 use crate::tts::{TtsEngine, TtsOptions, TtsSettings, TtsState, TtsVoice};
 
 /// Android TTS engine using JNI to access TextToSpeech API
+///
+/// Implements pause/resume by synthesizing to a temp file and using MediaPlayer.
 pub struct AndroidTtsEngine {
     /// Global reference to TextToSpeech instance
     tts_instance: Option<GlobalRef>,
+    /// Global reference to MediaPlayer instance (for pause/resume)
+    media_player: Option<GlobalRef>,
     /// Current TTS state
     state: TtsState,
     /// Current settings
@@ -26,6 +40,8 @@ pub struct AndroidTtsEngine {
     current_voice: Option<String>,
     /// Whether engine is initialized
     initialized: bool,
+    /// Temp file path for synthesized audio (for pause/resume)
+    temp_file_path: Option<String>,
 }
 
 impl AndroidTtsEngine {
@@ -33,15 +49,18 @@ impl AndroidTtsEngine {
     pub fn new() -> Self {
         Self {
             tts_instance: None,
+            media_player: None,
             state: TtsState::Idle,
             settings: TtsSettings::default(),
             current_voice: None,
             initialized: false,
+            temp_file_path: None,
         }
     }
 
     /// Get JNI environment
-    fn get_env(&self) -> Result<JNIEnv> {
+    /// In jni 0.22+, attach_current_thread() returns AttachGuard which derefs to &Env
+    fn get_env(&self) -> Result<jni::AttachGuard> {
         let ctx = ndk_context::android_context();
         let vm = ctx.vm();
         let env = vm
@@ -57,12 +76,14 @@ impl AndroidTtsEngine {
         if context.is_null() {
             bail!("Android context not available");
         }
-        Ok(unsafe { JObject::from_raw(context.as_raw() as jni::sys::jobject) })
+        // jni 0.22+: from_raw requires an Env parameter for safety
+        let raw = context.as_raw();
+        Ok(unsafe { JObject::from_raw(env, raw) })
     }
 
     /// Initialize the TextToSpeech engine
     fn init_tts(&mut self) -> Result<()> {
-        let mut env = self.get_env()?;
+        let env = self.get_env()?;
         let context = self.get_context(&env)?;
 
         // Find TextToSpeech class
@@ -92,23 +113,76 @@ impl AndroidTtsEngine {
         Ok(())
     }
 
-    /// Get TTS instance as JObject
-    fn get_tts_instance(&self) -> Result<JObject> {
+    /// Get TTS instance as JObject reference
+    fn get_tts_instance(&self) -> Result<&JObject<'static>> {
         match &self.tts_instance {
-            Some(gref) => Ok(gref.as_obj().clone()),
+            Some(gref) => Ok(gref.as_obj()),
             None => bail!("TTS instance not initialized"),
         }
     }
 
-    /// Speak text using Android TTS
+    /// Get MediaPlayer instance as JObject reference
+    fn get_media_player(&self) -> Result<&JObject<'static>> {
+        match &self.media_player {
+            Some(gref) => Ok(gref.as_obj()),
+            None => bail!("MediaPlayer not initialized"),
+        }
+    }
+
+    /// Clean up temp file
+    fn cleanup_temp_file(&mut self) {
+        if let Some(path) = &self.temp_file_path {
+            let _ = std::fs::remove_file(path);
+        }
+        self.temp_file_path = None;
+    }
+
+    /// Speak text using Android TTS with pause/resume support
+    ///
+    /// This method:
+    /// 1. Synthesizes text to a temporary file using `synthesizeToFile()`
+    /// 2. Waits for synthesis to complete (with timeout)
+    /// 3. Creates a MediaPlayer to play the audio file
+    /// 4. MediaPlayer supports pause/resume natively
     fn speak_text(&mut self, text: &str, options: &TtsOptions) -> Result<()> {
         let env = self.get_env()?;
         let tts_obj = self.get_tts_instance()?;
 
-        // Create Java string for text
-        let jtext = env
-            .new_string(text)
-            .context("Failed to create Java string")?;
+        // Clean up any previous temp file
+        self.cleanup_temp_file();
+
+        // Create a temporary file for synthesized audio
+        let temp_dir = std::env::temp_dir();
+        let temp_file_path = temp_dir.join(format!(
+            "plato_tts_{}.wav",
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis()
+        ));
+        let temp_file_path_str = temp_file_path.to_str().context("Invalid temp file path")?;
+
+        // Create the file (ensure it exists)
+        let _file = std::fs::File::create(&temp_file_path).context("Failed to create temp file")?;
+
+        // Store temp file path for cleanup
+        self.temp_file_path = Some(temp_file_path_str.to_string());
+
+        // Convert path to Java File object
+        let jfile_path = env
+            .new_string(temp_file_path_str)
+            .context("Failed to create file path string")?;
+
+        let file_class = env
+            .find_class("java/io/File")
+            .context("Failed to find File class")?;
+        let file_obj = env
+            .new_object(
+                &file_class,
+                "(Ljava/lang/String;)V",
+                &[JValue::Object(&JObject::from(jfile_path))],
+            )
+            .context("Failed to create File object")?;
 
         // Create Bundle for parameters
         let bundle_class = env
@@ -146,29 +220,96 @@ impl AndroidTtsEngine {
         let utterance_id = env
             .new_string(&format!(
                 "plato_tts_{}",
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
+                SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
                     .unwrap_or_default()
                     .as_millis()
             ))
             .context("Failed to create utterance ID")?;
 
-        // Call speak method
-        // speak(CharSequence text, int queueMode, Bundle params, String utteranceId)
-        let queue_mode = if options.interrupt { 0i32 } else { 1i32 }; // 0 = QUEUE_FLUSH, 1 = QUEUE_ADD
-
+        // Call synthesizeToFile: synthesizeToFile(CharSequence text, Bundle params, File file, String utteranceId)
         env.call_method(
             tts_obj,
-            "speak",
-            "(Ljava/lang/CharSequence;ILandroid/os/Bundle;Ljava/lang/String;)I",
+            "synthesizeToFile",
+            "(Ljava/lang/CharSequence;Landroid/os/Bundle;Ljava/io/File;Ljava/lang/String;)I",
             &[
-                JValue::Object(&jtext),
-                JValue::Int(queue_mode),
+                JValue::Object(
+                    &env.new_string(text)
+                        .context("Failed to create text string")?,
+                ),
                 JValue::Object(&bundle),
+                JValue::Object(&file_obj),
                 JValue::Object(&utterance_id),
             ],
         )
-        .context("Failed to call TTS speak")?;
+        .context("Failed to call synthesizeToFile")?;
+
+        // Wait for synthesis to complete (simple polling with timeout)
+        // Note: In production, use UtteranceProgressListener for reliable notification
+        let mut attempts = 0;
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+
+            // Check if file has content (WAV header is 44 bytes)
+            if let Ok(metadata) = std::fs::metadata(&temp_file_path) {
+                if metadata.len() > 44 {
+                    break;
+                }
+            }
+
+            attempts += 1;
+            if attempts > 100 {
+                // Timeout after 10 seconds
+                self.cleanup_temp_file();
+                bail!("TTS synthesis timeout");
+            }
+        }
+
+        // Get Android context for MediaPlayer
+        let context = self.get_context(&env)?;
+
+        // Create Uri from file
+        let uri_class = env
+            .find_class("android/net/Uri")
+            .context("Failed to find Uri class")?;
+
+        let uri_obj = env
+            .call_static_method(
+                &uri_class,
+                "fromFile",
+                "(Ljava/io/File;)Landroid/net/Uri;",
+                &[JValue::Object(&file_obj)],
+            )
+            .context("Failed to create Uri from file")?
+            .l()
+            .context("Failed to get Uri object")?;
+
+        // Create MediaPlayer using static method: MediaPlayer.create(Context, Uri)
+        let mp_class = env
+            .find_class("android/media/MediaPlayer")
+            .context("Failed to find MediaPlayer class")?;
+
+        let mp_obj = env
+            .call_static_method(
+                &mp_class,
+                "create",
+                "(Landroid/content/Context;Landroid/net/Uri;)Landroid/media/MediaPlayer;",
+                &[JValue::Object(&context), JValue::Object(&uri_obj)],
+            )
+            .context("Failed to create MediaPlayer")?
+            .l()
+            .context("Failed to get MediaPlayer object")?;
+
+        // Store MediaPlayer as global reference
+        let mp_global_ref = env
+            .new_global_ref(&mp_obj)
+            .context("Failed to create global reference for MediaPlayer")?;
+        self.media_player = Some(mp_global_ref);
+
+        // Start playback
+        let mp_obj = self.get_media_player()?;
+        env.call_method(&mp_obj, "start", "()V", &[])
+            .context("Failed to start MediaPlayer")?;
 
         self.state = TtsState::Speaking;
         self.settings.rate = options.rate;
@@ -178,15 +319,59 @@ impl AndroidTtsEngine {
         Ok(())
     }
 
-    /// Stop speech
+    /// Stop speech (stops both TTS and MediaPlayer)
     fn stop_speech(&mut self) -> Result<()> {
         let env = self.get_env()?;
-        let tts_obj = self.get_tts_instance()?;
 
-        env.call_method(tts_obj, "stop", "()I", &[])
-            .context("Failed to call TTS stop")?;
+        // Stop and release MediaPlayer if active
+        if let Some(_) = &self.media_player {
+            if let Ok(mp_obj) = self.get_media_player() {
+                let _ = env.call_method(&mp_obj, "stop", "()V", &[]);
+                let _ = env.call_method(&mp_obj, "release", "()V", &[]);
+            }
+            self.media_player = None;
+        }
+
+        // Also stop TTS in case it's still synthesizing
+        if let Ok(tts_obj) = self.get_tts_instance() {
+            let _ = env.call_method(tts_obj, "stop", "()I", &[]);
+        }
 
         self.state = TtsState::Idle;
+        self.cleanup_temp_file();
+
+        Ok(())
+    }
+
+    /// Pause speech (uses MediaPlayer.pause())
+    fn pause_speech(&mut self) -> Result<()> {
+        if self.media_player.is_none() {
+            bail!("No active speech to pause");
+        }
+
+        let env = self.get_env()?;
+        let mp_obj = self.get_media_player()?;
+
+        env.call_method(&mp_obj, "pause", "()V", &[])
+            .context("Failed to pause MediaPlayer")?;
+
+        self.state = TtsState::Paused;
+        Ok(())
+    }
+
+    /// Resume speech (uses MediaPlayer.start())
+    fn resume_speech(&mut self) -> Result<()> {
+        if self.media_player.is_none() {
+            bail!("No paused speech to resume");
+        }
+
+        let env = self.get_env()?;
+        let mp_obj = self.get_media_player()?;
+
+        env.call_method(&mp_obj, "start", "()V", &[])
+            .context("Failed to resume MediaPlayer")?;
+
+        self.state = TtsState::Speaking;
         Ok(())
     }
 
@@ -417,15 +602,27 @@ impl TtsEngine for AndroidTtsEngine {
     }
 
     fn pause(&mut self) -> Result<()> {
-        // Android TTS doesn't have a native pause method
-        // We simulate by stopping (but we lose position)
-        // This is a limitation of the Android TTS API
-        bail!("Pause not supported on Android TTS - use stop instead")
+        if !self.is_ready() {
+            bail!("TTS engine not initialized");
+        }
+
+        if self.state != TtsState::Speaking {
+            bail!("Not currently speaking");
+        }
+
+        self.pause_speech()
     }
 
     fn resume(&mut self) -> Result<()> {
-        // Android TTS doesn't have a native resume method
-        bail!("Resume not supported on Android TTS")
+        if !self.is_ready() {
+            bail!("TTS engine not initialized");
+        }
+
+        if self.state != TtsState::Paused {
+            bail!("Not currently paused");
+        }
+
+        self.resume_speech()
     }
 
     fn voices(&self) -> Result<Vec<TtsVoice>> {
