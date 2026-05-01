@@ -20,8 +20,7 @@ pub fn translate_motion_event(event: &MotionEvent, tx: &Sender<DeviceEvent>) {
         let x = pointer.x() as i32;
         let y = pointer.y() as i32;
         let position = Point::new(x, y);
-        // android-activity 0.5 doesn't have pointer.id(), use pointer_index instead
-        let id = pointer.pointer_index() as i32;
+        let id = pointer.pointer_id() as i32;
 
         let status = match event.action() {
             MotionAction::Down | MotionAction::PointerDown => FingerStatus::Down,

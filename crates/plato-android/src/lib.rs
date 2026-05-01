@@ -189,56 +189,15 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
         background_sync,
     );
 
-    // Set up gesture processing - simplified for MVP
-    let contacts = Arc::new(Mutex::new(FxHashMap::with_hasher(
-        plato_core::rustc_hash::FxBuildHasher,
-    )));
-    let segments = Arc::new(Mutex::new(Vec::<Vec<Point>>::new()));
-    let (gesture_tx, gesture_rx) = mpsc::channel();
+    // Set up gesture processing
     let (device_tx, device_rx) = mpsc::channel();
+    let gesture_events = plato_core::gesture::gesture_events(device_rx);
 
-    // gesture_tx is Sender<Event> which is the Hub type
-    let hub = gesture_tx.clone();
-
-    // Spawn gesture processor thread - simplified for MVP
-    // Note: plato_core::gesture::handle_finger_down/motion/up are private
-    // Using simplified gesture processing for MVP
-    let contacts_clone = contacts.clone();
-    let _segments_clone = segments.clone();
+    // Spawn gesture processor thread
     let gesture_tx_clone = gesture_tx.clone();
-    let _touch_config_clone = touch_config.clone();
-    let _device_tx = device_tx;
     std::thread::spawn(move || {
-        while let Ok(event) = device_rx.recv() {
-            if let DeviceEvent::Finger { id, time, status, position } = event {
-                match status {
-                    plato_core::input::FingerStatus::Down => {
-                        if let Ok(mut contacts) = contacts_clone.lock() {
-                            contacts.insert(id, plato_core::gesture::TouchState {
-                                time,
-                                held: true,
-                                positions: vec![position],
-                            });
-                        }
-                    }
-                    plato_core::input::FingerStatus::Motion => {
-                        if let Ok(mut contacts) = contacts_clone.lock() {
-                            if let Some(state) = contacts.get_mut(&id) {
-                                state.positions.push(position);
-                            }
-                        }
-                    }
-                    plato_core::input::FingerStatus::Up => {
-                        if let Ok(mut contacts) = contacts_clone.lock() {
-                            contacts.remove(&id);
-                            let _ = gesture_tx_clone.send(plato_core::view::Event::Gesture(
-                                plato_core::gesture::GestureEvent::Tap(position)
-                            ));
-                        }
-                    }
-                    _ => {}
-                }
-            }
+        while let Ok(event) = gesture_events.recv() {
+            let _ = gesture_tx_clone.send(plato_core::view::Event::Gesture(event));
         }
     });
 
@@ -259,9 +218,17 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
         app.poll_events(None, |event| {
             match event {
                 PollEvent::Main(MainEvent::InputAvailable) => {
-                    // Process input events
-                    // android-activity 0.6 API for input processing
-                    // For MVP, skip input processing until API is stable
+                    app.poll_events(None, |event| {
+                        if let PollEvent::Main(MainEvent::InputAvailable) = event {
+                             // This is where we receive motion events
+                        }
+                    });
+                    // For MVP, capture and translate events directly
+                    if let Some(event) = app.native_window().and_then(|_| app.poll_input()) {
+                         if let Some(motion) = event.motion() {
+                             crate::input::translate_motion_event(&motion, &device_tx);
+                         }
+                    }
                 }
                 PollEvent::Main(MainEvent::Pause) => {
                     log::info!("App paused");
