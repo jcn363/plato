@@ -42,6 +42,7 @@ members = [
   'crates/consts',
   'crates/rtc',
   'crates/framebuffer',
+  'crates/helpers',
 ]
 
 [workspace.package]
