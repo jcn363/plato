@@ -29,6 +29,16 @@ Root level documentation:
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Contributing guidelines
 - [AGENTS.md](../AGENTS.md) - AI coding agent guidance
 
+## Crate‑level READMEs
+
+Each top‑level crate now has its own `README.md` describing purpose, public API surface and optional features:
+
+- [core/README.md](../crates/core/README.md) – `plato‑core` library
+- [ai/README.md](../crates/ai/README.md) – `plato‑ai` embeddings & LLM providers
+- [thumbnail/README.md](../crates/thumbnail/README.md) – `plato‑thumbnail` background thumbnail generation
+- [plato‑android/README.md](../crates/plato-android/README.md) – Android‑specific glue
+- [plato‑view/README.md](../crates/plato-view/README.md) – UI view‑tree infrastructure
+
 ## Planning Documents
 
 ### Architecture & Design

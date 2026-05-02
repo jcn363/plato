@@ -2,6 +2,14 @@
 
 *Last updated: 2026-05-02*
 
+## Progress (2026-05-02)
+- [x] Architecture overview extended with AI/Thumbnail/TTS/Plugin nodes (commit 5502399)
+- [x] Service Layer updated to include `ai` (commit b2edbb3)
+- [x] Crate-level READMEs created for: core, ai, thumbnail, plato-android, plato-view
+- [ ] API_OVERVIEW.md not yet created
+- [ ] TESTING.md not yet created
+- [ ] ROADMAP.md not yet created
+
 ---
 
 ### 1. High‑level repository layout (Cargo workspace)
