@@ -60,6 +60,8 @@
 mod import;
 mod maintenance;
 mod manage;
+#[cfg(test)]
+mod manage_tests;
 mod query;
 mod scan;
 mod types;

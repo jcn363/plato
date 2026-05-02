@@ -277,7 +277,68 @@ Dependencies flow downward; lower layers don't depend on higher layers.
 - Architecture decisions documented with trade-offs
 - Module-level documentation in `mod.rs` files
 
+## Extended Architecture
+
+```mermaid
+graph TB
+    subgraph Application_Layer["Application Layer"]
+        ViewSystem["View System"]
+        UI["UI Components"]
+        Event["Event Handling"]
+    end
+
+    subgraph Business_Logic["Business Logic Layer"]
+        Library["Library Management"]
+        Document["Document Handling"]
+        Settings["Settings"]
+    end
+
+    subgraph Service["Service Layer"]
+        Rendering["Rendering"]
+        Input["Input"]
+        Storage["Storage"]
+        Sync["Synchronization"]
+        AI["AI Integration"]
+        Thumbnail["Thumbnail Subsystem"]
+        TTS["TTS Service"]
+        Plugin["Plugin System"]
+    end
+
+    subgraph Hardware["Hardware Abstraction Layer"]
+        Framebuffer["Framebuffers"]
+        Frontlight["Frontlight"]
+        Battery["Battery"]
+        InputDev["Input Devices"]
+    end
+
+    subgraph External["External Libraries"]
+        PDFPurr["PDFPurr (Pure Rust)"]
+        Skrifa["Skrifa (Pure Rust)"]
+        Lopdf["Lopdf (Pure Rust)"]
+    end
+
+    ViewSystem --> Library
+    UI --> Document
+    Event --> Settings
+    Library --> Rendering
+    Document --> Input
+    Settings --> Storage
+    Rendering --> Framebuffer
+    Input --> Frontlight
+    Storage --> Battery
+    Sync --> InputDev
+    AI --> Rendering
+    Thumbnail --> Rendering
+    TTS --> Rendering
+    Plugin --> Rendering
+    Framebuffer --> PDFPurr
+    Frontlight --> Skrifa
+    Battery --> Lopdf
+```
+
 ## Testing Strategy
+
+*(Existing content unchanged)*
 
 - Unit tests in sibling `*_tests.rs` files
 - Integration tests in `tests/` directory

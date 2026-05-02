@@ -1,7 +1,7 @@
-use plato_error::{PlatoError, PlatoResult};
 use crate::settings::CoverEditorSettings;
 use crate::validation::{validate_path, validate_range};
 use image::{DynamicImage, GenericImageView, ImageFormat};
+use plato_error::{PlatoError, PlatoResult};
 use std::io::Write;
 use std::path::Path;
 
@@ -21,8 +21,8 @@ impl CoverEditor {
         // Validate path before attempting to load
         validate_path(&path, "cover image path")?;
 
-        let img =
-            image::open(path.as_ref()).map_err(|e| PlatoError::Document(format!("Failed to open image: {}", e)))?;
+        let img = image::open(path.as_ref())
+            .map_err(|e| PlatoError::Document(format!("Failed to open image: {}", e)))?;
         Ok(img)
     }
 
@@ -41,26 +41,26 @@ impl CoverEditor {
         validate_range(y, 0, img_height, "crop y")?;
 
         if width == 0 {
-            return Err(PlatoError::Document("crop width must be greater than 0".into()));
+            return Err(PlatoError::Document(
+                "crop width must be greater than 0".into(),
+            ));
         }
         if height == 0 {
-            return Err(PlatoError::Document("crop height must be greater than 0".into()));
+            return Err(PlatoError::Document(
+                "crop height must be greater than 0".into(),
+            ));
         }
 
         if x + width > img_width {
             return Err(PlatoError::Document(format!(
                 "crop region extends beyond image width: x({}) + width({}) > img_width({})",
-                x,
-                width,
-                img_width
+                x, width, img_width
             )));
         }
         if y + height > img_height {
             return Err(PlatoError::Document(format!(
                 "crop region extends beyond image height: y({}) + height({}) > img_height({})",
-                y,
-                height,
-                img_height
+                y, height, img_height
             )));
         }
 
@@ -128,11 +128,15 @@ impl CoverEditor {
         // Validate image dimensions
         let (width, height) = img.dimensions();
         if width == 0 || height == 0 {
-            return Err(PlatoError::Document("cannot save cover with zero dimensions".into()));
+            return Err(PlatoError::Document(
+                "cannot save cover with zero dimensions".into(),
+            ));
         }
 
         // Validate settings
-        self.settings.validate().map_err(|e| PlatoError::Config(e.to_string()))?;
+        self.settings
+            .validate()
+            .map_err(|e| PlatoError::Config(e.to_string()))?;
 
         let rgb_img = img.to_rgb8();
         let (width, height) = rgb_img.dimensions();
@@ -170,9 +174,11 @@ impl CoverEditor {
 /// and case-insensitive matching. Returns the first valid cover image found.
 pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> PlatoResult<DynamicImage> {
     let path = epub_path.as_ref();
-    let file = std::fs::File::open(path)
-        .map_err(|e| PlatoError::Document(format!("can't open EPUB file {}: {}", path.display(), e)))?;
-    let mut archive = zip::ZipArchive::new(file).map_err(|e| PlatoError::Document(format!("can't open zip archive: {}", e)))?;
+    let file = std::fs::File::open(path).map_err(|e| {
+        PlatoError::Document(format!("can't open EPUB file {}: {}", path.display(), e))
+    })?;
+    let mut archive = zip::ZipArchive::new(file)
+        .map_err(|e| PlatoError::Document(format!("can't open zip archive: {}", e)))?;
 
     fn starts_with_case_insensitive(text: &str, prefix: &str) -> bool {
         text.len() >= prefix.len()
@@ -216,7 +222,9 @@ pub fn extract_cover_from_epub<P: AsRef<Path>>(epub_path: P) -> PlatoResult<Dyna
                 || ends_with_case_insensitive(entry, ".jpeg")
                 || ends_with_case_insensitive(entry, ".png"))
         {
-            if let Ok(mut file) = archive.by_index(file_names.iter().position(|r| r == entry).unwrap()) {
+            if let Ok(mut file) =
+                archive.by_index(file_names.iter().position(|r| r == entry).unwrap())
+            {
                 let mut buffer = Vec::with_capacity(1024 * 1024);
                 std::io::Read::read_to_end(&mut file, &mut buffer).map_err(PlatoError::Io)?;
                 if let Ok(img) = image::load_from_memory(&buffer) {
@@ -237,43 +245,65 @@ pub fn set_cover_in_epub<P: AsRef<Path>>(epub_path: P, cover_path: P) -> PlatoRe
     let epub_path = epub_path.as_ref();
     let cover_path = cover_path.as_ref();
 
-    let cover_img = image::open(cover_path).map_err(|e| PlatoError::Document(format!("Failed to open cover: {}", e)))?;
+    let cover_img = image::open(cover_path)
+        .map_err(|e| PlatoError::Document(format!("Failed to open cover: {}", e)))?;
     let resized = cover_img.resize(600, 800, image::imageops::FilterType::Lanczos3);
 
     let mut buffer = Vec::with_capacity(1024 * 1024); // 1MB initial capacity for JPEG
     let mut cursor = std::io::Cursor::new(&mut buffer);
-    resized.write_to(&mut cursor, ImageFormat::Jpeg).map_err(|e| PlatoError::Document(format!("Failed to encode cover: {}", e)))?;
+    resized
+        .write_to(&mut cursor, ImageFormat::Jpeg)
+        .map_err(|e| PlatoError::Document(format!("Failed to encode cover: {}", e)))?;
 
-    let file = std::fs::File::open(epub_path)
-        .map_err(|e| PlatoError::Document(format!("can't open EPUB file {}: {}", epub_path.display(), e)))?;
-    let mut archive = zip::ZipArchive::new(file).map_err(|e| PlatoError::Document(format!("can't open zip archive: {}", e)))?;
+    let file = std::fs::File::open(epub_path).map_err(|e| {
+        PlatoError::Document(format!(
+            "can't open EPUB file {}: {}",
+            epub_path.display(),
+            e
+        ))
+    })?;
+    let mut archive = zip::ZipArchive::new(file)
+        .map_err(|e| PlatoError::Document(format!("can't open zip archive: {}", e)))?;
 
     let temp_path = epub_path.with_extension("epub.bak");
     std::fs::copy(epub_path, &temp_path).map_err(PlatoError::Io)?;
 
-    let temp_file = std::fs::File::create(&temp_path)
-        .map_err(|e| PlatoError::Document(format!("can't create temporary file {}: {}", temp_path.display(), e)))?;
+    let temp_file = std::fs::File::create(&temp_path).map_err(|e| {
+        PlatoError::Document(format!(
+            "can't create temporary file {}: {}",
+            temp_path.display(),
+            e
+        ))
+    })?;
     let mut new_archive = zip::ZipWriter::new(temp_file);
 
     let options = zip::write::SimpleFileOptions::default()
         .compression_method(zip::CompressionMethod::DEFLATE);
 
     for i in 0..archive.len() {
-        let mut entry = archive.by_index(i).map_err(|e| PlatoError::Document(format!("can't get entry: {}", e)))?;
+        let mut entry = archive
+            .by_index(i)
+            .map_err(|e| PlatoError::Document(format!("can't get entry: {}", e)))?;
         let name = entry.name().to_string();
 
         if name.to_lowercase().starts_with("cover.") {
             continue;
         }
 
-        new_archive.start_file(&name, options).map_err(|e| PlatoError::Document(format!("can't start file: {}", e)))?;
+        new_archive
+            .start_file(&name, options)
+            .map_err(|e| PlatoError::Document(format!("can't start file: {}", e)))?;
         std::io::copy(&mut entry, &mut new_archive).map_err(PlatoError::Io)?;
     }
 
-    new_archive.start_file("cover.jpg", options).map_err(|e| PlatoError::Document(format!("can't start cover file: {}", e)))?;
+    new_archive
+        .start_file("cover.jpg", options)
+        .map_err(|e| PlatoError::Document(format!("can't start cover file: {}", e)))?;
     new_archive.write_all(&buffer).map_err(PlatoError::Io)?;
 
-    new_archive.finish().map_err(|e| PlatoError::Document(format!("can't finish archive: {}", e)))?;
+    new_archive
+        .finish()
+        .map_err(|e| PlatoError::Document(format!("can't finish archive: {}", e)))?;
     std::fs::rename(&temp_path, epub_path).map_err(PlatoError::Io)?;
 
     Ok(())

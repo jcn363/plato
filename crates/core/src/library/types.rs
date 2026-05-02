@@ -74,7 +74,8 @@ impl Library {
         let reading_states = Self::load_reading_states(&home, mode, &mut db)?;
         Self::create_thumbnail_previews_dir(&home);
 
-        let embedder = plato_ai::embedding::CandleEmbedder::new("model.safetensors", "tokenizer.json").ok();
+        let embedder =
+            plato_ai::embedding::CandleEmbedder::new("model.safetensors", "tokenizer.json").ok();
         let indexer = embedder.and_then(|e| LibraryIndexer::new("library.db", e).ok());
 
         Ok(Library {

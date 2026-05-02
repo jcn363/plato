@@ -346,7 +346,8 @@ impl HomeInputExt for Home {
                     use crate::view::home::search_results::SearchResults;
                     // For now using dummy query, will hook to search bar later
                     if let Some(indexer) = context.library.indexer.as_ref() {
-                        let res = SearchResults::new(rect, context, "test query", indexer.indexer());
+                        let res =
+                            SearchResults::new(rect, context, "test query", indexer.indexer());
                         self.semantic_results = Some(Box::new(res));
                     }
                 }
@@ -526,8 +527,12 @@ impl HomeInputExt for Home {
                         }
                         self.refresh_visibles(true, true, hub, rq, context);
                     } else {
-                        let notif =
-                            Notification::new("Invalid search query.".to_string(), hub, rq, context);
+                        let notif = Notification::new(
+                            "Invalid search query.".to_string(),
+                            hub,
+                            rq,
+                            context,
+                        );
                         self.children.push(Box::new(notif) as Box<dyn View>);
                     }
                 }

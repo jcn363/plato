@@ -80,7 +80,12 @@ impl SearchMenu {
 
         // Semantic search
         y += padding;
-        let semantic_rect = rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height];
+        let semantic_rect = rect![
+            rect.min.x + padding,
+            y,
+            rect.max.x - padding,
+            y + small_height
+        ];
         let semantic_btn = Button::new(
             semantic_rect,
             Event::Select(EntryId::ToggleSemanticSearch),

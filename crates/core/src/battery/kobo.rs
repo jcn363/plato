@@ -53,9 +53,7 @@ impl KoboBattery {
             BATTERY_INTERFACES
                 .iter()
                 .find(|bi| Path::new(bi).exists())
-                .ok_or_else(|| {
-                    PlatoError::Battery("battery path missing".to_string())
-                })?,
+                .ok_or_else(|| PlatoError::Battery("battery path missing".to_string()))?,
         );
         let capacity = File::open(base.join(BATTERY_CAPACITY)).map_err(|e| {
             PlatoError::Battery(format!(

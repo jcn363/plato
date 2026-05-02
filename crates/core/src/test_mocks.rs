@@ -23,7 +23,6 @@
 
 use crate::battery::{Battery, Status};
 use crate::color::Color;
-use plato_error::PlatoResult;
 use crate::device::{Device, FrontlightKind, KoboDevice, Model, Orientation};
 use crate::document::BoundedText;
 use crate::document::{Document, Location, TocEntry};
@@ -34,6 +33,7 @@ use crate::input::TouchProto;
 use crate::lightsensor::LightSensor;
 use crate::metadata::TextAlign;
 use anyhow::Error;
+use plato_error::PlatoResult;
 
 /// Mock framebuffer for headless testing
 pub struct MockFramebuffer {

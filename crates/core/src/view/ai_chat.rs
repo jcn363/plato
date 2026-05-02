@@ -36,7 +36,11 @@ pub struct AiChatView {
 }
 
 impl AiChatView {
-    pub fn new(rect: Rectangle, context: &mut Context, processor: Box<dyn AiProcessor>) -> AiChatView {
+    pub fn new(
+        rect: Rectangle,
+        context: &mut Context,
+        processor: Box<dyn AiProcessor>,
+    ) -> AiChatView {
         let id = ID_FEEDER.next();
         let dpi = crate::unit::get_device_dpi();
         let small_height = scale_by_dpi(SMALL_BAR_HEIGHT, dpi) as i32;
@@ -114,9 +118,7 @@ impl View for AiChatView {
                     let hub_cloned = hub.clone();
                     std::thread::spawn(move || {
                         let response = processor.process(text);
-                        hub_cloned
-                            .send(Event::AiResponse(response))
-                            .ok();
+                        hub_cloned.send(Event::AiResponse(response)).ok();
                     });
 
                     if let Some(input_field) = self.children[1].downcast_mut::<InputField>() {
