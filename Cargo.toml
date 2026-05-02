@@ -34,6 +34,8 @@ members = [
   'crates/gesture',
   'crates/battery',
   'crates/frontlight',
+  'crates/opds',
+  'crates/settings',
 ]
 
 [workspace.package]

@@ -1,5 +1,7 @@
 # **Plato codebase – analysis for documentation update**
 
+*Last updated: 2026-05-02*
+
 ---
 
 ### 1. High‑level repository layout (Cargo workspace)
