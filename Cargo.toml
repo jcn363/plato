@@ -21,6 +21,7 @@ members = [
   'crates/utils',
   'crates/network',
   'crates/plugin',
+  'crates/plato-view',
 ]
 
 [workspace.package]
