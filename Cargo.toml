@@ -30,6 +30,7 @@ members = [
   'crates/color',
   'crates/geom',
   'crates/sync',
+  'crates/input',
 ]
 
 [workspace.package]
