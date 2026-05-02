@@ -28,6 +28,7 @@ Root level documentation:
 - [DEVELOPMENT_SETUP.md](../DEVELOPMENT_SETUP.md) - Development environment setup
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Contributing guidelines
 - [AGENTS.md](../AGENTS.md) - AI coding agent guidance
+- [API_OVERVIEW.md](API_OVERVIEW.md) - Developer reference (traits, errors, helpers)
 
 ## Crate‑level READMEs
 
