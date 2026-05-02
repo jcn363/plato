@@ -82,6 +82,12 @@ Each top‑level crate now has its own `README.md` describing purpose, public AP
   - [STUB_PLAN.md](archive/STUB_PLAN.md) (Completed)
   - [Uncensored.md](archive/Uncensored.md)
 
+## Feature‑specific documentation
+
+- [AI Integration](AI_INTEGRATION.md) – provider abstraction, embeddings, cache.
+- [Thumbnail System](THUMBNAIL_SYSTEM.md) – worker pool, LRU cache, sizing.
+- [Text‑to‑Speech](TTS.md) – desktop & Android implementations, limitations.
+
 ## Documentation Standards
 
 When creating or updating documentation:

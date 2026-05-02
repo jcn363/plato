@@ -9,6 +9,9 @@
 - [x] API_OVERVIEW.md created (commit c474fe9)
 - [x] TESTING.md created
 - [x] ROADMAP.md created
+- [x] AI integration doc created
+- [x] Thumbnail system doc created
+- [x] TTS doc created
 
 ---
 
