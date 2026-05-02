@@ -37,12 +37,11 @@ members = [
   'crates/opds',
   'crates/settings',
   'crates/tts',
-  'crates/validation',
-  'crates/cover_editor',
-  'crates/reading_time',
-  'crates/rtc',
+'crates/validation',
   'crates/buffer_pool',
   'crates/consts',
+  'crates/rtc',
+  'crates/framebuffer',
 ]
 
 [workspace.package]
