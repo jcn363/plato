@@ -6,7 +6,7 @@
 - [x] Architecture overview extended with AI/Thumbnail/TTS/Plugin nodes (commit 5502399)
 - [x] Service Layer updated to include `ai` (commit b2edbb3)
 - [x] Crate-level READMEs created for: core, ai, thumbnail, plato-android, plato-view
-- [ ] API_OVERVIEW.md not yet created
+- [x] API_OVERVIEW.md created (commit c474fe9)
 - [ ] TESTING.md not yet created
 - [ ] ROADMAP.md not yet created
 
