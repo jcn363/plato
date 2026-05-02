@@ -7,7 +7,7 @@
 - [x] Service Layer updated to include `ai` (commit b2edbb3)
 - [x] Crate-level READMEs created for: core, ai, thumbnail, plato-android, plato-view
 - [x] API_OVERVIEW.md created (commit c474fe9)
-- [ ] TESTING.md not yet created
+- [x] TESTING.md created
 - [ ] ROADMAP.md not yet created
 
 ---

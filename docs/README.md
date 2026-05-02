@@ -29,6 +29,7 @@ Root level documentation:
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Contributing guidelines
 - [AGENTS.md](../AGENTS.md) - AI coding agent guidance
 - [API_OVERVIEW.md](API_OVERVIEW.md) - Developer reference (traits, errors, helpers)
+- [TESTING.md](TESTING.md) - Testing guide (running tests, mocks, linting)
 
 ## Crate‑level READMEs
 
