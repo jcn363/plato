@@ -22,6 +22,8 @@ members = [
   'crates/network',
   'crates/plugin',
   'crates/plato-view',
+  'crates/metadata',
+  'crates/font',
 ]
 
 [workspace.package]
