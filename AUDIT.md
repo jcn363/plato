@@ -16,7 +16,7 @@ This document provides a comprehensive security and code quality audit of the Pl
 | Code duplication | ✅ Complete | `Framebuffer` trait isolates platforms |
 | Module documentation | ✅ Complete | Key modules documented |
 | Function documentation | ⏳ Pending | ~1300 public functions |
-| Test coverage | ✅ 305 tests | TTS, thumbnails, settings, etc. |
+| Test coverage | ✅ 336 tests | TTS, thumbnails, settings, etc. |
 | Build verification | ✅ Complete | ARM32, ARM64, host all pass |
 | Clippy (warnings as errors) | ✅ Complete | Zero warnings |
 | Security audit | ✅ Automated | CI runs `cargo audit` weekly |
@@ -47,7 +47,7 @@ Framebuffer implementations (Kobo1 vs. Kobo2) use distinct kernel subsystems. Th
 
 ### 2.5 Testing
 
-- **305 unit tests** across the codebase
+- **336 unit tests** across the codebase (24 ignored)
 - TTS module: 7 tests (`tts.rs` + `view/tts.rs`)
 - Thumbnails, settings, validation: extensive coverage
 
@@ -69,22 +69,23 @@ Thread-safety of document types confirmed via external crate guarantees.
 
 | Crate | Version | Purpose | License |
 |-------|---------|---------|---------|
-| `serde` | 1.0.209 | Serialization | MIT/Apache-2.0 |
-| `thiserror` | 1.0.61 | Error types | MIT |
-| `rustybuzz` | 0.8.0 | Text shaping | Apache-2.0 |
-| `fxhash` | 0.2.1 | Fast hash map | MIT |
-| `ab_glyph` | 0.2.2 | Rasterization | MIT |
-| `anyhow` | 1.0.86 | Error handling | MIT/Apache-2.0 |
+| `serde` | 1.0.228 | Serialization | MIT/Apache-2.0 |
+| `thiserror` | 2.x | Error types | MIT |
+| `rustybuzz` | 0.20.x | Text shaping | Apache-2.0 |
+| `fxhash` | 0.2.x | Fast hash map | MIT |
+| `ab_glyph` | 0.2.x | Rasterization | MIT |
+| `anyhow` | 1.0.102 | Error handling | MIT/Apache-2.0 |
 | `lopdf` | 0.40.0 | PDF manipulation | MIT |
 
 **Note:** Project migrated to pure Rust libraries (skrifa, rustybuzz, ab_glyph, pdfpurr).
 
 ### 3.2 Security Measures
 
-- `cargo audit` runs weekly in CI
+- `cargo audit` runs weekly in CI (last run: no vulnerabilities)
 - Dependencies pinned to specific versions
 - No disallowed insecure protocols (TLS required)
 - Plugin interfaces expose safe abstractions
+- One unmaintained warning: `proc-macro-error` (allowed, transitive dep from pdfpurr)
 
 ---
 
@@ -180,6 +181,7 @@ Add doc comments (`///`) for new public items. Place unit tests alongside module
 - [x] Dependabot configuration
 - [x] License verification
 - [x] Compilation fixes
+- [x] Updated AUDIT.md (versions, test counts)
 
 ### In Progress
 - [ ] Function-level documentation (~1300 functions)
