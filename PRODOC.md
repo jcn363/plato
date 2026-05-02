@@ -12,6 +12,7 @@
 - [x] AI integration doc created
 - [x] Thumbnail system doc created
 - [x] TTS doc created
+- [x] CI doc generation workflow created
 
 ---
 
