@@ -40,9 +40,6 @@ members = [
   'crates/validation',
   'crates/cover_editor',
   'crates/reading_time',
-  'crates/rtc',
-  'crates/buffer_pool',
-  'crates/consts',
 ]
 
 [workspace.package]
