@@ -27,6 +27,9 @@ members = [
   'crates/doc',
   'crates/ui',
   'crates/theme',
+  'crates/color',
+  'crates/geom',
+  'crates/sync',
 ]
 
 [workspace.package]
