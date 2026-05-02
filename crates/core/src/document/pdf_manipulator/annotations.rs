@@ -364,8 +364,8 @@ impl PdfAnnotationExporter {
             .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
         let bytes = buffer.into_inner();
 
-        let path = self.file_path.clone();
-        let _ = tokio::task::spawn_blocking(move || std::fs::write(path, bytes));
+        std::fs::write(&self.file_path, bytes)
+            .map_err(|e| format_err!("Failed to write PDF: {}", e))?;
 
         log_info!("Successfully added annotation to page {}", annot.page + 1);
         Ok(())
@@ -431,8 +431,8 @@ impl PdfAnnotationExporter {
                             .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
                         let bytes = buffer.into_inner();
 
-                        let path = self.file_path.clone();
-        let _ = tokio::task::spawn_blocking(move || std::fs::write(path, bytes));
+                        std::fs::write(source_path, bytes)
+                            .map_err(|e| format_err!("Failed to write PDF: {}", e))?;
                     }
                 }
             }
@@ -466,8 +466,8 @@ impl PdfAnnotationExporter {
             .map_err(|e| format_err!("Failed to save PDF with lopdf: {}", e))?;
         let bytes = buffer.into_inner();
 
-        let path = self.file_path.clone();
-        let _ = tokio::task::spawn_blocking(move || std::fs::write(path, bytes));
+        std::fs::write(&self.file_path, bytes)
+            .map_err(|e| format_err!("Failed to write PDF: {}", e))?;
 
         log_info!(
             "Successfully saved document with annotations to: {:?}",

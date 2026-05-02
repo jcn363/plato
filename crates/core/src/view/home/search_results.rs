@@ -1,5 +1,4 @@
 /// Semantic search results UI view
-
 use crate::color::background;
 use crate::context::Context;
 use crate::font::Fonts;
@@ -27,7 +26,12 @@ impl SearchResults {
         let mut y = rect.min.y + padding;
 
         let title = Label::new(
-            rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height],
+            rect![
+                rect.min.x + padding,
+                y,
+                rect.max.x - padding,
+                y + small_height
+            ],
             format!("Results for '{}':", query),
             Align::Left(0),
         );
@@ -37,17 +41,33 @@ impl SearchResults {
         if let Ok(results) = indexer.search(query, 5) {
             if results.is_empty() {
                 let label = Label::new(
-                    rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height],
+                    rect![
+                        rect.min.x + padding,
+                        y,
+                        rect.max.x - padding,
+                        y + small_height
+                    ],
                     "No results found.".to_string(),
                     Align::Center,
                 );
                 children.push(Box::new(label) as Box<dyn View>);
             } else {
                 for (doc_id, score, content) in results {
-                    let snippet = if content.len() > 50 { &content[..50] } else { &content };
+                    let snippet = if content.len() > 50 {
+                        &content[..50]
+                    } else {
+                        &content
+                    };
                     let btn = crate::view::button::Button::new(
-                        rect![rect.min.x + padding, y, rect.max.x - padding, y + small_height + padding],
-                        Event::Select(crate::view::EntryId::OpenDocument(std::path::PathBuf::from(doc_id.clone()))),
+                        rect![
+                            rect.min.x + padding,
+                            y,
+                            rect.max.x - padding,
+                            y + small_height + padding
+                        ],
+                        Event::Select(crate::view::EntryId::OpenDocument(
+                            std::path::PathBuf::from(doc_id.clone()),
+                        )),
                         format!("{} ({:.2})\nMatch: {}...", doc_id, score, snippet),
                     );
                     children.push(Box::new(btn) as Box<dyn View>);
@@ -61,11 +81,18 @@ impl SearchResults {
 }
 
 impl View for SearchResults {
-    fn handle_event(&mut self, evt: &Event, _hub: &Hub, _bus: &mut Bus, _rq: &mut RenderQueue, _context: &mut Context) -> bool {
-        match *evt {
-            Event::Device(DeviceEvent::Finger { position, .. }) if self.rect.includes(position) => true,
-            _ => false,
-        }
+    fn handle_event(
+        &mut self,
+        evt: &Event,
+        _hub: &Hub,
+        _bus: &mut Bus,
+        _rq: &mut RenderQueue,
+        _context: &mut Context,
+    ) -> bool {
+        matches!(
+            *evt,
+            Event::Device(DeviceEvent::Finger { position, .. }) if self.rect.includes(position)
+        )
     }
 
     fn render(&self, fb: &mut dyn Framebuffer, rect: Rectangle, fonts: &mut Fonts) {
@@ -78,9 +105,19 @@ impl View for SearchResults {
         }
     }
 
-    fn rect(&self) -> &Rectangle { &self.rect }
-    fn rect_mut(&mut self) -> &mut Rectangle { &mut self.rect }
-    fn children(&self) -> &Vec<Box<dyn View>> { &self.children }
-    fn children_mut(&mut self) -> &mut Vec<Box<dyn View>> { &mut self.children }
-    fn id(&self) -> Id { self.id }
+    fn rect(&self) -> &Rectangle {
+        &self.rect
+    }
+    fn rect_mut(&mut self) -> &mut Rectangle {
+        &mut self.rect
+    }
+    fn children(&self) -> &Vec<Box<dyn View>> {
+        &self.children
+    }
+    fn children_mut(&mut self) -> &mut Vec<Box<dyn View>> {
+        &mut self.children
+    }
+    fn id(&self) -> Id {
+        self.id
+    }
 }
