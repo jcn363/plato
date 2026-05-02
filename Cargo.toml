@@ -26,6 +26,7 @@ members = [
   'crates/font',
   'crates/doc',
   'crates/ui',
+  'crates/theme',
 ]
 
 [workspace.package]
