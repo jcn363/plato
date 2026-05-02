@@ -30,7 +30,7 @@
 | Layer | Modules / Traits | Key responsibilities |
 |------|------------------|----------------------|
 | **Hardware‑Abstraction Layer** | `framebuffer/*`, `device`, `battery`, `frontlight`, `lightsensor` | Low‑level ops, expose `Framebuffer`, `Device`, `Battery` traits |
-| **Service Layer** | `input`, `sync`, `opds`, `tts`, `thumbnail` | Input handling, network sync, OPDS catalog, text‑to‑speech, background thumbnail generation |
+| **Service Layer** | `input`, `sync`, `opds`, `tts`, `thumbnail`, `ai` | Input handling, network sync, OPDS catalog, text‑to‑speech, background thumbnail generation |
 | **Business‑Logic Layer** | `library`, `document`, `settings`, `metadata` | Book/library database, document parsing, user configuration, metadata extraction |
 | **Application / UI Layer** | `view/*`, `gesture`, `theme`, `mobile_theme` | View‑tree, event bubbling, theming, gesture processing |
 | **AI / Extension Layer** | `ai/*`, `plugin` | Embedding generation, LLM provider abstraction, plug‑in entry points |
