@@ -51,6 +51,12 @@ edition = '2021'
 version = '0.9.45'
 license = 'MIT'
 
+[profile.release-arm]
+inherits = "release"
+
+[profile.release-arm64]
+inherits = "release"
+
 [workspace.dependencies]
 anyhow = "1.0.102"
 bitflags = "2.11.1"
