@@ -38,6 +38,8 @@ members = [
   'crates/settings',
   'crates/tts',
   'crates/validation',
+  'crates/cover_editor',
+  'crates/reading_time',
 ]
 
 [workspace.package]

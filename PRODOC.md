@@ -8,7 +8,7 @@
 - [x] Crate-level READMEs created for: core, ai, thumbnail, plato-android, plato-view
 - [x] API_OVERVIEW.md created (commit c474fe9)
 - [x] TESTING.md created
-- [ ] ROADMAP.md not yet created
+- [x] ROADMAP.md created
 
 ---
 

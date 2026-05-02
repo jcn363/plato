@@ -1,0 +1,11 @@
+[package]
+name = "plato-reading-time"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+plato-core = { path = "../core" }
+
+[dev-dependencies]
+tempfile = "3.27.0"

@@ -43,6 +43,8 @@ Each top‑level crate now has its own `README.md` describing purpose, public AP
 
 ## Planning Documents
 
+- [ROADMAP.md](ROADMAP.md) - Consolidated roadmap of active and planned items
+
 ### Architecture & Design
 
 - [PLAN.md](PLAN.md) - Overall project plan
