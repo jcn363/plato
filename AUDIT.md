@@ -46,8 +46,8 @@ This document summarizes a static audit of the Plato repository. It covers safet
 ---
 
 **Next steps**
-1. Finish pending function‑level documentation.
-2. Add integration tests for device input, gesture handling, and TTS.
+1. (Long-term) Add function-level documentation to remaining ~1300 public functions
+2. (Long-term) Add integration tests for device input/gesture handling
 
 **Completed in this session**
 - ✅ Resolved clippy warnings (tokio spawn_blocking in sync context, match_like_matches_macro)
@@ -55,6 +55,11 @@ This document summarizes a static audit of the Plato repository. It covers safet
 - ✅ Added Dependabot configuration (`.github/dependabot.yml`)
 - ✅ Verified license compliance with cargo-license
 - ✅ Verified builds and linting across all targets
+
+**Notes on remaining items:**
+- Existing test coverage: 305 tests across the codebase
+- TTS already has unit tests (4 tests in `tts.rs`, 3 in `view/tts.rs`)
+- Device input/gesture testing requires extensive mocking infrastructure
 
 ## 9. Security & Vulnerabilities
 - [ ] Verify all external crates with `cargo audit` (last run 2026‑04‑30).
