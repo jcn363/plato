@@ -1,5 +1,3 @@
-[workspace]
-
 [package]
 name = "plato-android"
 version = "0.9.45"

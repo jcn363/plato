@@ -8,10 +8,19 @@ members = [
   'crates/epub_edit',
   'crates/epub_editor',
   'crates/plato-ios',
+  'crates/plato-android',
   'crates/ai',
   'crates/rar',
   'crates/plato-document',
   'crates/plato-library',
+  'crates/error',
+  'crates/thumbnail',
+  'crates/search',
+  'crates/config',
+  'crates/device',
+  'crates/utils',
+  'crates/network',
+  'crates/plugin',
 ]
 
 [workspace.package]
