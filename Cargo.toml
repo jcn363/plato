@@ -24,6 +24,7 @@ members = [
   'crates/plato-view',
   'crates/metadata',
   'crates/font',
+  'crates/doc',
 ]
 
 [workspace.package]
