@@ -47,8 +47,7 @@ Each top‑level crate now has its own `README.md` describing purpose, public AP
 
 ### Architecture & Design
 
-- [PLAN.md](PLAN.md) - Overall project plan
-- [PLAN2.md](PLAN2.md) - Updated project plan
+- [architecture/](architecture/) - Architecture documentation
 
 ### Active Plans
 
