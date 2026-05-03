@@ -9,15 +9,16 @@ use crate::context::Context;
 use crate::document::signatures::{Certificate, SignatureManager};
 use crate::font::Fonts;
 use crate::framebuffer::{Framebuffer, UpdateMode};
-use crate::geom::Rectangle;
+use crate::geom::{Point, Rectangle};
 use std::path::{Path, PathBuf};
 
 use crate::unit::scale_by_dpi;
 use crate::view::button::Button;
+use crate::view::input_field::InputField;
 use crate::view::label::Label;
 use crate::view::top_bar::TopBar;
 use crate::view::{Align, Bus, Event, Hub, RenderData, RenderQueue, View};
-use crate::view::{EntryId, Id, ID_FEEDER};
+use crate::view::{EntryId, Id, ViewId, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
 use anyhow::Error;
 
@@ -32,6 +33,7 @@ pub struct SignaturesView {
     pdf_path: PathBuf,
     certificates: Vec<Certificate>,
     selected_certificate: Option<usize>,
+    input_visible: bool,
 }
 
 impl SignaturesView {
@@ -164,11 +166,59 @@ impl SignaturesView {
             pdf_path: pdf_path.to_path_buf(),
             certificates,
             selected_certificate: None,
+            input_visible: false,
         })
     }
 
     pub fn is_complete(&self) -> bool {
         self.selected_certificate.is_some()
+    }
+
+    fn show_import_dialog(&mut self, context: &mut Context, rq: &mut RenderQueue) {
+        let input_rect = Rectangle {
+            min: Point {
+                x: self.rect.min.x + PADDING,
+                y: self.rect.min.y + PADDING,
+            },
+            max: Point {
+                x: self.rect.max.x - PADDING,
+                y: self.rect.min.y + PADDING + 40,
+            },
+        };
+
+        let input_field = InputField::new(input_rect, ViewId::ImportCertificateInput)
+            .placeholder("Enter certificate path...")
+            .text("", context);
+
+        self.children.push(Box::new(input_field) as Box<dyn View>);
+        self.input_visible = true;
+        rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
+    }
+
+    fn import_certificate(&mut self, path: &str, bus: &mut Bus, _context: &mut Context) {
+        let path_buf = PathBuf::from(path.trim());
+        match SignatureManager::import_certificate(&path_buf) {
+            Ok(cert) => {
+                bus.push_back(Event::Notify(format!(
+                    "Certificate imported: {}",
+                    cert.subject
+                )));
+                // Refresh certificates list
+                self.certificates = SignatureManager::list_certificates().unwrap_or_default();
+                self.input_visible = false;
+                self.children.clear();
+                // Notify user to refresh the view
+                bus.push_back(Event::Notify(
+                    "Certificate imported. Please reopen signatures view.".to_string(),
+                ));
+            }
+            Err(e) => {
+                bus.push_back(Event::Notify(format!(
+                    "Failed to import certificate: {}",
+                    e
+                )));
+            }
+        }
     }
 }
 
@@ -179,7 +229,7 @@ impl View for SignaturesView {
         _hub: &Hub,
         bus: &mut Bus,
         _rq: &mut RenderQueue,
-        _context: &mut Context,
+        context: &mut Context,
     ) -> bool {
         match event {
             Event::Select(EntryId::SelectCertificate(index)) => {
@@ -233,9 +283,13 @@ impl View for SignaturesView {
                 return true;
             }
             Event::Select(EntryId::ImportCertificate) => {
-                bus.push_back(Event::Notify(
-                    "Certificate import not yet implemented".to_string(),
-                ));
+                self.show_import_dialog(context, _rq);
+                return true;
+            }
+            Event::Select(EntryId::SetInputText(view_id, text))
+                if *view_id == ViewId::ImportCertificateInput =>
+            {
+                self.import_certificate(text, bus, context);
                 return true;
             }
             _ => {}

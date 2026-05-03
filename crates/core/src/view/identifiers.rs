@@ -107,6 +107,7 @@ pub enum ViewId {
     Opds,
     CollectionsMenu,
     CreateCollectionDialog,
+    ImportCertificateInput,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

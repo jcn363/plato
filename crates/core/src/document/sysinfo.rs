@@ -99,9 +99,10 @@ pub fn sys_info_as_html() -> String {
     // Memory info (Linux only)
     #[cfg(target_os = "linux")]
     append_memory_info(&mut buf);
+    // Memory info (iOS)
     #[cfg(target_os = "ios")]
     {
-        // iOS memory info not yet implemented
+        append_memory_info_ios(&mut buf);
     }
 
     // CPU info
@@ -180,6 +181,36 @@ fn append_memory_info(buf: &mut String) {
             load.1 * 100.0,
             load.2 * 100.0
         ));
+        buf.push_str("\t\t\t</tr>\n");
+    }
+}
+
+#[cfg(target_os = "ios")]
+fn append_memory_info_ios(buf: &mut String) {
+    use libc::{c_void, size_t, sysctlbyname};
+    use std::ffi::CStr;
+    use std::ptr;
+
+    // Use sysctl to get total memory (hw.memsize)
+    let mut memsize: u64 = 0;
+    let mut size = std::mem::size_of::<u64>() as size_t;
+
+    let name = CStr::from_bytes_with_nul(b"hw.memsize\0").unwrap();
+    let ret = unsafe {
+        sysctlbyname(
+            name.as_ptr(),
+            &mut memsize as *mut _ as *mut c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        )
+    };
+
+    if ret == 0 {
+        let total_mb = memsize / 1024 / 1024;
+        buf.push_str("\t\t\t<tr>\n");
+        buf.push_str("\t\t\t\t<td>Total Memory</td>\n");
+        buf.push_str(&format!("\t\t\t\t<td>{} MB</td>\n", total_mb));
         buf.push_str("\t\t\t</tr>\n");
     }
 }
