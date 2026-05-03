@@ -314,7 +314,7 @@ impl Library {
         // Index document for full-text search
         let doc_id = info.file.path.to_string_lossy().into_owned();
         match info.file.kind.as_str() {
-            "epub" => {
+            "epub" | "kepub" => {
                 if let Ok(mut doc) = EpubDocument::new(&path) {
                     let _ = self
                         .search_index

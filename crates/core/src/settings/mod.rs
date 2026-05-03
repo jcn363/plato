@@ -588,9 +588,12 @@ impl Default for ImportSettings {
             unshare_trigger: true,
             startup_trigger: true,
             sync_metadata: true,
-            metadata_kinds: ["epub", "pdf"].iter().map(|k| k.to_string()).collect(),
+            metadata_kinds: ["epub", "kepub", "pdf"]
+                .iter()
+                .map(|k| k.to_string())
+                .collect(),
             allowed_kinds: [
-                "pdf", "epub", "fb2", "fbz", "txt", "xps", "oxps", "mobi", "cbz",
+                "pdf", "epub", "kepub", "fb2", "fbz", "txt", "xps", "oxps", "mobi", "cbz",
             ]
             .iter()
             .map(|k| k.to_string())

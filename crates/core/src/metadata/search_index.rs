@@ -178,8 +178,8 @@ impl SearchIndex {
                     }
                 }
             }
-            "epub" => {
-                // Extract text from EPUB
+            "epub" | "kepub" => {
+                // Extract text from EPUB/KePUB
                 if let Some((bounded_texts, _)) = document.words(Location::Exact(0)) {
                     for bt in bounded_texts {
                         text.push_str(&bt.text);

@@ -1,7 +1,7 @@
 //! Document Handling Module
 //!
 //! This module provides document loading, rendering, and manipulation for multiple
-//! document formats including PDF, EPUB, HTML, DJVU, and various image formats.
+//! document formats including PDF, EPUB, KePUB, HTML, DJVU, and various image formats.
 //!
 //! ## Architecture
 //!
@@ -14,6 +14,9 @@
 //! - **epub/**: EPUB e-book support
 //!   - `EpubDocument` for EPUB rendering
 //!   - NCX/Navigation parsing
+//! - **kepub/**: KePUB e-book support (Kobo's EPUB variant)
+//!   - Uses `EpubDocument` for rendering (KePUB is EPUB-compatible)
+//!   - Detected by `.kepub.epub` file extension
 //! - **html/**: HTML document support
 //!   - Custom HTML/CSS rendering engine optimized for e-ink
 //!   - DOM, layout, text shaping, line breaking
@@ -42,6 +45,8 @@
 //! ├── epub/               (EPUB format support)
 //! │   ├── mod.rs          (EpubDocument)
 //! │   └── opener.rs       (EPUB opening utilities)
+//! ├── kepub/              (KePUB format support - Kobo EPUB variant)
+//! │   └── Uses EpubDocument with .kepub.epub detection
 //! ├── html/               (HTML format support)
 //! │   ├── mod.rs          (HtmlDocument, Engine)
 //! │   ├── css.rs          (CSS parsing)
@@ -356,11 +361,18 @@ pub trait Document: Send + Sync {
 }
 
 pub fn file_kind<P: AsRef<Path>>(path: P) -> Option<String> {
-    path.as_ref()
+    let path_ref = path.as_ref();
+    // Check for KePUB files (.kepub.epub double extension)
+    if let Some(file_name) = path_ref.file_name().and_then(OsStr::to_str) {
+        if file_name.ends_with(".kepub.epub") {
+            return Some("kepub".to_string());
+        }
+    }
+    path_ref
         .extension()
         .and_then(OsStr::to_str)
         .map(str::to_lowercase)
-        .or_else(|| guess_kind(path.as_ref()).ok().map(String::from))
+        .or_else(|| guess_kind(path_ref).ok().map(String::from))
 }
 
 pub fn guess_kind<P: AsRef<Path>>(path: P) -> Result<&'static str, Error> {
@@ -433,7 +445,7 @@ pub fn open<P: AsRef<Path>>(path: P) -> Option<Box<dyn Document>> {
         return None;
     }
     file_kind(path.as_ref()).and_then(|k| match k.as_ref() {
-        "epub" => EpubDocument::new(&path)
+        "epub" | "kepub" => EpubDocument::new(&path)
             .map_err(|e| {
                 log_error!(
                     "Failed to open EPUB {}: {}. Please check the file is not corrupted.",

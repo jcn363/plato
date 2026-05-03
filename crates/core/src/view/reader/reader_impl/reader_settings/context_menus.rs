@@ -86,7 +86,7 @@ pub(crate) fn toggle_selection_menu(
         EntryKind::Command("Add Note".to_string(), EntryId::AnnotateSelection),
     ];
 
-    if file_kind == "epub" {
+    if file_kind == "epub" || file_kind == "kepub" {
         if let Some(path) = file_path {
             entries.push(EntryKind::Command(
                 "Edit".to_string(),
@@ -238,7 +238,7 @@ pub(crate) fn toggle_title_menu(
         entries.push(EntryKind::Separator);
     }
 
-    if file_kind == "epub" {
+    if file_kind == "epub" || file_kind == "kepub" {
         if let Some(path) = file_path.as_ref() {
             entries.push(EntryKind::Command(
                 "Edit EPUB".to_string(),

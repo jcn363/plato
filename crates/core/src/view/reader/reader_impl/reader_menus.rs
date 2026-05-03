@@ -109,7 +109,7 @@ impl Reader {
             &mut self.children,
             self.current_page,
             file_kind,
-            if file_kind == "epub" {
+            if file_kind == "epub" || file_kind == "kepub" {
                 Some(file_path_str)
             } else {
                 None
@@ -149,7 +149,7 @@ impl Reader {
             rect,
             self.reflowable,
             file_kind,
-            if file_kind == "epub" {
+            if file_kind == "epub" || file_kind == "kepub" {
                 Some(file_path_str)
             } else {
                 None

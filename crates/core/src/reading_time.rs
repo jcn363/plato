@@ -95,7 +95,7 @@ pub fn estimate_from_page_count(
     speed: ReadingSpeed,
 ) -> Duration {
     let words_per_page = match format {
-        Some("epub") => WORDS_PER_PAGE_EPUB,
+        Some("epub") | Some("kepub") => WORDS_PER_PAGE_EPUB,
         Some("pdf") => WORDS_PER_PAGE_PDF,
         Some("html") | Some("htm") => WORDS_PER_PAGE_HTML,
         _ => WORDS_PER_PAGE_EPUB, // Default to EPUB estimate
