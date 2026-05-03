@@ -1,0 +1,324 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "small_model": "anthropic/claude-3-5-haiku-20241022",
+  "large_model": "anthropic/claude-3-opus-20240229",
+  "theme": "opencode",
+  "autoupdate": true,
+  "share": "manual",
+  "max_turns": 150,
+  "max_output_tokens": 8192,
+  
+  "instructions": [
+    "AGENTS.md",
+    "rust-best-practices.md",
+    "CONTRIBUTING.md"
+  ],
+
+  "formatter": {
+    "rust": {
+      "command": "cargo fmt --",
+      "arguments": ["--edition 2021"]
+    }
+  },
+
+  "permission": {
+    "edit": "ask",
+    "bash": {
+      "cargo *": "allow",
+      "cargo-build *": "allow",
+      "cargo-test *": "allow",
+      "cargo-check *": "allow",
+      "cargo-clippy *": "allow",
+      "cargo-fmt *": "allow",
+      "cargo-doc *": "allow",
+      "cargo-audit *": "allow",
+      "cargo-outdated *": "allow",
+      "git *": "allow",
+      "rustc *": "allow",
+      "rustfmt *": "allow",
+      "tarpaulin *": "allow",
+      "mkdir -p *": "allow",
+      "touch *": "allow",
+      "rm -rf *": "deny",
+      "rm *": "ask",
+      "chmod *": "ask",
+      "ln *": "ask",
+      "cp *": "ask",
+      "rsync *": "ask",
+      "patchelf *": "ask",
+      "find *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "grep *": "allow",
+      "wc *": "allow",
+      "du *": "allow",
+      "file *": "allow",
+      "uname *": "allow",
+      "readelf *": "allow",
+      "*": "ask"
+    },
+    "skill": {
+      "*": "allow",
+      "dangerous-*": "deny",
+      "m15-anti-pattern": "allow"
+    },
+    "webfetch": "allow",
+    "websearch": "allow",
+    "fileAccess": {
+      "crates/**": "allow",
+      "doc/**": "allow",
+      "docs/**": "allow",
+      ".agents/**": "allow",
+      "*.rs": "allow",
+      "*.toml": "allow",
+      "*.md": "allow",
+      "*.yaml": "allow",
+      "*.yml": "allow",
+      "*.json": "allow",
+      "target/**": "deny",
+      "*.so": "deny",
+      "*.a": "deny"
+    }
+  },
+
+  "skill": {
+    "auto_load": [
+      "dev",
+      "dev-plan",
+      "dev-resume",
+      "dev-workflow",
+      "code-review",
+      "debug-generic",
+      "rust-core",
+      "rust-async-patterns",
+      "rust-testing",
+      "git-automation",
+      "documentation",
+      "verification-before-completion",
+      "brainstorming",
+      "refactor",
+      "opencode-primitives"
+    ],
+    "on_trigger": [
+      "using-superpowers"
+    ]
+  },
+
+  "mcp": {
+    "servers": {}
+  },
+
+  "env": {
+    "RUST_BACKTRACE": "1",
+    "CARGO_TERM_COLOR": "always",
+    "RUST_LOG": "warn",
+    "RUSTFLAGS": "-D warnings",
+    "OPENSSL_DIR": "/usr",
+    "CC": "arm-linux-gnueabihf-gcc"
+  },
+
+  "defaults": {
+    "language": "rust",
+    "edition": "2021",
+    "target": "arm-unknown-linux-gnueabihf",
+    "profile": "release-arm"
+  },
+
+  "command": {
+    "build": {
+      "template": "Build for 32-bit ARM Kobo devices",
+      "description": "Default build target for original Kobo devices",
+      "command": "cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato"
+    },
+    "build-arm64": {
+      "template": "Build for 64-bit ARM Kobo devices",
+      "description": "For Libra 2, Sage, Clara 2E, Elipsa 2E, etc.",
+      "command": "cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato"
+    },
+    "build-host": {
+      "template": "Build for host machine (x86_64)",
+      "description": "For development and testing on desktop",
+      "command": "cargo build --target x86_64-unknown-linux-gnu -p plato"
+    },
+    "build-all": {
+      "template": "Build all targets",
+      "description": "Build ARM, ARM64, and x86_64 targets",
+      "command": "cargo build --profile release-arm --target arm-unknown-linux-gnueabihf -p plato && cargo build --target aarch64-unknown-linux-gnu --profile release-arm64 -p plato && cargo build --target x86_64-unknown-linux-gnu -p plato"
+    },
+    "test": {
+      "template": "Run all tests",
+      "description": "Full test suite with host target",
+      "command": "cargo test --target x86_64-unknown-linux-gnu"
+    },
+    "test-crate": {
+      "template": "Test specific crate",
+      "description": "Run tests for a specific crate",
+      "command": "cargo test -p plato-core --target x86_64-unknown-linux-gnu"
+    },
+    "test-one": {
+      "template": "Run single test by name",
+      "description": "Run one test by exact name pattern",
+      "command": "cargo test test_name --target x86_64-unknown-linux-gnu -- --nocapture"
+    },
+    "clippy": {
+      "template": "Run clippy with warnings as errors",
+      "description": "Full lint check for the project",
+      "command": "cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings"
+    },
+    "clippy-all": {
+      "template": "Clippy all targets and features",
+      "description": "Comprehensive linting including all features",
+      "command": "cargo clippy --all-targets --all-features --target x86_64-unknown-linux-gnu -- -D warnings"
+    },
+    "fmt": {
+      "template": "Format code",
+      "description": "Format entire workspace with rustfmt",
+      "command": "cargo fmt --edition 2021"
+    },
+    "fmt-check": {
+      "template": "Check formatting without changes",
+      "description": "Verify code is formatted correctly",
+      "command": "cargo fmt -- --check"
+    },
+    "check": {
+      "template": "Quick type check (faster than build)",
+      "description": "Validate code without full compilation",
+      "command": "cargo check --target x86_64-unknown-linux-gnu"
+    },
+    "check-all": {
+      "template": "Check all targets",
+      "description": "Validate all build targets",
+      "command": "cargo check --target arm-unknown-linux-gnueabihf && cargo check --target aarch64-unknown-linux-gnu && cargo check --target x86_64-unknown-linux-gnu"
+    },
+    "doc": {
+      "template": "Generate documentation",
+      "description": "Build crate docs without dependencies",
+      "command": "cargo doc --target x86_64-unknown-linux-gnu --no-deps"
+    },
+    "clean": {
+      "template": "Clean build artifacts",
+      "description": "Remove target directory",
+      "command": "cargo clean"
+    },
+    "audit": {
+      "template": "Security audit",
+      "description": "Check for known vulnerabilities",
+      "command": "cargo audit"
+    },
+    "outdated": {
+      "template": "Check outdated dependencies",
+      "description": "List outdated crates",
+      "command": "cargo outdated --output-format table"
+    },
+    "tree": {
+      "template": "Dependency tree",
+      "description": "Show dependency tree for plato",
+      "command": "cargo tree -p plato"
+    },
+    "bench": {
+      "template": "Run benchmarks",
+      "description": "Execute benchmark suite",
+      "command": "cargo bench --target x86_64-unknown-linux-gnu"
+    },
+    "build-full": {
+      "template": "Full build with format, clippy, and test",
+      "description": "Complete validation pipeline",
+      "command": "cargo fmt && cargo clippy --target x86_64-unknown-linux-gnu -- -D warnings && cargo test --target x86_64-unknown-linux-gnu"
+    },
+    "update-deps": {
+      "template": "Update dependencies",
+      "description": "Update Cargo.lock with latest compatible versions",
+      "command": "cargo update"
+    },
+    "metadata": {
+      "template": "Show project metadata",
+      "description": "Display crate information",
+      "command": "cargo metadata --format-version 1 --no-deps"
+    },
+    "info": {
+      "template": "Package info",
+      "description": "Show installed toolchain and targets",
+      "command": "rustup show && rustup target list --installed"
+    }
+  },
+
+  "tools": {
+    "glob": {
+      "enabled": true,
+      "patterns": ["**/*.rs", "**/*.toml", "**/*.md", "**/*.yaml", "**/*.yml", "**/*.json"]
+    },
+    "grep": {
+      "enabled": true,
+      "include": ["*.rs", "*.toml", "*.md", "*.yaml", "*.yml", "*.json", "*.sh"]
+    },
+    "read": {
+      "max_file_size": 1048576
+    },
+    "write": {
+      "max_file_size": 524288
+    }
+  },
+
+  "build": {
+    "targets": {
+      "primary": "arm-unknown-linux-gnueabihf",
+      "secondary": ["aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"],
+      "all": ["arm-unknown-linux-gnueabihf", "aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"],
+      "profiles": {
+        "release-arm": {
+          "inherits": "release"
+        },
+        "release-arm64": {
+          "inherits": "release"
+        },
+        "dev": {
+          "inherits": "dev"
+        }
+      }
+    }
+  },
+
+  "testing": {
+    "default_target": "x86_64-unknown-linux-gnu",
+    "timeout_seconds": 60,
+    "parallel": true,
+    "coverage": {
+      "enabled": true,
+      "tool": "tarpaulin",
+      "threshold": 80
+    }
+  },
+
+  "commit": {
+    "conventional": true,
+    "types": ["feat", "fix", "docs", "style", "refactor", "test", "chore", "perf", "ci"],
+    "scope_required": false
+  },
+
+  "pr": {
+    "auto_checklist": [
+      "cargo fmt passes",
+      "cargo clippy passes with -D warnings",
+      "cargo test passes",
+      "All build targets compile"
+    ],
+    "branch_naming": {
+      "types": ["feature", "fix", "refactor", "docs", "ci"],
+      "example": "feature/add-new-feature"
+    }
+  },
+
+  "logging": {
+    "level": "info",
+    "format": "pretty",
+    "show_timestamps": true
+  },
+
+  "telemetry": {
+    "enabled": false,
+    "destination": "local"
+  }
+}

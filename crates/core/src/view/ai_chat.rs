@@ -1,10 +1,7 @@
 //! AI Chat View for Plato Reader
 //!
 //! Provides an AI chat sidebar in the reader for asking questions about the current document.
-//!
-//! Note: The actual AI processing is implemented in the `plato-ai` crate.
-//! This view provides the UI shell; AI integration requires proper dependency injection
-//! to avoid cyclic dependencies between `plato-core` and `plato-ai`.
+//! The actual AI processing is done via LLM providers from the `plato-ai` crate.
 
 use super::input_field::InputField;
 use super::top_bar::TopBar;
@@ -18,12 +15,61 @@ use crate::theme;
 use crate::unit::scale_by_dpi;
 use crate::view::SMALL_BAR_HEIGHT;
 
+use plato_ai::traits::LLMProvider;
+use plato_ai::AiContext;
+
 pub trait AiProcessor: Send + Sync {
     fn process(&self, text: String) -> String;
     fn clone_box(&self) -> Box<dyn AiProcessor>;
 }
 
-// Removed blanket impl
+pub struct LlmProcessor {
+    provider: Box<dyn LLMProvider>,
+    context: AiContext,
+}
+
+impl LlmProcessor {
+    pub fn new(
+        provider: Box<dyn LLMProvider>,
+        document_path: String,
+        current_page: usize,
+        total_pages: usize,
+    ) -> Self {
+        Self {
+            provider,
+            context: AiContext::new(document_path, current_page, total_pages),
+        }
+    }
+}
+
+impl AiProcessor for LlmProcessor {
+    fn process(&self, text: String) -> String {
+        match self.provider.generate(&text, &self.context) {
+            Ok(response) => response.content,
+            Err(e) => format!("Error: {}", e),
+        }
+    }
+
+    fn clone_box(&self) -> Box<dyn AiProcessor> {
+        let config = plato_ai::traits::ProviderConfig::default();
+        Box::new(LlmProcessor {
+            provider: Box::new(plato_ai::providers::MockProvider::new(config)),
+            context: self.context.clone(),
+        })
+    }
+}
+
+#[derive(Clone)]
+pub struct EchoProcessor;
+
+impl AiProcessor for EchoProcessor {
+    fn process(&self, text: String) -> String {
+        format!("Echo: {}", text)
+    }
+    fn clone_box(&self) -> Box<dyn AiProcessor> {
+        Box::new(self.clone())
+    }
+}
 
 pub struct AiChatView {
     id: Id,
@@ -82,18 +128,6 @@ impl AiChatView {
             status: String::new(),
             processor,
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct EchoProcessor;
-
-impl AiProcessor for EchoProcessor {
-    fn process(&self, text: String) -> String {
-        format!("Echo: {}", text)
-    }
-    fn clone_box(&self) -> Box<dyn AiProcessor> {
-        Box::new(self.clone())
     }
 }
 

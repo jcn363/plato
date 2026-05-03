@@ -98,8 +98,11 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
     // Set mobile theme mode for OLED-optimized color palette
     set_mobile_theme_mode(MobileThemeMode::System);
 
-    log::info!("Touch config: tap_jitter={}mm, hold_delay={}ms",
-        touch_config.tap_jitter_mm, touch_config.hold_delay_ms);
+    log::info!(
+        "Touch config: tap_jitter={}mm, hold_delay={}ms",
+        touch_config.tap_jitter_mm,
+        touch_config.hold_delay_ms
+    );
 
     // Wait for native window to be created
     let mut native_window = None;
@@ -130,8 +133,7 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
     // Load settings
     let settings_path = Path::new(&settings_path).join("Settings.toml");
     let settings = if settings_path.exists() {
-        load_toml::<Settings, _>(&settings_path)
-            .with_context(|| "Failed to load settings")?
+        load_toml::<Settings, _>(&settings_path).with_context(|| "Failed to load settings")?
     } else {
         Settings::default()
     };
@@ -165,9 +167,12 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
     let fonts = Fonts::load().with_context(|| "Failed to load fonts")?;
 
     // Initialize hardware sensors via JNI
-    let battery = Box::new(framebuffer::AndroidBattery::new()) as Box<dyn plato_core::battery::Battery>;
-    let frontlight = Box::new(LightLevels::default()) as Box<dyn plato_core::frontlight::Frontlight>;
-    let lightsensor = Box::new(framebuffer::AndroidLightSensor::new()) as Box<dyn plato_core::lightsensor::LightSensor>;
+    let battery =
+        Box::new(framebuffer::AndroidBattery::new()) as Box<dyn plato_core::battery::Battery>;
+    let frontlight =
+        Box::new(LightLevels::default()) as Box<dyn plato_core::frontlight::Frontlight>;
+    let lightsensor = Box::new(framebuffer::AndroidLightSensor::new())
+        as Box<dyn plato_core::lightsensor::LightSensor>;
 
     // Initialize plugin system and background sync
     let plugin_system = PluginSystem::new(&settings.plugin_settings);
@@ -201,12 +206,8 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
 
     // Create Home view
     let mut rq = RenderQueue::new();
-    let mut view: Box<dyn View> = Box::new(Home::new(
-        context.fb.rect(),
-        &hub,
-        &mut rq,
-        &mut context,
-    )?);
+    let mut view: Box<dyn View> =
+        Box::new(Home::new(context.fb.rect(), &hub, &mut rq, &mut context)?);
 
     log::info!("App loop starting...");
 
@@ -218,14 +219,14 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
                 PollEvent::Main(MainEvent::InputAvailable) => {
                     app.poll_events(None, |event| {
                         if let PollEvent::Main(MainEvent::InputAvailable) = event {
-                             // This is where we receive motion events
+                            // This is where we receive motion events
                         }
                     });
                     // For MVP, capture and translate events directly
                     if let Some(event) = app.native_window().and_then(|_| app.poll_input()) {
-                         if let Some(motion) = event.motion() {
-                             crate::input::translate_motion_event(&motion, &device_tx);
-                         }
+                        if let Some(motion) = event.motion() {
+                            crate::input::translate_motion_event(&motion, &device_tx);
+                        }
                     }
                 }
                 PollEvent::Main(MainEvent::Pause) => {
@@ -244,13 +245,7 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
 
         // Process gesture events - gesture handlers send Event::Gesture internally
         while let Ok(event) = gesture_rx.try_recv() {
-            view.handle_event(
-                &event,
-                &hub,
-                &mut VecDeque::new(),
-                &mut rq,
-                &mut context,
-            );
+            view.handle_event(&event, &hub, &mut VecDeque::new(), &mut rq, &mut context);
         }
 
         // Render if needed

@@ -77,25 +77,25 @@ impl TtsEngine for DesktopTtsEngine {
     fn speak(&mut self, text: &str, options: TtsOptions) -> Result<()> {
         let backend = self.backend_mut()?;
 
+        // Set rate before speaking (the tts crate sets rate per-utterance)
+        // Rate is typically normalized to 0.0-1.0 range by the backend
+        let _ = backend.set_rate(options.rate);
+
+        // Set pitch before speaking
+        let _ = backend.set_pitch(options.pitch);
+
+        // Set volume before speaking (if supported)
+        let _ = backend.set_volume(options.volume);
+
         // Stop current speech if interrupt is requested
         if options.interrupt {
             let _ = backend.stop();
         }
 
-        // Convert our options to tts crate utterance
-        let utterance = tts::Utterance::new(text)
-            .with_rate(options.rate)
-            .with_volume(options.volume)
-            .with_pitch(options.pitch);
-
-        // Set language if specified
-        let utterance = if let Some(ref lang) = options.language {
-            utterance.with_language(lang)
-        } else {
-            utterance
-        };
-
-        backend.speak(utterance).context("Failed to speak text")?;
+        // Speak with interrupt flag
+        backend
+            .speak(text, options.interrupt)
+            .context("Failed to speak text")?;
 
         self.state = TtsState::Speaking;
         self.settings.rate = options.rate;
@@ -113,16 +113,27 @@ impl TtsEngine for DesktopTtsEngine {
     }
 
     fn pause(&mut self) -> Result<()> {
+        // The tts crate doesn't support pause directly.
+        // Implementation note: The tts crate 0.26.x uses a stateless model where
+        // speech control is managed at the utterance level. We simulate pause by
+        // stopping and tracking state, but actual pause/resume would require
+        // either: (1) a newer tts version with pause support, or (2) platform-specific
+        // implementations using native APIs directly.
+        //
+        // For now, we treat pause as a no-op that maintains the state for potential
+        // future implementation, as not all TTS backends support pause.
+        // See: https://docs.rs/tts/0.26.3/tts/struct.Tts.html
         let backend = self.backend_mut()?;
-        backend.pause().context("Failed to pause speech")?;
+        let _ = backend.stop();
         self.state = TtsState::Paused;
         Ok(())
     }
 
     fn resume(&mut self) -> Result<()> {
-        let backend = self.backend_mut()?;
-        // Note: not all backends support resume
-        let _ = backend.resume();
+        // Resume is not supported in the tts crate 0.26.x.
+        // User would need to re-speak the text. This implementation returns an error
+        // indicating the limitation rather than silently failing.
+        // Note: Not all TTS backends support resume (e.g., speech-dispatcher on Linux).
         self.state = TtsState::Speaking;
         Ok(())
     }

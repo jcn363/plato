@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::mpsc::Sender;
 
-use crate::thumbnail::error::ThumbnailResult;
+use crate::error::ThumbnailResult;
 
 #[derive(Debug, Clone)]
 pub struct ThumbnailRequest {
@@ -30,14 +30,14 @@ impl ThumbnailRequest {
     pub fn validate(&self) -> ThumbnailResult<()> {
         // Validate file path
         if self.file_path.as_os_str().is_empty() {
-            return Err(crate::thumbnail::error::ThumbnailError::invalid_path(
+            return Err(crate::error::ThumbnailError::invalid_path(
                 "empty file path",
             ));
         }
 
         // Validate thumbnail path
         if self.thumbnail_path.as_os_str().is_empty() {
-            return Err(crate::thumbnail::error::ThumbnailError::invalid_path(
+            return Err(crate::error::ThumbnailError::invalid_path(
                 "empty thumbnail path",
             ));
         }
@@ -45,7 +45,7 @@ impl ThumbnailRequest {
         // Validate dimensions
         let (width, height) = self.dimensions;
         if width == 0 || height == 0 {
-            return Err(crate::thumbnail::error::ThumbnailError::invalid_dimensions(
+            return Err(crate::error::ThumbnailError::invalid_dimensions(
                 width, height,
             ));
         }
@@ -53,7 +53,7 @@ impl ThumbnailRequest {
         // Validate reasonable dimension bounds
         const MAX_DIMENSION: u32 = 2000;
         if width > MAX_DIMENSION || height > MAX_DIMENSION {
-            return Err(crate::thumbnail::error::ThumbnailError::invalid_dimensions(
+            return Err(crate::error::ThumbnailError::invalid_dimensions(
                 width, height,
             ));
         }

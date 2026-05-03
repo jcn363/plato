@@ -8,7 +8,8 @@ members = [
   'crates/epub_edit',
   'crates/epub_editor',
   'crates/plato-ios',
-  'crates/plato-android',
+  # 'crates/plato-android' - excluded from workspace; build separately with:
+  # cargo build -p plato-android --target aarch64-linux-android
   'crates/ai',
   'crates/rar',
   'crates/plato-document',
@@ -37,7 +38,7 @@ members = [
   'crates/opds',
   'crates/settings',
   'crates/tts',
-'crates/validation',
+  'crates/validation',
   'crates/buffer_pool',
   'crates/consts',
   'crates/rtc',

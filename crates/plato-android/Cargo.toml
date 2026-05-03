@@ -8,7 +8,8 @@ license = "MIT"
 crate-type = ["cdylib"]
 
 [dependencies]
-plato-core = { path = "../core", features = ["tts"] }
+# Enable Android TTS via tts-android feature (includes jni for TextToSpeech API)
+plato-core = { path = "../core", features = ["tts-android"] }
 android-activity = { version = "0.6.1", features = ["native-activity"], optional = true }
 ndk = { version = "0.9.0", features = ["nativewindow"], optional = true }
 ndk-context = { version = "0.1.1", optional = true }

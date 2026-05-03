@@ -5,10 +5,10 @@ use std::thread;
 
 use crate::buffer_pool;
 use crate::document::open;
+use crate::error::{ThumbnailError, ThumbnailResult};
 use crate::framebuffer::Framebuffer;
 use crate::log_error;
-use crate::thumbnail::error::{ThumbnailError, ThumbnailResult};
-use crate::thumbnail::request::ThumbnailRequest;
+use crate::request::ThumbnailRequest;
 
 /// Global mutex to prevent concurrent access when loading multiple JP2 images
 static EXCLUSIVE_ACCESS: LazyLock<Mutex<u8>> = LazyLock::new(|| Mutex::new(0));
@@ -100,6 +100,8 @@ impl ThumbnailWorker {
 
 /// Worker pool for managing multiple thumbnail generation threads
 pub struct ThumbnailWorkerPool {
+    /// Thread handles for the worker threads
+    #[allow(dead_code)]
     handles: Vec<thread::JoinHandle<()>>,
     sender: Sender<ThumbnailRequest>,
 }
@@ -137,6 +139,10 @@ impl ThumbnailWorkerPool {
     }
 
     /// Shuts down the worker pool and waits for all workers to finish
+    ///
+    /// This method is provided for future use when graceful shutdown is needed.
+    /// Currently, the Drop implementation handles cleanup automatically.
+    #[allow(dead_code)]
     pub fn shutdown(mut self) -> ThumbnailResult<()> {
         // Drop the sender to close the channel
         let _sender = std::mem::replace(&mut self.sender, mpsc::channel().0);

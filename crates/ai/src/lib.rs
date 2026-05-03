@@ -16,10 +16,10 @@
 )]
 
 pub mod cache;
+pub mod embedding;
 pub mod providers;
 pub mod settings;
 pub mod traits;
-pub mod embedding;
 
 pub use settings::AiSettings;
 pub use traits::LLMProvider;

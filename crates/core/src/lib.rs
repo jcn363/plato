@@ -50,10 +50,12 @@ pub mod view;
 // Not available on Kobo e-readers (no audio hardware)
 pub mod tts;
 
+// Desktop TTS via 'tts' crate (Linux/macOS/Windows)
 #[cfg(feature = "tts")]
 pub mod tts_desktop;
 
-#[cfg(all(feature = "tts", target_os = "android"))]
+// Android TTS via JNI (requires tts-android feature - only works on Android)
+#[cfg(feature = "tts-android")]
 pub mod tts_android;
 
 pub use reading_time::{

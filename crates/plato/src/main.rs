@@ -19,8 +19,6 @@ fn main() -> Result<(), Error> {
         .build()
         .expect("Failed to create tokio runtime");
 
-    runtime.block_on(async {
-        run()
-    })?;
+    runtime.block_on(async { run() })?;
     Ok(())
 }

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use crate::framebuffer::{Framebuffer, Pixmap};
-use crate::thumbnail::ThumbnailResult;
+use crate::ThumbnailResult;
 
 /// Thread-safe LRU cache for thumbnail pixmaps
 pub struct ThumbnailCache {
@@ -13,15 +13,13 @@ impl ThumbnailCache {
     /// Creates a new thumbnail cache with the specified maximum size
     pub fn new(max_size: usize) -> ThumbnailResult<Self> {
         if max_size == 0 {
-            return Err(crate::thumbnail::error::ThumbnailError::cache(
+            return Err(crate::error::ThumbnailError::cache(
                 "cache size cannot be zero",
             ));
         }
 
         if max_size > 1000 {
-            return Err(crate::thumbnail::error::ThumbnailError::cache(
-                "cache size too large",
-            ));
+            return Err(crate::error::ThumbnailError::cache("cache size too large"));
         }
 
         Ok(Self {
@@ -41,7 +39,7 @@ impl ThumbnailCache {
     pub fn put(&mut self, path: PathBuf, pixmap: Pixmap) -> ThumbnailResult<()> {
         // Validate pixmap size to prevent memory issues
         if pixmap.width() == 0 || pixmap.height() == 0 {
-            return Err(crate::thumbnail::error::ThumbnailError::cache(
+            return Err(crate::error::ThumbnailError::cache(
                 "invalid pixmap dimensions",
             ));
         }
@@ -50,7 +48,7 @@ impl ThumbnailCache {
         let estimated_bytes = pixmap.width() as usize * pixmap.height() as usize * 4; // RGBA
         const MAX_PIXMAP_SIZE: usize = 10 * 1024 * 1024; // 10MB per pixmap
         if estimated_bytes > MAX_PIXMAP_SIZE {
-            return Err(crate::thumbnail::error::ThumbnailError::resource_limit(
+            return Err(crate::error::ThumbnailError::resource_limit(
                 "pixmap too large for cache",
             ));
         }

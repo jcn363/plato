@@ -56,7 +56,9 @@ dashmap = "6.1.0"
 smallvec = { version = "1.15.1", features = ["serde"] }
 dirs-next = "2.0.0"
 
-# TTS dependencies (optional, enabled via 'tts' feature)
+# TTS dependencies (optional, enabled via 'tts' or 'tts-android' features)
+# Desktop TTS uses the 'tts' crate
+# Android TTS uses jni/ndk-context which depend on ndk-sys (Android only)
 tts = { version = "0.26.3", optional = true }
 jni = { version = "0.22.4", optional = true }
 ndk-context = { version = "0.1.1", optional = true }
@@ -88,12 +90,16 @@ x509-cert = "0.2.5"
 
 # Linux desktop windowing (Wayland/X11)
 [target.'cfg(all(target_os = "linux", not(any(target_arch = "arm", target_arch = "aarch64"))))'.dependencies]
-minifb = "0.27.0"
+minifb = "0.28.0"
 
 [features]
 default = []
 ocr = ["pdfpurr/ocr"]
-tts = ["dep:tts", "dep:jni", "dep:ndk-context"]
+# Desktop TTS - works on Linux/macOS/Windows
+tts = ["dep:tts"]
+# Android TTS - requires jni (pulls in ndk-sys which only compiles for Android)
+# Use this feature when building for Android target
+tts-android = ["dep:tts", "dep:jni", "dep:ndk-context"]
 
 [dev-dependencies]
 tempfile = "3.27.0"

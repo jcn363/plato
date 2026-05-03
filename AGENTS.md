@@ -2,52 +2,99 @@
 
 This file provides guidance for AI coding agents working in the Plato codebase.
 
-You are an elite AI technical analyst and senior developer. You are operating in the year 2026. You have access to the internet and an advanced reasoning engine. You are relentless in your pursuit of accuracy and have a straightforward approach.
+You are an elite AI technical analyst and senior developer specializing in Rust systems programming for embedded devices. You are operating in the year 2026.
+
+## Quick Reference
+
+| Command | Description |
+|---------|-------------|
+| `opencode run build` | Build for ARM Kobo |
+| `opencode run test` | Run test suite |
+| `opencode run clippy` | Lint with warnings as errors |
+| `skill dev` | Start development workflow |
+| `skill code-review` | Run code review |
 
 ## Table of Contents
 
 - [Your Toolkit](#your-toolkit-️-for-strict-use-only)
+- [OpenCode Configuration](#opencode-configuration)
 - [Project Structure](#project-structure)
 - [Build & Run Commands](#build--run-commands)
 - [Testing](#testing)
 - [Code Style](#code-style)
-- [Automation](#automation)
 - [Error Handling Process](#error-handling-process)
 - [Task Discipline](#task-discipline)
 - [Build Verification](#build-verification)
 - [Architecture Notes](#architecture-notes)
-- [Recent Architecture Improvements](#recent-architecture-improvements)
-- [Skill Coordination](#skill-coordination-for-rust--local-first-development)
+- [Skill Coordination](#skill-coordination)
 - [Communication](#communication)
 
-## YOUR TOOLKIT 🛠️ (FOR STRICT USE ONLY)
+## YOUR TOOLKIT 🛠️
 
-1. **Web Search**: Use `mcp0_web_search_exa` to search for real-world data, up-to-date documentation, or physical/mathematical constants. NEVER make up data if you can look it up.
-2. **Web Fetch**: Use `mcp0_web_fetch_exa` or `mcp1_fetch` to visit URLs and extract full text or code. Do not respond with links alone.
-3. **File Operations**: Use filesystem MCP tools (`mcp2_*`) for reading, writing, and managing files. Always use absolute paths.
-4. **Code Search**: Use `mcp4_localSearchCode` for searching code patterns, `mcp4_localFindFiles` for finding files by metadata, and `mcp4_localViewStructure` for understanding directory structure.
-5. **GitHub Tools**: Use `mcp4_githubSearchCode`, `mcp4_githubViewRepoStructure`, and `mcp4_githubGetFileContent` for external code research.
-6. **Sequential Thinking**: Use `mcp5_sequentialthinking` for any programming, logic, or architecture problem before writing code.
-7. **Security Scanning**: Use `mcp6_snyk_*` tools for vulnerability scanning and security analysis.
+### OpenCode Native Tools
+
+Use these tools for all operations:
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| **websearch** | Search the web | `websearch({ query: "...", numResults: 5 })` |
+| **webfetch** | Fetch URL content | `webfetch({ url: "...", format: "markdown" })` |
+| **glob** | Find files by pattern | `glob("**/*.rs")` |
+| **grep** | Search code patterns | `grep("pattern", include: "*.rs")` |
+| **read** | Read file contents | `read("path/to/file.rs")` |
+| **write** | Create/modify files | `write({ filePath: "...", content: "..." })` |
+| **edit** | Modify existing code | `edit({ filePath: "...", oldString: "...", newString: "..." })` |
+| **bash** | Run terminal commands | `bash("cargo build")` |
+| **skill** | Load skills | `skill({ name: "dev" })` |
+| **question** | Ask user input | `question({ question: "...", options: [...] })` |
+| **todowrite** | Track tasks | `todowrite({ todos: [...] })` |
+| **task** | Launch subagents | `task({ description: "...", prompt: "...", subagent_type: "..." })` |
 
 ### ⚙️ STANDARD WORKFLOW
 
-1. (If external data is missing) → Use web search and fetch tools to gather information.
-2. (For code analysis) → Use local search tools to find patterns and understand structure.
-3. (To plan the code/analysis) → Use sequential thinking step by step.
-4. (Final Response) → Once "nextThoughtNeeded" is false, respond with clean, functional code and a straightforward technical explanation in Markdown.
+1. **Research** → Use `websearch`/`webfetch` for external data
+2. **Explore** → Use `glob`/`grep`/`read` for code analysis
+3. **Plan** → Use `skill dev-plan` or `todowrite` for task tracking
+4. **Implement** → Use `edit`/`write` for code changes
+5. **Verify** → Use `bash` for cargo commands
+6. **Review** → Use `skill code-review` before completion
 
-### 🔄 MCP TOOL USAGE GUIDELINES
+**Communication style**: Direct and technical. No filler phrases.
 
-**Mandatory rule:** Use MCP tools when possible and never parallelize tasks on the same file.
+## OpenCode Configuration
 
-- **Prefer MCP tools**: Always use available MCP tools over direct file operations when possible
-- **No file parallelization**: Never run multiple operations on the same file simultaneously
-- **Sequential file operations**: Perform file edits, reads, and writes sequentially to avoid conflicts
-- **Batch independent operations**: Use parallel tool calls only for independent operations on different files
-- **Tool priority**: MCP tools > direct file operations > terminal commands
+The project includes `opencode.json` with pre-configured settings:
 
-**Communication style**: Direct and technical. No filler phrases — get straight to analysis and action.
+- **Model**: Claude Sonnet 4 (default), Haiku (fast tasks), Opus (complex tasks)
+- **Skills**: Auto-loaded workflow skills (dev, code-review, rust-core, etc.)
+- **Commands**: Pre-defined build/test/lint commands via `opencode run <command>`
+- **Permissions**: Safe bash commands (cargo, git, clippy) allowed; destructive commands require approval
+
+### Quick Commands
+
+```bash
+opencode run build       # ARM Kobo (default)
+opencode run build-arm64 # 64-bit Kobo devices
+opencode run build-host  # x86_64 development
+opencode run test        # Run test suite
+opencode run clippy      # Lint with warnings as errors
+opencode run fmt        # Format code
+opencode run check      # Quick type check
+opencode run audit      # Security audit
+```
+
+### Skill Invocation
+
+Use the `skill` tool to load specialized workflows:
+
+```javascript
+skill({ name: "dev" })        // Development workflow
+skill({ name: "code-review" }) // Code review
+skill({ name: "rust-core" })   // Rust best practices
+skill({ name: "debug-generic" }) // Debugging
+```
+
+---
 
 ## Project Structure
 
@@ -106,6 +153,13 @@ cargo test -p plato-core geom::tests --target x86_64-unknown-linux-gnu
 
 # Run tests matching a pattern
 cargo test overlaping --target x86_64-unknown-linux-gnu
+```
+
+Or use OpenCode commands:
+
+```bash
+opencode run test        # Full test suite
+opencode run test-one   # Single test by name
 ```
 
 Tests use standard Rust `#[cfg(test)]` / `#[test]` attributes. See the [Test Segregation](#test-segregation) section for placement rules.
@@ -363,6 +417,22 @@ where
 - When modifying multiple files, batch changes and run a single validation pass at the end
 - For this project, native libs may require `RUSTFLAGS` to be set correctly
 - Cross-compilation targets ARM by default (see `.cargo/config.toml`) — use `--target x86_64-unknown-linux-gnu` for host builds
+
+### OpenCode Commands
+
+The project includes pre-configured commands in `opencode.json`:
+
+```bash
+opencode run build       # ARM Kobo (default)
+opencode run build-arm64 # 64-bit Kobo
+opencode run build-host  # x86_64 development
+opencode run test        # Run test suite
+opencode run clippy      # Lint with warnings
+opencode run fmt         # Format code
+opencode run check       # Quick type check
+opencode run audit       # Security audit
+opencode run build-full  # Full pipeline (fmt + clippy + test)
+```
 
 ## Error Handling Process
 
@@ -714,119 +784,59 @@ match battery.capacity() {
 }
 ```
 
-## Skill Coordination for Rust + Local-First Development
+## Skill Coordination
 
-The following skills are optimized for Rust development and local-first architecture. They work together as a coordinated system:
+### Core Skills (Auto-loaded)
 
-### Core Rust Skills
+These skills are pre-configured in `opencode.json` and auto-loaded:
 
-| Skill                       | Purpose        | Use When                                                 |
-|-----------------------------|----------------|----------------------------------------------------------|
-| `rust-engineer`             | Implementation | Writing new Rust code, designing traits, error handling  |
-| `rust-best-practices`       | Code quality   | Reviewing code, ensuring idiomatic patterns              |
-| `rust-async-patterns`       | Concurrency    | async/await, tokio, channels, concurrent data structures |
-| `rust-testing`              | Verification   | Writing tests, test organization, mocking                |
-| `rust-mcp-server-generator` | Tool building  | Creating MCP servers in Rust                             |
+| Skill | Purpose | Use When |
+|-------|---------|----------|
+| `dev` | Development workflow | General development tasks |
+| `dev-plan` | Feature planning | Creating PRDs and implementation plans |
+| `dev-resume` | Session recovery | Resuming from previous sessions |
+| `code-review` | Code validation | Running clippy, fmt, tests |
+| `debug-generic` | Root-cause analysis | Fixing bugs systematically |
+| `rust-core` | Rust best practices | Implementation guidance |
+| `git-automation` | Version control | Commit, branch, PR operations |
+| `documentation` | Doc generation | Creating README, guides |
+| `verification-before-completion` | Quality gate | Pre-commit validation |
+| `brainstorming` | Design clarification | Feature design sessions |
+| `refactor` | Code improvement | Restructuring existing code |
 
-### Workflow Skills (Rust-Optimized)
+### Skill Selection Guide
 
-| Skill                    | Purpose              | Key Rust/Local Adaptations                              |
-|--------------------------|----------------------|---------------------------------------------------------|
-| `dev`                    | Development workflow | Uses `cargo check/build/test`, SQLite for local state   |
-| `dev-plan`               | Planning             | PRD format with Rust module hierarchy, local file paths |
-| `dev-resume`             | Session recovery     | Resumes from `.dev/` with Rust project structure        |
-| `dev-story`              | Story implementation | Integrates with GDD + ADR for Rust game dev             |
-| `code-review-excellence` | Code review          | Includes `cargo clippy`, ownership, lifetime checks     |
-
-### Feature Skills (Local-First Adapted)
-
-| Skill                | Cloud-Native       | Local-First Equivalent                                             |
-|----------------------|--------------------|--------------------------------------------------------------------|
-| `ai-features`        | Vercel Blob, Redis | SQLite + local filesystem (see `doc/AI_GENERATION_PERSISTENCE.md`) |
-| `real-time-features` | WebSockets, SSE    | `tokio::sync::broadcast`, IPC, file watchers                       |
+```
+Task Type → Recommended Skill(s)
+─────────────────────────────────
+New feature → skill dev-plan → skill dev → skill rust-core
+Bug fix     → skill debug-generic → skill rust-core
+Refactor    → skill refactor
+Code review → skill code-review
+Documentation → skill documentation
+```
 
 ### Local-First Principles
 
-When using skills for this codebase, always prefer local equivalents:
+When using skills, prefer local alternatives:
 
-```text
-PostgreSQL   → SQLite (rusqlite)
-Redis        → SQLite cache table OR in-memory LRU
-Vercel Blob  → Local filesystem (std::fs)
-WebSockets   → tokio::sync::broadcast OR file-based IPC
-SSE          → File watchers (notify crate) OR polling
-```
+| Cloud-Native | Local-First |
+|--------------|--------------|
+| PostgreSQL | SQLite (rusqlite) |
+| Redis | SQLite cache or in-memory LRU |
+| WebSockets | tokio::sync::broadcast |
+| Cloud storage | Local filesystem |
 
-### Cross-Skill Integration Patterns
+### Skill Invocation
 
-#### Pattern 1: AI Feature with Local Persistence
+```javascript
+// Load a skill
+skill({ name: "dev" })
 
-```rust
-// From ai-features skill + ai-generation-persistence.md
-use nanoid::nanoid;
-use rusqlite::Connection;
-
-let id = nanoid!(10);
-// Save to SQLite BEFORE calling LLM
-sqlite.execute("INSERT INTO generations ...", params![id, ...])?;
-// Call LLM
-let result = call_llm(prompt).await?;
-// Update with result
-sqlite.execute("UPDATE generations SET result = ? ...", params![result, id])?;
-```
-
-#### Pattern 2: Real-Time without WebSockets
-
-```rust
-// From real-time-features skill (local variant)
-use tokio::sync::broadcast;
-use notify::{Watcher, RecursiveMode};
-
-// In-process broadcast (no network)
-let (tx, _rx) = broadcast::channel(100);
-
-// File system watcher for external events
-let mut watcher = notify::recommended_watcher(move |res| {
-    tx.send(res).ok();
-})?;
-watcher.watch(Path::new("/data"), RecursiveMode::NonRecursive)?;
-```
-
-#### Pattern 3: Code Review with Rust Checks
-
-```markdown
-From code-review-excellence skill (Rust additions):
-- Run `cargo clippy -- -D warnings` before review
-- Check ownership: unnecessary clones, borrowing opportunities
-- Check lifetimes: explicit annotations where needed
-- Check errors: proper ? usage, context with `.with_context()`
-- Check tests: `#[cfg(test)]` modules, test file naming
-```
-
-### Skill Selection Decision Tree
-
-```text
-Task Type → Recommended Skill(s)
-─────────────────────────────────
-New feature → /dev-plan → /rust-engineer → /rust-testing
-Bug fix     → /systematic-debugging → /rust-engineer
-Refactor    → /refactor + /rust-best-practices
-Code review → /code-review-excellence + /rust-best-practices
-AI feature  → /ai-features (local variant) + /rust-engineer
-Real-time   → /real-time-features (local variant) + /rust-async-patterns
-```
-
-### Skill Configuration Overrides
-
-When invoking skills, use these project-specific settings:
-
-```yaml
-# In skill invocations or .dev/ configuration
-database: "sqlite"        # Not postgres
-storage: "local"          # Not cloud/blob
-async_runtime: "tokio"   # Standard for Rust
-error_handling: "anyhow"  # For binaries
-error_library: "thiserror" # For libraries
+// Use specific workflow
+// - /dev for development
+// - /dev-plan for planning  
+// - /code-review for validation
 ```
 
 ## Communication

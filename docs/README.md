@@ -58,30 +58,6 @@ Each top‑level crate now has its own `README.md` describing purpose, public AP
 
 - [architecture/](architecture/) - Architecture documentation
 
-## Archive
-
-- [archive/](archive/) - Directory containing completed or superseded plans:
-  - [Mu-OUT.md](archive/Mu-OUT.md) (Completed)
-  - [APK-complete_PLAN.md](archive/APK-complete_PLAN.md)
-  - [APK_PLAN.md](archive/APK_PLAN.md)
-  - [APK_PLAN2.md](archive/APK_PLAN2.md)
-  - [CROP_PLAN.md](archive/CROP_PLAN.md) (Completed)
-  - [DEAD-CODE_PLAN.md](archive/DEAD-CODE_PLAN.md) (Completed)
-  - [FONT-WRAPPERS.md](archive/FONT-WRAPPERS.md) (Completed)
-  - [GEMINI.md](archive/GEMINI.md) (Outdated)
-  - [HOME-VIEW_PLAN.md](archive/HOME-VIEW_PLAN.md) (Completed)
-  - [IMPROVEMENTS_LOG.md](archive/IMPROVEMENTS_LOG.md) (Formerly IMPRO.md - Completed items)
-  - [LAZY-THUMBNAIL_PLAN.md](archive/LAZY-THUMBNAIL_PLAN.md) (Completed)
-  - [MOBIPLAN.md](archive/MOBIPLAN.md)
-  - [MODULARIZATION_PLAN.md](archive/MODULARIZATION_PLAN.md) (Completed)
-  - [OPTI_PLAN.md](archive/OPTI_PLAN.md) (Completed)
-  - [OSRUST.md](archive/OSRUST.md)
-  - [PDF-UI_PLAN.md](archive/PDF-UI_PLAN.md) (Completed)
-  - [PDFRust.md](archive/PDFRust.md)
-  - [RUST-ONLY.md](archive/RUST-ONLY.md)
-  - [STUB_PLAN.md](archive/STUB_PLAN.md) (Completed)
-  - [Uncensored.md](archive/Uncensored.md)
-
 ## Feature‑specific documentation
 
 - [AI Integration](AI_INTEGRATION.md) – provider abstraction, embeddings, cache.

@@ -6,12 +6,12 @@
 
 #![cfg(target_os = "android")]
 
+use anyhow::{Context, Result};
+use ndk::native_window::NativeWindow;
 use plato_core::color::Color;
 use plato_core::framebuffer::Framebuffer;
 use plato_core::framebuffer::UpdateMode;
 use plato_core::geom::Rectangle;
-use anyhow::{Context, Result};
-use ndk::native_window::NativeWindow;
 
 /// Android framebuffer implementation using ANativeWindow for software rendering
 pub struct AndroidFramebuffer {

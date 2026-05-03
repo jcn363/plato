@@ -1,7 +1,7 @@
 #![cfg_attr(not(target_os = "android"), allow(dead_code, unused_imports))]
 
 #[cfg(target_os = "android")]
-use android_activity::input::{MotionEvent, MotionAction};
+use android_activity::input::{MotionAction, MotionEvent};
 use plato_core::geom::Point;
 use plato_core::input::{DeviceEvent, FingerStatus};
 use std::sync::mpsc::Sender;
