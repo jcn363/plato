@@ -46,6 +46,9 @@ pub mod update;
 pub mod validation;
 pub mod view;
 
+// Accessibility module - bionic reading, auto-pace, dyslexia fonts
+pub mod accessibility;
+
 // TTS module - available on supported platforms (Android, Desktop)
 // Not available on Kobo e-readers (no audio hardware)
 pub mod tts;

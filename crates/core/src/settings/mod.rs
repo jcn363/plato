@@ -208,6 +208,18 @@ pub struct AccessibilitySettings {
     pub color_blindness_mode: String,
     /// Dyslexic-friendly font
     pub dyslexic_font: bool,
+    /// Dyslexia font family (opendyslexic, atkinson, lexend)
+    pub dyslexic_font_family: String,
+    /// Bionic reading mode - bold first half of words
+    pub bionic_reading: bool,
+    /// Bionic reading intensity (0.0 to 1.0, how much of word to bold)
+    pub bionic_intensity: f32,
+    /// Auto-pace: automatic page turn with adjustable speed
+    pub auto_pace: bool,
+    /// Auto-pace speed in words per minute (100-600)
+    pub auto_pace_wpm: u32,
+    /// Enable dyslexia-friendly fonts bundling
+    pub use_accessibility_fonts: bool,
 }
 
 impl Default for AccessibilitySettings {
@@ -221,6 +233,12 @@ impl Default for AccessibilitySettings {
             focus_mode: false,
             color_blindness_mode: "none".to_string(),
             dyslexic_font: false,
+            dyslexic_font_family: "opendyslexic".to_string(),
+            bionic_reading: false,
+            bionic_intensity: 0.5,
+            auto_pace: false,
+            auto_pace_wpm: 300,
+            use_accessibility_fonts: true,
         }
     }
 }
@@ -231,6 +249,16 @@ impl AccessibilitySettings {
         validate_finite_f32(self.word_spacing, "word_spacing", 0.0, 2.0)?;
         validate_finite_f32(self.line_height, "line_height", 0.5, 3.0)?;
         validate_finite_f32(self.large_text_scale, "large_text_scale", 1.0, 3.0)?;
+        validate_finite_f32(self.bionic_intensity, "bionic_intensity", 0.0, 1.0)?;
+        validate_range(self.auto_pace_wpm, 100, 600, "auto_pace_wpm")?;
+        // Validate dyslexia font family
+        let valid_families = ["opendyslexic", "atkinson", "lexend"];
+        if !valid_families.contains(&self.dyslexic_font_family.as_str()) {
+            bail!(
+                "dyslexic_font_family must be one of: {}",
+                valid_families.join(", ")
+            );
+        }
         Ok(())
     }
 }
