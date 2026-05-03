@@ -16,7 +16,8 @@ use crate::view::top_bar::TopBar;
 use crate::view::{Align, Bus, Event, Hub, RenderData, RenderQueue, View};
 use crate::view::{EntryId, EntryKind, Id, ViewId, ID_FEEDER};
 use crate::view::{SMALL_BAR_HEIGHT, THICKNESS_MEDIUM};
-use anyhow::{format_err, Error};
+#[allow(clippy::unused_imports)]
+use anyhow::{format_err, Context, Error};
 
 mod manipulation_handlers;
 mod types;
