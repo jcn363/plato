@@ -255,7 +255,7 @@ crates/core/src/eink/ → Add color e-ink optimizations
 ## Implementation Roadmap
 
 ### Phase 1 (Q2-Q3 2026) - Accessibility & Content
-1. **Accessibility Suite** - Dyslexia fonts, bionic reading
+1. **Accessibility Suite** - Dyslexia fonts, bionic reading **(✅ Implemented May 2026)**
 2. **Pocket Integration** - Web article reading
 3. **Per-book Settings** - Typography improvements
 
