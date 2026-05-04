@@ -23,6 +23,7 @@
 // Imports and Constants
 // ===========================================================================
 
+use crate::accessibility::auto_pace::AutoPace;
 use crate::context::Context;
 use crate::device::CURRENT_DEVICE;
 use crate::document::{BoundedText, Document, TextLocation, TocEntry};
@@ -85,6 +86,7 @@ pub struct Reader {
     pub(crate) bars_visible: bool,
     pub(crate) margin_cropper_visible: bool,
     pub(crate) ai_chat_visible: bool,
+    pub(crate) auto_pace: Option<AutoPace>,
 }
 
 // ===========================================================================
@@ -97,15 +99,13 @@ impl Reader {
         let (doc, pages_count, reflowable) = reader_constructors::open_document(&info)?;
         let children = reader_constructors::create_toolbar(rect, reflowable, &info, context);
 
-        Some(Self::create_reader(
-            id,
-            rect,
-            children,
-            doc,
-            pages_count,
-            reflowable,
-            info,
-        ))
+        let mut reader =
+            Self::create_reader(id, rect, children, doc, pages_count, reflowable, info);
+
+        // Initialize auto-pace from settings
+        reader.init_auto_pace(&context.settings.accessibility);
+
+        Some(reader)
     }
 
     fn create_reader(
@@ -150,6 +150,7 @@ impl Reader {
             bars_visible: true,
             margin_cropper_visible: false,
             ai_chat_visible: false,
+            auto_pace: None,
         }
     }
 
@@ -518,5 +519,47 @@ impl Reader {
     /// Get the bounding rectangle for the current text selection
     pub fn selection_rect(&self, chunks: &[super::reader_core::RenderChunk]) -> Option<Rectangle> {
         super::reader_rendering::selection_rect(self.selection.as_ref(), &self.text, chunks)
+    }
+
+    /// Initialize auto-pace from settings
+    pub fn init_auto_pace(&mut self, settings: &crate::settings::AccessibilitySettings) {
+        if settings.auto_pace {
+            let mut ap = AutoPace::new(settings.auto_pace_wpm);
+            ap.start();
+            self.auto_pace = Some(ap);
+        } else {
+            self.auto_pace = None;
+        }
+    }
+
+    /// Check if auto-pace should trigger a page turn
+    pub fn check_auto_pace(&self) -> bool {
+        if let Some(ref ap) = self.auto_pace {
+            ap.is_active() && ap.should_turn_page()
+        } else {
+            false
+        }
+    }
+
+    /// Notify auto-pace that a page was turned
+    pub fn notify_page_turned(&mut self) {
+        if let Some(ref mut ap) = self.auto_pace {
+            ap.page_turned();
+        }
+    }
+
+    /// Update auto-pace WPM from settings
+    pub fn update_auto_pace_wpm(&mut self, wpm: u32) {
+        if let Some(ref mut ap) = self.auto_pace {
+            ap.set_wpm(wpm);
+        }
+    }
+
+    /// Stop auto-pace
+    pub fn stop_auto_pace(&mut self) {
+        if let Some(ref mut ap) = self.auto_pace {
+            ap.stop();
+        }
+        self.auto_pace = None;
     }
 }

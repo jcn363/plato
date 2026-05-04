@@ -3,6 +3,7 @@
 //! This module handles user input events for the Reader view.
 //! It processes touch events, keyboard input, and device button events,
 //! dispatching to appropriate handlers based on the current state.
+
 use crate::context::Context;
 use crate::input::{ButtonStatus, DeviceEvent};
 use crate::view::{Hub, RenderQueue};
