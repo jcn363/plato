@@ -44,6 +44,30 @@ This document lists the major work items for the Plato project, their current st
 | **Search & metadata** (saved queries, search index) | ✅ | `metadata` module, `SearchIndex`. |
 | **Reading stats & time estimation** | ✅ | `reading_time` module, `ReadingSpeed`. |
 
+## Feature Opportunities (Priority Order)
+
+### Tier 1 – High Impact, Strategic Alignment
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Enhanced Accessibility Suite** | ✅ | UI integration (toolbar/menu) added |
+| **Pocket/Instapaper Integration** | 🔜 | Web article reading |
+| **Advanced Typography & Reading Experience** | 🔜 | Per‑book settings, spacing controls |
+| **Enhanced Library Management & Discovery** | 🔜 | Smart collections, stats, recommendations |
+
+### Tier 2 – Medium Impact, Good ROI
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Audiobook Support** | 🔜 | MP3/M4B playback, Bluetooth |
+| **Handwriting & Note‑taking Enhancement** | 🔜 | Sketch, OCR, export |
+| **Cross‑Device Sync 2.0** | 🔜 | Multi‑backend sync, offline‑first |
+| **Comic/Manga Optimization** | 🔜 | Panel view, RTL, color e‑ink |
+
+### Tier 3 – Niche but Differentiating
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Academic/Research Mode** | 🔜 | Citations, split‑screen, LaTeX |
+| **Social Reading Features** | 🔜 | Highlight sharing, reading groups |
+
 ## Documentation tasks
 
 | Item | Status | Notes |
