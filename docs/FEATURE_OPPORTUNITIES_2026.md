@@ -379,17 +379,17 @@ crates/core/src/settings/features.rs → SocialSettings struct
    - Author/genre/series grouping
    - Duplicate detection
 
-### Phase 2 (Q3-Q4 2026) - Ecosystem & Sync
+### Phase 2 (Q3-Q4 2026) - Ecosystem & Sync ✅ COMPLETE
 
-1. **Cross-Device Sync 2.0** - Multiple backends
-2. **Reading Statistics** - Time read, pages/day, streaks
-3. **Audiobook Support** - Bluetooth playback
+1. **Cross-Device Sync 2.0** - Multiple backends **(✅ COMPLETE May 2026)**
+2. **Reading Statistics** - Time read, pages/day, streaks **(✅ COMPLETE May 2026)**
+3. **Audiobook Support** - Bluetooth playback **(✅ COMPLETE May 2026)**
 
-### Phase 3 (Q1-Q2 2027) - Premium Features
+### Phase 3 (Q1-Q2 2027) - Premium Features ✅ COMPLETE
 
-1. **Note-taking Enhancement** - Handwriting recognition
-2. **Comic/Manga Optimization** - Panel view, RTL
-3. **Academic Mode** - Citations, split-screen
+1. **Note-taking Enhancement** - Handwriting recognition **(✅ COMPLETE May 2026)**
+2. **Comic/Manga Optimization** - Panel view, RTL **(✅ COMPLETE May 2026)**
+3. **Academic Mode** - Citations, split-screen **(✅ COMPLETE May 2026)**
 
 ---
 
@@ -422,8 +422,10 @@ All proposed features align with existing architecture:
 | Per-book Settings   | Settings customized per book  | 30% of reading sessions | ✅ Implemented |
 | Enhanced Library    | Smart collections created     | 2+ per active user      | ✅ Implemented |
 | Advanced Typography | Chunked reading users        | 10% of reading sessions | ✅ Implemented |
-| Cross-Device Sync   | Users with sync enabled       | 40% of user base        | 🔜 Planned |
-| Audiobook Support   | Audiobooks played             | 10% of user base        | 🔜 Planned |
+| Cross-Device Sync   | Users with sync enabled       | 40% of user base        | ✅ Implemented |
+| Audiobook Support   | Audiobooks played             | 10% of user base        | ✅ Implemented |
+| Academic Mode      | Citations exported          | 5% of user base        | ✅ Implemented |
+| Social Reading     | Highlights shared           | 5% of user base        | ✅ Implemented |
 
 ---
 

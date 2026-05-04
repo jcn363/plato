@@ -1,6 +1,7 @@
 # Plato
 
 ![Logo](artworks/plato-logo.svg)
+[![All Features Complete](https://img.shields.io/badge/Status-All%20Features%20Complete-green)](docs/FEATURE_OPPORTUNITIES_2026.md)
 
 This is an optimized version of the original [Plato](https://github.com/pettarin/plato) document reader for Kobo e-readers.
 

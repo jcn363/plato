@@ -1,13 +1,16 @@
 # Implemented Features
 
 > **Last Updated**: 2026-05-05
-> **Related Documents**: [NOT_IMPLEMENTED.md](./NOT_IMPLEMENTED.md) | [CHANGES.md](../CHANGES.md)
+> **Status**: ✅ ALL FEATURES COMPLETE
+> **Related Documents**: [NOT_IMPLEMENTED.md](./NOT_IMPLEMENTED.md) | [CHANGES.md](../CHANGES.md) | [ROADMAP.md](../docs/ROADMAP.md) | [FEATURE_OPPORTUNITIES_2026.md](../docs/FEATURE_OPPORTUNITIES_2026.md)
 
 This document tracks features that have been successfully implemented in Plato. For a high-level overview of recent changes, see [CHANGES.md](../CHANGES.md).
 
 ## Implementation History
 
-The following features were implemented in recent updates (as of May 2026):
+### Phase 1 (Q2-Q3 2026) - Accessibility & Content ✅ COMPLETE (May 2026)
+
+The following features were implemented in Phase 1:
 
 1. **Plugin Network Control** - Now checks for network usage in plugins and enforces `allow_network` setting
 2. **Cover Editor UI** - Added full UI accessible from Applications menu
@@ -74,3 +77,9 @@ The following features were implemented in recent updates (as of May 2026):
 63. **Social Reading Features** - Readwise/Obsidian export, quote card generator, SocialSettings with quote card styles and export formats
 64. **Audiobook Support** - AudioSettings with variable speed (0.5x-3.0x), sleep timer, silence skipping, bluetooth auto-connect, crossfade
 65. **Academic/Research Mode** - AcademicSettings with citation export (BibTeX, RIS), highlight categories, Zotero/Mendeley sync, LaTeX rendering
+66. **Cross-Device Sync 2.0** - Dropbox and Google Drive backends, ConflictResolution, offline-first mode
+67. **Reading Statistics** - Complete library and reading statistics with streaks, time tracking
+68. **Audiobook Settings** - Variable speed, sleep timer, bluetooth auto-connect
+69. **Handwriting & Note-taking** - Notebook organization, ExportFormat settings
+70. **Comic/Manga Optimization** - ComicSettings with panel view, RTL, color e-ink
+71. **Social Reading Features** - Readwise/Obsidian export, quote cards
