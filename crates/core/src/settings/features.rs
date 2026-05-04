@@ -74,6 +74,29 @@ pub struct CloudSyncSettings {
     pub remote_path: String,
     pub auto_sync: bool,
     pub last_sync: Option<chrono::NaiveDateTime>,
+    pub dropbox_token: Option<String>,
+    pub google_drive_token: Option<String>,
+    pub onedrive_token: Option<String>,
+    pub conflict_resolution: ConflictResolution,
+    pub offline_first: bool,
+    pub sync_annotations: bool,
+    pub sync_highlights: bool,
+    pub sync_reading_position: bool,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ConflictResolution {
+    LastWriteWins,
+    PreferLocal,
+    PreferRemote,
+    Merge,
+}
+
+impl Default for ConflictResolution {
+    fn default() -> Self {
+        ConflictResolution::Merge
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -81,6 +104,8 @@ pub struct CloudSyncSettings {
 pub enum CloudSyncMethod {
     WebDAV,
     KoboCloud,
+    Dropbox,
+    GoogleDrive,
 }
 
 impl Default for ExternalStorageSettings {
@@ -160,6 +185,14 @@ impl Default for CloudSyncSettings {
             remote_path: "/".to_string(),
             auto_sync: false,
             last_sync: None,
+            dropbox_token: None,
+            google_drive_token: None,
+            onedrive_token: None,
+            conflict_resolution: ConflictResolution::default(),
+            offline_first: true,
+            sync_annotations: true,
+            sync_highlights: true,
+            sync_reading_position: true,
         }
     }
 }

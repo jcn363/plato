@@ -249,18 +249,29 @@ Integrate with cloud storage APIs
 
 **Proposed Features:**
 
-- **Position sync**: Reading position, highlights, notes across devices
-- **Multiple sync backends**: WebDAV, Dropbox, Google Drive, self-hosted
-- **Conflict resolution**: Smart merge for simultaneous edits
-- **Offline-first**: Sync when connection available
+- **Position sync**: Reading position, highlights, notes across devices ✅
+- **Multiple sync backends**: WebDAV, Dropbox, Google Drive, KoboCloud ✅
+- **Conflict resolution**: Smart merge for simultaneous edits ✅
+- **Offline-first**: Sync when connection available ✅
 
 **Implementation Path:**
 
 ```text
 crates/core/src/sync/ → Enhance existing WebDAV/KoboCloud
+crates/core/src/settings/features.rs → Add Dropbox/Google Drive backends
 Add pluggable sync providers
 Use existing library infrastructure
 ```
+
+**Status:** ✅ Implemented (May 2026)
+
+- WebDAV backend (existing)
+- KoboCloud backend (existing)
+- Dropbox token-based sync
+- Google Drive API sync
+- Conflict resolution options (LastWriteWins, Merge, PreferLocal, PreferRemote)
+- Offline-first mode
+- Granular sync options (annotations, highlights, reading position)
 
 **Effort:** Medium-High | **Impact:** Medium-High
 

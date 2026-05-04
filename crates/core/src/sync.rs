@@ -196,6 +196,16 @@ pub fn check_network_and_sync(
                 &library_path.join(".reading-states"),
             )?;
         }
+        crate::settings::CloudSyncMethod::Dropbox => {
+            if let Some(ref token) = cloud_settings.dropbox_token {
+                sync_with_dropbox(token, library_path)?;
+            }
+        }
+        crate::settings::CloudSyncMethod::GoogleDrive => {
+            if let Some(ref token) = cloud_settings.google_drive_token {
+                sync_with_google_drive(token, library_path)?;
+            }
+        }
     }
 
     if !background_settings.keep_wifi_on && !background_settings.auto_wifi {
@@ -698,4 +708,137 @@ pub fn sync_with_kobocloud(
     upload_to_kobocloud(device_id, &upload_data)?;
 
     Ok(())
+}
+
+pub fn sync_with_dropbox(token: &str, library_path: &std::path::Path) -> Result<(), Error> {
+    let client = SYNC_CLIENT.clone();
+    let dbx_api = "https://api.dropboxapi.com/2";
+
+    // Upload reading progress
+    let states_dir = library_path.join(".reading-states");
+    if states_dir.exists() {
+        for entry in std::fs::read_dir(&states_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.extension().map(|e| e == "json").unwrap_or(false) {
+                let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+                let content = std::fs::read_to_string(&path)?;
+                let result = client
+                    .post(&format!("{}/files/upload", dbx_api))
+                    .header("Authorization", format!("Bearer {}", token))
+                    .header("Content-Type", "application/octet-stream")
+                    .header(
+                        "Dropbox-API-Arg",
+                        serde_json::json!({
+                            "path": format!("/Plato/{}", filename),
+                            "mode": "overwrite",
+                            "autorename": false
+                        })
+                        .to_string(),
+                    )
+                    .body(content)
+                    .send()
+                    .map_err(|e| format_err!("Dropbox sync failed: {}", e))?;
+
+                if !result.status().is_success() {
+                    log_info!("Dropbox: Failed to upload {}", filename);
+                }
+            }
+        }
+    }
+
+    log_info!("Dropbox: Sync complete");
+    Ok(())
+}
+
+pub fn sync_with_google_drive(token: &str, library_path: &std::path::Path) -> Result<(), Error> {
+    let client = SYNC_CLIENT.clone();
+    let gdrive_api = "https://www.googleapis.com/drive/v3";
+
+    // Find or create Plato folder
+    let folder_id = find_or_create_gdrive_folder(&client, token, "Plato")?;
+
+    // Upload reading progress
+    let states_dir = library_path.join(".reading-states");
+    if states_dir.exists() {
+        for entry in std::fs::read_dir(&states_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.extension().map(|e| e == "json").unwrap_or(false) {
+                let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+                let content = std::fs::read_to_string(&path)?;
+
+                // Simple multipart upload
+                let result = client
+                    .post(&format!("{}/files", gdrive_api))
+                    .header("Authorization", format!("Bearer {}", token))
+                    .header("Content-Type", "application/octet-stream")
+                    .query(&[("uploadType", "multipart")])
+                    .body(content)
+                    .send()
+                    .map_err(|e| format_err!("Google Drive sync failed: {}", e))?;
+
+                if !result.status().is_success() {
+                    log_info!("Google Drive: Failed to upload {}", filename);
+                }
+            }
+        }
+    }
+
+    log_info!("Google Drive: Sync complete");
+    Ok(())
+}
+
+fn find_or_create_gdrive_folder(
+    client: &reqwest::blocking::Client,
+    token: &str,
+    name: &str,
+) -> Result<String, Error> {
+    // Query for existing folder
+    let query = format!(
+        "name='{}' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+        name
+    );
+    let response = client
+        .get("https://www.googleapis.com/drive/v3/files")
+        .header("Authorization", format!("Bearer {}", token))
+        .query(&[("q", &query)])
+        .send()
+        .map_err(|e| format_err!("Google Drive query failed: {}", e))?;
+
+    if response.status().is_success() {
+        if let Ok(json) = response.json::<serde_json::Value>() {
+            if let Some(files) = json.get("files").and_then(|f| f.as_array()) {
+                if let Some(first) = files.first() {
+                    if let Some(id) = first.get("id").and_then(|i| i.as_str()) {
+                        return Ok(id.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    // Create new folder if not found
+    let folder_meta = serde_json::json!({
+        "name": name,
+        "mimeType": "application/vnd.google-apps.folder"
+    });
+
+    let create_response = client
+        .post("https://www.googleapis.com/drive/v3/files")
+        .header("Authorization", format!("Bearer {}", token))
+        .header("Content-Type", "application/json")
+        .json(&folder_meta)
+        .send()
+        .map_err(|e| format_err!("Google Drive folder creation failed: {}", e))?;
+
+    if let Ok(json) = create_response.json::<serde_json::Value>() {
+        if let Some(id) = json.get("id").and_then(|i| i.as_str()) {
+            return Ok(id.to_string());
+        }
+    }
+
+    Err(format_err!("Could not find or create Google Drive folder"))
 }
