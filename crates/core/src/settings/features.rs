@@ -300,3 +300,58 @@ impl Default for AudioSettings {
         }
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct AcademicSettings {
+    pub enabled: bool,
+    pub split_screen: bool,
+    pub citation_format: CitationFormat,
+    pub citation_dir: PathBuf,
+    pub highlight_categories: Vec<String>,
+    pub sync_zotero: bool,
+    pub zotero_api_key: Option<String>,
+    pub sync_mendeley: bool,
+    pub mendeley_email: Option<String>,
+    pub mendeley_password: Option<String>,
+    pub latex_render: bool,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CitationFormat {
+    BibTeX,
+    RIS,
+    APA,
+    MLA,
+    Chicago,
+}
+
+impl Default for CitationFormat {
+    fn default() -> Self {
+        CitationFormat::BibTeX
+    }
+}
+
+impl Default for AcademicSettings {
+    fn default() -> Self {
+        AcademicSettings {
+            enabled: false,
+            split_screen: true,
+            citation_format: CitationFormat::default(),
+            citation_dir: PathBuf::from("Citations"),
+            highlight_categories: vec![
+                "Methodology".to_string(),
+                "Finding".to_string(),
+                "Question".to_string(),
+                "Quote".to_string(),
+            ],
+            sync_zotero: false,
+            zotero_api_key: None,
+            sync_mendeley: false,
+            mendeley_email: None,
+            mendeley_password: None,
+            latex_render: true,
+        }
+    }
+}

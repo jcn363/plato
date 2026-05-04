@@ -1,13 +1,13 @@
 # Implemented Features
 
-> **Last Updated**: 2026-05-04
+> **Last Updated**: 2026-05-05
 > **Related Documents**: [NOT_IMPLEMENTED.md](./NOT_IMPLEMENTED.md) | [CHANGES.md](../CHANGES.md)
 
 This document tracks features that have been successfully implemented in Plato. For a high-level overview of recent changes, see [CHANGES.md](../CHANGES.md).
 
 ## Implementation History
 
-The following features were implemented in recent updates (as of April 2026):
+The following features were implemented in recent updates (as of May 2026):
 
 1. **Plugin Network Control** - Now checks for network usage in plugins and enforces `allow_network` setting
 2. **Cover Editor UI** - Added full UI accessible from Applications menu
@@ -65,3 +65,12 @@ The following features were implemented in recent updates (as of April 2026):
 54. **Further Unwrap/Expect Reduction** - Replaced `.unwrap()` with proper error handling in `sync.rs`, `document/html/parse.rs`, and `fetcher/main.rs`
 55. **IMPROVEMENTS.md Reorganization** - Condensed and organized improvement logs for better clarity
 56. **Pocket/Instapaper Integration** - Full API integration with OAuth (Pocket), username/password (Instapaper), article sync, tag management, archive operations, reading progress sync, highlight export (Readwise/Obsidian), and folder support (Instapaper). Modules: `article.rs`, `pocket.rs`, `instapaper.rs`
+57. **Accessibility Suite** - Bundled dyslexia-friendly fonts (OpenDyslexic, Atkinson Hyperlegible, Lexend), bionic reading mode, auto-pace feature, high-contrast mode, ADHD/chunked reading mode, accessibility font auto-detection
+58. **Enhanced Library Management** - Smart collections engine with reading status collections, author/genre/series grouping, recently added/read, duplicate detection
+59. **Advanced Typography** - Per-book CSS overrides, numeric font/margin controls, custom font loading, letter/word spacing, chunked reading mode for focus
+60. **Handwriting & Note-taking** - Notebook organization settings, ExportFormat enum (PNG, JPG, SVG, PDF, Markdown, JSON), CalculatorSettings struct
+61. **Cross-Device Sync 2.0** - Dropbox and Google Drive backends, ConflictResolution enum, offline-first mode, granular sync options (annotations, highlights, reading position)
+62. **Comic/Manga Optimization** - ComicSettings struct with panel view, RTL mode, color e-ink optimization, edge dimming, fast dithering
+63. **Social Reading Features** - Readwise/Obsidian export, quote card generator, SocialSettings with quote card styles and export formats
+64. **Audiobook Support** - AudioSettings with variable speed (0.5x-3.0x), sleep timer, silence skipping, bluetooth auto-connect, crossfade
+65. **Academic/Research Mode** - AcademicSettings with citation export (BibTeX, RIS), highlight categories, Zotero/Mendeley sync, LaTeX rendering

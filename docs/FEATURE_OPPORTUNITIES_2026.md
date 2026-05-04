@@ -294,11 +294,27 @@ crates/core/src/eink/ → Add color e-ink optimizations
 
 **Proposed Features:**
 
-- **Citation export**: BibTeX, RIS, Zotero integration
-- **Split-screen**: PDF + notes side by side
-- **Highlight categories**: Color-code by theme
-- **LaTeX support**: Render equations in notes
-- **Reference manager sync**: Mendeley, Zotero integration
+- **Citation export**: BibTeX, RIS, Zotero integration ✅ (AcademicSettings)
+- **Split-screen**: PDF + notes side by side ✅ (split_screen)
+- **Highlight categories**: Color-code by theme ✅ (highlight_categories)
+- **LaTeX support**: Render equations in notes ✅ (latex_render)
+- **Reference manager sync**: Zotero, Mendeley integration ✅ (zotero_api_key)
+
+**Implementation Path:**
+
+```text
+crates/core/src/metadata/annotation.rs → Add citation export
+crates/core/src/settings/features.rs → AcademicSettings
+```
+
+**Status:** ✅ Settings Implemented (May 2026)
+
+- Citation formats: BibTeX, RIS, APA, MLA, Chicago
+- Highlight categorization
+- Zotero sync support
+- Mendeley sync support
+- LaTeX rendering
+- Split-screen mode
 
 **Effort:** High | **Impact:** Low-Medium (niche)
 

@@ -157,6 +157,7 @@ pub struct Settings {
     pub ai: AiSettings,
     pub social: SocialSettings,
     pub audio: AudioSettings,
+    pub academic: AcademicSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -750,6 +751,7 @@ impl Default for Settings {
             ai: AiSettings::default(),
             social: SocialSettings::default(),
             audio: AudioSettings::default(),
+            academic: AcademicSettings::default(),
         }
     }
 }

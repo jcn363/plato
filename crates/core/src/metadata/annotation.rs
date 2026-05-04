@@ -174,3 +174,74 @@ fn wrap_text(text: &str, max_width: usize) -> Vec<String> {
 
     lines
 }
+
+pub fn export_to_bibtex(
+    annotations: &[Annotation],
+    book_title: &str,
+    author: Option<&str>,
+) -> String {
+    if annotations.is_empty() {
+        return String::new();
+    }
+
+    let key = book_title
+        .to_lowercase()
+        .split_whitespace()
+        .take(2)
+        .collect::<Vec<_>>()
+        .join("");
+
+    let mut bib = format!("@book{}{{,\n", key);
+    bib.push_str(&format!("  title = {{{}}},\n", book_title));
+    if let Some(a) = author {
+        bib.push_str(&format!("  author = {{{}}},\n", a));
+    }
+    bib.push_str(&format!(
+        "  note = {{{} highlight(s)}},\n",
+        annotations.len()
+    ));
+    for (i, annot) in annotations.iter().enumerate() {
+        bib.push_str(&format!("  highlight{} = {{{}}},\n", i + 1, annot.text));
+    }
+    bib.push('}');
+    bib
+}
+
+pub fn export_to_ris(annotations: &[Annotation], book_title: &str, author: Option<&str>) -> String {
+    if annotations.is_empty() {
+        return String::new();
+    }
+
+    let mut ris = String::new();
+
+    for annot in annotations {
+        ris.push_str("TY  - BOOK\n");
+        ris.push_str(&format!("TI  - {}\n", book_title));
+        if let Some(a) = author {
+            ris.push_str(&format!("AU  - {}\n", a));
+        }
+        ris.push_str("QU  - \n");
+        ris.push_str(&format!("TX  - {}\n", annot.text));
+        if !annot.note.is_empty() {
+            ris.push_str(&format!("AN  - {}\n", annot.note));
+        }
+        ris.push_str("ER  - \n\n");
+    }
+
+    ris
+}
+
+pub fn export_citations(
+    annotations: &[Annotation],
+    book_title: &str,
+    author: Option<&str>,
+    format: crate::settings::CitationFormat,
+) -> String {
+    match format {
+        crate::settings::CitationFormat::BibTeX => {
+            export_to_bibtex(annotations, book_title, author)
+        }
+        crate::settings::CitationFormat::RIS => export_to_ris(annotations, book_title, author),
+        _ => String::new(),
+    }
+}
