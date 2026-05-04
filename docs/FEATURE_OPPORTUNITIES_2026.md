@@ -51,7 +51,7 @@ Based on comprehensive codebase analysis and market research, this document iden
 
 ### Tier 1: High Impact, Strategic Alignment
 
-#### 1. Enhanced Accessibility Suite
+#### 1. Enhanced Accessibility Suite (Implemented)
 **Market Need:** 15-20% of readers have dyslexia or visual processing differences. Kobo supports OpenDyslexic/Atkinson Hyperlegible, but market lacks advanced accessibility.
 
 **Proposed Features:**
@@ -66,6 +66,7 @@ Based on comprehensive codebase analysis and market research, this document iden
 crates/core/src/font/ → Add bundled accessibility fonts
 crates/core/src/view/reader/ → Add bionic reading renderer
 crates/core/src/settings/ → Add accessibility settings section
+- UI integration: Toolbar icon and menu added (May 2026)
 ```
 
 **Effort:** Medium | **Impact:** High
