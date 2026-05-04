@@ -13,6 +13,45 @@ use super::defaults::{
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "kebab-case")]
+pub struct ComicSettings {
+    /// Enable panel view - tap to zoom into detected panels automatically
+    pub panel_view: bool,
+    /// Minimum panel size ratio (panels smaller than this are ignored)
+    pub min_panel_ratio: f32,
+    /// Enable right-to-left reading for manga
+    pub rtl_mode: bool,
+    /// Pre-cache adjacent pages for faster navigation
+    pub prefetch_pages: bool,
+    /// Number of pages to prefetch ahead
+    pub prefetch_count: usize,
+    /// Enable color e-ink optimization (Kaleido displays)
+    pub color_optimization: bool,
+    /// Enable dim edges / brighten center for eye comfort
+    pub dim_edges: bool,
+    /// Dim intensity (0.0 = off, 1.0 = max)
+    pub dim_intensity: f32,
+    /// Use faster dithering for color e-ink
+    pub fast_dither: bool,
+}
+
+impl Default for ComicSettings {
+    fn default() -> Self {
+        ComicSettings {
+            panel_view: false,
+            min_panel_ratio: 0.1,
+            rtl_mode: false,
+            prefetch_pages: true,
+            prefetch_count: 3,
+            color_optimization: false,
+            dim_edges: false,
+            dim_intensity: 0.3,
+            fast_dither: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
 pub struct ReaderSettings {
     pub finished: FinishedAction,
     pub south_east_corner: SouthEastCornerAction,
@@ -55,6 +94,8 @@ pub struct ReaderSettings {
     pub chunk_lines: u8,
     /// Highlight the current chunk for focus
     pub highlight_current_chunk: bool,
+    /// Comic/Manga optimization settings
+    pub comic: ComicSettings,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -293,6 +334,7 @@ impl Default for ReaderSettings {
             chunked_reading: false,
             chunk_lines: 5,
             highlight_current_chunk: true,
+            comic: ComicSettings::default(),
         }
     }
 }
@@ -352,6 +394,17 @@ impl ReaderSettings {
         }
         if self.chunk_lines > 20 {
             bail!("chunk_lines must be at most 20");
+        }
+
+        // Validate comic settings
+        if self.comic.min_panel_ratio <= 0.0 || self.comic.min_panel_ratio >= 1.0 {
+            bail!("comic.min_panel_ratio must be between 0.0 and 1.0");
+        }
+        if self.comic.prefetch_count > 10 {
+            bail!("comic.prefetch_count must be at most 10");
+        }
+        if self.comic.dim_intensity < 0.0 || self.comic.dim_intensity > 1.0 {
+            bail!("comic.dim_intensity must be between 0.0 and 1.0");
         }
 
         Ok(())

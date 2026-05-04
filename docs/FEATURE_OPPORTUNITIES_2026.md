@@ -272,19 +272,28 @@ Use existing library infrastructure
 
 **Proposed Features:**
 
-- **Panel view**: Tap to zoom into comic panels automatically
-- **RTL support**: Right-to-left for manga/arabic texts
-- **CBZ/CBR enhancements**: Faster rendering, pre-caching
-- **Color calibration**: Optimize for Kaleido 3 color e-ink displays
-- **Brightness by zone**: Dim edges, brighten center for eye comfort
+- **Panel view**: Tap to zoom into comic panels automatically ✅ (Settings added)
+- **RTL support**: Right-to-left for manga/arabic texts ✅ (Settings: rtl_mode)
+- **CBZ/CBR enhancements**: Faster rendering, pre-caching ✅ (Settings: prefetch_pages)
+- **Color calibration**: Optimize for Kaleido 3 color e-ink displays ✅ (Settings: color_optimization)
+- **Brightness by zone**: Dim edges, brighten center for eye comfort ✅ (Settings: dim_edges)
 
 **Implementation Path:**
 
 ```text
-crates/core/src/document/ → Enhance comic handling
-crates/core/src/view/reader/ → Add panel detection algorithm
+crates/core/src/settings/reading.rs → Add ComicSettings struct
+crates/core/src/document/comic.rs → Add panel detection algorithm
 crates/core/src/eink/ → Add color e-ink optimizations
 ```
+
+**Status:** ✅ Settings Implemented (May 2026)
+
+- Panel view settings (panel_view, min_panel_ratio)
+- RTL mode for manga
+- Page pre-caching options
+- Color e-ink optimization settings
+- Edge dimming for eye comfort
+- Fast dithering option
 
 **Effort:** Medium | **Impact:** Medium
 
