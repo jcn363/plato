@@ -34,6 +34,7 @@ pub use self::types::{GlyphPlan, RenderPlan};
 // Imports and Re-exports
 // ===========================================================================
 
+use crate::accessibility::is_accessibility_font;
 use crate::device::CURRENT_DEVICE;
 use crate::helpers::walkdir_visible;
 use crate::settings::Settings;
@@ -394,4 +395,23 @@ pub fn font_from_style_with_accessibility<'a>(
 
     // Fall back to standard font_from_style
     font_from_style(fonts, style, dpi)
+}
+
+/// Process text with accessibility features enabled (bionic reading)
+///
+/// This applies bionic reading by bolding the first half of words if enabled in settings.
+/// Use this before rendering text to apply accessibility processing.
+pub fn apply_accessibility_text(text: &str, settings: &Settings) -> String {
+    use crate::accessibility::apply_bionic_reading;
+
+    if settings.accessibility.bionic_reading && settings.accessibility.bionic_intensity > 0.0 {
+        apply_bionic_reading(text, settings.accessibility.bionic_intensity)
+    } else {
+        text.to_string()
+    }
+}
+
+/// Check if accessibility fonts are enabled and available
+pub fn is_accessibility_enabled(settings: &Settings) -> bool {
+    settings.accessibility.use_accessibility_fonts && settings.accessibility.dyslexic_font
 }
