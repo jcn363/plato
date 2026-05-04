@@ -49,6 +49,12 @@ pub struct ReaderSettings {
     pub fast_page_turn: bool,
     pub use_system_fonts: bool,
     pub reading_speed: ReadingSpeed,
+    /// Chunked reading mode for focus/ADHD - shows text in smaller chunks
+    pub chunked_reading: bool,
+    /// Number of lines to show per chunk in chunked reading mode
+    pub chunk_lines: u8,
+    /// Highlight the current chunk for focus
+    pub highlight_current_chunk: bool,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -284,6 +290,9 @@ impl Default for ReaderSettings {
             fast_page_turn: false,
             use_system_fonts: false,
             reading_speed: ReadingSpeed::Average,
+            chunked_reading: false,
+            chunk_lines: 5,
+            highlight_current_chunk: true,
         }
     }
 }
@@ -336,6 +345,14 @@ impl ReaderSettings {
 
         // Validate CSS overrides
         self.css_overrides.validate()?;
+
+        // Validate chunked reading settings
+        if self.chunk_lines == 0 {
+            bail!("chunk_lines must be at least 1");
+        }
+        if self.chunk_lines > 20 {
+            bail!("chunk_lines must be at most 20");
+        }
 
         Ok(())
     }
