@@ -66,7 +66,7 @@ This document lists the major work items for the Plato project, their current st
 | Feature | Status | Notes |
 |---------|--------|-------|
 | **Academic/Research Mode** | 🔜 | Citations, split‑screen, LaTeX |
-| **Social Reading Features** | 🔜 | Highlight sharing, reading groups |
+| **Social Reading Features** | ✅ | Readwise/Obsidian export, quote cards (May 2026) |
 
 ## Documentation tasks
 

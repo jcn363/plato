@@ -334,10 +334,25 @@ crates/core/src/eink/ → Add color e-ink optimizations
 
 **Proposed Features:**
 
-- **Highlight sharing**: Export to social media, Readwise
-- **Reading groups**: Local book clubs with shared annotations
-- **Quote cards**: Generate shareable images of highlights
-- **Progress sharing**: "I'm 60% through X book"
+- **Highlight sharing**: Export to social media, Readwise ✅ (export_to_readwise)
+- **Reading groups**: Local book clubs with shared annotations ✅ (SocialSettings)
+- **Quote cards**: Generate shareable images of highlights ✅ (generate_quote_card)
+- **Progress sharing**: "I'm 60% through X book" ✅ (show_progress_in_notification)
+
+**Implementation Path:**
+
+```text
+crates/core/src/metadata/annotation.rs → Add export functions
+crates/core/src/settings/features.rs → SocialSettings struct
+```
+
+**Status:** ✅ Implemented (May 2026)
+
+- Readwise export format
+- Obsidian export format  
+- Quote card generator (ASCII art style)
+- SocialSettings with quote card styles
+- Reading groups directory support
 
 **Effort:** Medium | **Impact:** Low-Medium
 

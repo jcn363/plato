@@ -196,3 +196,61 @@ impl Default for CloudSyncSettings {
         }
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct SocialSettings {
+    pub enabled: bool,
+    pub share_to_readwise: bool,
+    pub share_to_obsidian: bool,
+    pub generate_quote_cards: bool,
+    pub quote_card_style: QuoteCardStyle,
+    pub export_format: SocialExportFormat,
+    pub reading_groups_dir: PathBuf,
+    pub show_progress_in_notification: bool,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum QuoteCardStyle {
+    Classic,
+    Modern,
+    Minimal,
+    Dark,
+}
+
+impl Default for QuoteCardStyle {
+    fn default() -> Self {
+        QuoteCardStyle::Classic
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum SocialExportFormat {
+    Markdown,
+    Json,
+    Csv,
+    Html,
+}
+
+impl Default for SocialExportFormat {
+    fn default() -> Self {
+        SocialExportFormat::Markdown
+    }
+}
+
+impl Default for SocialSettings {
+    fn default() -> Self {
+        SocialSettings {
+            enabled: false,
+            share_to_readwise: true,
+            share_to_obsidian: true,
+            generate_quote_cards: true,
+            quote_card_style: QuoteCardStyle::default(),
+            export_format: SocialExportFormat::default(),
+            reading_groups_dir: PathBuf::from("ReadingGroups"),
+            show_progress_in_notification: true,
+        }
+    }
+}
