@@ -152,6 +152,7 @@ pub struct Settings {
     pub epub_to_pdf: EpubToPdfSettings,
     pub goodreads: GoodreadsSettings,
     pub pocket: PocketSettings,
+    pub instapaper: InstapaperSettings,
     pub cloud_storage: CloudStorageSettings,
     pub ai: AiSettings,
 }
@@ -389,6 +390,34 @@ impl PocketSettings {
         if let Some(key) = &self.consumer_key {
             if key.is_empty() {
                 bail!("Pocket consumer key cannot be empty");
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct InstapaperSettings {
+    /// Instapaper username (email)
+    pub username: Option<String>,
+    /// Instapaper password
+    pub password: Option<String>,
+    /// Auto-sync on Wi-Fi connection
+    pub auto_sync: bool,
+    /// Sync reading progress
+    pub sync_progress: bool,
+    /// Archive after reading
+    pub archive_after_reading: bool,
+    /// Default folder ID for new bookmarks
+    pub default_folder_id: Option<i64>,
+}
+
+impl InstapaperSettings {
+    pub fn validate(&self) -> Result<(), Error> {
+        if let Some(username) = &self.username {
+            if username.is_empty() {
+                bail!("Instapaper username cannot be empty");
             }
         }
         Ok(())
@@ -714,6 +743,7 @@ impl Default for Settings {
             epub_to_pdf: EpubToPdfSettings::default(),
             goodreads: GoodreadsSettings::default(),
             pocket: PocketSettings::default(),
+            instapaper: InstapaperSettings::default(),
             cloud_storage: CloudStorageSettings::default(),
             ai: AiSettings::default(),
         }

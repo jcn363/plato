@@ -47,6 +47,15 @@ pub mod validation;
 pub mod view;
 
 // Accessibility module - bionic reading, auto-pace, dyslexia fonts
+// Article management for Pocket/Instapaper integration
+pub mod article;
+
+// Pocket integration module
+pub mod pocket;
+
+// Instapaper integration module
+pub mod instapaper;
+
 pub mod accessibility;
 
 // TTS module - available on supported platforms (Android, Desktop)
