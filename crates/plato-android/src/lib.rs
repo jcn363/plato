@@ -164,7 +164,7 @@ fn run_android_app(app: AndroidApp) -> Result<()> {
         .with_context(|| "Failed to load library")?;
 
     // Load fonts
-    let fonts = Fonts::load().with_context(|| "Failed to load fonts")?;
+    let fonts = Fonts::load(&settings).with_context(|| "Failed to load fonts")?;
 
     // Initialize hardware sensors via JNI
     let battery =

@@ -36,6 +36,7 @@ pub use self::types::{GlyphPlan, RenderPlan};
 
 use crate::device::CURRENT_DEVICE;
 use crate::helpers::walkdir_visible;
+use crate::settings::Settings;
 use crate::{log_error, log_warn};
 use anyhow::{format_err, Error};
 use bitflags::bitflags;
@@ -244,10 +245,12 @@ pub struct Fonts {
     pub monospace: FontFamily,
     pub keyboard: Font,
     pub display: Font,
+    /// Accessibility fonts: maps family name (e.g., "opendyslexic") to FontFamily
+    pub accessibility: FxHashMap<String, FontFamily>,
 }
 
 impl Fonts {
-    pub fn load() -> Result<Fonts, Error> {
+    pub fn load(settings: &Settings) -> Result<Fonts, Error> {
         let opener = FontOpener::new()?;
 
         // Resolve font paths using XDG directories
@@ -276,9 +279,31 @@ impl Fonts {
             },
             keyboard: opener.open(font_path("VarelaRound-Regular.ttf"))?,
             display: opener.open(font_path("Cormorant-Regular.ttf"))?,
+            accessibility: FxHashMap::default(),
         };
         fonts.monospace.bold.set_variations(&["wght=600"]);
         fonts.monospace.bold_italic.set_variations(&["wght=600"]);
+
+        // Load accessibility fonts if enabled
+        if settings.accessibility.use_accessibility_fonts {
+            for (family_name, filename) in crate::accessibility::ACCESSIBILITY_FONTS {
+                let accessibility_font_path = font_path(&format!("accessibility/{}", filename));
+                match FontFamily::from_name(
+                    family_name,
+                    accessibility_font_path
+                        .parent()
+                        .unwrap_or_else(|| Path::new(".")),
+                ) {
+                    Ok(family) => {
+                        fonts.accessibility.insert(family_name.to_string(), family);
+                    }
+                    Err(e) => {
+                        log_warn!("Failed to load accessibility font '{}': {}", family_name, e);
+                    }
+                }
+            }
+        }
+
         Ok(fonts)
     }
 }
@@ -338,4 +363,35 @@ pub fn font_from_style<'a>(fonts: &'a mut Fonts, style: &Style, dpi: u16) -> &'a
     };
     font.set_size(style.size, dpi);
     font
+}
+
+/// Extended version that applies accessibility settings (dyslexia-friendly fonts)
+/// if enabled in settings. Falls back to standard font if accessibility fonts are unavailable.
+pub fn font_from_style_with_accessibility<'a>(
+    fonts: &'a mut Fonts,
+    style: &Style,
+    settings: &Settings,
+    dpi: u16,
+) -> &'a mut Font {
+    // Check if dyslexic font is enabled and available
+    if settings.accessibility.dyslexic_font {
+        let family_name = &settings.accessibility.dyslexic_font_family;
+        if let Some(_) = fonts.accessibility.get(family_name) {
+            // SAFETY: We verified the key exists, and we're casting from &mut Fonts to &mut Fonts,
+            // just through a raw pointer to satisfy the borrow checker.
+            let fonts_ptr = fonts as *mut Fonts;
+            let family = unsafe {
+                (*fonts_ptr)
+                    .accessibility
+                    .get_mut(family_name)
+                    .unwrap_unchecked()
+            };
+            let font = font_from_variant(family, style.variant);
+            font.set_size(style.size, dpi);
+            return font;
+        }
+    }
+
+    // Fall back to standard font_from_style
+    font_from_style(fonts, style, dpi)
 }

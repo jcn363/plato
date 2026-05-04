@@ -86,7 +86,7 @@ pub fn apply_bionic_reading(text: &str, intensity: f32) -> String {
 /// Simple bionic reading that returns (bold_part, rest_part) for each word
 ///
 /// This is easier to use with rendering systems that don't support markup
-pub fn split_word_bionic(word: &str, intensity: f32) -> (Cow<str>, Cow<str>) {
+pub fn split_word_bionic(word: &str, intensity: f32) -> (Cow<'_, str>, Cow<'_, str>) {
     if intensity <= 0.0 || word.len() < 2 {
         return (Cow::Borrowed(word), Cow::Borrowed(""));
     }

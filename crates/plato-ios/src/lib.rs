@@ -281,7 +281,7 @@ pub unsafe extern "C" fn plato_init(width: u32, height: u32) -> bool {
     };
 
     // Load fonts
-    let fonts = match Fonts::load() {
+    let fonts = match Fonts::load(&settings) {
         Ok(f) => f,
         Err(e) => {
             log::error!("Failed to load fonts: {e}");
