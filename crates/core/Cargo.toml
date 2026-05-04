@@ -67,7 +67,7 @@ ndk-context = { version = "0.1.1", optional = true }
 bzip2 = "0.6.1"
 justjp2 = "0.1.1"
 hayro-jbig2 = "0.3.0"
-djvu-rs = "0.13.0"
+djvu-rs = "0.16.1"
 rar = { path = "../rar" }  # CBR support (pure Rust)
 tempfile = "3.15.0"  # Temp directory support
 
@@ -83,7 +83,7 @@ hex = "0.4.3"
 
 # Linux only dependencies (cryptographic signatures)
 [target.'cfg(target_os = "linux")'.dependencies]
-sha2 = "0.10.9"
+sha2 = "0.11.0"
 x509-cert = "0.2.5"
 
 # Linux desktop windowing (Wayland/X11)

@@ -1,6 +1,6 @@
 # Implemented Features
 
-> **Last Updated**: 2026-04-27
+> **Last Updated**: 2026-05-04
 > **Related Documents**: [NOT_IMPLEMENTED.md](./NOT_IMPLEMENTED.md) | [CHANGES.md](../CHANGES.md)
 
 This document tracks features that have been successfully implemented in Plato. For a high-level overview of recent changes, see [CHANGES.md](../CHANGES.md).
@@ -64,3 +64,4 @@ The following features were implemented in recent updates (as of April 2026):
 53. **lazy_static → LazyLock Migration** - Migrated 13 `lazy_static!` instances to `std::sync::LazyLock` across 9 files (constants, keyboard combos, regex patterns, hyphenation, i18n translations, dithering matrices, shelf mutex).
 54. **Further Unwrap/Expect Reduction** - Replaced `.unwrap()` with proper error handling in `sync.rs`, `document/html/parse.rs`, and `fetcher/main.rs`
 55. **IMPROVEMENTS.md Reorganization** - Condensed and organized improvement logs for better clarity
+56. **Pocket/Instapaper Integration** - Full API integration with OAuth (Pocket), username/password (Instapaper), article sync, tag management, archive operations, reading progress sync, highlight export (Readwise/Obsidian), and folder support (Instapaper). Modules: `article.rs`, `pocket.rs`, `instapaper.rs`
