@@ -286,6 +286,18 @@ pub(super) fn build_fixed_children(
 
 pub(super) fn build_common_children(rect: Rectangle, side: i32) -> Vec<Box<dyn View>> {
     let mut children = Vec::new();
+    // Accessibility settings icon
+    let accessibility_icon = Icon::new(
+        "accessibility",
+        rect![
+            rect.max.x - 3 * side,
+            rect.max.y - side,
+            rect.max.x - 2 * side,
+            rect.max.y,
+        ],
+        Event::Show(ViewId::AccessibilityMenu),
+    );
+    children.push(Box::new(accessibility_icon) as Box<dyn View>);
 
     let search_icon = Icon::new(
         "search",

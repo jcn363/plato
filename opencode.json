@@ -3,7 +3,6 @@
   "model": "anthropic/claude-sonnet-4-20250514",
   "small_model": "anthropic/claude-3-5-haiku-20241022",
   "large_model": "anthropic/claude-3-opus-20240229",
-  "theme": "opencode",
   "autoupdate": true,
   "share": "manual",
   "max_turns": 150,
