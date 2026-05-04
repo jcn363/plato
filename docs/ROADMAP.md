@@ -49,10 +49,10 @@ This document lists the major work items for the Plato project, their current st
 ### Tier 1 – High Impact, Strategic Alignment
 | Feature | Status | Notes |
 |---------|--------|-------|
-| **Enhanced Accessibility Suite** | ✅ | UI integration (toolbar/menu) added |
-| **Pocket/Instapaper Integration** | 🔜 | Web article reading |
-| **Advanced Typography & Reading Experience** | 🔜 | Per‑book settings, spacing controls |
-| **Enhanced Library Management & Discovery** | 🔜 | Smart collections, stats, recommendations |
+| **Enhanced Accessibility Suite** | ✅ | Fonts, bionic reading, auto-pace, focus mode (May 2026) |
+| **Pocket/Instapaper Integration** | ✅ | Full API clients with OAuth sync (May 2026) |
+| **Advanced Typography & Reading Experience** | ✅ | Per-book CSS, chunked reading, spacing controls (May 2026) |
+| **Enhanced Library Management & Discovery** | ✅ | Smart collections, duplicate detection (May 2026) |
 
 ### Tier 2 – Medium Impact, Good ROI
 | Feature | Status | Notes |

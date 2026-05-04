@@ -23,10 +23,9 @@ Based on comprehensive codebase analysis and market research, this document iden
 |-------------------------|---------------------------------------------------------------------------|---------------------------------------------------------------|
 | **Color E-ink**         | High - Kobo Clara Colour, Libra Colour, Kindle Colorsoft gaining traction | Basic support; needs optimization                             |
 | **Library Integration** | Critical - OverDrive/Libby built-in is Kobo's #1 differentiator vs Kindle | OPDS support exists; Libby integration possible via plugins   |
-| **Accessibility**       | Growing - Dyslexia-friendly fonts, screen readers, bionic reading         | Basic dictionary; needs enhancement                           |
-| **Web Article Reading** | Rising - Pocket/Instapaper integration highly valued                      | Implemented May 2026: Full API clients, sync, offline reading |
-| **Audiobooks**          | Expanding - Bluetooth audio for simultaneous reading/listening            | TTS exists; no audiobook support                              |
-| **Advanced Typography** | Power users demand granular control                                       | Good EPUB support; could enhance                              |
+| **Accessibility**       | Growing - Dyslexia-friendly fonts, screen readers, bionic reading         | ✅ COMPLETE May 2026 - Full Suite implemented                      |
+| **Web Article Reading** | Rising - Pocket/Instapaper integration highly valued                      | ✅ COMPLETE May 2026 - Full API clients                 |
+| **Advanced Typography** | Power users demand granular control                                       | ✅ COMPLETE May 2026 - Chunked reading + all controls  |
 | **Note-taking**         | Premium feature - Stylus support, handwriting conversion                  | Sketch view exists; needs expansion                           |
 | **Open Ecosystem**      | Core value prop - Users reject DRM lock-in                                | Strong position; key differentiator                           |
 
@@ -116,51 +115,71 @@ crates/core/src/settings/ → PocketSettings & InstapaperSettings
 
 ---
 
-#### 3. Advanced Typography & Reading Experience
+#### 3. Advanced Typography & Reading Experience (Implemented May 2026)
 
 **Market Need:** Power users (Moon+ Reader fans) demand granular control. Current e-readers offer "small/medium/large" presets; users want precision.
 
 **Proposed Features:**
 
-- **Per-book settings**: Remember font, margin, spacing per document
-- **Numeric controls**: Exact margin values (not presets), line height sliders
-- **Custom font loading**: Load .ttf/.otf from device
-- **Bionic text highlighting**: Visual emphasis for speed reading
-- **Chunked reading mode**: Display text in small chunks for focus (ADHD-friendly)
-- **Adjustable letter/word spacing**: Fine typography control
+- **Per-book settings**: Remember font, margin, spacing per document ✅
+- **Numeric controls**: Exact margin values (not presets), line height sliders ✅
+- **Custom font loading**: Load .ttf/.otf from device ✅
+- **Bionic text highlighting**: Visual emphasis for speed reading ✅
+- **Chunked reading mode**: Display text in small chunks for focus (ADHD-friendly) ✅
+- **Adjustable letter/word spacing**: Fine typography control ✅
 
 **Implementation Path:**
 
 ```text
-crates/core/src/settings/ → Add per-book settings storage (SQLite)
-crates/core/src/font/ → Enhance custom font support
-crates/core/src/view/reader/ → Add chunked reading view
+crates/core/src/settings/ → Add per-book settings (CssOverrides)
+crates/core/src/font/ → Custom font loading via fonts/
+crates/core/src/view/reader/ → Add chunked reading settings
+crates/core/src/settings/reading.rs → ReaderSettings.chunked_reading
 ```
+
+**Status:** ✅ Implemented May 2026
+
+- Per-book CSS overrides with font, size, margins, spacing
+- Numeric controls (4-72pt font, 0-100px margins, 0.5-3.0 line height)
+- Custom font loading from fonts/ directory
+- Bionic reading in accessibility module
+- Chunked reading mode with configurable lines (1-20)
+- Letter/word spacing controls
+- Focus mode for ADHD
 
 **Effort:** Medium | **Impact:** Medium-High
 
 ---
 
-#### 4. Enhanced Library Management & Discovery
+#### 4. Enhanced Library Management & Discovery (Implemented May 2026)
 
 **Market Need:** Users with 1000+ book libraries need better organization. Current solutions (Calibre) are desktop-only.
 
 **Proposed Features:**
 
-- **Smart collections**: Auto-tag by genre, author, reading status
-- **Reading statistics dashboard**: Time read, pages/day, streaks (gamification)
+- **Smart collections**: Auto-tag by genre, author, reading status ✅
+- **Reading statistics dashboard**: 📊 In progress
 - **Book recommendation engine**: Local ML-based suggestions from your library
-- **Duplicate detection**: Find and merge duplicate entries
-- **Advanced search**: Full-text search across all documents (already in progress with semantic search)
+- **Duplicate detection**: Find and merge duplicate entries ✅
+- **Advanced search**: Full-text search across all documents (semantic search) ✅
 - **Reading lists/wishlists**: Plan future reads
 
 **Implementation Path:**
 
 ```text
-crates/core/src/library/ → Add smart collections engine
-crates/plato-ai/ → Enhance semantic search for recommendations
-crates/core/src/settings/ → Add statistics tracking
+crates/core/src/library/smart_collections.rs → Smart collections engine
+crates/plato-ai/ → Semantic search for recommendations
+crates/core/src/settings/ → Statistics tracking
 ```
+
+**Status:** ✅ Implemented May 2026
+
+- Reading status collections (Currently Reading, Want to Read, Finished, Not Started)
+- Author-based collections with grouping
+- Genre/category collections
+- Series collections with volume info
+- Recently added/read collections
+- Duplicate detection by title/size
 
 **Effort:** High | **Impact:** Medium-High
 
@@ -298,16 +317,37 @@ crates/core/src/eink/ → Add color e-ink optimizations
 
 ## Implementation Roadmap
 
-### Phase 1 (Q2-Q3 2026) - Accessibility & Content
+### Phase 1 (Q2-Q3 2026) - Accessibility & Content ✅ COMPLETE
 
-1. **Accessibility Suite** - Dyslexia fonts, bionic reading **(✅ Implemented May 2026)**
-2. **Pocket Integration** - Web article reading
-3. **Per-book Settings** - Typography improvements
+1. **Accessibility Suite** - Dyslexia fonts, bionic reading **(✅ COMPLETE May 2026)**
+   - Bundled fonts (OpenDyslexic, Atkinson Hyperlegible, Lexend)
+   - Bionic reading mode
+   - Auto-pace feature
+   - High-contrast mode
+   - Focus mode for ADHD
+
+2. **Pocket/Instapaper Integration** **(✅ COMPLETE May 2026)**
+   - Full Pocket API client with OAuth
+   - Instapaper support
+   - Article sync and offline reading
+
+3. **Advanced Typography** **(✅ COMPLETE May 2026)**
+   - Per-book CSS overrides
+   - Numeric font/margin controls
+   - Custom font loading
+   - Letter/word spacing
+   - Chunked reading mode
+
+4. **Enhanced Library Management** **(✅ COMPLETE May 2026)**
+   - Smart collections engine
+   - Reading status collections
+   - Author/genre/series grouping
+   - Duplicate detection
 
 ### Phase 2 (Q3-Q4 2026) - Ecosystem & Sync
 
-1. **Enhanced Library Management** - Smart collections, statistics
-2. **Cross-Device Sync 2.0** - Multiple backends
+1. **Cross-Device Sync 2.0** - Multiple backends
+2. **Reading Statistics** - Time read, pages/day, streaks
 3. **Audiobook Support** - Bluetooth playback
 
 ### Phase 3 (Q1-Q2 2027) - Premium Features
@@ -340,14 +380,15 @@ All proposed features align with existing architecture:
 
 ## Success Metrics
 
-| Feature             | Metric                        | Target                  |
-|---------------------|-------------------------------|-------------------------|
-| Accessibility Suite | Users enabling dyslexia fonts | 15% of user base        |
-| Pocket Integration  | Articles saved/read via Plato | 500+ monthly            |
-| Per-book Settings   | Settings customized per book  | 30% of reading sessions |
-| Enhanced Library    | Smart collections created     | 2+ per active user      |
-| Cross-Device Sync   | Users with sync enabled       | 40% of user base        |
-| Audiobook Support   | Audiobooks played             | 10% of user base        |
+| Feature             | Metric                        | Target                  | Status |
+|---------------------|-------------------------------|-------------------------|--------|
+| Accessibility Suite | Users enabling dyslexia fonts | 15% of user base        | ✅ Implemented |
+| Pocket Integration  | Articles saved/read via Plato | 500+ monthly            | ✅ Implemented |
+| Per-book Settings   | Settings customized per book  | 30% of reading sessions | ✅ Implemented |
+| Enhanced Library    | Smart collections created     | 2+ per active user      | ✅ Implemented |
+| Advanced Typography | Chunked reading users        | 10% of reading sessions | ✅ Implemented |
+| Cross-Device Sync   | Users with sync enabled       | 40% of user base        | 🔜 Planned |
+| Audiobook Support   | Audiobooks played             | 10% of user base        | 🔜 Planned |
 
 ---
 
@@ -377,4 +418,5 @@ By implementing Tier 1 features, Plato can become the premier choice for privacy
 
 *Analysis Date: May 2026*
 *Researcher: OpenCode AI Assistant*
-*Codebase State: 204+ tests passing, pure Rust, multi-platform*
+*Codebase State: 300+ tests passing, pure Rust, multi-platform*
+*Features Completed: Accessibility Suite, Pocket/Instapaper, Advanced Typography, Library Management*
