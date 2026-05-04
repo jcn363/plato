@@ -57,7 +57,7 @@ This document lists the major work items for the Plato project, their current st
 ### Tier 2 – Medium Impact, Good ROI
 | Feature | Status | Notes |
 |---------|--------|-------|
-| **Audiobook Support** | 🔜 | MP3/M4B playback, Bluetooth |
+| **Audiobook Support** | ✅ | AudioSettings, speed/sleep timer/bluetooth (May 2026) |
 | **Handwriting & Note‑taking Enhancement** | ✅ | Notebook settings, ExportFormat enum (May 2026) |
 | **Cross‑Device Sync 2.0** | ✅ | WebDAV, Dropbox, Google Drive, conflict resolution (May 2026) |
 | **Comic/Manga Optimization** | ✅ | ComicSettings struct, panel/RTL/color options (May 2026) |

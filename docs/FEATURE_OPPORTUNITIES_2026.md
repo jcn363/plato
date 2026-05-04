@@ -189,30 +189,6 @@ crates/core/src/settings/ → Statistics tracking
 
 #### 5. Audiobook Support
 
-**Market Need:** Kobo Libra Colour/Bluetooth models support audiobooks. Kindle has Audible integration. Growing market.
-
-**Proposed Features:**
-
-- **Audiobook playback**: MP3/M4B support with bookmarking
-- **Bluetooth audio**: Connect headphones/speakers
-- **Sync with text**: Whispersync-like position sync between text and audio
-- **Variable speed**: 0.5x to 3x playback speed
-- **Sleep timer**: Auto-stop after time/chapter
-
-**Implementation Path:**
-
-```text
-crates/core/src/ → Add audiobook module
-Use rodio or cpal for audio playback
-crates/core/src/settings/ → Add audio settings
-```
-
-**Effort:** Medium | **Impact:** Medium
-
----
-
-#### 6. Handwriting & Note-taking Enhancement
-
 **Market Need:** Kobo Elipsa 2E/Libra Colour with stylus. Kindle Scribe dominates this space. Users want digital notebooks.
 
 **Proposed Features:**

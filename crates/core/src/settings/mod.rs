@@ -155,6 +155,8 @@ pub struct Settings {
     pub instapaper: InstapaperSettings,
     pub cloud_storage: CloudStorageSettings,
     pub ai: AiSettings,
+    pub social: SocialSettings,
+    pub audio: AudioSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -746,6 +748,8 @@ impl Default for Settings {
             instapaper: InstapaperSettings::default(),
             cloud_storage: CloudStorageSettings::default(),
             ai: AiSettings::default(),
+            social: SocialSettings::default(),
+            audio: AudioSettings::default(),
         }
     }
 }

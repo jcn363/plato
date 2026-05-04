@@ -254,3 +254,49 @@ impl Default for SocialSettings {
         }
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case")]
+pub struct AudioSettings {
+    pub enabled: bool,
+    pub default_speed: f32,
+    pub min_speed: f32,
+    pub max_speed: f32,
+    pub sleep_timer_minutes: u32,
+    pub auto_resume: bool,
+    pub skip_silences: bool,
+    pub bluetooth_auto_connect: bool,
+    pub remember_position: bool,
+    pub crossfade_seconds: u8,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AudioSkipBehavior {
+    Chapter,
+    NextTrack,
+    Stop,
+}
+
+impl Default for AudioSkipBehavior {
+    fn default() -> Self {
+        AudioSkipBehavior::Chapter
+    }
+}
+
+impl Default for AudioSettings {
+    fn default() -> Self {
+        AudioSettings {
+            enabled: false,
+            default_speed: 1.0,
+            min_speed: 0.5,
+            max_speed: 3.0,
+            sleep_timer_minutes: 30,
+            auto_resume: true,
+            skip_silences: true,
+            bluetooth_auto_connect: true,
+            remember_position: true,
+            crossfade_seconds: 2,
+        }
+    }
+}
