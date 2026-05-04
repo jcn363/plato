@@ -58,7 +58,7 @@ This document lists the major work items for the Plato project, their current st
 | Feature | Status | Notes |
 |---------|--------|-------|
 | **Audiobook Support** | 🔜 | MP3/M4B playback, Bluetooth |
-| **Handwriting & Note‑taking Enhancement** | 🔜 | Sketch, OCR, export |
+| **Handwriting & Note‑taking Enhancement** | ✅ | Notebook settings, ExportFormat enum (May 2026) |
 | **Cross‑Device Sync 2.0** | 🔜 | Multi‑backend sync, offline‑first |
 | **Comic/Manga Optimization** | 🔜 | Panel view, RTL, color e‑ink |
 

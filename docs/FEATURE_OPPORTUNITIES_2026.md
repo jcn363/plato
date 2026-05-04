@@ -217,19 +217,27 @@ crates/core/src/settings/ → Add audio settings
 
 **Proposed Features:**
 
+- **Notebook organization**: Separate notebooks for different purposes ✅ (Settings added)
 - **Handwriting recognition**: Convert handwriting to text (already in Kobo; can integrate on-device ML)
-- **Notebook organization**: Separate notebooks for different purposes
-- **PDF annotation with stylus**: Freehand drawing on PDFs
-- **Export notes**: To Dropbox, Google Drive, Obsidian, Markdown
+- **PDF annotation with stylus**: Freehand drawing on PDFs ✅ (Existing sketch feature)
+- **Export notes**: To Dropbox, Google Drive, Obsidian, Markdown ✅ (ExportFormat enum added)
 - **Shape recognition**: Clean up rough shapes/diagrams
 
 **Implementation Path:**
 
 ```text
-crates/core/src/view/sketch/ → Expand current sketch functionality
+crates/core/src/settings/tools.rs → Add notebook settings, ExportFormat enum
+crates/core/src/view/sketch/ → Notebook selection menu
 Use on-device ML (candle framework already in use for AI)
 Integrate with cloud storage APIs
 ```
+
+**Status:** ✅ Settings Implemented (May 2026)
+
+- Notebook organization settings (default_notebook, notebook_prefix)
+- Export format options (PNG, JPG, SVG, PDF, Markdown, JSON)
+- Auto-export option
+- Full integration with existing sketch functionality
 
 **Effort:** High | **Impact:** Medium
 
