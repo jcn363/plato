@@ -45,6 +45,7 @@ pub enum ViewId {
     PageMenu,
     PresetMenu,
     MarginCropperMenu,
+    AccessibilityMenu,
     SearchMenu,
     SketchMenu,
     SettingsEditor,

@@ -376,6 +376,23 @@ impl Reader {
         );
     }
 
+    /// Toggle accessibility settings menu
+    pub fn toggle_accessibility_menu(
+        &mut self,
+        rect: Rectangle,
+        enable: Option<bool>,
+        rq: &mut RenderQueue,
+        context: &mut Context,
+    ) {
+        super::reader_settings::toggle_accessibility_menu(
+            &mut self.children,
+            rect,
+            enable,
+            rq,
+            context,
+        );
+    }
+
     pub fn toggle_search_menu(
         &mut self,
         rect: Rectangle,

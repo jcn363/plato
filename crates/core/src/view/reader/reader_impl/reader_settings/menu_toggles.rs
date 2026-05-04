@@ -408,3 +408,144 @@ pub(crate) fn toggle_margin_cropper_menu(
         context,
     );
 }
+
+pub(crate) fn toggle_accessibility_menu(
+    children: &mut Vec<Box<dyn crate::view::View>>,
+    rect: Rectangle,
+    enable: Option<bool>,
+    rq: &mut RenderQueue,
+    context: &mut crate::context::Context,
+) {
+    toggle_menu_vec(
+        ViewId::AccessibilityMenu,
+        |ctx| {
+            let acc = &ctx.settings.accessibility;
+            let intensity_choices = [0.3, 0.5, 0.7, 0.9];
+            let wpm_choices = [150, 200, 250, 300, 400, 500];
+            let font_families = ["opendyslexic", "atkinson", "lexend"];
+            let color_modes = ["none", "deuteranopia", "protanopia", "tritanopia"];
+            let spacing_choices = [0, 1, 2, 3, 5];
+
+            let entries: Vec<EntryKind> = vec![
+                EntryKind::CheckBox(
+                    "Bionic Reading".to_string(),
+                    EntryId::ToggleBionicReading,
+                    acc.bionic_reading,
+                ),
+                EntryKind::SubMenu(
+                    "Bionic Intensity".to_string(),
+                    intensity_choices
+                        .iter()
+                        .map(|v| {
+                            EntryKind::RadioButton(
+                                format!("{:.1}", v),
+                                EntryId::SetBionicIntensity((v * 10.0) as i32),
+                                (acc.bionic_intensity - v).abs() < 0.05,
+                            )
+                        })
+                        .collect(),
+                ),
+                EntryKind::Separator,
+                EntryKind::CheckBox(
+                    "Auto-Pace".to_string(),
+                    EntryId::ToggleAutoPace,
+                    acc.auto_pace,
+                ),
+                EntryKind::SubMenu(
+                    "Auto-Pace WPM".to_string(),
+                    wpm_choices
+                        .iter()
+                        .map(|v| {
+                            EntryKind::RadioButton(
+                                format!("{} WPM", v),
+                                EntryId::SetAutoPaceWpm(*v as i32),
+                                acc.auto_pace_wpm == *v,
+                            )
+                        })
+                        .collect(),
+                ),
+                EntryKind::Separator,
+                EntryKind::CheckBox(
+                    "Dyslexic Font".to_string(),
+                    EntryId::ToggleDyslexicFont,
+                    acc.dyslexic_font,
+                ),
+                EntryKind::SubMenu(
+                    "Dyslexia Font Family".to_string(),
+                    font_families
+                        .iter()
+                        .map(|f| {
+                            EntryKind::RadioButton(
+                                f.to_string(),
+                                EntryId::SetDyslexicFontFamily(f.to_string()),
+                                acc.dyslexic_font_family == *f,
+                            )
+                        })
+                        .collect(),
+                ),
+                EntryKind::Separator,
+                EntryKind::CheckBox(
+                    "High Contrast".to_string(),
+                    EntryId::ToggleHighContrast,
+                    acc.high_contrast,
+                ),
+                EntryKind::CheckBox(
+                    "Focus Mode".to_string(),
+                    EntryId::ToggleFocusMode,
+                    acc.focus_mode,
+                ),
+                EntryKind::SubMenu(
+                    "Color Blindness".to_string(),
+                    color_modes
+                        .iter()
+                        .map(|m| {
+                            EntryKind::RadioButton(
+                                m.to_string(),
+                                EntryId::SetColorBlindnessMode(m.to_string()),
+                                acc.color_blindness_mode == *m,
+                            )
+                        })
+                        .collect(),
+                ),
+                EntryKind::Separator,
+                EntryKind::SubMenu(
+                    "Letter Spacing".to_string(),
+                    spacing_choices
+                        .iter()
+                        .map(|v| {
+                            EntryKind::RadioButton(
+                                format!("{:.1}em", *v as f32 / 10.0),
+                                EntryId::SetLetterSpacing(*v),
+                                (acc.letter_spacing - (*v as f32 / 10.0)).abs() < 0.05,
+                            )
+                        })
+                        .collect(),
+                ),
+                EntryKind::SubMenu(
+                    "Word Spacing".to_string(),
+                    spacing_choices
+                        .iter()
+                        .map(|v| {
+                            EntryKind::RadioButton(
+                                format!("{:.1}em", *v as f32 / 10.0),
+                                EntryId::SetWordSpacing(*v),
+                                (acc.word_spacing - (*v as f32 / 10.0)).abs() < 0.05,
+                            )
+                        })
+                        .collect(),
+                ),
+            ];
+            Menu::new(
+                rect,
+                ViewId::AccessibilityMenu,
+                MenuKind::Contextual,
+                entries,
+                ctx,
+            )
+        },
+        children,
+        enable,
+        rq,
+        context,
+    );
+}

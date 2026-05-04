@@ -453,6 +453,64 @@ impl View for Reader {
                 rq.add(RenderData::new(self.id, self.rect, UpdateMode::Gui));
                 true
             }
+            // Accessibility settings handlers
+            Event::Select(EntryId::ToggleBionicReading) => {
+                context.settings.accessibility.bionic_reading =
+                    !context.settings.accessibility.bionic_reading;
+                true
+            }
+            Event::Select(EntryId::SetBionicIntensity(v)) => {
+                context.settings.accessibility.bionic_intensity = *v as f32 / 10.0;
+                true
+            }
+            Event::Select(EntryId::ToggleAutoPace) => {
+                let acc = &mut context.settings.accessibility;
+                acc.auto_pace = !acc.auto_pace;
+                self.init_auto_pace(acc);
+                true
+            }
+            Event::Select(EntryId::SetAutoPaceWpm(v)) => {
+                let wpm = *v as u32;
+                context.settings.accessibility.auto_pace_wpm = wpm;
+                self.update_auto_pace_wpm(wpm);
+                true
+            }
+            Event::Select(EntryId::ToggleDyslexicFont) => {
+                context.settings.accessibility.dyslexic_font =
+                    !context.settings.accessibility.dyslexic_font;
+                true
+            }
+            Event::Select(EntryId::SetDyslexicFontFamily(f)) => {
+                context.settings.accessibility.dyslexic_font_family = (*f).clone();
+                true
+            }
+            Event::Select(EntryId::ToggleHighContrast) => {
+                context.settings.accessibility.high_contrast =
+                    !context.settings.accessibility.high_contrast;
+                true
+            }
+            Event::Select(EntryId::ToggleFocusMode) => {
+                context.settings.accessibility.focus_mode =
+                    !context.settings.accessibility.focus_mode;
+                true
+            }
+            Event::Select(EntryId::SetColorBlindnessMode(m)) => {
+                context.settings.accessibility.color_blindness_mode = (*m).clone();
+                true
+            }
+            Event::Select(EntryId::SetLetterSpacing(v)) => {
+                context.settings.accessibility.letter_spacing = *v as f32 / 10.0;
+                true
+            }
+            Event::Select(EntryId::SetWordSpacing(v)) => {
+                context.settings.accessibility.word_spacing = *v as f32 / 10.0;
+                true
+            }
+            Event::Select(EntryId::AccessibilityMenu) => {
+                let rect = Rectangle::from(self.rect);
+                self.toggle_accessibility_menu(rect, None, rq, context);
+                true
+            }
             _ => false,
         }
     }

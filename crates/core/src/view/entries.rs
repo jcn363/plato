@@ -339,6 +339,18 @@ pub enum EntryId {
     OpenRedactionEditor(PathBuf, usize),
     OpenOpds(String),
     DownloadOpds(String),
+    // Accessibility Settings
+    ToggleBionicReading,
+    SetBionicIntensity(i32),
+    ToggleAutoPace,
+    SetAutoPaceWpm(i32),
+    ToggleDyslexicFont,
+    SetDyslexicFontFamily(String),
+    ToggleFocusMode,
+    SetColorBlindnessMode(String),
+    SetLetterSpacing(i32),
+    SetWordSpacing(i32),
+    AccessibilityMenu,
 }
 
 impl EntryId {
@@ -458,6 +470,18 @@ impl EntryId {
             EntryId::ToggleAiChat => "ToggleAiChat",
             EntryId::OpenDocument(_) => "OpenDocument",
             EntryId::Preview => "Preview",
+            EntryId::ToggleBionicReading => "ToggleBionicReading",
+            EntryId::SetBionicIntensity(_) => "SetBionicIntensity",
+            EntryId::ToggleAutoPace => "ToggleAutoPace",
+            EntryId::SetAutoPaceWpm(_) => "SetAutoPaceWpm",
+            EntryId::ToggleDyslexicFont => "ToggleDyslexicFont",
+            EntryId::SetDyslexicFontFamily(_) => "SetDyslexicFontFamily",
+            EntryId::ToggleHighContrast => "ToggleHighContrast",
+            EntryId::ToggleFocusMode => "ToggleFocusMode",
+            EntryId::SetColorBlindnessMode(_) => "SetColorBlindnessMode",
+            EntryId::SetLetterSpacing(_) => "SetLetterSpacing",
+            EntryId::SetWordSpacing(_) => "SetWordSpacing",
+            EntryId::AccessibilityMenu => "AccessibilityMenu",
             _ => "Unknown",
         }
     }
