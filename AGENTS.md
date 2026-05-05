@@ -45,7 +45,7 @@ cargo test --target x86_64-unknown-linux-gnu
 
 1. **Always use `--target x86_64-unknown-linux-gnu`** for host commands (tests, clippy, check)
 2. **No `.unwrap()`** - use `?`, `bail!`, or explicit error handling
-3. **Use `PlatoResult<T>`** from `crates/core/src/error.rs` - not `anyhow` for core library code
+3. **Use `PlatoResult<T>`** from the `plato_error` crate (`crates/error`) - not `anyhow` for core library code
 4. **Add `#[inline]`** to frequently-called small functions (pixel ops, geometry math)
 5. **Use `FxHashMap`** from `rustc-hash` for non-cryptographic hashing
 6. **Memory**: Use `Box` for large data, `String::with_capacity()` for predictable sizes

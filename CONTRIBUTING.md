@@ -190,7 +190,25 @@ pub struct Document {
 
 ### Error Handling
 
-**Standard approach - use anyhow:**
+**Use PlatoResult from plato_error crate** (preferred for new code):
+
+```rust
+use plato_error::{PlatoError, PlatoResult};
+
+pub fn load_document(path: &Path) -> PlatoResult<Document> {
+    let content = std::fs::read_to_string(path).map_err(|e| {
+        PlatoError::Io(e)
+    })?;
+
+    if content.is_empty() {
+        return Err(PlatoError::Format("Document cannot be empty".to_string()));
+    }
+
+    parse_document(&content)
+}
+```
+
+**Or use anyhow** (still widely used in the codebase):
 
 ```rust
 use anyhow::{bail, Context, Result};
@@ -198,11 +216,11 @@ use anyhow::{bail, Context, Result};
 pub fn load_document(path: &Path) -> Result<Document> {
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read file: {}", path.display()))?;
-    
+
     if content.is_empty() {
         bail!("Document cannot be empty");
     }
-    
+
     parse_document(&content)
 }
 ```
