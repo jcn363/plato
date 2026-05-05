@@ -17,7 +17,7 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
-use anyhow::{Error, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 /// TTS playback state
@@ -178,7 +178,7 @@ pub fn create_tts_engine() -> Result<Box<dyn TtsEngine>> {
 /// Stub implementation when TTS feature is disabled
 #[cfg(not(feature = "tts"))]
 pub fn create_tts_engine() -> Result<Box<dyn TtsEngine>> {
-    Err(Error::msg("TTS feature not enabled"))
+    Err(anyhow::anyhow!("TTS feature not enabled"))
 }
 
 /// Check if TTS is supported on the current platform

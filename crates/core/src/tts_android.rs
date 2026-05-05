@@ -1,5 +1,11 @@
 //! Android TTS Implementation
 //!
+#![allow(
+    clippy::needless_borrows_for_generic_args,
+    clippy::cmp_owned,
+    clippy::redundant_pattern_matching
+)]
+
 //! This module provides TTS support for Android using the Android TextToSpeech API
 //! through JNI (Java Native Interface).
 //!
@@ -28,6 +34,8 @@ use crate::tts::{TtsEngine, TtsOptions, TtsSettings, TtsState, TtsVoice};
 ///
 /// Implements pause/resume by synthesizing to a temp file and using MediaPlayer.
 pub struct AndroidTtsEngine {
+    /// JavaVM kept alive to allow AttachGuard to work
+    vm: Option<jni::JavaVM>,
     /// Global reference to TextToSpeech instance
     tts_instance: Option<GlobalRef>,
     /// Global reference to MediaPlayer instance (for pause/resume)
@@ -47,7 +55,10 @@ pub struct AndroidTtsEngine {
 impl AndroidTtsEngine {
     /// Create a new Android TTS engine
     pub fn new() -> Self {
+        let vm = ndk_context::android_context();
+        let java_vm = unsafe { jni::JavaVM::from_raw(vm.vm().cast()).ok() };
         Self {
+            vm: java_vm,
             tts_instance: None,
             media_player: None,
             state: TtsState::Idle,
@@ -58,53 +69,51 @@ impl AndroidTtsEngine {
         }
     }
 
-    /// Get JNI environment
-    /// In jni 0.22+, attach_current_thread() returns AttachGuard which derefs to &Env
-    fn get_env(&self) -> Result<jni::AttachGuard> {
-        let ctx = ndk_context::android_context();
-        let vm = ctx.vm();
+    /// Get JNI environment (jni 0.21 + ndk-context pattern)
+    fn get_env(&self) -> Result<jni::AttachGuard<'_>> {
+        let vm = self.vm.as_ref().context("JavaVM not initialized")?;
         let env = vm
             .attach_current_thread()
             .context("Failed to attach to JVM")?;
         Ok(env)
     }
 
-    /// Get the Android context
-    fn get_context<'a>(&self, env: &'a JNIEnv<'a>) -> Result<JObject<'a>> {
+    /// Get the Android context as JObject
+    fn get_android_context() -> Result<JObject<'static>> {
         let ctx = ndk_context::android_context();
         let context = ctx.context();
         if context.is_null() {
             bail!("Android context not available");
         }
-        // jni 0.22+: from_raw requires an Env parameter for safety
-        let raw = context.as_raw();
-        Ok(unsafe { JObject::from_raw(env, raw) })
+        Ok(unsafe { JObject::from_raw(context.cast()) })
     }
 
     /// Initialize the TextToSpeech engine
     fn init_tts(&mut self) -> Result<()> {
-        let env = self.get_env()?;
-        let context = self.get_context(&env)?;
+        let context = Self::get_android_context()?;
 
-        // Find TextToSpeech class
-        let tts_class = env
-            .find_class("android/speech/tts/TextToSpeech")
-            .context("Failed to find TextToSpeech class")?;
+        // Do JNI operations in a separate scope to release env borrow
+        let global_ref = {
+            let mut env = self.get_env()?;
 
-        // Constructor: TextToSpeech(Context context, OnInitListener listener)
-        // We pass null for listener - TTS will still initialize
-        let tts_obj = env
-            .new_object(
-                &tts_class,
-                "(Landroid/content/Context;Landroid/speech/tts/TextToSpeech$OnInitListener;)V",
-                &[JValue::Object(&context), JValue::Object(&JObject::null())],
-            )
-            .context("Failed to create TextToSpeech instance")?;
+            // Find TextToSpeech class
+            let tts_class = env
+                .find_class("android/speech/tts/TextToSpeech")
+                .context("Failed to find TextToSpeech class")?;
 
-        // Convert to global reference for long-term storage
-        let global_ref = env
-            .new_global_ref(&tts_obj)
-            .context("Failed to create global reference for TTS")?;
+            // Constructor: TextToSpeech(Context context, OnInitListener listener)
+            let tts_obj = env
+                .new_object(
+                    &tts_class,
+                    "(Landroid/content/Context;Landroid/speech/tts/TextToSpeech$OnInitListener;)V",
+                    &[JValue::Object(&context), JValue::Object(&JObject::null())],
+                )
+                .context("Failed to create TextToSpeech instance")?;
+
+            // Convert to global reference
+            env.new_global_ref(&tts_obj)
+                .context("Failed to create global reference for TTS")?
+        };
 
         self.tts_instance = Some(global_ref);
         self.initialized = true;
@@ -145,13 +154,10 @@ impl AndroidTtsEngine {
     /// 3. Creates a MediaPlayer to play the audio file
     /// 4. MediaPlayer supports pause/resume natively
     fn speak_text(&mut self, text: &str, options: &TtsOptions) -> Result<()> {
-        let env = self.get_env()?;
-        let tts_obj = self.get_tts_instance()?;
-
-        // Clean up any previous temp file
+        // Step 1: Do all self modifications FIRST (before any JNI)
         self.cleanup_temp_file();
 
-        // Create a temporary file for synthesized audio
+        // Create temp file path
         let temp_dir = std::env::temp_dir();
         let temp_file_path = temp_dir.join(format!(
             "plato_tts_{}.wav",
@@ -165,178 +171,184 @@ impl AndroidTtsEngine {
         // Create the file (ensure it exists)
         let _file = std::fs::File::create(&temp_file_path).context("Failed to create temp file")?;
 
-        // Store temp file path for cleanup
-        self.temp_file_path = Some(temp_file_path_str.to_string());
+        // Store temp file path
+        let temp_file_for_cleanup = temp_file_path_str.to_string();
+        self.temp_file_path = Some(temp_file_for_cleanup.clone());
 
-        // Convert path to Java File object
-        let jfile_path = env
-            .new_string(temp_file_path_str)
-            .context("Failed to create file path string")?;
+        // Step 2: Do JNI operations (create scope to release env borrow before updating self)
+        let (mp_global_ref, final_rate, final_volume, final_pitch) = {
+            let mut env = self.get_env()?;
+            let tts_obj = self.get_tts_instance()?;
 
-        let file_class = env
-            .find_class("java/io/File")
-            .context("Failed to find File class")?;
-        let file_obj = env
-            .new_object(
-                &file_class,
-                "(Ljava/lang/String;)V",
-                &[JValue::Object(&JObject::from(jfile_path))],
+            // Convert path to Java File object
+            let jfile_path = env
+                .new_string(&temp_file_path_str)
+                .context("Failed to create file path string")?;
+
+            let file_class = env
+                .find_class("java/io/File")
+                .context("Failed to find File class")?;
+            let file_obj = env
+                .new_object(
+                    &file_class,
+                    "(Ljava/lang/String;)V",
+                    &[JValue::Object(&jfile_path)],
+                )
+                .context("Failed to create File object")?;
+
+            // Create Bundle for parameters
+            let bundle_class = env
+                .find_class("android/os/Bundle")
+                .context("Failed to find Bundle class")?;
+            let bundle = env
+                .new_object(&bundle_class, "()V", &[])
+                .context("Failed to create Bundle")?;
+
+            // Set speech rate in bundle
+            let rate_key = env
+                .new_string("rate")
+                .context("Failed to create rate key")?;
+            env.call_method(
+                &bundle,
+                "putFloat",
+                "(Ljava/lang/String;F)V",
+                &[JValue::Object(&rate_key), JValue::Float(options.rate)],
             )
-            .context("Failed to create File object")?;
+            .context("Failed to set rate in bundle")?;
 
-        // Create Bundle for parameters
-        let bundle_class = env
-            .find_class("android/os/Bundle")
-            .context("Failed to find Bundle class")?;
-        let bundle = env
-            .new_object(&bundle_class, "()V", &[])
-            .context("Failed to create Bundle")?;
+            // Set pitch in bundle
+            let pitch_key = env
+                .new_string("pitch")
+                .context("Failed to create pitch key")?;
+            env.call_method(
+                &bundle,
+                "putFloat",
+                "(Ljava/lang/String;F)V",
+                &[JValue::Object(&pitch_key), JValue::Float(options.pitch)],
+            )
+            .context("Failed to set pitch in bundle")?;
 
-        // Set speech rate in bundle
-        let rate_key = env
-            .new_string("rate")
-            .context("Failed to create rate key")?;
-        env.call_method(
-            &bundle,
-            "putFloat",
-            "(Ljava/lang/String;F)V",
-            &[JValue::Object(&rate_key), JValue::Float(options.rate)],
-        )
-        .context("Failed to set rate in bundle")?;
+            // Generate unique utterance ID
+            let utterance_id = env
+                .new_string(&format!(
+                    "plato_tts_{}",
+                    SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_millis()
+                ))
+                .context("Failed to create utterance ID")?;
 
-        // Set pitch in bundle
-        let pitch_key = env
-            .new_string("pitch")
-            .context("Failed to create pitch key")?;
-        env.call_method(
-            &bundle,
-            "putFloat",
-            "(Ljava/lang/String;F)V",
-            &[JValue::Object(&pitch_key), JValue::Float(options.pitch)],
-        )
-        .context("Failed to set pitch in bundle")?;
+            // Call synthesizeToFile
+            let text_jstr = env
+                .new_string(text)
+                .context("Failed to create text string")?;
+            env.call_method(
+                tts_obj,
+                "synthesizeToFile",
+                "(Ljava/lang/CharSequence;Landroid/os/Bundle;Ljava/io/File;Ljava/lang/String;)I",
+                &[
+                    JValue::Object(&text_jstr),
+                    JValue::Object(&bundle),
+                    JValue::Object(&file_obj),
+                    JValue::Object(&utterance_id),
+                ],
+            )
+            .context("Failed to call synthesizeToFile")?;
 
-        // Generate unique utterance ID
-        let utterance_id = env
-            .new_string(&format!(
-                "plato_tts_{}",
-                SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_millis()
-            ))
-            .context("Failed to create utterance ID")?;
-
-        // Call synthesizeToFile: synthesizeToFile(CharSequence text, Bundle params, File file, String utteranceId)
-        env.call_method(
-            tts_obj,
-            "synthesizeToFile",
-            "(Ljava/lang/CharSequence;Landroid/os/Bundle;Ljava/io/File;Ljava/lang/String;)I",
-            &[
-                JValue::Object(
-                    &env.new_string(text)
-                        .context("Failed to create text string")?,
-                ),
-                JValue::Object(&bundle),
-                JValue::Object(&file_obj),
-                JValue::Object(&utterance_id),
-            ],
-        )
-        .context("Failed to call synthesizeToFile")?;
-
-        // Wait for synthesis to complete (simple polling with timeout)
-        // Note: In production, use UtteranceProgressListener for reliable notification
-        let mut attempts = 0;
-        loop {
-            std::thread::sleep(std::time::Duration::from_millis(100));
-
-            // Check if file has content (WAV header is 44 bytes)
-            if let Ok(metadata) = std::fs::metadata(&temp_file_path) {
-                if metadata.len() > 44 {
-                    break;
+            // Wait for synthesis to complete
+            let mut attempts = 0;
+            loop {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                if let Ok(metadata) = std::fs::metadata(&temp_file_path) {
+                    if metadata.len() > 44 {
+                        break;
+                    }
+                }
+                attempts += 1;
+                if attempts > 100 {
+                    bail!("TTS synthesis timeout");
                 }
             }
 
-            attempts += 1;
-            if attempts > 100 {
-                // Timeout after 10 seconds
-                self.cleanup_temp_file();
-                bail!("TTS synthesis timeout");
-            }
-        }
+            // Get Android context for MediaPlayer
+            let context = Self::get_android_context()?;
 
-        // Get Android context for MediaPlayer
-        let context = self.get_context(&env)?;
+            // Create Uri from file
+            let uri_class = env
+                .find_class("android/net/Uri")
+                .context("Failed to find Uri class")?;
+            let uri_obj = env
+                .call_static_method(
+                    &uri_class,
+                    "fromFile",
+                    "(Ljava/io/File;)Landroid/net/Uri;",
+                    &[JValue::Object(&file_obj)],
+                )
+                .context("Failed to create Uri from file")?
+                .l()
+                .context("Failed to get Uri object")?;
 
-        // Create Uri from file
-        let uri_class = env
-            .find_class("android/net/Uri")
-            .context("Failed to find Uri class")?;
+            // Create MediaPlayer
+            let mp_class = env
+                .find_class("android/media/MediaPlayer")
+                .context("Failed to find MediaPlayer class")?;
+            let mp_obj = env
+                .call_static_method(
+                    &mp_class,
+                    "create",
+                    "(Landroid/content/Context;Landroid/net/Uri;)Landroid/media/MediaPlayer;",
+                    &[JValue::Object(&context), JValue::Object(&uri_obj)],
+                )
+                .context("Failed to create MediaPlayer")?
+                .l()
+                .context("Failed to get MediaPlayer object")?;
 
-        let uri_obj = env
-            .call_static_method(
-                &uri_class,
-                "fromFile",
-                "(Ljava/io/File;)Landroid/net/Uri;",
-                &[JValue::Object(&file_obj)],
-            )
-            .context("Failed to create Uri from file")?
-            .l()
-            .context("Failed to get Uri object")?;
+            // Store MediaPlayer as global reference
+            let mp_global_ref = env
+                .new_global_ref(&mp_obj)
+                .context("Failed to create global reference for MediaPlayer")?;
 
-        // Create MediaPlayer using static method: MediaPlayer.create(Context, Uri)
-        let mp_class = env
-            .find_class("android/media/MediaPlayer")
-            .context("Failed to find MediaPlayer class")?;
+            // Start playback
+            let mp_obj = self.get_media_player()?;
+            env.call_method(&mp_obj, "start", "()V", &[])
+                .context("Failed to start MediaPlayer")?;
 
-        let mp_obj = env
-            .call_static_method(
-                &mp_class,
-                "create",
-                "(Landroid/content/Context;Landroid/net/Uri;)Landroid/media/MediaPlayer;",
-                &[JValue::Object(&context), JValue::Object(&uri_obj)],
-            )
-            .context("Failed to create MediaPlayer")?
-            .l()
-            .context("Failed to get MediaPlayer object")?;
+            (mp_global_ref, options.rate, options.volume, options.pitch)
+        }; // env borrow ends here
 
-        // Store MediaPlayer as global reference
-        let mp_global_ref = env
-            .new_global_ref(&mp_obj)
-            .context("Failed to create global reference for MediaPlayer")?;
+        // Step 3: Update self after env is released
         self.media_player = Some(mp_global_ref);
-
-        // Start playback
-        let mp_obj = self.get_media_player()?;
-        env.call_method(&mp_obj, "start", "()V", &[])
-            .context("Failed to start MediaPlayer")?;
-
         self.state = TtsState::Speaking;
-        self.settings.rate = options.rate;
-        self.settings.volume = options.volume;
-        self.settings.pitch = options.pitch;
+        self.settings.rate = final_rate;
+        self.settings.volume = final_volume;
+        self.settings.pitch = final_pitch;
 
         Ok(())
     }
 
     /// Stop speech (stops both TTS and MediaPlayer)
     fn stop_speech(&mut self) -> Result<()> {
-        let env = self.get_env()?;
+        // Do JNI operations in separate scope
+        {
+            let mut env = self.get_env()?;
 
-        // Stop and release MediaPlayer if active
-        if let Some(_) = &self.media_player {
-            if let Ok(mp_obj) = self.get_media_player() {
-                let _ = env.call_method(&mp_obj, "stop", "()V", &[]);
-                let _ = env.call_method(&mp_obj, "release", "()V", &[]);
+            // Stop and release MediaPlayer if active
+            if let Some(_) = &self.media_player {
+                if let Ok(mp_obj) = self.get_media_player() {
+                    let _ = env.call_method(&mp_obj, "stop", "()V", &[]);
+                    let _ = env.call_method(&mp_obj, "release", "()V", &[]);
+                }
             }
-            self.media_player = None;
+
+            // Also stop TTS in case it's still synthesizing
+            if let Ok(tts_obj) = self.get_tts_instance() {
+                let _ = env.call_method(tts_obj, "stop", "()I", &[]);
+            }
         }
 
-        // Also stop TTS in case it's still synthesizing
-        if let Ok(tts_obj) = self.get_tts_instance() {
-            let _ = env.call_method(tts_obj, "stop", "()I", &[]);
-        }
-
+        // Update state after env is released
+        self.media_player = None;
         self.state = TtsState::Idle;
         self.cleanup_temp_file();
 
@@ -349,11 +361,13 @@ impl AndroidTtsEngine {
             bail!("No active speech to pause");
         }
 
-        let env = self.get_env()?;
         let mp_obj = self.get_media_player()?;
 
-        env.call_method(&mp_obj, "pause", "()V", &[])
-            .context("Failed to pause MediaPlayer")?;
+        {
+            let mut env = self.get_env()?;
+            env.call_method(&mp_obj, "pause", "()V", &[])
+                .context("Failed to pause MediaPlayer")?;
+        }
 
         self.state = TtsState::Paused;
         Ok(())
@@ -365,11 +379,13 @@ impl AndroidTtsEngine {
             bail!("No paused speech to resume");
         }
 
-        let env = self.get_env()?;
         let mp_obj = self.get_media_player()?;
 
-        env.call_method(&mp_obj, "start", "()V", &[])
-            .context("Failed to resume MediaPlayer")?;
+        {
+            let mut env = self.get_env()?;
+            env.call_method(&mp_obj, "start", "()V", &[])
+                .context("Failed to resume MediaPlayer")?;
+        }
 
         self.state = TtsState::Speaking;
         Ok(())
@@ -377,7 +393,7 @@ impl AndroidTtsEngine {
 
     /// Get available voices
     fn get_voices(&self) -> Result<Vec<TtsVoice>> {
-        let env = self.get_env()?;
+        let mut env = self.get_env()?;
         let tts_obj = self.get_tts_instance()?;
 
         // Call getVoices()
@@ -388,13 +404,13 @@ impl AndroidTtsEngine {
             .context("Failed to get voices set")?;
 
         // Convert Set<Voice> to Vec<TtsVoice>
-        let voices = self.convert_voices_set_to_vec(&env, voices_result)?;
+        let voices = self.convert_voices_set_to_vec(&mut env, voices_result)?;
 
         Ok(voices)
     }
 
     /// Convert Java Set<Voice> to Vec<TtsVoice>
-    fn convert_voices_set_to_vec(&self, env: &JNIEnv, set: JObject) -> Result<Vec<TtsVoice>> {
+    fn convert_voices_set_to_vec(&self, env: &mut JNIEnv, set: JObject) -> Result<Vec<TtsVoice>> {
         let mut result = Vec::new();
 
         // Call set.iterator()
@@ -431,15 +447,16 @@ impl AndroidTtsEngine {
     }
 
     /// Extract TtsVoice from a Java Voice object
-    fn extract_voice_info(&self, env: &JNIEnv, voice_obj: JObject) -> Result<TtsVoice> {
+    fn extract_voice_info(&self, env: &mut JNIEnv, voice_obj: JObject) -> Result<TtsVoice> {
         // Get voice name: getName()
         let name_obj = env
             .call_method(&voice_obj, "getName", "()Ljava/lang/String;", &[])
             .context("Failed to get voice name")?
             .l()
             .context("Failed to get name object")?;
-        let name_str = env
-            .get_string(JString::from(name_obj))
+        let name_jstr: JString = name_obj.into();
+        let name_str: String = env
+            .get_string(&name_jstr)
             .context("Failed to convert voice name to string")?
             .into();
 
@@ -457,9 +474,12 @@ impl AndroidTtsEngine {
                 .context("Failed to get locale string")?
                 .l()
                 .context("Failed to get locale string object")?;
-            env.get_string(JString::from(locale_str_obj))
+            let locale_jstr: JString = locale_str_obj.into();
+            let s: String = env
+                .get_string(&locale_jstr)
                 .context("Failed to convert locale to string")?
-                .into()
+                .into();
+            s
         } else {
             "en-US".to_string()
         };
@@ -468,78 +488,86 @@ impl AndroidTtsEngine {
             id: name_str.clone(),
             name: name_str,
             language: locale_str,
-            is_male: None, // Voice class doesn't expose gender directly
+            is_male: None,
             quality: None,
         })
     }
 
     /// Set voice by ID
     fn set_voice_by_id(&mut self, voice_id: &str) -> Result<()> {
-        let env = self.get_env()?;
-        let tts_obj = self.get_tts_instance()?;
+        // Do JNI operations in a scoped block
+        let voice_id_string = {
+            let mut env = self.get_env()?;
+            let tts_obj = self.get_tts_instance()?;
 
-        // Get available voices and find the one with matching name
-        let voices_set = env
-            .call_method(&tts_obj, "getVoices", "()Ljava/util/Set;", &[])
-            .context("Failed to get voices")?
-            .l()
-            .context("Failed to get voices set")?;
+            // Get available voices and find the one with matching name
+            let voices_set = env
+                .call_method(&tts_obj, "getVoices", "()Ljava/util/Set;", &[])
+                .context("Failed to get voices")?
+                .l()
+                .context("Failed to get voices set")?;
 
-        // Iterate through voices to find matching one
-        let iterator = env
-            .call_method(&voices_set, "iterator", "()Ljava/util/Iterator;", &[])
-            .context("Failed to get iterator")?
-            .l()
-            .context("Failed to get iterator object")?;
+            // Iterate through voices to find matching one
+            let iterator = env
+                .call_method(&voices_set, "iterator", "()Ljava/util/Iterator;", &[])
+                .context("Failed to get iterator")?
+                .l()
+                .context("Failed to get iterator object")?;
 
-        let mut found_voice: Option<JObject> = None;
+            let mut found_voice: Option<JObject> = None;
 
-        loop {
-            let has_next = env
-                .call_method(&iterator, "hasNext", "()Z", &[])
-                .context("Failed to check hasNext")?
-                .z()
-                .context("Failed to get hasNext boolean")?;
+            loop {
+                let has_next = env
+                    .call_method(&iterator, "hasNext", "()Z", &[])
+                    .context("Failed to check hasNext")?
+                    .z()
+                    .context("Failed to get hasNext boolean")?;
 
-            if !has_next {
-                break;
+                if !has_next {
+                    break;
+                }
+
+                let voice_obj = env
+                    .call_method(&iterator, "next", "()Ljava/lang/Object;", &[])
+                    .context("Failed to get next voice")?
+                    .l()
+                    .context("Failed to get next voice object")?;
+
+                let name_obj = env
+                    .call_method(&voice_obj, "getName", "()Ljava/lang/String;", &[])
+                    .context("Failed to get voice name")?
+                    .l()
+                    .context("Failed to get name object")?;
+
+                let name_jstr: JString = name_obj.into();
+                let name: String = env
+                    .get_string(&name_jstr)
+                    .context("Failed to convert name")?
+                    .into();
+
+                if name.to_string() == voice_id {
+                    found_voice = Some(voice_obj);
+                    break;
+                }
             }
 
-            let voice_obj = env
-                .call_method(&iterator, "next", "()Ljava/lang/Object;", &[])
-                .context("Failed to get next voice")?
-                .l()
-                .context("Failed to get next voice object")?;
+            let voice_obj = found_voice.context("Voice not found")?;
 
-            let name_obj = env
-                .call_method(&voice_obj, "getName", "()Ljava/lang/String;", &[])
-                .context("Failed to get voice name")?
-                .l()
-                .context("Failed to get name object")?;
+            // Set the voice
+            env.call_method(
+                tts_obj,
+                "setVoice",
+                "(Landroid/speech/tts/Voice;)I",
+                &[JValue::Object(&voice_obj)],
+            )
+            .context("Failed to set voice")?;
 
-            let name = env
-                .get_string(JString::from(name_obj))
-                .context("Failed to convert name")?;
+            voice_id.to_string()
+        }; // env borrow ends here
 
-            if name.to_string_lossy() == voice_id {
-                found_voice = Some(voice_obj);
-                break;
-            }
-        }
-
-        let voice_obj = found_voice.context("Voice not found")?;
-
-        // Set the voice
-        env.call_method(
-            tts_obj,
-            "setVoice",
-            "(Landroid/speech/tts/Voice;)I",
-            &[JValue::Object(&voice_obj)],
-        )
-        .context("Failed to set voice")?;
-
-        self.current_voice = Some(voice_id.to_string());
-        self.settings.voice_id = Some(voice_id.to_string());
+        // Update self after env is released
+        self.current_voice = Some(voice_id_string.clone());
+        self.settings.voice_id = Some(voice_id_string);
 
         Ok(())
     }
@@ -666,6 +694,7 @@ impl TtsEngine for AndroidTtsEngine {
     }
 }
 
+#[cfg(target_os = "android")]
 #[cfg(test)]
 mod tests {
     use super::*;
