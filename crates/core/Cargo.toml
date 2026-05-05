@@ -55,6 +55,8 @@ lru = "0.18.0"
 dashmap = "6.1.0"
 smallvec = { version = "1.15.1", features = ["serde"] }
 dirs-next = "2.0.0"
+libloading = "0.8.5"
+once_cell = "1.20.2"
 
 # TTS dependencies (optional, enabled via 'tts' or 'tts-android' features)
 # Desktop TTS uses the 'tts' crate

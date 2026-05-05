@@ -35,7 +35,7 @@ This document lists the major work items for the Plato project, their current st
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Plugin system** (extensible document formats) | 🔜 | Design discussed in architecture docs. |
+| **Plugin system** (extensible document formats) | ✅ | Implemented in `document/plugin.rs`, loads .so/.dll/.dylib plugins. |
 | **Cloud sync** (background sync) | 🔜 | `sync` module exists, full architecture not yet spec‑ed. |
 | **Annotation system** (enhanced storage & rendering) | 🔜 | Basic annotations done, enhancement planned. |
 | **OPDS catalog** | ✅ | Fully integrated, `opds` module. |

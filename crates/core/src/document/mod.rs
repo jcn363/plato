@@ -128,6 +128,7 @@ use self::djvu::DjvuDocument;
 use self::epub::EpubDocument;
 use self::html::HtmlDocument;
 use self::pdf::PdfOpener;
+pub(crate) mod plugin;
 use crate::framebuffer::Pixmap;
 use crate::geom::{Boundary, CycleDir, Point};
 use crate::log_error;
@@ -444,6 +445,14 @@ pub fn open<P: AsRef<Path>>(path: P) -> Option<Box<dyn Document>> {
         log_error!("Failed to open document {}: {}", path.as_ref().display(), e);
         return None;
     }
+
+    // Try plugins first
+    if plugin::plugin_can_open(path.as_ref()) {
+        if let Some(doc) = plugin::open_with_plugins(path.as_ref()) {
+            return Some(doc);
+        }
+    }
+
     file_kind(path.as_ref()).and_then(|k| match k.as_ref() {
         "epub" | "kepub" => EpubDocument::new(&path)
             .map_err(|e| {
