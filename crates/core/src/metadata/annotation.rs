@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_if, dead_code)]
+
 use chrono::{Local, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 

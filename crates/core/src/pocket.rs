@@ -1,5 +1,7 @@
 //! Pocket API Integration Module
 //!
+#![allow(dead_code)]
+
 //! Provides full integration with the Pocket API (getpocket.com) for syncing
 //! saved articles, managing read/unread status, archiving, favoriting, and tagging.
 //!
@@ -35,7 +37,7 @@
 //! ```
 
 use crate::article::{
-    Article, ArticleId, ArticleImage, ArticleSource, ArticleStatus, ArticleCollection, ReadProgress,
+    Article, ArticleId, ArticleImage, ArticleSource, ArticleStatus, ArticleCollection,
 };
 use crate::log_error;
 use crate::log_info;
@@ -928,6 +930,7 @@ pub fn validate_pocket_settings(settings: &PocketSettings) -> Result<(), Error> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::article::ReadProgress;
 
     #[test]
     fn test_pocket_auth_url() {

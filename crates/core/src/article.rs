@@ -34,7 +34,7 @@ use std::path::PathBuf;
 pub type ArticleId = String;
 
 /// Source of the article (Pocket, Instapaper, or local)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ArticleSource {
     /// Article from Pocket (getpocket.com)
@@ -42,15 +42,10 @@ pub enum ArticleSource {
     /// Article from Instapaper (instapaper.com)
     Instapaper,
     /// Locally saved article (user imported)
+    #[default]
     Local,
     /// Article from Wallabag instance
     Wallabag,
-}
-
-impl Default for ArticleSource {
-    fn default() -> Self {
-        ArticleSource::Local
-    }
 }
 
 impl std::fmt::Display for ArticleSource {
@@ -65,10 +60,11 @@ impl std::fmt::Display for ArticleSource {
 }
 
 /// Article reading status
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ArticleStatus {
     /// Article is unread
+    #[default]
     Unread,
     /// Article has been read and archived
     Archived,
@@ -80,17 +76,12 @@ pub enum ArticleStatus {
     Reading,
 }
 
-impl Default for ArticleStatus {
-    fn default() -> Self {
-        ArticleStatus::Unread
-    }
-}
-
 /// Article content format
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ArticleFormat {
     /// HTML content
+    #[default]
     Html,
     /// Markdown content
     Markdown,
@@ -98,12 +89,6 @@ pub enum ArticleFormat {
     Text,
     /// EPUB format
     Epub,
-}
-
-impl Default for ArticleFormat {
-    fn default() -> Self {
-        ArticleFormat::Html
-    }
 }
 
 /// Reading progress for an article
@@ -451,9 +436,10 @@ pub struct ArticleFilter {
 }
 
 /// Sort options for articles
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ArticleSort {
     /// Sort by date added (newest first)
+    #[default]
     DateAddedDesc,
     /// Sort by date added (oldest first)
     DateAddedAsc,
@@ -469,12 +455,6 @@ pub enum ArticleSort {
     ReadingTimeAsc,
     /// Sort by reading time (longest first)
     ReadingTimeDesc,
-}
-
-impl Default for ArticleSort {
-    fn default() -> Self {
-        ArticleSort::DateAddedDesc
-    }
 }
 
 /// Collection of articles with filtering and sorting

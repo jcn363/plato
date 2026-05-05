@@ -1,3 +1,5 @@
+#![allow(clippy::needless_borrows_for_generic_args)]
+
 use crate::log_info;
 use crate::settings::BackgroundSyncSettings;
 use anyhow::{format_err, Context, Error};
@@ -757,7 +759,7 @@ pub fn sync_with_google_drive(token: &str, library_path: &std::path::Path) -> Re
     let gdrive_api = "https://www.googleapis.com/drive/v3";
 
     // Find or create Plato folder
-    let folder_id = find_or_create_gdrive_folder(&client, token, "Plato")?;
+    let _folder_id = find_or_create_gdrive_folder(&client, token, "Plato")?;
 
     // Upload reading progress
     let states_dir = library_path.join(".reading-states");

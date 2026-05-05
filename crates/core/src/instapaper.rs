@@ -1,5 +1,7 @@
 //! Instapaper API Integration Module
 //!
+#![allow(dead_code)]
+
 //! Provides full integration with the Instapaper API (instapaper.com) for syncing
 //! saved articles, managing read/unread status, archiving, favoriting, and organizing
 //! into folders.

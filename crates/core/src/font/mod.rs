@@ -34,7 +34,6 @@ pub use self::types::{GlyphPlan, RenderPlan};
 // Imports and Re-exports
 // ===========================================================================
 
-use crate::accessibility::is_accessibility_font;
 use crate::device::CURRENT_DEVICE;
 use crate::helpers::walkdir_visible;
 use crate::settings::Settings;
@@ -377,7 +376,7 @@ pub fn font_from_style_with_accessibility<'a>(
     // Check if dyslexic font is enabled and available
     if settings.accessibility.dyslexic_font {
         let family_name = &settings.accessibility.dyslexic_font_family;
-        if let Some(_) = fonts.accessibility.get(family_name) {
+        if fonts.accessibility.contains_key(family_name) {
             // SAFETY: We verified the key exists, and we're casting from &mut Fonts to &mut Fonts,
             // just through a raw pointer to satisfy the borrow checker.
             let fonts_ptr = fonts as *mut Fonts;

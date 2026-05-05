@@ -1,3 +1,5 @@
+#![allow(clippy::derivable_impls)]
+
 use crate::validation::validate_range;
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
@@ -84,19 +86,14 @@ pub struct CloudSyncSettings {
     pub sync_reading_position: bool,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum ConflictResolution {
     LastWriteWins,
     PreferLocal,
     PreferRemote,
+    #[default]
     Merge,
-}
-
-impl Default for ConflictResolution {
-    fn default() -> Self {
-        ConflictResolution::Merge
-    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -210,34 +207,24 @@ pub struct SocialSettings {
     pub show_progress_in_notification: bool,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum QuoteCardStyle {
+    #[default]
     Classic,
     Modern,
     Minimal,
     Dark,
 }
 
-impl Default for QuoteCardStyle {
-    fn default() -> Self {
-        QuoteCardStyle::Classic
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum SocialExportFormat {
+    #[default]
     Markdown,
     Json,
     Csv,
     Html,
-}
-
-impl Default for SocialExportFormat {
-    fn default() -> Self {
-        SocialExportFormat::Markdown
-    }
 }
 
 impl Default for SocialSettings {
@@ -270,18 +257,13 @@ pub struct AudioSettings {
     pub crossfade_seconds: u8,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum AudioSkipBehavior {
+    #[default]
     Chapter,
     NextTrack,
     Stop,
-}
-
-impl Default for AudioSkipBehavior {
-    fn default() -> Self {
-        AudioSkipBehavior::Chapter
-    }
 }
 
 impl Default for AudioSettings {
@@ -317,20 +299,15 @@ pub struct AcademicSettings {
     pub latex_render: bool,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub enum CitationFormat {
+    #[default]
     BibTeX,
     RIS,
     APA,
     MLA,
     Chicago,
-}
-
-impl Default for CitationFormat {
-    fn default() -> Self {
-        CitationFormat::BibTeX
-    }
 }
 
 impl Default for AcademicSettings {

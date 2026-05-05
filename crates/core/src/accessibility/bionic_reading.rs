@@ -4,6 +4,8 @@
 //! to increase reading speed and focus. Based on the Bionic Reading API
 //! (https://bionic-reading.com/).
 
+#![allow(clippy::explicit_counter_loop)]
+
 use std::borrow::Cow;
 
 /// Apply bionic reading transformation to text
@@ -61,14 +63,14 @@ pub fn apply_bionic_reading(text: &str, intensity: f32) -> String {
             .clamp(1, word_part.len());
 
         // Find the byte index for the bold section
-        let mut char_count = 0;
+        let mut processed = 0;
         let mut bold_end = 0;
         for (i, ch) in word_part.char_indices() {
-            if char_count >= bold_len {
+            if processed >= bold_len {
                 break;
             }
             bold_end = i + ch.len_utf8();
-            char_count += 1;
+            processed += 1;
         }
 
         // Append: prefix + **bold_part** + rest + suffix
@@ -101,14 +103,14 @@ pub fn split_word_bionic(word: &str, intensity: f32) -> (Cow<'_, str>, Cow<'_, s
     let bold_count = ((char_count as f32 * intensity).ceil() as usize).clamp(1, char_count);
 
     // Find the split point in bytes
-    let mut current_char = 0;
+    let mut processed = 0;
     let mut split_byte = 0;
     for (i, ch) in word.char_indices() {
-        if current_char >= bold_count {
+        if processed >= bold_count {
             break;
         }
         split_byte = i + ch.len_utf8();
-        current_char += 1;
+        processed += 1;
     }
 
     let (bold_part, rest_part) = word.split_at(split_byte);

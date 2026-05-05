@@ -47,7 +47,7 @@ rand_xoshiro = "0.8.0"
 percent-encoding = "2.3.2"
 chrono = { version = "0.4.44", features = ["serde", "clock"], default-features = false }
 uuid = { version = "1.23.1", features = ["v4", "serde"] }
-reqwest = { version = "0.13.2", default-features = false, features = ["blocking", "json", "rustls", "multipart"] }
+reqwest = { version = "0.13.2", default-features = false, features = ["blocking", "json", "rustls", "multipart", "query"] }
 url = "2.5.0"
 quick-xml = "0.39.2"
 epub_edit = { path = "../epub_edit" }

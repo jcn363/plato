@@ -1,5 +1,7 @@
 //! Accessibility Module
 //!
+#![allow(clippy::redundant_pattern_matching)]
+
 //! This module provides accessibility features for Plato:
 //! - Bionic Reading: Bold first half of words for faster reading
 //! - Auto-Pace: Automatic page turning with adjustable WPM

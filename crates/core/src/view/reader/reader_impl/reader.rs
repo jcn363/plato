@@ -3,6 +3,8 @@
 //! The Reader view is the core component for displaying and interacting with documents
 //! (EPUB, PDF, etc.) on Kobo e-readers.
 //!
+#![allow(clippy::useless_conversion)]
+
 //! ## Architecture
 //!
 //! This implementation follows a modular design where related functionality is split
