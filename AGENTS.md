@@ -39,7 +39,7 @@ cargo test --target x86_64-unknown-linux-gnu
 | `crates/core/src/error.rs` | `PlatoError` enum definition |
 | `crates/core/src/settings/` | All settings structs |
 | `.cargo/config.toml` | Build target defaults |
-| `build.sh` | Full build script |
+| `build.sh` | Full build script (supports --no-clean, --no-clippy, --no-fmt) |
 
 ## Critical Conventions
 
